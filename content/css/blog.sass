@@ -1,0 +1,66 @@
+@import url(http://fonts.googleapis.com/css?family=Yanone+Kaffeesatz:400,700)
+
+body
+  background: url("/img/bg-blog.jpg") no-repeat center center fixed
+  -webkit-background-size: cover
+  -moz-background-size: cover
+  -o-background-size: cover
+  background-size: cover
+
+$fontColor: #333333
+
+#tags
+  $size: 12pt
+  $coef: 2
+  span
+    vertical-align: middle
+    line-height: 95%
+  .size-0
+    font-size: $size + $coef * 0
+  .size-1
+    font-size: $size + $coef * 1
+  .size-2
+    font-size: $size + $coef * 2
+  .size-3
+    font-size: $size + $coef * 3
+  .size-4
+    font-size: $size + $coef * 4
+  .size-5
+    font-size: $size + $coef * 5
+  .size-6
+    font-size: $size + $coef * 6
+  .size-7
+    font-size: $size + $coef * 7
+  .size-8
+    font-size: $size + $coef * 8
+  .size-9
+    font-size: $size + $coef * 9
+  .highlight
+    color: #ff0000
+  a
+    color: $fontColor
+    text-decoration: none
+
+#blog
+  margin-top: 10px
+  margin-bottom: 10px
+  h2
+    font-family: "Yanone Kaffeesatz", sans-serif
+    font-size: 14pt
+    border-bottom: 1px dotted
+  li
+    margin-bottom: 10px
+    line-height: 100%
+    .title a
+      font-size: 12pt
+    .info
+      font-size: 9pt
+      a
+        color: $fontColor
+        border-bottom: 1px dotted
+      a:hover
+        text-decoration: none
+        border-bottom: 1px solid
+  #tags
+    margin-top: 20px
+    text-align: right

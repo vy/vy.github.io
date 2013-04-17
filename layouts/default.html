@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title><%= @item[:title] %></title>
+    <link rel="stylesheet" href="/css/bootstrap.css">
+    <link rel="stylesheet" href="/css/bootstrap-responsive.css">
+    <script src="/js/bootstrap.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="/css/common.css">
+    <meta name="generator" content="nanoc <%= Nanoc::VERSION %>">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <%=
+       css = @item[:css]
+       css = @css if defined? @css
+       '<link rel="stylesheet" href="/css/%s.css">' % (css) if css
+    %>
+  </head>
+  <body>
+    <div id="menu">
+      <%=
+        [
+          ["Home", "/"],
+          ["About", "/about/"],
+          ["Blog", "/blog/"],
+          ["Code", "/code/"],
+          ["Feed", "/blog/feed/"]
+        ].map { |caption, url|
+          "<div%s>#{link_to caption, url}</div>" %
+            (" class='active'" if @item.identifier == url)
+        }.join()
+      %>
+    </div>
+    <%= yield %>
+
+    <script type="text/javascript">
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-40183531-1']);
+      _gaq.push(['_trackPageview']);
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+    </script>
+  </body>
+</html>

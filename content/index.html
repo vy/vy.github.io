@@ -1,0 +1,64 @@
+---
+title: "Volkan Yazıcı's Soap Co."
+css: "home"
+---
+
+<div class="container">
+  <div class="row-fluid">
+    <div class="offset9 span3">
+      <img src="/img/photo.png">
+    </div>
+  </div>
+  <div class="row-fluid">
+    <div class="offset8 span4 text-right">
+      <div id="title">
+	<span class="head">Volkan Yazıcı</span><span class="body">'s<br/>
+	  Soap Co.</span>
+      </div>
+    </div>
+  </div>
+  <div class="row-fluid">
+    <div class="span9">
+      <div class="white-box rounded-corners">
+	<div id="posts" class="narrow-font">
+	  <div class="title">Recent Blog Posts</div>
+	  <ul class="arrow-list">
+            <% recent_posts(5).each do |article| %>
+            <li>
+              <%= link_to(article[:title], article.path) %>
+              at
+              <%=
+                 require "time"
+                 Time.parse(article[:created_at]).strftime("%e %b, %Y")
+              %>
+            </li>
+            <% end %>
+	  </ul>
+	  <div><%= link_to "Continues...", "/blog/" %></div>
+	</div>
+      </div>
+    </div>
+    <div class="span3 text-right">
+      <div class="white-box rounded-corners">
+	<div class="narrow-font">
+	  I am a programmer living in İstanbul with a background in math and
+	  computer science. Right now I am trying to finish my PhD.
+	  <%= link_to "Continues...", "/about/" %>
+	</div>
+	<div id="btn-box">
+	  <a href="mailto:volkan.yazici@gmail.com"
+	     ><img src="/img/btn-gmail-32.png"></a>
+	  <a href="https://twitter.com/yazicivo"
+	     ><img src="/img/btn-twitter-32.png"></a>
+	  <a href="https://github.com/vy"
+	     ><img src="/img/btn-github-32.png"></a>
+	</div>
+      </div>
+      <div id="bgauthor" class="narrow-font">
+	background image by
+	<a href="http://ubphotoart.com/series/istanbul-night-photos/"
+	   >Ugur Bektaş</a>
+      </div>
+    </div>
+  </div>
+</div>

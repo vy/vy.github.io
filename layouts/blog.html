@@ -1,0 +1,76 @@
+<% render 'default', :css => "blog" do %>
+
+<div class="container">
+  <div class="row-fluid">
+    <div class="offset1 span10">
+      <div id="blog" class="more-white-box rounded-corners narrow-font">
+        <div class="row-fluid">
+          <div id="tags" class="span2">
+            <%=
+              freqs = Hash.new(0)
+              articles.each do |article|
+                article[:tags].each do |tag|
+                  freqs[tag] += 1
+                  end
+               end
+               min_freq = freqs.values.min
+               max_freq = freqs.values.max
+               dif_freq = max_freq - min_freq
+               freqs.keys.sort.map { |tag|
+                  size = (9.0 * (freqs[tag] - min_freq) / dif_freq).to_i
+                  extra_class = "highlight" if tag == @tag
+                  link_to("<span class='size-#{size} #{extra_class}'>#{tag}</span>",
+                    tag_identifier(tag))
+               } .join(", ")
+            %>
+          </div>
+          <div class="span10">
+            <div id="posts">
+              <%
+                require "time"
+                year_to_article_map = {}
+                sorted_articles.each do |article|
+                  if @tag.nil? or article[:tags].include?(@tag)
+                    year = Time.parse(article[:created_at]).strftime("%Y")
+                    year_to_article_map[year] ||= []
+                    year_to_article_map[year] << article
+                  end
+                end
+                year_to_article_map.keys.each do |year|
+              %>
+              <h2><%= year %></h2>
+              <ul class="arrow-list">
+                <% year_to_article_map[year].each do |article| %>
+                <li>
+                  <span class="title">
+                    <%= link_to(article[:title], article.path) %>
+                  </span><br/>
+                  <span class="info">
+                    posted at
+                    <%= Time.parse(article[:created_at]).strftime("%m/%d") %>
+                    <%=
+                      if article[:tags]
+                        "with tags " + \
+                        article[:tags].map { |tag|
+                          link_to(tag, tag_identifier(tag))
+                        } .join(", ")
+                      end
+                    %>
+                  </span>
+                </li>
+                <% end %>
+              </ul>
+              <% end %>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="bgauthor" class="narrow-font" style="margin-top: -10px">
+        background image by
+        <a href="http://weitz.de/">Edi Weitz</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<% end %>
