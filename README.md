@@ -1,6 +1,6 @@
 # About
 
-This branch contains the sources for generating my personal web site. You can either [view it online](https://vy.github.io/) or [browse the generated content](https://github.com/vy/vy.github.io/).
+This branch contains the sources for generating my personal web site. You can either [view it online](https://vy.github.io/) or [browse the generated content](https://github.com/vy/vy.github.io/tree/master/).
 
 # License
 
