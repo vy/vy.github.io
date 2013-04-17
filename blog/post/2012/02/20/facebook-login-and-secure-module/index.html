@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Facebook Login and Secure Module Integration in Play</title>
+    <link rel="stylesheet" href="/css/bootstrap.css">
+    <link rel="stylesheet" href="/css/bootstrap-responsive.css">
+    <script src="/js/bootstrap.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="/css/common.css">
+    <meta name="generator" content="nanoc 3.6.2">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/post.css">
+  </head>
+  <body>
+    <div id="menu">
+      <div><a href="/">Home</a></div><div><a href="/about/">About</a></div><div><a href="/blog/">Blog</a></div><div><a href="/code/">Code</a></div><div><a href="/blog/feed/">Feed</a></div>
+    </div>
+    
+
+<div class="container">
+  <div class="row-fluid">
+    <div class="offset2 span8">
+      <div id="post" class="more-white-box rounded-corners">
+	<div class="head">
+	  <div class="title">Facebook Login and Secure Module Integration in Play</div>
+	  <div class="subtitle">posted at
+	    February 20, 2012
+	    with tags <a href="http://technorati.com/tag/facebook" rel="tag">facebook</a>, <a href="http://technorati.com/tag/java" rel="tag">java</a>, <a href="http://technorati.com/tag/play framework" rel="tag">play framework</a>
+	  </div>
+	  <div class="share">
+	    <!-- AddThis Button BEGIN -->
+	    <div class="addthis_toolbox addthis_default_style ">
+	      <a class="addthis_button_preferred_1"></a>
+	      <a class="addthis_button_preferred_2"></a>
+	      <a class="addthis_button_preferred_3"></a>
+	      <a class="addthis_button_preferred_4"></a>
+	      <a class="addthis_button_compact"></a>
+	    </div>
+	    <script type="text/javascript">var addthis_config = {"data_track_addressbar":true};</script>
+	    <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-5144adf75211a62b"></script>
+	    <!-- AddThis Button END -->
+	  </div>
+	</div>
+	<div class="body">
+
+	  <p><a href="http://www.playframework.org/">Play</a> has a really neat module, called <a href="http://www.playframework.org/documentation/1.0/secure">Secure</a>, to ease the authentication mechanics in a web application. Unfortunately, nowadays none of us would really be willing to fill yet another registration form, that is where <a href="http://developers.facebook.com/docs/reference/plugins/login/">Facebook Login</a> (and similars) comes into play. The problem is, Facebook Login is not something trivial, and integrating it into Secure poses another challange. In this post, I will try to walk you through a Play web application with Secure module enabled and wrapped around Facebook Login. We will use <a href="http://www.playframework.org/documentation/api/1.2.4/play%2Flibs%2FOAuth2.html">OAuth2</a> provided by Play to get an access token from Facebook, and later issue queries using <a href="http://restfb.com/">RestFB</a>.</p>
+
+<p>Let’s start with creating the project directory.</p>
+
+<pre><code class="language-bash">play new PlayTest</code></pre>
+
+<p>Next, we introduce module dependencies to <code>conf/dependencies.yml</code> file.</p>
+
+<pre><code class="language-yaml"><span class="l-Scalar-Plain">require</span><span class="p-Indicator">:</span>
+    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">play 1.2.4</span>
+    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">play -&gt; secure</span>
+    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">com.restfb -&gt; restfb 1.6.9</span></code></pre>
+
+<p>Let Play resolve the dependencies for us.</p>
+
+<pre><code class="language-bash">play dependencies</code></pre>
+
+<p>As a first step, let’s start with creating an entrance page. Here goes our <code>app/views/Application/index.html</code>.</p>
+
+<pre><code class="language-html">#{extends 'main.html' /}
+#{set title:'Home' /}
+ 
+#{if flash.error}<span class="nt">&lt;p</span> <span class="na">class=</span><span class="s">"error"</span><span class="nt">&gt;</span><span class="err">&amp;</span>{flash.error}<span class="nt">&lt;/p&gt;</span>#{/if}
+#{if flash.success}<span class="nt">&lt;p</span> <span class="na">class=</span><span class="s">"success"</span><span class="nt">&gt;</span><span class="err">&amp;</span>{flash.success}<span class="nt">&lt;/p&gt;</span>#{/if}
+ 
+#{if user}
+<span class="nt">&lt;h1&gt;</span>Welcome, ${user.name}<span class="nt">&lt;/h1&gt;</span>
+<span class="nt">&lt;p&gt;</span>id: ${user.uid},
+name: ${user.name},
+isAdmin: ${user.isAdmin}<span class="nt">&lt;/p&gt;</span>
+<span class="nt">&lt;p&gt;&lt;a</span> <span class="na">href=</span><span class="s">"@{Secure.logout()}"</span><span class="nt">&gt;</span>Logout<span class="nt">&lt;/a&gt;&lt;/p&gt;</span>
+#{/if}
+ 
+#{else}
+<span class="nt">&lt;h1&gt;</span>Hello, stranger!<span class="nt">&lt;/h1&gt;</span>
+<span class="nt">&lt;a</span> <span class="na">href=</span><span class="s">"@{Secure.login()}"</span><span class="nt">&gt;</span>Login<span class="nt">&lt;/a&gt;</span>
+#{/else}</code></pre>
+
+<p>Oops! But we still didn’t add secure module routes. Add below lines to your <code>conf/routes</code> file.</p>
+
+<pre><code># Import Secure routes
+*       /                                       module:secure
+</code></pre>
+
+<p>Before typing <code>play run</code> in the console, I will first add <code>http.port=80</code> line to <code>conf/application.conf</code> and add <code>127.0.0.1 vy.net</code> line to <code>/etc/hosts</code> file. I want my application to get served on <code>http://vy.net</code> at localhost. This small trick will enable me to work with Facebook Login on localhost, before going public. (Remember that Facebook Apps require a proper domain name to redirect issued requests.)</p>
+
+<p>Let’s start our application.</p>
+
+<pre><code class="language-bash">sudo play run</code></pre>
+
+<p>And browse to <code>http://vy.net</code>.</p>
+
+<p><img src="1.png" alt="http://vy.net"></p>
+
+<p>So far so good. <em>Login</em> link in the above page redirects us to <code>/secure/login</code>, hence we will need to override <code>login.html</code> (and <code>layout.html</code> for altering <code>&lt;html&gt;</code> tag attributes) contents.</p>
+
+<pre><code class="language-bash">play secure:ov --login
+play secure:ov --layout</code></pre>
+
+<p>First add <code>xmlns:fb="http://www.facebook.com/2008/fbml"</code> attribute to <code>&lt;html&gt;</code> tag in <code>app/views/Secure/layout.html</code>. Later, override <code>app/views/Secure/login.html</code> as follows.</p>
+
+<pre><code class="language-html">#{extends 'Secure/layout.html' /}
+ 
+#{if flash.error}<span class="nt">&lt;p</span> <span class="na">class=</span><span class="s">"error"</span><span class="nt">&gt;</span><span class="err">&amp;</span>{flash.error}<span class="nt">&lt;/p&gt;</span>#{/if}
+#{if flash.success}<span class="nt">&lt;p</span> <span class="na">class=</span><span class="s">"success"</span><span class="nt">&gt;</span><span class="err">&amp;</span>{flash.success}<span class="nt">&lt;/p&gt;</span>#{/if}
+ 
+<span class="nt">&lt;div</span> <span class="na">id=</span><span class="s">"fb-root"</span><span class="nt">&gt;&lt;/div&gt;</span>
+<span class="nt">&lt;script</span>
+<span class="nt">   </span><span class="na">type=</span><span class="s">"text/javascript"</span>
+   <span class="na">src=</span><span class="s">"http://connect.facebook.net/en_US/all.js"</span><span class="nt">&gt;</span>
+<span class="nt">&lt;/script&gt;</span>
+<span class="nt">&lt;fb:login</span><span class="na">-button</span> <span class="na">perms=</span><span class="s">"publish_stream"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;a</span> <span class="na">href=</span><span class="s">"@{Security.auth()}"</span> <span class="na">class=</span><span class="s">"fb_button fb_button_medium"</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;span</span> <span class="na">class=</span><span class="s">"fb_button_text"</span><span class="nt">&gt;</span>Log In<span class="nt">&lt;/span&gt;</span>
+    <span class="nt">&lt;/a&gt;</span>
+<span class="err">&lt;</span>/fb:login-button&gt;</code></pre>
+
+<p>Click to <em>Login</em> link and go to <code>http://vy.net/secure/login</code>.</p>
+
+<p><img src="2.png" alt="http://vy.net/secure/login"></p>
+
+<p>Yay! Now we have a Facebook Login button that will redirect Facebook approved login requests to <code>Security.auth()</code> method. (See <code>&lt;a href="@{Security.auth()}" class="fb...</code> line.) Before going into the details of <code>Security</code> controller, we first need to create a Facebook App and User model to store registered users. For this purpose, go to <a href="https://developers.facebook.com/apps">Facebook Apps</a> page and create a new application. Don’t forget to note down the <em>App ID/API Key</em> and <em>App Secret</em> of the created app. And you need to set <em>Site URL</em> to <code>http://vy.net/</code>. Later, create <code>app/models/User.java</code> as follows.</p>
+
+<pre><code class="language-java"><span class="nd">@Entity</span>
+<span class="nd">@Table</span><span class="o">(</span><span class="n">name</span> <span class="o">=</span> <span class="s">"users"</span><span class="o">)</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">User</span> <span class="kd">extends</span> <span class="n">Model</span> <span class="o">{</span>
+    <span class="nd">@Unique</span>
+    <span class="nd">@NotNull</span>
+    <span class="nd">@Required</span>
+    <span class="kd">public</span> <span class="n">String</span> <span class="n">uid</span><span class="o">;</span>
+ 
+    <span class="nd">@NotNull</span>
+    <span class="nd">@Required</span>
+    <span class="kd">public</span> <span class="n">String</span> <span class="n">name</span><span class="o">;</span>
+ 
+    <span class="nd">@NoBinding</span>
+    <span class="kd">public</span> <span class="kt">boolean</span> <span class="n">isAdmin</span><span class="o">;</span>
+ 
+    <span class="kd">public</span> <span class="nf">User</span><span class="o">(</span><span class="n">String</span> <span class="n">uid</span><span class="o">,</span> <span class="n">String</span> <span class="n">name</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">uid</span> <span class="o">=</span> <span class="n">uid</span><span class="o">;</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">name</span> <span class="o">=</span> <span class="n">name</span><span class="o">;</span>
+    <span class="o">}</span>
+<span class="o">}</span></code></pre>
+
+<p>Now here comes the trick, the <code>Security</code> controller. Let’s first write the code: Here goes <code>app/controllers/Security.java</code>.</p>
+
+<pre><code class="language-java"><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Security</span> <span class="kd">extends</span> <span class="n">Secure</span><span class="o">.</span><span class="na">Security</span> <span class="o">{</span>
+    <span class="kd">static</span> <span class="n">OAuth2</span> <span class="n">FBOAuth</span> <span class="o">=</span> <span class="k">new</span> <span class="n">OAuth2</span><span class="o">(</span>
+            <span class="s">"https://graph.facebook.com/oauth/authorize"</span><span class="o">,</span>
+            <span class="s">"https://graph.facebook.com/oauth/access_token"</span><span class="o">,</span>
+            <span class="s">"17014613976****"</span><span class="o">,</span>  <span class="c1">// App ID/API Key</span>
+            <span class="s">"04bf6165527ec9e30a7d2aa380e5****"</span>  <span class="c1">// App Secret</span>
+    <span class="o">);</span>
+ 
+    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">onAuth</span><span class="o">()</span> <span class="o">{</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">OAuth2</span><span class="o">.</span><span class="na">isCodeResponse</span><span class="o">())</span> <span class="o">{</span>
+            <span class="n">OAuth2</span><span class="o">.</span><span class="na">Response</span> <span class="n">response</span> <span class="o">=</span> <span class="n">FBOAuth</span><span class="o">.</span><span class="na">retrieveAccessToken</span><span class="o">(</span><span class="n">onAuthURL</span><span class="o">());</span>
+            <span class="n">FacebookClient</span> <span class="n">fbClient</span> <span class="o">=</span> <span class="k">new</span> <span class="n">DefaultFacebookClient</span><span class="o">(</span><span class="n">response</span><span class="o">.</span><span class="na">accessToken</span><span class="o">);</span>
+            <span class="n">User</span> <span class="n">fbUser</span> <span class="o">=</span> <span class="n">fbClient</span><span class="o">.</span><span class="na">fetchObject</span><span class="o">(</span><span class="s">"me"</span><span class="o">,</span> <span class="n">com</span><span class="o">.</span><span class="na">restfb</span><span class="o">.</span><span class="na">types</span><span class="o">.</span><span class="na">User</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+            <span class="n">models</span><span class="o">.</span><span class="na">User</span> <span class="n">user</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="na">User</span><span class="o">.</span><span class="na">getById</span><span class="o">(</span><span class="n">fbUser</span><span class="o">.</span><span class="na">getId</span><span class="o">());</span>
+            <span class="k">if</span> <span class="o">(</span><span class="n">user</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span>
+                <span class="n">user</span> <span class="o">=</span> <span class="k">new</span> <span class="n">models</span><span class="o">.</span><span class="na">User</span><span class="o">(</span><span class="n">fbUser</span><span class="o">.</span><span class="na">getId</span><span class="o">(),</span> <span class="n">fbUser</span><span class="o">.</span><span class="na">getName</span><span class="o">()).</span><span class="na">save</span><span class="o">();</span>
+            <span class="n">session</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="s">"username"</span><span class="o">,</span> <span class="n">user</span><span class="o">.</span><span class="na">uid</span><span class="o">);</span>  <span class="c1">// Required by Secure.</span>
+            <span class="n">session</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="s">"uid"</span><span class="o">,</span> <span class="n">user</span><span class="o">.</span><span class="na">uid</span><span class="o">);</span>
+            <span class="n">flash</span><span class="o">.</span><span class="na">success</span><span class="o">(</span><span class="s">"You are logged in."</span><span class="o">);</span>
+            <span class="n">Application</span><span class="o">.</span><span class="na">index</span><span class="o">();</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+ 
+    <span class="kd">static</span> <span class="n">String</span> <span class="nf">onAuthURL</span><span class="o">()</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="n">play</span><span class="o">.</span><span class="na">mvc</span><span class="o">.</span><span class="na">Router</span><span class="o">.</span><span class="na">getFullUrl</span><span class="o">(</span><span class="s">"Security.onAuth"</span><span class="o">);</span>
+    <span class="o">}</span>
+ 
+    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">auth</span><span class="o">()</span> <span class="o">{</span>
+        <span class="n">FBOAuth</span><span class="o">.</span><span class="na">retrieveVerificationCode</span><span class="o">(</span><span class="n">onAuthURL</span><span class="o">());</span>
+    <span class="o">}</span>
+ 
+    <span class="kd">static</span> <span class="kt">void</span> <span class="nf">onDisconnected</span><span class="o">()</span> <span class="o">{</span>
+        <span class="n">flash</span><span class="o">.</span><span class="na">success</span><span class="o">(</span><span class="s">"You have been logged out."</span><span class="o">);</span>
+        <span class="n">Application</span><span class="o">.</span><span class="na">index</span><span class="o">();</span>
+    <span class="o">}</span>
+<span class="o">}</span></code></pre>
+
+<p>In <code>login.html</code>, we have prompted Facebook Login to redirect issued requests to <code>Security.auth()</code>. Here, in <code>auth()</code>, we tell <code>FBOAuth</code> to retrieve verification code (provided by OAuth2 protocol) via <code>onAuth()</code> method. In <code>onAuth()</code>, we first retrieve the <em>access token</em> and use this access token to construct a Facebook client using RestFB. (In other words, access token is the key for us to talk with Facebook behalf of the logged in user.) Later, using created Facebook client, we retrieve the user information into a <code>com.restfb.types.User</code> object. Consequently, we try to locate the current user in the available list of users, or create a new one if no such user exists. Finally, we store the user ID in <code>uid</code> and <code>username</code> session variables. The significant bit in here is the <code>username</code> session variable, which is required by <code>Secure</code> module to figure out if a user is logged in or not. The other <code>uid</code> session variable is for our own use.</p>
+
+<p>Now we have necessary plumbing to authenticate a Facebook user. Do you remember the <code>#{if user}</code> line in <code>index.html</code>? Yep, now it’s time to put the user as a render argument for <code>Application.index</code> view. For this purpose, edit <code>app/controllers/Application.java</code> as follows.</p>
+
+<pre><code class="language-java"><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Application</span> <span class="kd">extends</span> <span class="n">Controller</span> <span class="o">{</span>
+    <span class="nd">@Before</span>
+    <span class="kd">static</span> <span class="kt">void</span> <span class="nf">setRenderArgs</span><span class="o">()</span> <span class="o">{</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">session</span><span class="o">.</span><span class="na">contains</span><span class="o">(</span><span class="s">"uid"</span><span class="o">))</span>
+            <span class="n">renderArgs</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="s">"user"</span><span class="o">,</span> <span class="n">User</span><span class="o">.</span><span class="na">getById</span><span class="o">(</span><span class="n">session</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="s">"uid"</span><span class="o">)));</span>
+    <span class="o">}</span>
+ 
+    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">index</span><span class="o">()</span> <span class="o">{</span>
+        <span class="n">render</span><span class="o">();</span>
+    <span class="o">}</span>
+<span class="o">}</span></code></pre>
+
+<p>After creating <code>Security</code> controller and updating <code>Application.index()</code> method, click on the Facebook <em>Log In</em> button appeared on the <code>/secure/login</code> page. When you finish giving related access rights to the application, you should have forwared to the <code>Application.index</code> view, which should look like as follows.</p>
+
+<p><img src="3.png" alt="Login"></p>
+
+<p>Let’s give <em>Logout</em> link a try.</p>
+
+<p><img src="4.png" alt="Logout"></p>
+
+<p>Now you can just use <code>@With(Secure.class)</code> annotations to define access control for your controllers. (As a next step, you might want to create a <code>Users</code> CRUD controller with access control.)</p>
+
+<p><strong>Edit:</strong> Don’t forget to checkout the <a href="http://github.com/vy/play-facebook">play-facebook</a>, which is ready to go Play Framework application with Facebook Login integration. It follows the mechanics described in here and provides an archetype to bootstrap custom applications.</p>
+
+	  <script type="text/javascript">
+	    $("#post table").attr("class", "table table-hover");
+	  </script>
+
+	  <div id="disqus_thread"></div>
+	  <script type="text/javascript">
+	  var disqus_shortname = 'vyazici';
+	  var disqus_identifier = '/blog/post/20120220-facebook-login-and-secure-module/';
+	  var disqus_title = 'Facebook Login and Secure Module Integration in Play';
+	  (function() {
+	  	var dsq = document.createElement('script');
+	  	dsq.type = 'text/javascript';
+	  	dsq.async = true;
+	  	dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+	  	(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+	  })();
+	  </script>
+
+	</div>
+      </div>
+      <div id="bgauthor" class="narrow-font">
+	background image by
+	<a href="http://jenniferwetzel.com/">Jennifer Wetzel</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+    <script type="text/javascript">
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-40183531-1']);
+      _gaq.push(['_trackPageview']);
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+    </script>
+  </body>
+</html>
+

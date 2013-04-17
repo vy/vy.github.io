@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Performance of Linux IP Aliased Network Interfaces</title>
+    <link rel="stylesheet" href="/css/bootstrap.css">
+    <link rel="stylesheet" href="/css/bootstrap-responsive.css">
+    <script src="/js/bootstrap.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="/css/common.css">
+    <meta name="generator" content="nanoc 3.6.2">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/post.css">
+  </head>
+  <body>
+    <div id="menu">
+      <div><a href="/">Home</a></div><div><a href="/about/">About</a></div><div><a href="/blog/">Blog</a></div><div><a href="/code/">Code</a></div><div><a href="/blog/feed/">Feed</a></div>
+    </div>
+    
+
+<div class="container">
+  <div class="row-fluid">
+    <div class="offset2 span8">
+      <div id="post" class="more-white-box rounded-corners">
+	<div class="head">
+	  <div class="title">Performance of Linux IP Aliased Network Interfaces</div>
+	  <div class="subtitle">posted at
+	    May 11, 2012
+	    with tags <a href="http://technorati.com/tag/kernel" rel="tag">kernel</a>, <a href="http://technorati.com/tag/linux" rel="tag">linux</a>
+	  </div>
+	  <div class="share">
+	    <!-- AddThis Button BEGIN -->
+	    <div class="addthis_toolbox addthis_default_style ">
+	      <a class="addthis_button_preferred_1"></a>
+	      <a class="addthis_button_preferred_2"></a>
+	      <a class="addthis_button_preferred_3"></a>
+	      <a class="addthis_button_preferred_4"></a>
+	      <a class="addthis_button_compact"></a>
+	    </div>
+	    <script type="text/javascript">var addthis_config = {"data_track_addressbar":true};</script>
+	    <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-5144adf75211a62b"></script>
+	    <!-- AddThis Button END -->
+	  </div>
+	</div>
+	<div class="body">
+
+	  <blockquote>
+  <p><strong>TL;DR</strong> – I put together a setup to measure the performance of IP aliasing in Linux. As the numbers at the bottom of the post describe, observed throughput increases as the number of aliases increase. WTF?</p>
+</blockquote>
+
+<p>For a couple of months I have been putting together some fancy hacks using IP aliasing feature in Linux, that is, associating more than one IP address to a network interface. The limits of IP aliasing are endless…</p>
+
+<pre><code class="language-bash">sudo ifconfig eth0 192.168.1.1 netmask 255.255.0.0
+<span class="k">for </span>I in <span class="sb">`</span>seq 0 254<span class="sb">`</span>; <span class="k">do </span>sudo ifconfig eth0:<span class="nv">$I</span> 192.168.2.<span class="nv">$I</span>; <span class="k">done</span></code></pre>
+
+<p>But obviously there is a price (overhead) to pay for this at kernel level. To shed some more light into the problem at hand, for experimentation purpose, I setup a simple network as follows.</p>
+
+<p><img src="network.jpg" alt="Test Network"></p>
+
+<p>First, I setup two identical Linux boxes with gigabit ethernet cards (RTL-8169 Gigabit Ethernet [10ec:8169] rev 10) connected through a Huawei gigabit switch. (Cable is CAT6 262M of length 1 meter.) Then, I started creating <a href="http://iperf.sourceforge.net/">iperf</a> instances binded to particular IP aliased interfaces. That is, first iperf instance is bind to <code>192.168.2.1</code> at <code>eth1:1</code>, second is bind to <code>192.168.2.2</code> at <code>eth1:2</code>, and so on. In other words, <code>N</code>th iperf instance is bind to <code>192.168.2.N</code> at <code>eth1:N</code>.</p>
+
+<p>To ease the workflow, I put together a <code>server.sh</code> script as follows.</p>
+
+<pre><code class="language-bash"><span class="c">#!/bin/bash</span>
+
+<span class="nb">set</span> -e
+
+<span class="k">if</span> <span class="o">[</span> <span class="nv">$# </span>-ne 3 <span class="o">]</span>; <span class="k">then</span>
+<span class="k">    </span><span class="nb">echo</span> <span class="s2">"Usage: $0 &lt;NAME_TMPL&gt; &lt;ADDR_TMPL&gt; &lt;N_WORKERS&gt;"</span>
+    <span class="nb">exit </span>1
+<span class="k">fi</span>
+<span class="nv">NAME_TMPL</span><span class="o">=</span><span class="s2">"$1"</span>
+<span class="nv">ADDR_TMPL</span><span class="o">=</span><span class="s2">"$2"</span>
+<span class="nv">N_WORKERS</span><span class="o">=</span><span class="s2">"$3"</span>
+
+start<span class="o">()</span> <span class="o">{</span>
+    <span class="nb">echo</span> <span class="s2">"Taking network interfaces up..."</span>
+    <span class="k">for </span>I in <span class="sb">`</span>seq 1 <span class="nv">$N_WORKERS</span><span class="sb">`</span>; <span class="k">do</span>
+<span class="k">	</span>sudo ifconfig <span class="k">$(</span><span class="nb">printf</span> <span class="nv">$NAME_TMPL</span> <span class="nv">$I</span><span class="k">)</span> <span class="k">$(</span><span class="nb">printf</span> <span class="nv">$ADDR_TMPL</span> <span class="nv">$I</span><span class="k">)</span>
+    <span class="k">done</span>
+
+<span class="k">    </span><span class="nb">echo</span> <span class="s2">"Starting iperf servers..."</span>
+    <span class="k">for </span>I in <span class="sb">`</span>seq 1 <span class="nv">$N_WORKERS</span><span class="sb">`</span>; <span class="k">do</span>
+<span class="k">	</span>iperf --server --bind <span class="k">$(</span><span class="nb">printf</span> <span class="nv">$ADDR_TMPL</span> <span class="nv">$I</span><span class="k">)</span> &amp;
+    <span class="k">done</span>
+
+<span class="k">    </span><span class="nb">echo</span> <span class="s2">"Started."</span>
+<span class="o">}</span>
+
+stop<span class="o">()</span> <span class="o">{</span>
+    <span class="nb">echo</span> <span class="s2">"Taking network interfaces down..."</span>
+    <span class="k">for </span>I in <span class="sb">`</span>seq <span class="nv">$N_WORKERS</span> -1 1<span class="sb">`</span>; <span class="k">do</span>
+<span class="k">	</span>sudo ifconfig <span class="k">$(</span><span class="nb">printf</span> <span class="nv">$NAME_TMPL</span> <span class="nv">$I</span><span class="k">)</span> down
+    <span class="k">done</span>
+
+<span class="k">    </span><span class="nb">echo</span> <span class="s2">"Stopped."</span>
+    <span class="nb">exit </span>0
+<span class="o">}</span>
+
+<span class="nb">trap </span>stop INT
+start <span class="o">&amp;&amp;</span> <span class="k">while</span> /bin/true; <span class="k">do </span>sleep 5m; <span class="k">done</span></code></pre>
+
+<p>Using <code>server.sh</code>, I’ll be able to start as many iperf instances (and necessary IP aliases for them) as I want. Next, I write <code>client.sh</code> as follows.</p>
+
+<pre><code class="language-bash"><span class="c">#!/bin/bash</span>
+
+<span class="nb">set</span> -e
+
+<span class="k">if</span> <span class="o">[</span> <span class="nv">$# </span>-ne 3 <span class="o">]</span>; <span class="k">then</span>
+<span class="k">    </span><span class="nb">echo</span> <span class="s2">"Usage: $0 &lt;ADDR_TMPL&gt; &lt;N_WORKERS&gt; &lt;TIMEOUT&gt;"</span>
+    <span class="nb">exit </span>1
+<span class="k">fi</span>
+<span class="nv">ADDR_TMPL</span><span class="o">=</span><span class="s2">"$1"</span>
+<span class="nv">N_WORKERS</span><span class="o">=</span><span class="s2">"$2"</span>
+<span class="nv">TIMEOUT</span><span class="o">=</span><span class="s2">"$3"</span>
+
+start<span class="o">()</span> <span class="o">{</span>
+    <span class="o">(</span><span class="nv">PIDS</span><span class="o">=()</span>;
+	<span class="k">for </span>I in <span class="sb">`</span>seq 1 <span class="nv">$N_WORKERS</span><span class="sb">`</span>; <span class="k">do</span>
+	    <span class="o">(</span>iperf <span class="se">\</span>
+		--format k <span class="se">\</span>
+		--reportexclude CMSV <span class="se">\</span>
+		--time <span class="nv">$TIMEOUT</span> <span class="se">\</span>
+		--client <span class="se">\</span>
+		<span class="k">$(</span><span class="nb">printf</span> <span class="nv">$ADDR_TMPL</span> <span class="nv">$I</span><span class="k">)</span> | <span class="se">\</span>
+		grep <span class="s2">"Kbits/sec"</span> | <span class="se">\</span>
+		sed -r <span class="s1">'s/^.* ([0-9]+) Kbits\/sec/\1/g'</span>; <span class="se">\</span>
+		PIDS<span class="o">[</span><span class="nv">$I</span><span class="o">]=</span><span class="nv">$!</span><span class="o">)</span> &amp;
+	<span class="k">done</span>;
+	<span class="nb">wait</span> <span class="k">${</span><span class="nv">PIDS</span><span class="p">[@]</span><span class="k">}</span><span class="o">)</span> | <span class="se">\</span>
+	    awk <span class="s1">'BEGIN{s=0} {s+=$1} END{print s}'</span>
+    <span class="nb">exit </span>0
+<span class="o">}</span>
+
+stop<span class="o">()</span> <span class="o">{</span>
+    <span class="nb">exit </span>0
+<span class="o">}</span>
+
+<span class="nb">trap </span>stop INT
+start</code></pre>
+
+<p>Then the workflow becomes relatively simple.</p>
+
+<pre><code class="language-bash">server<span class="nv">$ </span>./server.sh eth1:%d 192.168.2.%d 32
+client<span class="nv">$ </span>./client.sh 192.168.2.%d 32 30</code></pre>
+
+<p>While going this further, nobody could stop me from writing a Gnuplot script to visualize these results.</p>
+
+<pre><code class="language-gnuplot"><span class="k">reset</span>
+ 
+<span class="k">set</span> <span class="nb">terminal</span> <span class="n">jpeg</span> <span class="n">enhanced</span>
+<span class="k">set</span> <span class="nb">output</span> <span class="s">"results.jpg"</span>
+ 
+<span class="k">set</span> <span class="nb">key</span> <span class="n">left</span>
+<span class="k">set</span> <span class="nb">ylabel</span> <span class="s">"Mbits/sec"</span>
+<span class="k">set</span> <span class="nb">xlabel</span> <span class="s">"# of aliases"</span>
+ 
+<span class="k">set</span> <span class="nb">grid</span>
+<span class="k">plot</span> <span class="s">'results.dat'</span> <span class="nb">using</span> <span class="mi">1</span><span class="o">:</span><span class="p">(</span><span class="err">$</span><span class="mi">2</span><span class="o">/</span><span class="mf">1000.0</span><span class="p">)</span> <span class="nb">with</span> <span class="n">points</span> <span class="n">pointtype</span> <span class="mi">7</span> <span class="nb">title</span> <span class="s">''</span><span class="o">,</span> \
+                <span class="s">''</span> <span class="nb">using</span> <span class="mi">1</span><span class="o">:</span><span class="p">(</span><span class="err">$</span><span class="mi">2</span><span class="o">/</span><span class="mf">1000.0</span><span class="p">)</span> <span class="nb">smooth</span> <span class="n">csplines</span> <span class="nb">title</span> <span class="s">''</span></code></pre>
+
+<p>Ok, too much talk so far. Let’s get to results. (Timeout is set to 60 seconds.)</p>
+
+<table><tbody>
+<tr>
+<td><em># of alias</em></td>
+      <td>1</td>
+      <td>2</td>
+      <td>4</td>
+      <td>8</td>
+      <td>16</td>
+      <td>32</td>
+      <td>64</td>
+    </tr>
+<tr>
+<td><em>Kbits/sec</em></td>
+      <td>615,216</td>
+      <td>612,580</td>
+      <td>616,071</td>
+      <td>615,777</td>
+      <td>616,686</td>
+      <td>615,340</td>
+      <td>618,838</td>
+    </tr>
+<tr>
+<td><em># of alias</em></td>
+      <td>96</td>
+      <td>128</td>
+      <td>160</td>
+      <td>192</td>
+      <td>224</td>
+      <td>254</td>
+      <td> </td>
+    </tr>
+<tr>
+<td><em>Kbits/sec</em></td>
+      <td>622,344</td>
+      <td>654,269</td>
+      <td>640,364</td>
+      <td>662,783</td>
+      <td>658,962</td>
+      <td>670,788</td>
+      <td> </td>
+    </tr>
+</tbody></table><p><img src="results.jpg" alt="Results"></p>
+
+<p>As the numbers suggest, Linux IP aliasing does a fairly good job that the overhead imposed by the aliases are nearly negligible. (At least I hope that is something I succeeded in measuring.) But the strange thing is, there is an improvement in the throughput as the number of network interfaces increase. What might be the explanation of this observation? Is my setup mistaken? I will be happy to hear your ideas.</p>
+
+	  <script type="text/javascript">
+	    $("#post table").attr("class", "table table-hover");
+	  </script>
+
+	  <div id="disqus_thread"></div>
+	  <script type="text/javascript">
+	  var disqus_shortname = 'vyazici';
+	  var disqus_identifier = '/blog/post/20120511-performance-of-linux-ip-alias/';
+	  var disqus_title = 'Performance of Linux IP Aliased Network Interfaces';
+	  (function() {
+	  	var dsq = document.createElement('script');
+	  	dsq.type = 'text/javascript';
+	  	dsq.async = true;
+	  	dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+	  	(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+	  })();
+	  </script>
+
+	</div>
+      </div>
+      <div id="bgauthor" class="narrow-font">
+	background image by
+	<a href="http://jenniferwetzel.com/">Jennifer Wetzel</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+    <script type="text/javascript">
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-40183531-1']);
+      _gaq.push(['_trackPageview']);
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+    </script>
+  </body>
+</html>
+

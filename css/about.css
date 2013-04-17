@@ -1,0 +1,12 @@
+body {
+  background: url("/img/bg-about.jpg") no-repeat center center fixed;
+  -webkit-background-size: cover;
+  -moz-background-size: cover;
+  -o-background-size: cover;
+  background-size: cover; }
+
+#about {
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+  margin-right: 10px; }

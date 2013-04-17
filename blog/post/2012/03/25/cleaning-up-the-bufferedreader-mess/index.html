@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Cleaning up the BufferedReader Mess in a Proxy Server</title>
+    <link rel="stylesheet" href="/css/bootstrap.css">
+    <link rel="stylesheet" href="/css/bootstrap-responsive.css">
+    <script src="/js/bootstrap.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="/css/common.css">
+    <meta name="generator" content="nanoc 3.6.2">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/post.css">
+  </head>
+  <body>
+    <div id="menu">
+      <div><a href="/">Home</a></div><div><a href="/about/">About</a></div><div><a href="/blog/">Blog</a></div><div><a href="/code/">Code</a></div><div><a href="/blog/feed/">Feed</a></div>
+    </div>
+    
+
+<div class="container">
+  <div class="row-fluid">
+    <div class="offset2 span8">
+      <div id="post" class="more-white-box rounded-corners">
+	<div class="head">
+	  <div class="title">Cleaning up the BufferedReader Mess in a Proxy Server</div>
+	  <div class="subtitle">posted at
+	    March 25, 2012
+	    with tags <a href="http://technorati.com/tag/java" rel="tag">java</a>
+	  </div>
+	  <div class="share">
+	    <!-- AddThis Button BEGIN -->
+	    <div class="addthis_toolbox addthis_default_style ">
+	      <a class="addthis_button_preferred_1"></a>
+	      <a class="addthis_button_preferred_2"></a>
+	      <a class="addthis_button_preferred_3"></a>
+	      <a class="addthis_button_preferred_4"></a>
+	      <a class="addthis_button_compact"></a>
+	    </div>
+	    <script type="text/javascript">var addthis_config = {"data_track_addressbar":true};</script>
+	    <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-5144adf75211a62b"></script>
+	    <!-- AddThis Button END -->
+	  </div>
+	</div>
+	<div class="body">
+
+	  <p>A couple of weeks ago, friends from the university knocked my door. They were given an assignment to implement a HTTP <a href="http://en.wikipedia.org/wiki/Proxy_server">Proxy Server</a>. I tried to do my best and told them the basics. That is, they should first simply read the HTTP headers line by line, and then read the rest of the stream in bytes. After that, the mechanics are easy:</p>
+
+<ol>
+<li>Pass the request headers from browser to the server, which is, provided by <code>Host</code> header in the browser request,</li>
+  <li>Pass back the response sent by server to the browser.</li>
+</ol><p>Easy, right? Just before the homework due, my door knocked again. Suprise! Suprise! They couldn’t properly read the server data after reading the headers. It sounded like a trivial problem at first, as hours pass by while I’m trying to fix the code, it appeared to be not like so. Since you are here for the code, let me first show you the working draft.</p>
+
+<pre><code class="language-java"><span class="kn">import</span> <span class="nn">java.io.*</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">java.net.InetAddress</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">java.net.ServerSocket</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">java.net.Socket</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">java.util.ArrayList</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">java.util.List</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">java.util.regex.Pattern</span><span class="o">;</span>
+
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">Main</span> <span class="o">{</span>
+    <span class="kd">static</span> <span class="kd">final</span> <span class="kt">int</span> <span class="n">PROXY_PORT</span> <span class="o">=</span> <span class="mi">8080</span><span class="o">;</span>
+    <span class="kd">static</span> <span class="kd">final</span> <span class="n">String</span> <span class="n">PROXY_HOST</span> <span class="o">=</span> <span class="s">"localhost"</span><span class="o">;</span>
+    <span class="kd">static</span> <span class="kd">final</span> <span class="n">String</span> <span class="n">NEWLINE</span> <span class="o">=</span> <span class="s">"\r\n"</span><span class="o">;</span>
+ 
+    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="n">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">Exception</span> <span class="o">{</span>
+        <span class="n">ServerSocket</span> <span class="n">proxySocket</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ServerSocket</span><span class="o">(</span>
+                <span class="n">PROXY_PORT</span><span class="o">,</span> <span class="mi">32</span><span class="o">,</span> <span class="n">InetAddress</span><span class="o">.</span><span class="na">getByName</span><span class="o">(</span><span class="n">PROXY_HOST</span><span class="o">));</span>
+ 
+        <span class="k">while</span> <span class="o">(</span><span class="kc">true</span><span class="o">)</span> <span class="o">{</span>
+            <span class="c1">// Accept the incoming connection.</span>
+            <span class="n">Socket</span> <span class="n">clientSocket</span> <span class="o">=</span> <span class="n">proxySocket</span><span class="o">.</span><span class="na">accept</span><span class="o">();</span>
+            <span class="n">BufferedInputStream</span> <span class="n">clientInputStream</span> <span class="o">=</span> <span class="k">new</span> <span class="n">BufferedInputStream</span><span class="o">(</span>
+                    <span class="k">new</span> <span class="nf">DataInputStream</span><span class="o">(</span><span class="n">clientSocket</span><span class="o">.</span><span class="na">getInputStream</span><span class="o">()));</span>
+            <span class="n">OutputStream</span> <span class="n">clientOutputStream</span> <span class="o">=</span> <span class="k">new</span> <span class="n">DataOutputStream</span><span class="o">(</span>
+                    <span class="n">clientSocket</span><span class="o">.</span><span class="na">getOutputStream</span><span class="o">());</span>
+ 
+            <span class="c1">// Read client headers.</span>
+            <span class="n">List</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;</span> <span class="n">clientHeaders</span> <span class="o">=</span> <span class="n">readHeaders</span><span class="o">(</span><span class="n">clientInputStream</span><span class="o">);</span>
+            <span class="n">display</span><span class="o">(</span><span class="s">"Client Headers"</span><span class="o">,</span> <span class="n">clientHeaders</span><span class="o">);</span>
+ 
+            <span class="c1">// Locate the web server.</span>
+            <span class="n">String</span> <span class="n">hostHeader</span> <span class="o">=</span> <span class="n">getHeader</span><span class="o">(</span><span class="n">clientHeaders</span><span class="o">,</span> <span class="s">"Host"</span><span class="o">);</span>
+            <span class="n">display</span><span class="o">(</span><span class="s">"HostHeader"</span><span class="o">,</span> <span class="n">hostHeader</span><span class="o">);</span>
+            <span class="n">String</span><span class="o">[]</span> <span class="n">hostHeaders</span> <span class="o">=</span> <span class="n">hostHeader</span><span class="o">.</span><span class="na">split</span><span class="o">(</span><span class="s">":"</span><span class="o">);</span>
+            <span class="n">String</span> <span class="n">hostName</span> <span class="o">=</span> <span class="n">hostHeaders</span><span class="o">[</span><span class="mi">0</span><span class="o">];</span>
+            <span class="n">display</span><span class="o">(</span><span class="s">"HostName"</span><span class="o">,</span> <span class="n">hostName</span><span class="o">);</span>
+            <span class="kt">int</span> <span class="n">hostPort</span> <span class="o">=</span> <span class="n">hostHeaders</span><span class="o">.</span><span class="na">length</span> <span class="o">&gt;</span> <span class="mi">1</span>
+                    <span class="o">?</span> <span class="n">Integer</span><span class="o">.</span><span class="na">parseInt</span><span class="o">(</span><span class="n">hostHeaders</span><span class="o">[</span><span class="mi">1</span><span class="o">])</span> <span class="o">:</span> <span class="mi">80</span><span class="o">;</span>
+            <span class="n">display</span><span class="o">(</span><span class="s">"HostPort"</span><span class="o">,</span> <span class="n">hostPort</span><span class="o">);</span>
+ 
+            <span class="c1">// Connect to the web server.</span>
+            <span class="n">Socket</span> <span class="n">serverSocket</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Socket</span><span class="o">(</span><span class="n">hostName</span><span class="o">,</span> <span class="n">hostPort</span><span class="o">);</span>
+            <span class="n">BufferedInputStream</span> <span class="n">serverInputStream</span> <span class="o">=</span> <span class="k">new</span> <span class="n">BufferedInputStream</span><span class="o">(</span>
+                    <span class="k">new</span> <span class="nf">DataInputStream</span><span class="o">(</span><span class="n">serverSocket</span><span class="o">.</span><span class="na">getInputStream</span><span class="o">()));</span>
+            <span class="n">OutputStream</span> <span class="n">serverOutputStream</span> <span class="o">=</span> <span class="k">new</span> <span class="n">DataOutputStream</span><span class="o">(</span>
+                    <span class="n">serverSocket</span><span class="o">.</span><span class="na">getOutputStream</span><span class="o">());</span>
+ 
+            <span class="c1">// Pass the client request to the web server.</span>
+            <span class="n">writeHeaders</span><span class="o">(</span><span class="n">serverOutputStream</span><span class="o">,</span> <span class="n">clientHeaders</span><span class="o">);</span>
+            <span class="n">serverSocket</span><span class="o">.</span><span class="na">shutdownOutput</span><span class="o">();</span>
+            <span class="n">display</span><span class="o">(</span><span class="s">"Sent server headers."</span><span class="o">);</span>
+ 
+            <span class="c1">// Read web server response headers.</span>
+            <span class="n">List</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;</span> <span class="n">serverHeaders</span> <span class="o">=</span> <span class="n">readHeaders</span><span class="o">(</span><span class="n">serverInputStream</span><span class="o">);</span>
+            <span class="n">display</span><span class="o">(</span><span class="s">"ServerHeaders"</span><span class="o">,</span> <span class="n">serverHeaders</span><span class="o">);</span>
+ 
+            <span class="c1">// Read web server response data.</span>
+            <span class="kt">byte</span><span class="o">[]</span> <span class="n">serverData</span> <span class="o">=</span> <span class="n">readData</span><span class="o">(</span><span class="n">serverInputStream</span><span class="o">);</span>
+            <span class="n">display</span><span class="o">(</span><span class="s">"ServerDataLength"</span><span class="o">,</span> <span class="n">serverData</span><span class="o">.</span><span class="na">length</span><span class="o">);</span>
+ 
+            <span class="c1">// Try to sign the response data.</span>
+            <span class="kt">byte</span><span class="o">[]</span> <span class="n">signedData</span> <span class="o">=</span> <span class="n">sign</span><span class="o">(</span><span class="n">serverHeaders</span><span class="o">,</span> <span class="n">serverData</span><span class="o">);</span>
+ 
+            <span class="c1">// Pass the web server response to the client.</span>
+            <span class="n">writeHeaders</span><span class="o">(</span><span class="n">clientOutputStream</span><span class="o">,</span> <span class="n">serverHeaders</span><span class="o">);</span>
+            <span class="n">clientOutputStream</span><span class="o">.</span><span class="na">write</span><span class="o">(</span><span class="n">signedData</span><span class="o">);</span>
+ 
+            <span class="n">display</span><span class="o">(</span><span class="s">"---------------------"</span><span class="o">);</span>
+            <span class="n">display</span><span class="o">(</span><span class="s">""</span><span class="o">);</span>
+ 
+            <span class="n">serverSocket</span><span class="o">.</span><span class="na">close</span><span class="o">();</span>
+            <span class="n">clientSocket</span><span class="o">.</span><span class="na">close</span><span class="o">();</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+ 
+    <span class="kd">static</span> <span class="kt">byte</span><span class="o">[]</span> <span class="nf">readData</span><span class="o">(</span><span class="n">InputStream</span> <span class="n">stream</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">Exception</span> <span class="o">{</span>
+        <span class="n">ByteArrayOutputStream</span> <span class="n">baos</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ByteArrayOutputStream</span><span class="o">();</span>
+        <span class="n">BufferedInputStream</span> <span class="n">bufferedStream</span> <span class="o">=</span> <span class="k">new</span> <span class="n">BufferedInputStream</span><span class="o">(</span><span class="n">stream</span><span class="o">);</span>
+        <span class="kt">byte</span><span class="o">[]</span> <span class="n">buf</span> <span class="o">=</span> <span class="k">new</span> <span class="kt">byte</span><span class="o">[</span><span class="mi">8192</span><span class="o">];</span>
+        <span class="kt">int</span> <span class="n">len</span><span class="o">;</span>
+        <span class="k">while</span> <span class="o">((</span><span class="n">len</span> <span class="o">=</span> <span class="n">bufferedStream</span><span class="o">.</span><span class="na">read</span><span class="o">(</span><span class="n">buf</span><span class="o">))</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="o">)</span>
+            <span class="n">baos</span><span class="o">.</span><span class="na">write</span><span class="o">(</span><span class="n">buf</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="n">len</span><span class="o">);</span>
+        <span class="k">return</span> <span class="n">baos</span><span class="o">.</span><span class="na">toByteArray</span><span class="o">();</span>
+    <span class="o">}</span>
+ 
+    <span class="kd">static</span> <span class="kt">void</span> <span class="nf">writeHeaders</span><span class="o">(</span><span class="n">OutputStream</span> <span class="n">stream</span><span class="o">,</span> <span class="n">List</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;</span> <span class="n">headers</span><span class="o">)</span>
+            <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
+        <span class="n">StringBuilder</span> <span class="n">builder</span> <span class="o">=</span> <span class="k">new</span> <span class="n">StringBuilder</span><span class="o">();</span>
+        <span class="k">for</span> <span class="o">(</span><span class="n">String</span> <span class="n">header</span> <span class="o">:</span> <span class="n">headers</span><span class="o">)</span> <span class="o">{</span>
+            <span class="n">builder</span><span class="o">.</span><span class="na">append</span><span class="o">(</span><span class="n">header</span><span class="o">);</span>
+            <span class="n">builder</span><span class="o">.</span><span class="na">append</span><span class="o">(</span><span class="n">NEWLINE</span><span class="o">);</span>
+        <span class="o">}</span>
+        <span class="n">builder</span><span class="o">.</span><span class="na">append</span><span class="o">(</span><span class="n">NEWLINE</span><span class="o">);</span>
+        <span class="n">stream</span><span class="o">.</span><span class="na">write</span><span class="o">(</span><span class="n">builder</span><span class="o">.</span><span class="na">toString</span><span class="o">().</span><span class="na">getBytes</span><span class="o">());</span>
+    <span class="o">}</span>
+ 
+    <span class="kd">static</span> <span class="n">List</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;</span> <span class="nf">readHeaders</span><span class="o">(</span><span class="n">BufferedInputStream</span> <span class="n">stream</span><span class="o">)</span>
+            <span class="kd">throws</span> <span class="n">Exception</span> <span class="o">{</span>
+        <span class="n">List</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;</span> <span class="n">lines</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ArrayList</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;();</span>
+        <span class="n">BufferedReader</span> <span class="n">reader</span> <span class="o">=</span> <span class="k">new</span> <span class="n">BufferedReader</span><span class="o">(</span>
+                <span class="k">new</span> <span class="nf">InputStreamReader</span><span class="o">(</span><span class="n">stream</span><span class="o">));</span>
+        <span class="n">String</span> <span class="n">line</span><span class="o">;</span>
+        <span class="kt">long</span> <span class="n">nRead</span> <span class="o">=</span> <span class="n">NEWLINE</span><span class="o">.</span><span class="na">length</span><span class="o">();</span>  <span class="c1">// For the last empty line.</span>
+        <span class="n">stream</span><span class="o">.</span><span class="na">mark</span><span class="o">(</span><span class="n">Integer</span><span class="o">.</span><span class="na">MAX_VALUE</span><span class="o">);</span>
+        <span class="k">while</span> <span class="o">((</span><span class="n">line</span> <span class="o">=</span> <span class="n">reader</span><span class="o">.</span><span class="na">readLine</span><span class="o">())</span> <span class="o">!=</span> <span class="kc">null</span> <span class="o">&amp;&amp;</span> <span class="o">!(</span><span class="n">line</span><span class="o">.</span><span class="na">isEmpty</span><span class="o">()))</span> <span class="o">{</span>
+            <span class="n">nRead</span> <span class="o">+=</span> <span class="n">line</span><span class="o">.</span><span class="na">getBytes</span><span class="o">().</span><span class="na">length</span> <span class="o">+</span> <span class="n">NEWLINE</span><span class="o">.</span><span class="na">length</span><span class="o">();</span>
+            <span class="k">if</span> <span class="o">(!</span><span class="n">line</span><span class="o">.</span><span class="na">startsWith</span><span class="o">(</span><span class="s">"Accept-Encoding"</span><span class="o">))</span>    <span class="c1">// Avoid compressed pages.</span>
+                <span class="n">lines</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="n">line</span><span class="o">);</span>
+        <span class="o">}</span>
+        <span class="n">stream</span><span class="o">.</span><span class="na">reset</span><span class="o">();</span>
+        <span class="kt">long</span> <span class="n">nSkipped</span> <span class="o">=</span> <span class="n">stream</span><span class="o">.</span><span class="na">skip</span><span class="o">(</span><span class="n">nRead</span><span class="o">);</span>
+        <span class="k">assert</span> <span class="o">(</span><span class="n">nSkipped</span> <span class="o">==</span> <span class="n">nRead</span><span class="o">);</span>
+        <span class="k">return</span> <span class="n">lines</span><span class="o">;</span>
+    <span class="o">}</span>
+ 
+    <span class="kd">static</span> <span class="n">String</span> <span class="nf">getHeader</span><span class="o">(</span><span class="n">List</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;</span> <span class="n">headers</span><span class="o">,</span> <span class="n">String</span> <span class="n">name</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">for</span> <span class="o">(</span><span class="n">String</span> <span class="n">line</span> <span class="o">:</span> <span class="n">headers</span><span class="o">)</span>
+            <span class="k">if</span> <span class="o">(</span><span class="n">line</span><span class="o">.</span><span class="na">startsWith</span><span class="o">(</span><span class="n">name</span><span class="o">))</span>
+                <span class="k">return</span> <span class="n">line</span><span class="o">.</span><span class="na">split</span><span class="o">(</span><span class="s">": "</span><span class="o">)[</span><span class="mi">1</span><span class="o">];</span>
+        <span class="k">return</span> <span class="kc">null</span><span class="o">;</span>
+    <span class="o">}</span>
+ 
+    <span class="kd">static</span> <span class="kt">byte</span><span class="o">[]</span> <span class="nf">sign</span><span class="o">(</span><span class="n">List</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;</span> <span class="n">headers</span><span class="o">,</span> <span class="kt">byte</span><span class="o">[]</span> <span class="n">data</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">String</span> <span class="n">header</span> <span class="o">=</span> <span class="n">getHeader</span><span class="o">(</span><span class="n">headers</span><span class="o">,</span> <span class="s">"Content-Type"</span><span class="o">);</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">header</span> <span class="o">==</span> <span class="kc">null</span> <span class="o">||</span> <span class="o">!</span><span class="n">header</span><span class="o">.</span><span class="na">startsWith</span><span class="o">(</span><span class="s">"text/html"</span><span class="o">))</span>
+            <span class="k">return</span> <span class="n">data</span><span class="o">;</span>
+        <span class="n">String</span> <span class="n">content</span> <span class="o">=</span> <span class="k">new</span> <span class="n">String</span><span class="o">(</span><span class="n">data</span><span class="o">);</span>
+        <span class="n">Pattern</span> <span class="n">pattern</span> <span class="o">=</span> <span class="n">Pattern</span><span class="o">.</span><span class="na">compile</span><span class="o">(</span><span class="s">"^(.*&lt;title&gt;)(.*&lt;/title&gt;.*)$"</span><span class="o">,</span>
+                <span class="n">Pattern</span><span class="o">.</span><span class="na">CASE_INSENSITIVE</span> <span class="o">|</span> <span class="n">Pattern</span><span class="o">.</span><span class="na">MULTILINE</span><span class="o">);</span>
+        <span class="k">return</span> <span class="n">pattern</span><span class="o">.</span><span class="na">matcher</span><span class="o">(</span><span class="n">content</span><span class="o">).</span><span class="na">replaceFirst</span><span class="o">(</span><span class="s">"$1[VY] $2"</span><span class="o">).</span><span class="na">getBytes</span><span class="o">();</span>
+    <span class="o">}</span>
+ 
+    <span class="kd">static</span> <span class="kt">void</span> <span class="nf">display</span><span class="o">(</span><span class="n">String</span> <span class="n">title</span><span class="o">,</span> <span class="n">List</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;</span> <span class="n">lines</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">"### &lt;"</span> <span class="o">+</span> <span class="n">title</span> <span class="o">+</span> <span class="s">"&gt; ###"</span><span class="o">);</span>
+        <span class="k">for</span> <span class="o">(</span><span class="n">String</span> <span class="n">line</span> <span class="o">:</span> <span class="n">lines</span><span class="o">)</span>
+            <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">"'"</span> <span class="o">+</span> <span class="n">line</span> <span class="o">+</span> <span class="s">"'"</span><span class="o">);</span>
+        <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">"### &lt;/"</span> <span class="o">+</span> <span class="n">title</span> <span class="o">+</span> <span class="s">"&gt; ###"</span><span class="o">);</span>
+    <span class="o">}</span>
+ 
+    <span class="kd">static</span> <span class="kt">void</span> <span class="nf">display</span><span class="o">(</span><span class="n">String</span> <span class="n">title</span><span class="o">,</span> <span class="n">Object</span> <span class="n">obj</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">"### "</span> <span class="o">+</span> <span class="n">title</span> <span class="o">+</span> <span class="s">": '"</span> <span class="o">+</span> <span class="n">obj</span> <span class="o">+</span> <span class="s">"'"</span><span class="o">);</span>
+    <span class="o">}</span>
+ 
+    <span class="kd">static</span> <span class="kt">void</span> <span class="nf">display</span><span class="o">(</span><span class="n">Object</span> <span class="n">obj</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">"### "</span> <span class="o">+</span> <span class="n">obj</span><span class="o">);</span>
+    <span class="o">}</span>
+ 
+    <span class="kd">static</span> <span class="kt">void</span> <span class="nf">display</span><span class="o">()</span> <span class="o">{</span>
+        <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">();</span>
+    <span class="o">}</span>
+<span class="o">}</span></code></pre>
+
+<p>The truth is, it took my almost four hours to find and squash the bug. <code>serverSocket.shutdownOutput()</code> was a low hanging one, it solved the problem of web server waiting to start sending data. But take a closer look at the <code>readHeaders()</code> method. You see the mess? Particularly, the ones with stream arithmetic using <code>mark()</code>, <code>reset()</code> and <code>skip()</code> calls. The problem was, in order to make <code>readLine()</code> requests on an <code>InputStream</code>, you first need to wrap it with a <code>BufferedReader</code>. But once you wrap it up and make a call to <code>readLine()</code>, <code>BufferedReader</code> buffers the input stream to a position that is much more advanced than you generally expect it to be. Hence, after you finish reading headers and continue with reading the response data in bytes, <code>read()</code> tells you that there is nothing left to read. To avoid such nasty bugs, after reading from an <code>InputStream</code> using some sort of buffered reader, do not forget to reset the stream to a position where you expect it to be.</p>
+
+	  <script type="text/javascript">
+	    $("#post table").attr("class", "table table-hover");
+	  </script>
+
+	  <div id="disqus_thread"></div>
+	  <script type="text/javascript">
+	  var disqus_shortname = 'vyazici';
+	  var disqus_identifier = '/blog/post/20120325-cleaning-up-the-bufferedreader-mess/';
+	  var disqus_title = 'Cleaning up the BufferedReader Mess in a Proxy Server';
+	  (function() {
+	  	var dsq = document.createElement('script');
+	  	dsq.type = 'text/javascript';
+	  	dsq.async = true;
+	  	dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+	  	(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+	  })();
+	  </script>
+
+	</div>
+      </div>
+      <div id="bgauthor" class="narrow-font">
+	background image by
+	<a href="http://jenniferwetzel.com/">Jennifer Wetzel</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+    <script type="text/javascript">
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-40183531-1']);
+      _gaq.push(['_trackPageview']);
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+    </script>
+  </body>
+</html>
+

@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Build Scripts for LaTeX-BibTeX-XFig-GnuPlot Combo</title>
+    <link rel="stylesheet" href="/css/bootstrap.css">
+    <link rel="stylesheet" href="/css/bootstrap-responsive.css">
+    <script src="/js/bootstrap.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="/css/common.css">
+    <meta name="generator" content="nanoc 3.6.2">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/post.css">
+  </head>
+  <body>
+    <div id="menu">
+      <div><a href="/">Home</a></div><div><a href="/about/">About</a></div><div><a href="/blog/">Blog</a></div><div><a href="/code/">Code</a></div><div><a href="/blog/feed/">Feed</a></div>
+    </div>
+    
+
+<div class="container">
+  <div class="row-fluid">
+    <div class="offset2 span8">
+      <div id="post" class="more-white-box rounded-corners">
+	<div class="head">
+	  <div class="title">Build Scripts for LaTeX-BibTeX-XFig-GnuPlot Combo</div>
+	  <div class="subtitle">posted at
+	    April 28, 2012
+	    with tags <a href="http://technorati.com/tag/latex" rel="tag">latex</a>
+	  </div>
+	  <div class="share">
+	    <!-- AddThis Button BEGIN -->
+	    <div class="addthis_toolbox addthis_default_style ">
+	      <a class="addthis_button_preferred_1"></a>
+	      <a class="addthis_button_preferred_2"></a>
+	      <a class="addthis_button_preferred_3"></a>
+	      <a class="addthis_button_preferred_4"></a>
+	      <a class="addthis_button_compact"></a>
+	    </div>
+	    <script type="text/javascript">var addthis_config = {"data_track_addressbar":true};</script>
+	    <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-5144adf75211a62b"></script>
+	    <!-- AddThis Button END -->
+	  </div>
+	</div>
+	<div class="body">
+
+	  <p>Over the past 8 years, I needed to compile LaTeX documents for this or that reason. As time passed, I enhanced them with BibTeX, XFig, and Gnuplot. Further, I generally needed to produce PDF files validated by <a href="http://www.pdf-express.org/">IEEE PDF eXpress</a>. Here, I share some scripts I developed during the road to ease the pain.</p>
+
+<p>First, note that there is a certain directory structure I stick to.</p>
+
+<ul>
+<li>
+<code>/</code> – LaTeX (.tex) and BibTeX (<code>.bib</code>) files are placed here.</li>
+  <li>
+<code>/constants.tex</code> – LaTeX file for constants (variables, definitions, commands, etc.) shared between LaTeX and XFig files.</li>
+  <li>
+<code>/make.sh</code> – Compiles the whole project.</li>
+  <li>
+<code>/figs</code> – XFig (<code>.fig</code>), Gnuplot (<code>.gnu</code>), and EPS (<code>.eps</code>) files go here.</li>
+  <li><code>/figs/fig2eps.sh</code></li>
+  <li>
+<code>/figs/make.sh</code> – Compiles the XFig and Gnuplot into EPS format.</li>
+</ul><p>Below is the entry point, <code>/make.sh</code>. (Make sure you have <code>latex</code>, <code>bibtex</code>, <code>dvips</code>, and <code>pspdf</code> commands available.)</p>
+
+<pre><code class="language-bash"><span class="c">#!/bin/bash</span>
+
+usage<span class="o">()</span> <span class="o">{</span>
+    <span class="nb">echo</span> <span class="s2">"Usage: $0 &lt;BASENAME&gt; &lt;LATEX|BIBTEX|CLEAN&gt;"</span>
+    <span class="nb">exit </span>1
+<span class="o">}</span>
+
+<span class="o">[</span> <span class="nv">$# </span>-ne 2 <span class="o">]</span> <span class="o">&amp;&amp;</span> usage
+<span class="nv">BASENAME</span><span class="o">=</span><span class="nv">$1</span>
+<span class="nv">ACTION</span><span class="o">=</span><span class="nv">$2</span>
+
+<span class="nb">set</span> -e
+<span class="nb">set</span> -x
+
+latex<span class="o">()</span> <span class="o">{</span>
+    /usr/bin/latex --halt-on-error <span class="nv">$1</span>
+<span class="o">}</span>
+
+make_bibtex<span class="o">()</span> <span class="o">{</span>
+    latex <span class="nv">$1</span> <span class="o">&amp;&amp;</span> <span class="se">\</span>
+	bibtex <span class="nv">$1</span> <span class="o">&amp;&amp;</span> <span class="se">\</span>
+	latex <span class="nv">$1</span> <span class="o">&amp;&amp;</span> <span class="se">\</span>
+	latex <span class="nv">$1</span>
+<span class="o">}</span>
+
+make_latex<span class="o">()</span> <span class="o">{</span>
+    <span class="nb">cd </span>figs <span class="o">&amp;&amp;</span> ./make.sh <span class="o">&amp;&amp;</span> <span class="nb">cd</span> .. <span class="o">&amp;&amp;</span> <span class="se">\</span>
+    latex <span class="nv">$1</span> <span class="o">&amp;&amp;</span> <span class="se">\</span>
+    dvips -Ppdf -G0 -ta4 <span class="nv">$1</span>.dvi -o <span class="o">&amp;&amp;</span> <span class="se">\</span>
+    ps2pdf <span class="se">\</span>
+	-dCompatibilityLevel<span class="o">=</span>1.4 <span class="se">\</span>
+	-dPDFSETTINGS<span class="o">=</span>/prepress <span class="se">\</span>
+	<span class="nv">$1</span>.ps <span class="nv">$1</span>.pdf
+<span class="o">}</span>
+
+make_clean<span class="o">()</span> <span class="o">{</span>
+    rm -f <span class="se">\</span>
+	<span class="nv">$1</span>.aux <span class="se">\</span>
+	<span class="nv">$1</span>.bbl <span class="se">\</span>
+	<span class="nv">$1</span>.blg <span class="se">\</span>
+	<span class="nv">$1</span>.dvi <span class="se">\</span>
+	<span class="nv">$1</span>.log <span class="se">\</span>
+	<span class="nv">$1</span>.pdf <span class="se">\</span>
+	<span class="nv">$1</span>.ps
+<span class="o">}</span>
+
+<span class="k">case</span> <span class="nv">$ACTION</span> in
+    latex<span class="o">)</span> make_latex <span class="nv">$BASENAME</span>;;
+    bibtex<span class="o">)</span> make_bibtex <span class="nv">$BASENAME</span>;;
+    clean<span class="o">)</span> make_clean <span class="nv">$BASENAME</span>;;
+    *<span class="o">)</span> usage;;
+<span class="k">esac</span></code></pre>
+
+<p>In <code>/make.sh</code>, I follow LaTeX-&gt;DVI-&gt;PostScript-&gt;PDF path. The main reason for the preference of this path over LaTeX-&gt;PDF is to properly process scalable EPS figures produced by XFig. (Personally, I hate to see broken figures in published articles.)</p>
+
+<p>Next, here goes <code>/figs/make.sh</code> script. (Per see, gnuplot is required during execution.)</p>
+
+<pre><code class="language-bash"><span class="c">#!/bin/bash</span>
+
+<span class="nb">set</span> -e
+<span class="nb">set</span> -x
+
+get_modify_time<span class="o">()</span> <span class="o">{</span>
+    <span class="k">if</span> <span class="o">[</span> -e <span class="s2">"$1"</span> <span class="o">]</span>; <span class="k">then</span>
+<span class="k">	</span><span class="nv">DT</span><span class="o">=</span><span class="k">$(</span>stat <span class="s2">"$1"</span> | grep ^Modify: | sed <span class="s1">'s/^Modify: //g'</span><span class="k">)</span>
+	date -d <span class="s2">"$DT"</span> +%s
+    <span class="k">else</span>
+<span class="k">	</span><span class="nb">echo </span>0
+    <span class="k">fi</span>
+<span class="o">}</span>
+
+find -name <span class="s2">"*.fig"</span> | <span class="se">\</span>
+<span class="k">while </span><span class="nb">read </span>FIG; <span class="k">do</span>
+<span class="k">    </span><span class="nv">BAS</span><span class="o">=</span><span class="k">$(</span>basename <span class="s2">"$FIG"</span> | sed <span class="s1">'s/\.fig$//g'</span><span class="k">)</span>
+    <span class="nv">BAK</span><span class="o">=</span><span class="s2">"$BAS.fig.bak"</span>
+    <span class="nv">EPS</span><span class="o">=</span><span class="s2">"$BAS.eps"</span>
+
+    <span class="c"># See if EPS needs to be updated.</span>
+    <span class="nv">T_FIG</span><span class="o">=</span><span class="k">$(</span>get_modify_time <span class="s2">"$FIG"</span><span class="k">)</span>
+    <span class="nv">T_EPS</span><span class="o">=</span><span class="k">$(</span>get_modify_time <span class="s2">"$EPS"</span><span class="k">)</span>
+    <span class="o">[</span> <span class="nv">$T_FIG</span> -gt <span class="nv">$T_EPS</span> <span class="o">]</span> <span class="o">&amp;&amp;</span> ./fig2eps.sh <span class="nv">$BAS</span>
+
+    <span class="c"># Remove backup, if there is any.</span>
+    rm -f <span class="s2">"$BAK"</span>
+<span class="k">done</span>
+
+find -name <span class="s2">"*.gnu"</span> | <span class="se">\</span>
+<span class="k">while </span><span class="nb">read </span>GNU; <span class="k">do</span>
+<span class="k">    </span><span class="nv">BAS</span><span class="o">=</span><span class="k">$(</span>basename <span class="s2">"$GNU"</span> | sed <span class="s1">'s/\.gnu$//g'</span><span class="k">)</span>
+    <span class="nv">EPS</span><span class="o">=</span><span class="s2">"$BAS.eps"</span>
+
+    <span class="c"># See if EPS needs to be updated.</span>
+    <span class="nv">T_GNU</span><span class="o">=</span><span class="k">$(</span>get_modify_time <span class="s2">"$GNU"</span><span class="k">)</span>
+    <span class="nv">T_EPS</span><span class="o">=</span><span class="k">$(</span>get_modify_time <span class="s2">"$EPS"</span><span class="k">)</span>
+    <span class="k">if</span> <span class="o">[</span> <span class="nv">$T_GNU</span> -gt <span class="nv">$T_EPS</span> <span class="o">]</span>; <span class="k">then</span>
+<span class="k">	</span>gnuplot <span class="nv">$GNU</span>
+    <span class="k">fi</span>
+<span class="k">done</span>
+
+<span class="nb">exit </span>0</code></pre>
+
+<p>Nothing fancy in <code>/figs/make.sh</code>. First, we process <code>.fig</code> files; second, we process <code>.gnu</code> files.</p>
+
+<p>Finally, below goes <code>/figs/fig2eps.sh</code> script. (Make <code>fig2dev</code>, <code>pdflatex</code>, <code>pdf2ps</code> commands ready. Note that <code>/figs/fig2eps.sh</code> requires <code>/constants.tex</code> for shared LaTeX variables.)</p>
+
+<pre><code class="language-bash"><span class="c">#!/bin/bash</span>
+
+<span class="nb">set</span> -x
+
+<span class="k">if</span> <span class="o">[</span> <span class="k">${#</span><span class="p">@</span><span class="k">}</span> -ne 1 <span class="o">]</span>; <span class="k">then</span>
+<span class="k">    </span><span class="nb">echo</span> <span class="s2">"Usage: $0 &lt;BASENAME&gt;"</span>
+    <span class="nb">exit </span>1
+<span class="k">fi</span>
+
+<span class="nv">BASENAME</span><span class="o">=</span><span class="s2">"$1"</span>
+
+cat <span class="s">&lt;&lt;EOF &gt;$BASENAME.tex</span>
+<span class="s">\documentclass{article}</span>
+<span class="s">\usepackage{graphics}</span>
+<span class="s">\usepackage{amsfonts}</span>
+<span class="s">\usepackage{color}</span>
+<span class="s">\input{../constants}</span>
+<span class="s">\begin{document}</span>
+<span class="s">\thispagestyle{empty}</span>
+<span class="s">\begin{figure}</span>
+<span class="s">  \centering</span>
+<span class="s">  \input{${BASENAME}_fig.pdf_t}</span>
+<span class="s">\end{figure}</span>
+<span class="s">\end{document}</span>
+<span class="s">EOF</span>
+
+fig2dev -L pdftex <span class="nv">$BASENAME</span>.fig <span class="k">${</span><span class="nv">BASENAME</span><span class="k">}</span>_fig.pdf <span class="o">&amp;&amp;</span> <span class="se">\</span>
+fig2dev -L pstex_t -p <span class="k">${</span><span class="nv">BASENAME</span><span class="k">}</span>_fig.pdf <span class="nv">$BASENAME</span>.fig <span class="k">${</span><span class="nv">BASENAME</span><span class="k">}</span>_fig.pdf_t <span class="o">&amp;&amp;</span> <span class="se">\</span>
+pdflatex <span class="nv">$BASENAME</span> <span class="o">&amp;&amp;</span> <span class="se">\</span>
+pdf2ps <span class="nv">$BASENAME</span>.pdf <span class="nv">$BASENAME</span>.eps
+<span class="nv">RET</span><span class="o">=</span><span class="nv">$?</span>
+
+rm -f <span class="se">\</span>
+    <span class="k">${</span><span class="nv">BASENAME</span><span class="k">}</span>_fig.pdf <span class="se">\</span>
+    <span class="k">${</span><span class="nv">BASENAME</span><span class="k">}</span>_fig.pdf_t <span class="se">\</span>
+    <span class="nv">$BASENAME</span>.aux <span class="se">\</span>
+    <span class="nv">$BASENAME</span>.pdf <span class="se">\</span>
+    <span class="nv">$BASENAME</span>.log <span class="se">\</span>
+    <span class="nv">$BASENAME</span>.tex
+
+<span class="nb">exit</span> <span class="nv">$RET</span></code></pre>
+
+<p>After all these fuss, the whole project boils down to</p>
+
+<pre><code class="language-bash">./make.sh paper bibtex
+./make.sh paper latex</code></pre>
+
+<p>and you are ready to go.</p>
+
+<p>Scripts need a little bit more cleaning and they are probably not the most correct ones. Anyway, they served well until now, and I hope they would for you as well.</p>
+
+	  <script type="text/javascript">
+	    $("#post table").attr("class", "table table-hover");
+	  </script>
+
+	  <div id="disqus_thread"></div>
+	  <script type="text/javascript">
+	  var disqus_shortname = 'vyazici';
+	  var disqus_identifier = '/blog/post/20120408-build-scripts-for-latex-bibtex-xfig-gnuplot/';
+	  var disqus_title = 'Build Scripts for LaTeX-BibTeX-XFig-GnuPlot Combo';
+	  (function() {
+	  	var dsq = document.createElement('script');
+	  	dsq.type = 'text/javascript';
+	  	dsq.async = true;
+	  	dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+	  	(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+	  })();
+	  </script>
+
+	</div>
+      </div>
+      <div id="bgauthor" class="narrow-font">
+	background image by
+	<a href="http://jenniferwetzel.com/">Jennifer Wetzel</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+    <script type="text/javascript">
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-40183531-1']);
+      _gaq.push(['_trackPageview']);
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+    </script>
+  </body>
+</html>
+

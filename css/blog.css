@@ -1,0 +1,60 @@
+@import url(http://fonts.googleapis.com/css?family=Yanone+Kaffeesatz:400,700);
+body {
+  background: url("/img/bg-blog.jpg") no-repeat center center fixed;
+  -webkit-background-size: cover;
+  -moz-background-size: cover;
+  -o-background-size: cover;
+  background-size: cover; }
+
+#tags span {
+  vertical-align: middle;
+  line-height: 95%; }
+#tags .size-0 {
+  font-size: 12pt; }
+#tags .size-1 {
+  font-size: 14pt; }
+#tags .size-2 {
+  font-size: 16pt; }
+#tags .size-3 {
+  font-size: 18pt; }
+#tags .size-4 {
+  font-size: 20pt; }
+#tags .size-5 {
+  font-size: 22pt; }
+#tags .size-6 {
+  font-size: 24pt; }
+#tags .size-7 {
+  font-size: 26pt; }
+#tags .size-8 {
+  font-size: 28pt; }
+#tags .size-9 {
+  font-size: 30pt; }
+#tags .highlight {
+  color: red; }
+#tags a {
+  color: #333333;
+  text-decoration: none; }
+
+#blog {
+  margin-top: 10px;
+  margin-bottom: 10px; }
+  #blog h2 {
+    font-family: "Yanone Kaffeesatz", sans-serif;
+    font-size: 14pt;
+    border-bottom: 1px dotted; }
+  #blog li {
+    margin-bottom: 10px;
+    line-height: 100%; }
+    #blog li .title a {
+      font-size: 12pt; }
+    #blog li .info {
+      font-size: 9pt; }
+      #blog li .info a {
+        color: #333333;
+        border-bottom: 1px dotted; }
+      #blog li .info a:hover {
+        text-decoration: none;
+        border-bottom: 1px solid; }
+  #blog #tags {
+    margin-top: 20px;
+    text-align: right; }

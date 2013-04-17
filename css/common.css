@@ -1,0 +1,97 @@
+@import url(http://fonts.googleapis.com/css?family=Archivo+Narrow);
+@import url("http://fonts.googleapis.com/css?family=Six+Caps");
+body {
+  margin: 0;
+  padding: 0;
+  background: white; }
+
+hr {
+  border: 0;
+  border-bottom: 1px dotted; }
+
+.white-box {
+  background-color: rgba(255, 255, 255, 0.5);
+  padding: 10px; }
+
+.more-white-box {
+  background-color: rgba(255, 255, 255, 0.9);
+  padding: 10px; }
+
+/* Large desktop */
+@media (min-width: 1200px) {
+  #menu {
+    position: absolute;
+    right: 10px;
+    top: 5px;
+    text-align: right; }
+    #menu a {
+      line-height: 40px;
+      font-size: 28pt;
+      font-family: "Six Caps", sans-serif;
+      color: white; }
+    #menu .active a {
+      color: black; }
+    #menu a {
+      display: block; } }
+/* Portrait tablet to landscape and desktop */
+@media (min-width: 768px) and (max-width: 979px) {
+  #menu {
+    position: absolute;
+    right: 10px;
+    top: 5px;
+    text-align: right; }
+    #menu a {
+      line-height: 40px;
+      font-size: 28pt;
+      font-family: "Six Caps", sans-serif;
+      color: white; }
+    #menu .active a {
+      color: black; }
+    #menu a {
+      display: block; } }
+/* Landscape phone to portrait tablet */
+@media (max-width: 767px) {
+  #menu a {
+    line-height: 40px;
+    font-size: 28pt;
+    font-family: "Six Caps", sans-serif;
+    color: white; }
+  #menu .active a {
+    color: black; }
+  #menu div {
+    display: inline;
+    margin-right: 10px; } }
+/* Landscape phones and down */
+@media (max-width: 480px) {
+  #menu a {
+    line-height: 40px;
+    font-size: 28pt;
+    font-family: "Six Caps", sans-serif;
+    color: white; }
+  #menu .active a {
+    color: black; }
+  #menu div {
+    display: inline;
+    margin-right: 10px; } }
+.rounded-corners {
+  border-radius: 5px;
+  -moz-border-radius: 5px; }
+
+.narrow-font {
+  font-family: "Archivo Narrow", sans-serif; }
+
+#bgauthor {
+  margin-bottom: 10px;
+  text-align: right;
+  font-size: 9pt; }
+  #bgauthor a {
+    color: white; }
+
+.arrow-list {
+  margin: 0; }
+  .arrow-list li {
+    list-style-type: none;
+    text-indent: 0; }
+  .arrow-list li:before {
+    content: "\2192";
+    display: inline; }

@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Chat Application with Play Framework and KnockoutJS</title>
+    <link rel="stylesheet" href="/css/bootstrap.css">
+    <link rel="stylesheet" href="/css/bootstrap-responsive.css">
+    <script src="/js/bootstrap.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="/css/common.css">
+    <meta name="generator" content="nanoc 3.6.2">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/post.css">
+  </head>
+  <body>
+    <div id="menu">
+      <div><a href="/">Home</a></div><div><a href="/about/">About</a></div><div><a href="/blog/">Blog</a></div><div><a href="/code/">Code</a></div><div><a href="/blog/feed/">Feed</a></div>
+    </div>
+    
+
+<div class="container">
+  <div class="row-fluid">
+    <div class="offset2 span8">
+      <div id="post" class="more-white-box rounded-corners">
+	<div class="head">
+	  <div class="title">Chat Application with Play Framework and KnockoutJS</div>
+	  <div class="subtitle">posted at
+	    March 11, 2012
+	    with tags <a href="http://technorati.com/tag/facebook" rel="tag">facebook</a>, <a href="http://technorati.com/tag/java" rel="tag">java</a>, <a href="http://technorati.com/tag/javascript" rel="tag">javascript</a>, <a href="http://technorati.com/tag/knockoutjs" rel="tag">knockoutjs</a>, <a href="http://technorati.com/tag/play framework" rel="tag">play framework</a>
+	  </div>
+	  <div class="share">
+	    <!-- AddThis Button BEGIN -->
+	    <div class="addthis_toolbox addthis_default_style ">
+	      <a class="addthis_button_preferred_1"></a>
+	      <a class="addthis_button_preferred_2"></a>
+	      <a class="addthis_button_preferred_3"></a>
+	      <a class="addthis_button_preferred_4"></a>
+	      <a class="addthis_button_compact"></a>
+	    </div>
+	    <script type="text/javascript">var addthis_config = {"data_track_addressbar":true};</script>
+	    <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-5144adf75211a62b"></script>
+	    <!-- AddThis Button END -->
+	  </div>
+	</div>
+	<div class="body">
+
+	  <p>For a geography based social web application, I chose to work on a <a href="http://en.wikipedia.org/wiki/Single-page_application">Single Page Application</a> template. For this purpose, I needed a Javascript framework to do the necessary plumbing for synchronizing server side and client side model objects. It took my nearly 3-4 weeks to finish the implementation. I was very happy with its final state and was excited to use it in the rest of the project. Next morning, I met with <a href="http://documentcloud.github.com/backbone/">BackboneJS</a> with a suggestion from a friend of mine. Damn! My implementation was so close to BackboneJS that almost every function name was identical. Anyway, I couldn’t know if I should cry or laugh. Following that path, it didn’t take long for me to discover <a href="http://knockoutjs.com/">KnockoutJS</a>. I found it astonishingly beautiful and directly dived into the depths of the tutorial and spent that half day to read-and-evaluate  the exercises. Since the best way to learn something is to use it, in this blog post I will try to walk you through a chat application using <a href="http://playframework.org/">Play Framework</a> and KnockoutJS.</p>
+
+<p>In order to save some effort, I’ll use the Facebook Login mechanics described in my <a href="/blog/post/2012/02/20/facebook-login-and-secure-module/">Facebook Login and Secure Module Integration in Play</a> post. Since I put together the necessary pieces into a GitHub project (<a href="http://github.com/vy/play-facebook">play-facebook</a>), I will bootstrap directly from there.</p>
+
+<pre><code class="language-bash">git clone git://github.com/vy/play-facebook.git play-chat
+<span class="nb">cd </span>play-chat
+play deps
+emacs conf/application.conf            <span class="c"># Edit application.name</span>
+emacs app/controllers/Security.java    <span class="c"># Edit FBOAuth</span>
+play run</code></pre>
+
+<p>So far, so good. Now, we need a <code>Room</code> model to store the posted messages.</p>
+
+<pre><code class="language-java"><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Room</span> <span class="o">{</span>
+    <span class="kd">private</span> <span class="kd">static</span> <span class="n">Room</span> <span class="n">instance</span> <span class="o">=</span> <span class="kc">null</span><span class="o">;</span>
+    <span class="kd">public</span> <span class="kd">static</span> <span class="kd">final</span> <span class="kt">int</span> <span class="n">EVENT_STREAM_SIZE</span> <span class="o">=</span> <span class="mi">100</span><span class="o">;</span>
+    <span class="kd">private</span> <span class="kd">final</span> <span class="n">ArchivedEventStream</span><span class="o">&lt;</span><span class="n">Event</span><span class="o">&gt;</span> <span class="n">eventStream</span> <span class="o">=</span>
+            <span class="k">new</span> <span class="n">ArchivedEventStream</span><span class="o">&lt;</span><span class="n">Event</span><span class="o">&gt;(</span><span class="n">EVENT_STREAM_SIZE</span><span class="o">);</span>
+ 
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">publish</span><span class="o">(</span><span class="n">Event</span> <span class="n">event</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">eventStream</span><span class="o">.</span><span class="na">publish</span><span class="o">(</span><span class="n">event</span><span class="o">);</span>
+    <span class="o">}</span>
+ 
+    <span class="kd">public</span> <span class="n">Promise</span><span class="o">&lt;</span><span class="n">List</span><span class="o">&lt;</span><span class="n">IndexedEvent</span><span class="o">&lt;</span><span class="n">Event</span><span class="o">&gt;&gt;&gt;</span> <span class="nf">nextMessages</span><span class="o">(</span><span class="kt">long</span> <span class="n">lastReceived</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="n">eventStream</span><span class="o">.</span><span class="na">nextEvents</span><span class="o">(</span><span class="n">lastReceived</span><span class="o">);</span>
+    <span class="o">}</span>
+ 
+    <span class="kd">public</span> <span class="kd">static</span> <span class="kd">abstract</span> <span class="kd">class</span> <span class="nc">Event</span> <span class="o">{</span>
+        <span class="kd">public</span> <span class="kd">final</span> <span class="n">String</span> <span class="n">date</span><span class="o">;</span>
+        <span class="kd">public</span> <span class="kd">final</span> <span class="n">String</span> <span class="n">user</span><span class="o">;</span>
+        <span class="kd">public</span> <span class="kd">final</span> <span class="n">Type</span> <span class="n">type</span><span class="o">;</span>
+ 
+        <span class="kd">public</span> <span class="kd">final</span> <span class="kd">static</span> <span class="n">DateFormat</span> <span class="n">dateFormat</span> <span class="o">=</span>
+                <span class="k">new</span> <span class="nf">SimpleDateFormat</span><span class="o">(</span><span class="s">"yyyy-MM-dd HH:mm:ss"</span><span class="o">);</span>
+ 
+        <span class="kd">public</span> <span class="kd">enum</span> <span class="n">Type</span> <span class="o">{</span>
+            <span class="n">JOIN</span><span class="o">,</span>
+            <span class="n">LEAVE</span><span class="o">,</span>
+            <span class="n">MESSAGE</span>
+        <span class="o">}</span>
+ 
+        <span class="kd">public</span> <span class="nf">Event</span><span class="o">(</span><span class="n">User</span> <span class="n">user</span><span class="o">,</span> <span class="n">Type</span> <span class="n">type</span><span class="o">)</span> <span class="o">{</span>
+            <span class="k">this</span><span class="o">.</span><span class="na">date</span> <span class="o">=</span> <span class="n">dateFormat</span><span class="o">.</span><span class="na">format</span><span class="o">(</span><span class="k">new</span> <span class="n">Date</span><span class="o">());</span>
+            <span class="k">this</span><span class="o">.</span><span class="na">user</span> <span class="o">=</span> <span class="n">user</span><span class="o">.</span><span class="na">name</span><span class="o">;</span>
+            <span class="k">this</span><span class="o">.</span><span class="na">type</span> <span class="o">=</span> <span class="n">type</span><span class="o">;</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+ 
+    <span class="kd">public</span> <span class="kd">static</span> <span class="kd">class</span> <span class="nc">JoinEvent</span> <span class="kd">extends</span> <span class="n">Event</span> <span class="o">{</span>
+        <span class="kd">public</span> <span class="nf">JoinEvent</span><span class="o">(</span><span class="n">User</span> <span class="n">user</span><span class="o">)</span> <span class="o">{</span>
+            <span class="kd">super</span><span class="o">(</span><span class="n">user</span><span class="o">,</span> <span class="n">Type</span><span class="o">.</span><span class="na">JOIN</span><span class="o">);</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+ 
+    <span class="kd">public</span> <span class="kd">static</span> <span class="kd">class</span> <span class="nc">LeaveEvent</span> <span class="kd">extends</span> <span class="n">Event</span> <span class="o">{</span>
+        <span class="kd">public</span> <span class="nf">LeaveEvent</span><span class="o">(</span><span class="n">User</span> <span class="n">user</span><span class="o">)</span> <span class="o">{</span>
+            <span class="kd">super</span><span class="o">(</span><span class="n">user</span><span class="o">,</span> <span class="n">Type</span><span class="o">.</span><span class="na">LEAVE</span><span class="o">);</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+ 
+    <span class="kd">public</span> <span class="kd">static</span> <span class="kd">class</span> <span class="nc">MessageEvent</span> <span class="kd">extends</span> <span class="n">Event</span> <span class="o">{</span>
+        <span class="kd">public</span> <span class="kd">final</span> <span class="n">String</span> <span class="n">text</span><span class="o">;</span>
+ 
+        <span class="kd">public</span> <span class="nf">MessageEvent</span><span class="o">(</span><span class="n">User</span> <span class="n">user</span><span class="o">,</span> <span class="n">String</span> <span class="n">text</span><span class="o">)</span> <span class="o">{</span>
+            <span class="kd">super</span><span class="o">(</span><span class="n">user</span><span class="o">,</span> <span class="n">Type</span><span class="o">.</span><span class="na">MESSAGE</span><span class="o">);</span>
+            <span class="k">this</span><span class="o">.</span><span class="na">text</span> <span class="o">=</span> <span class="n">text</span><span class="o">;</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+ 
+    <span class="kd">public</span> <span class="kd">static</span> <span class="n">Room</span> <span class="nf">getInstance</span><span class="o">()</span> <span class="o">{</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">instance</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span>
+            <span class="n">instance</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Room</span><span class="o">();</span>
+        <span class="k">return</span> <span class="n">instance</span><span class="o">;</span>
+    <span class="o">}</span>
+<span class="o">}</span></code></pre>
+
+<p>Below is the list of major components provided by the <code>Room</code> model.</p>
+
+<ul>
+<li>
+<code>eventStream</code>, which is of type <code>ArchivedEventStream&lt;Event&gt;</code>, is the stream of messages that are published in the room. We bound the size of the stream window with <code>EVENT_STREAM_SIZE</code>.</li>
+  <li>
+<code>nextMessages</code>, returns the list of messages that are published since the time pointed by passed index number, <code>lastReceived</code>. The main crux here is that, we return a <code>Promise</code>, which is actually a tiny magic provided by <code>ArchivedEventStream</code>. Hence, web server can process these requests asynchronously without blocking the whole thread. And this results in a huge increase in the number of simultaneous requests that we can handle.</li>
+  <li>
+<code>Event</code> is the base type that is fed to <code>eventStream</code>. We represent each user action (join, leave, message) by corresponding subclasses of <code>Event</code>, that is, <code>JoinEvent</code>, <code>LeaveEvent</code>, and <code>MessageEvent</code>. As a side note, these classes will be serialized to their JSON counterparts while getting transferred to the client side. Hence, try to keep them as compact as possible.</li>
+</ul><p>Since we have a <code>Room</code>, now we will implement our <code>Chat</code> controller.</p>
+
+<pre><code class="language-java"><span class="nd">@With</span><span class="o">(</span><span class="n">Secure</span><span class="o">.</span><span class="na">class</span><span class="o">)</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">Chat</span> <span class="kd">extends</span> <span class="n">Controller</span> <span class="o">{</span>
+    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">index</span><span class="o">()</span> <span class="o">{</span>
+        <span class="n">renderArgs</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="s">"username"</span><span class="o">,</span> <span class="n">Security</span><span class="o">.</span><span class="na">getSessionUser</span><span class="o">().</span><span class="na">name</span><span class="o">);</span>
+        <span class="n">render</span><span class="o">();</span>
+    <span class="o">}</span>
+ 
+    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">join</span><span class="o">()</span> <span class="o">{</span>
+        <span class="n">Room</span><span class="o">.</span><span class="na">getInstance</span><span class="o">().</span><span class="na">publish</span><span class="o">(</span>
+                <span class="k">new</span> <span class="n">Room</span><span class="o">.</span><span class="na">JoinEvent</span><span class="o">(</span><span class="n">Security</span><span class="o">.</span><span class="na">getSessionUser</span><span class="o">()));</span>
+    <span class="o">}</span>
+ 
+    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">leave</span><span class="o">()</span> <span class="o">{</span>
+        <span class="n">Room</span><span class="o">.</span><span class="na">getInstance</span><span class="o">().</span><span class="na">publish</span><span class="o">(</span>
+                <span class="k">new</span> <span class="n">Room</span><span class="o">.</span><span class="na">LeaveEvent</span><span class="o">(</span><span class="n">Security</span><span class="o">.</span><span class="na">getSessionUser</span><span class="o">()));</span>
+    <span class="o">}</span>
+ 
+    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">say</span><span class="o">(</span><span class="n">String</span> <span class="n">text</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">Room</span><span class="o">.</span><span class="na">getInstance</span><span class="o">().</span><span class="na">publish</span><span class="o">(</span>
+                <span class="k">new</span> <span class="n">Room</span><span class="o">.</span><span class="na">MessageEvent</span><span class="o">(</span><span class="n">Security</span><span class="o">.</span><span class="na">getSessionUser</span><span class="o">(),</span> <span class="n">text</span><span class="o">));</span>
+    <span class="o">}</span>
+ 
+    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">waitMessages</span><span class="o">(</span><span class="kt">long</span> <span class="n">lastReceived</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">renderJSON</span><span class="o">(</span>
+                <span class="c1">// Here we use continuation to suspend the execution until a</span>
+                <span class="c1">// new message arrives.</span>
+                <span class="n">await</span><span class="o">(</span><span class="n">Room</span><span class="o">.</span><span class="na">getInstance</span><span class="o">().</span><span class="na">nextMessages</span><span class="o">(</span><span class="n">lastReceived</span><span class="o">)),</span>
+                <span class="k">new</span> <span class="n">TypeToken</span><span class="o">&lt;</span><span class="n">List</span><span class="o">&lt;</span><span class="n">IndexedEvent</span><span class="o">&lt;</span><span class="n">Room</span><span class="o">.</span><span class="na">Event</span><span class="o">&gt;&gt;&gt;()</span> <span class="o">{}.</span><span class="na">getType</span><span class="o">());</span>
+    <span class="o">}</span>
+<span class="o">}</span></code></pre>
+
+<p>See the <code>@With(Secure.class)</code> annotation? Yes, only signed in Facebook users are allowed. Per see, <code>index()</code>, <code>join()</code>, <code>leave()</code>, <code>say()</code> methods are clear. The significant bit here is the <code>waitMessages</code> method. Each client will make long <a href="http://en.wikipedia.org/wiki/XMLHttpRequest">XHR</a> polls to the server and wait for incoming messages. And <code>waitMessages</code> will render necessary number of messages from <code>Room</code> event stream in JSON. Since <code>Room.nextMessages()</code> returns a <code>Promise</code>, <code>waitMessages</code> will work in an asynchronous (non-blocking) manner.</p>
+
+<p><img src="1.jpg" alt="Facebook Login Entrance"><img src="2.jpg" alt="Facebook Login Success"></p>
+
+<p>Let’s modify <code>app/views/Application/index.html</code> as follows to provide a link to the chat room for the signed in users.</p>
+
+<pre><code class="language-html">#{extends 'main.html' /}
+#{set title:'Home' /}
+ 
+#{if user}
+<span class="nt">&lt;h1&gt;</span>Welcome, ${user.name}! #{if user.isAdmin}(admin)#{/if}<span class="nt">&lt;/h1&gt;</span>
+<span class="nt">&lt;a</span> <span class="na">href=</span><span class="s">"@{Secure.logout()}"</span><span class="nt">&gt;</span>Logout<span class="nt">&lt;/a&gt;</span>
+<span class="nt">&lt;a</span> <span class="na">href=</span><span class="s">"@{Chat.index()}"</span><span class="nt">&gt;</span>Chat Room<span class="nt">&lt;/a&gt;</span>
+#{/if}
+ 
+#{else}
+#{fbLogin text:'Log In', perms:'publish_stream' /}
+#{/else}</code></pre>
+
+<p>It is time for the client side implementation of the chat room. I’ll first present you the <code>app/views/Chat/index.html</code> as is, and then explain the bits in it. Here we go.</p>
+
+<pre><code class="language-html">#{extends 'main.html' /}
+#{set title:'Chat Room' /}
+#{set 'moreScripts'}
+    #{script 'jquery.scrollTo.js' /}
+    #{script 'knockout.js' /}
+#{/set}
+#{set 'moreStyles'}
+    #{stylesheet 'chat.css' /}
+#{/set}
+ 
+<span class="nt">&lt;div&gt;</span>
+    <span class="nt">&lt;button</span> <span class="na">data-bind=</span><span class="s">"enable: !isJoined(), click: join"</span><span class="nt">&gt;</span>Join<span class="nt">&lt;/button&gt;</span>
+    <span class="nt">&lt;button</span> <span class="na">data-bind=</span><span class="s">"enable: isJoined, click: leave"</span><span class="nt">&gt;</span>Leave<span class="nt">&lt;/button&gt;</span>
+<span class="nt">&lt;/div&gt;</span>
+ 
+<span class="nt">&lt;div</span> <span class="na">id=</span><span class="s">"messages"</span> <span class="na">data-bind=</span><span class="s">"foreach: messages"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;div&gt;</span>
+        <span class="nt">&lt;span</span> <span class="na">class=</span><span class="s">"date"</span> <span class="na">data-bind=</span><span class="s">"text: date"</span><span class="nt">&gt;&lt;/span&gt;</span>
+        <span class="nt">&lt;span</span> <span class="na">class=</span><span class="s">"message"</span> <span class="na">data-bind=</span><span class="s">"if: type == 'MESSAGE'"</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;span</span> <span class="na">class=</span><span class="s">"user"</span>
+                  <span class="na">data-bind=</span><span class="s">"text: user,</span>
+<span class="s">                             css: { you: user == '${username}' }"</span><span class="nt">&gt;&lt;/span&gt;</span><span class="ni">&amp;gt;</span>
+            <span class="nt">&lt;span</span> <span class="na">class=</span><span class="s">"text"</span> <span class="na">data-bind=</span><span class="s">"text: text"</span><span class="nt">&gt;&lt;/span&gt;</span>
+        <span class="nt">&lt;/span&gt;</span>
+        <span class="nt">&lt;span</span> <span class="na">class=</span><span class="s">"join"</span> <span class="na">data-bind=</span><span class="s">"if: type == 'JOIN'"</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;span</span> <span class="na">class=</span><span class="s">"user"</span> <span class="na">data-bind=</span><span class="s">"text: user"</span><span class="nt">&gt;&lt;/span&gt;</span> joins the room.
+        <span class="nt">&lt;/span&gt;</span>
+        <span class="nt">&lt;span</span> <span class="na">class=</span><span class="s">"leave"</span> <span class="na">data-bind=</span><span class="s">"if: type == 'LEAVE'"</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;span</span> <span class="na">class=</span><span class="s">"user"</span> <span class="na">data-bind=</span><span class="s">"text: user"</span><span class="nt">&gt;&lt;/span&gt;</span> leaves the room.
+        <span class="nt">&lt;/span&gt;</span>
+    <span class="nt">&lt;/div&gt;</span>
+<span class="nt">&lt;/div&gt;</span>
+ 
+<span class="nt">&lt;form</span> <span class="na">data-bind=</span><span class="s">"submit: say"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;label</span> <span class="na">for=</span><span class="s">"inputText"</span><span class="nt">&gt;</span>Type your text here:<span class="nt">&lt;/label&gt;</span>
+    <span class="nt">&lt;input</span> <span class="na">id=</span><span class="s">"inputText"</span> <span class="na">type=</span><span class="s">"input"</span>
+           <span class="na">data-bind=</span><span class="s">"enable: isJoined, value: messageText"</span> <span class="nt">/&gt;</span>
+    <span class="nt">&lt;input</span> <span class="na">type=</span><span class="s">"submit"</span> <span class="na">value=</span><span class="s">"Send"</span> <span class="na">data-bind=</span><span class="s">"enable: isJoined"</span> <span class="nt">/&gt;</span>
+<span class="nt">&lt;/form&gt;</span>
+ 
+<span class="nt">&lt;script </span><span class="na">type=</span><span class="s">"text/javascript"</span><span class="nt">&gt;</span>
+    <span class="nx">$</span><span class="p">(</span><span class="nb">document</span><span class="p">).</span><span class="nx">ready</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">XHR</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="nx">join</span><span class="o">:</span> <span class="err">#</span><span class="p">{</span><span class="nx">jsAction</span> <span class="err">@</span><span class="nx">join</span><span class="p">()</span> <span class="o">/</span><span class="p">},</span>
+            <span class="nx">leave</span><span class="o">:</span> <span class="err">#</span><span class="p">{</span><span class="nx">jsAction</span> <span class="err">@</span><span class="nx">leave</span><span class="p">()</span> <span class="o">/</span><span class="p">},</span>
+            <span class="nx">say</span><span class="o">:</span> <span class="err">#</span><span class="p">{</span><span class="nx">jsAction</span> <span class="err">@</span><span class="nx">say</span><span class="p">()</span> <span class="o">/</span><span class="p">},</span>
+            <span class="nx">waitMessages</span><span class="o">:</span> <span class="err">#</span><span class="p">{</span><span class="nx">jsAction</span> <span class="err">@</span><span class="nx">waitMessages</span><span class="p">(</span><span class="s1">':lastReceived'</span><span class="p">)</span> <span class="o">/</span><span class="p">}</span>
+        <span class="p">};</span>
+ 
+        <span class="kd">var</span> <span class="nx">RoomModel</span> <span class="o">=</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+            <span class="kd">var</span> <span class="nx">self</span> <span class="o">=</span> <span class="k">this</span><span class="p">;</span>
+            <span class="kd">var</span> <span class="nx">lastReceived</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+ 
+            <span class="nx">self</span><span class="p">.</span><span class="nx">isJoined</span> <span class="o">=</span> <span class="nx">ko</span><span class="p">.</span><span class="nx">observable</span><span class="p">(</span><span class="kc">false</span><span class="p">);</span>
+            <span class="nx">self</span><span class="p">.</span><span class="nx">messages</span> <span class="o">=</span> <span class="nx">ko</span><span class="p">.</span><span class="nx">observableArray</span><span class="p">([]);</span>
+            <span class="nx">self</span><span class="p">.</span><span class="nx">messageText</span> <span class="o">=</span> <span class="nx">ko</span><span class="p">.</span><span class="nx">observable</span><span class="p">(</span><span class="s2">""</span><span class="p">);</span>
+ 
+            <span class="nx">self</span><span class="p">.</span><span class="nx">join</span> <span class="o">=</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+                <span class="nx">$</span><span class="p">.</span><span class="nx">post</span><span class="p">(</span><span class="nx">XHR</span><span class="p">.</span><span class="nx">join</span><span class="p">(),</span> <span class="p">{},</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+                    <span class="nx">self</span><span class="p">.</span><span class="nx">isJoined</span><span class="p">(</span><span class="kc">true</span><span class="p">);</span>
+                    <span class="nx">getMessages</span><span class="p">();</span>
+                <span class="p">});</span>
+            <span class="p">};</span>
+ 
+            <span class="nx">self</span><span class="p">.</span><span class="nx">leave</span> <span class="o">=</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+                <span class="nx">$</span><span class="p">.</span><span class="nx">post</span><span class="p">(</span><span class="nx">XHR</span><span class="p">.</span><span class="nx">leave</span><span class="p">(),</span> <span class="p">{},</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+                    <span class="nx">self</span><span class="p">.</span><span class="nx">isJoined</span><span class="p">(</span><span class="kc">false</span><span class="p">);</span>
+                <span class="p">});</span>
+            <span class="p">};</span>
+ 
+            <span class="nx">self</span><span class="p">.</span><span class="nx">say</span> <span class="o">=</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+                <span class="nx">$</span><span class="p">.</span><span class="nx">post</span><span class="p">(</span><span class="nx">XHR</span><span class="p">.</span><span class="nx">say</span><span class="p">(),</span> <span class="p">{</span><span class="nx">text</span><span class="o">:</span> <span class="nx">self</span><span class="p">.</span><span class="nx">messageText</span><span class="p">()});</span>
+                <span class="nx">self</span><span class="p">.</span><span class="nx">messageText</span><span class="p">(</span><span class="s2">""</span><span class="p">);</span>
+            <span class="p">};</span>
+ 
+            <span class="kd">var</span> <span class="nx">getMessages</span> <span class="o">=</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+                <span class="k">if</span> <span class="p">(</span><span class="nx">self</span><span class="p">.</span><span class="nx">isJoined</span><span class="p">())</span>
+                    <span class="nx">$</span><span class="p">.</span><span class="nx">getJSON</span><span class="p">(</span><span class="nx">XHR</span><span class="p">.</span><span class="nx">waitMessages</span><span class="p">({</span><span class="nx">lastReceived</span><span class="o">:</span> <span class="nx">lastReceived</span><span class="p">}),</span> <span class="p">{},</span>
+                            <span class="kd">function</span><span class="p">(</span><span class="nx">events</span><span class="p">)</span> <span class="p">{</span>
+                                <span class="nx">$</span><span class="p">(</span><span class="nx">events</span><span class="p">).</span><span class="nx">each</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+                                    <span class="nx">self</span><span class="p">.</span><span class="nx">messages</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">data</span><span class="p">);</span>
+                                    <span class="nx">lastReceived</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">id</span><span class="p">;</span>
+                                <span class="p">});</span>
+                                <span class="nx">$</span><span class="p">(</span><span class="s2">"#messages"</span><span class="p">).</span><span class="nx">scrollTo</span><span class="p">(</span><span class="s2">"max"</span><span class="p">);</span>
+                                <span class="nx">getMessages</span><span class="p">();</span>
+                            <span class="p">});</span>
+            <span class="p">};</span>
+ 
+            <span class="nx">$</span><span class="p">(</span><span class="nb">window</span><span class="p">).</span><span class="nx">unload</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+                <span class="k">if</span> <span class="p">(</span><span class="nx">self</span><span class="p">.</span><span class="nx">isJoined</span><span class="p">())</span>
+                    <span class="nx">$</span><span class="p">.</span><span class="nx">post</span><span class="p">(</span><span class="nx">XHR</span><span class="p">.</span><span class="nx">leave</span><span class="p">());</span>
+            <span class="p">});</span>
+        <span class="p">};</span>
+ 
+        <span class="kd">var</span> <span class="nx">roomModel</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">RoomModel</span><span class="p">();</span>
+        <span class="nx">ko</span><span class="p">.</span><span class="nx">applyBindings</span><span class="p">(</span><span class="nx">roomModel</span><span class="p">);</span>
+    <span class="p">});</span>
+<span class="nt">&lt;/script&gt;</span></code></pre>
+
+<p>Before diving into the sources, you will need to get <code>jquery.scrollTo.js</code> and <code>knockout.js</code> files. </p>
+
+<pre><code class="language-bash"><span class="nb">cd </span>public/javascripts
+wget http://flesler-plugins.googlecode.com/files/jquery.scrollTo-1.4.2-min.js -O jquery.scrollTo.js
+wget http://github.com/downloads/SteveSanderson/knockout/knockout-2.0.0.js -O knockout.js</code></pre>
+
+<p>And a simple CSS (<code>public/stylesheets/chat.css</code>) for the chat room.</p>
+
+<pre><code class="language-css"><span class="nf">#messages</span> <span class="p">{</span>
+    <span class="k">height</span><span class="o">:</span> <span class="m">200px</span><span class="p">;</span>
+    <span class="k">overflow</span><span class="o">:</span> <span class="k">auto</span><span class="p">;</span>
+    <span class="k">font-family</span><span class="o">:</span> <span class="n">Arial</span><span class="o">,</span> <span class="n">Verdana</span><span class="o">,</span> <span class="k">sans-serif</span><span class="p">;</span>
+    <span class="k">font-size</span><span class="o">:</span> <span class="m">10pt</span><span class="p">;</span>
+    <span class="k">padding-bottom</span><span class="o">:</span> <span class="m">8px</span><span class="p">;</span>
+    <span class="k">padding-top</span><span class="o">:</span> <span class="m">8px</span><span class="p">;</span>
+<span class="p">}</span>
+ 
+<span class="nf">#messages</span> <span class="nc">.user</span> <span class="p">{</span> <span class="k">font-style</span><span class="o">:</span> <span class="k">oblique</span><span class="p">;</span> <span class="p">}</span>
+<span class="nf">#messages</span> <span class="nc">.message</span> <span class="nc">.user</span> <span class="p">{</span> <span class="k">font-style</span><span class="o">:</span> <span class="k">normal</span><span class="p">;</span> <span class="p">}</span>
+<span class="nf">#messages</span> <span class="nc">.you</span> <span class="p">{</span> <span class="k">font-weight</span><span class="o">:</span> <span class="k">bold</span><span class="p">;</span> <span class="p">}</span>
+<span class="nf">#messages</span> <span class="nc">.join</span> <span class="p">{</span> <span class="k">color</span><span class="o">:</span> <span class="nb">green</span><span class="p">;</span> <span class="p">}</span>
+<span class="nf">#messages</span> <span class="nc">.leave</span> <span class="p">{</span> <span class="k">color</span><span class="o">:</span> <span class="nb">red</span><span class="p">;</span> <span class="p">}</span>
+<span class="nf">#messages</span> <span class="nc">.date</span> <span class="p">{</span> <span class="k">font-family</span><span class="o">:</span> <span class="k">monospace</span><span class="p">;</span> <span class="k">padding-right</span><span class="o">:</span> <span class="m">6px</span><span class="p">;</span> <span class="p">}</span></code></pre>
+
+<p>Let me introduce you to KnockoutJS with a very simple snippet from the above mess.</p>
+
+<ol>
+<li>There is a javascript object, called <code>RoomModel</code>, and it has a boolean field called <code>isJoined</code>.</li>
+  <li>There is a submit button to send messages to the room and we want the button to be enabled and disabled appropriately according to the <code>RoomModel.isJoined</code> flag.</li>
+  <li>
+    <p>We instantiate <code>RoomModel</code> as an observable using KnockoutJS.</p>
+
+    <p>#!javascript
+ var roomModel = new RoomModel();
+ ko.applyBindings(roomModel);</p>
+  </li>
+  <li>
+    <p>We set <code>isJoined</code> to an observable as well.</p>
+
+    <p>#!javascript
+ self.isJoined = ko.observable(false);</p>
+  </li>
+  <li>Add <code>data-bind="enable: isJoined"</code> attribute to the button.</li>
+</ol><p>After three easy settings, we have the send button auto-magically binded to the <code>isJoined</code> flag. When there occurs a change on the <code>isJoined</code> variable, change will be propagated to the all dependent objects.</p>
+
+<p>Another good thing about KnockoutJS observables is that the change propagation channel is bidrectional. That is, when an observable variable changes, this change gets propagated to the rest of the binded elements. Moreover, a change on the binded elements are also gets reflected to the variables as well. Let’s see this in action.</p>
+
+<ol>
+<li>There is an observable text field called <code>messageText</code>.</li>
+  <li>Message input box is binded to this observable through <code>data-bind="enable: isJoined, value: messageText"</code> attribute.</li>
+</ol><p>Here, <code>messageText</code> variable and the value of the input box are bidirectionally synchronized by KnockoutJS observables.
+Another cool KnockoutJS feature is its <code>foreach</code> looping functionality over observable arrays. We see on in action while printing out the incoming messages. That is,</p>
+
+<ol>
+<li>
+    <p>Messages are stored in an observable array via</p>
+
+    <p>#!javascript
+ self.messages = ko.observableArray([]);</p>
+  </li>
+  <li>
+    <p>We loop over the <code>messages</code> observable via</p>
+
+    <p>#!html
+ &lt;div … data-bind=”foreach: messages”&gt;
+ …
+ &lt;/div&gt;</p>
+  </li>
+  <li>
+    <p>Inside the loop body, current array element is accessed as is. (Remember the list of JSON-inified <code>Room.Event</code> subclasses?)</p>
+  </li>
+</ol><p>There are other cool KnockoutJS tricks that are available in the above chat room sources (e.g., <code>if: type == 'MESSAGE'</code>, <code>css: { you: user == '${username}'</code>, etc.), but explaining all of them is out of the scope of my agenda, at least not in this blog post. I strongly advise you to take a look at the KnockoutJS <a href="http://learn.knockoutjs.com/">tutorials</a> and <a href="documentation">documentation</a>.</p>
+
+	  <script type="text/javascript">
+	    $("#post table").attr("class", "table table-hover");
+	  </script>
+
+	  <div id="disqus_thread"></div>
+	  <script type="text/javascript">
+	  var disqus_shortname = 'vyazici';
+	  var disqus_identifier = '/blog/post/20120311-chat-application-with-play-and-knockoutjs/';
+	  var disqus_title = 'Chat Application with Play Framework and KnockoutJS';
+	  (function() {
+	  	var dsq = document.createElement('script');
+	  	dsq.type = 'text/javascript';
+	  	dsq.async = true;
+	  	dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+	  	(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+	  })();
+	  </script>
+
+	</div>
+      </div>
+      <div id="bgauthor" class="narrow-font">
+	background image by
+	<a href="http://jenniferwetzel.com/">Jennifer Wetzel</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+    <script type="text/javascript">
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-40183531-1']);
+      _gaq.push(['_trackPageview']);
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+    </script>
+  </body>
+</html>
+

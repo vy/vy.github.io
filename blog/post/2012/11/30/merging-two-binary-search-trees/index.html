@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Merging Two Binary Search Trees in O(logn) Space</title>
+    <link rel="stylesheet" href="/css/bootstrap.css">
+    <link rel="stylesheet" href="/css/bootstrap-responsive.css">
+    <script src="/js/bootstrap.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="/css/common.css">
+    <meta name="generator" content="nanoc 3.6.2">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/post.css">
+  </head>
+  <body>
+    <div id="menu">
+      <div><a href="/">Home</a></div><div><a href="/about/">About</a></div><div><a href="/blog/">Blog</a></div><div><a href="/code/">Code</a></div><div><a href="/blog/feed/">Feed</a></div>
+    </div>
+    
+
+<div class="container">
+  <div class="row-fluid">
+    <div class="offset2 span8">
+      <div id="post" class="more-white-box rounded-corners">
+	<div class="head">
+	  <div class="title">Merging Two Binary Search Trees in O(logn) Space</div>
+	  <div class="subtitle">posted at
+	    November 30, 2012
+	    with tags <a href="http://technorati.com/tag/algorithm" rel="tag">algorithm</a>, <a href="http://technorati.com/tag/cpp" rel="tag">cpp</a>
+	  </div>
+	  <div class="share">
+	    <!-- AddThis Button BEGIN -->
+	    <div class="addthis_toolbox addthis_default_style ">
+	      <a class="addthis_button_preferred_1"></a>
+	      <a class="addthis_button_preferred_2"></a>
+	      <a class="addthis_button_preferred_3"></a>
+	      <a class="addthis_button_preferred_4"></a>
+	      <a class="addthis_button_compact"></a>
+	    </div>
+	    <script type="text/javascript">var addthis_config = {"data_track_addressbar":true};</script>
+	    <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-5144adf75211a62b"></script>
+	    <!-- AddThis Button END -->
+	  </div>
+	</div>
+	<div class="body">
+
+	  <p>In a recent coding interview, I was asked to merge two <a href="http://en.wikipedia.org/wiki/Binary_search_tree">Binary Search Tree</a>s (BSTs) without modifying them. This was the first time I was exposed to this question and for an hour or so I tried to come up with a linear time algorithm of O(1) space complexity. The defeat was inevitable. (To tell the truth, if a hint would be given like O(m+n) storage is allowed, I could easily figure out the solution without breaking a sweat.) As usual, I could not sleep that night and scratched dozens of papers to come up with a better solution. But as night passed, I started to realize the fact that the space complexity is lower bounded by the tree height. This blog post is set to keep a cyber-record of this pursuit.</p>
+
+<h1 id="related-work">Related Work</h1>
+
+<p>You can first start by checking the <a href="https://www.google.com/search?q=merge+binary+search+tree">Google results</a>. But, as usual, I am kind enough to provide you a tl;dr version: In order to merge two BSTs of size m and n nodes, there are a couple of common approaches of fixed O(m+n) processing time and space complexity, some of which are listed as follows.</p>
+
+<ul>
+<li>Insert given BSTs into a newly created BST.</li>
+  <li>Create an array of elements of the first BST in sorted order, and use this array to merge the results to a new BST while traversing the second BST.</li>
+</ul><p>Further exposure to the higher doses of the problem is available through <a href="http://stackoverflow.com/questions/1008513/how-to-merge-two-bsts-efficiently">this</a> and <a href="http://stackoverflow.com/questions/7540546/merging-2-binary-search-trees">this</a> StackOverflow threads.</p>
+
+<h1 id="on-complexity">On Complexity</h1>
+
+<p>You will definitely need an O(m+n) processing complexity to visit each node, that’s for sure. But what about O(m+n) space complexity? It means that you need to store one (or both) of the given trees in a vector in order to proceed with the merge. As it will turn out in the following paragraphs, actually space complexity is lower-bounded by the height of the tree, that is, O(h), where h=logn for a balanced tree.</p>
+
+<h1 id="the-trick">The Trick</h1>
+
+<p>In its most basic form, we flatten both trees into two separate vectors. Next, we consume one element at a time from either of the trees with the smallest element. This scheme deserves a figure of its own.</p>
+
+<p><img src="mn-space.jpg" alt="Solution with O(m+n) space complexity."></p>
+
+<p>It is certain that we effectively don’t need the whole elements of a tree packed into a single vector at once. At each step, what we ask for is the next smallest element. That is, we just need a <em>stream</em> of nodes traversed in-order.</p>
+
+<p>Let’s further investigate the possibility of implementing a stream of nodes. In order to consume the elements of a binary search tree in sorted order, we need to traverse the tree in left-center-right node order. Assume that we have below traversal function. (Yes, it is in C++ and I shamelessly used templates.)</p>
+
+<pre><code class="language-c++"><span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="o">&gt;</span>
+<span class="kt">void</span> <span class="n">traverse</span><span class="p">(</span><span class="n">Node</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;*</span> <span class="n">root</span><span class="p">,</span> <span class="n">queue</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;&amp;</span> <span class="n">items</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">if</span> <span class="p">(</span><span class="n">root</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">traverse</span><span class="p">(</span><span class="n">root</span><span class="o">-&gt;</span><span class="n">left</span><span class="p">());</span>
+    <span class="n">items</span><span class="p">.</span><span class="n">push</span><span class="p">(</span><span class="n">root</span><span class="o">-&gt;</span><span class="n">data</span><span class="p">());</span>
+    <span class="n">traverse</span><span class="p">(</span><span class="n">root</span><span class="o">-&gt;</span><span class="n">right</span><span class="p">());</span>
+  <span class="p">}</span>
+<span class="p">}</span></code></pre>
+
+<p>What if I can suspend the execution at any point in time while pushing the data to a queue? In that case, what would be the maximum possible height of a recursive <code>traverse()</code> call stack? I know you like figures, so I took another photo of the board.</p>
+
+<p><img src="tree-height.jpg" alt="Relation with tree height."></p>
+
+<p>That is, the maximum call stack depth of a <code>traverse()</code> recursion is upper-bounded by the tree height. Coupled with the fact that successive <code>traverse()</code> calls are sufficient to consume the nodes of a tree in sorted order, we should be able to stream the nodes of tree with at most O(logn) node pointers.</p>
+
+<h1 id="streaming-nodes">Streaming Nodes</h1>
+
+<p>Since actual traverse call stack is bounded, we can emulate the recursive traverse using a stack of the nodes traversed so far from the root. The outline of the streaming algorithm is as follows.</p>
+
+<p><img src="algorithm.jpg" alt="Node streaming algorithm."></p>
+
+<h1 id="the-prestige">The Prestige</h1>
+
+<p>Now we can stream a tree in sorted order using at most O(logn) storage. The rest is easy: Stream both trees and merge them while streaming.</p>
+
+<h1 id="the-code">The Code</h1>
+
+<p>I implemented a streamer (<code>NodeStream</code>), stream merger (<code>MergeNodeStream</code>), and a vector merger (<code>MergeNodeVector</code>) in C++ and Scala. Code is accessible through this <a href="https://gist.github.com/4171977">Gist</a>. You can also find implementations of the algorithm in <a href="https://gist.github.com/8be224c9cfb423dcc0f3">C++ using Boost Coroutines</a> and <a href="https://gist.github.com/4181097">Haskell</a> written by <a href="http://www.blogger.com/profile/01427008889073096042">Remko</a>.</p>
+
+	  <script type="text/javascript">
+	    $("#post table").attr("class", "table table-hover");
+	  </script>
+
+	  <div id="disqus_thread"></div>
+	  <script type="text/javascript">
+	  var disqus_shortname = 'vyazici';
+	  var disqus_identifier = '/blog/post/20121130-merging-two-binary-search-trees/';
+	  var disqus_title = 'Merging Two Binary Search Trees in O(logn) Space';
+	  (function() {
+	  	var dsq = document.createElement('script');
+	  	dsq.type = 'text/javascript';
+	  	dsq.async = true;
+	  	dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+	  	(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+	  })();
+	  </script>
+
+	</div>
+      </div>
+      <div id="bgauthor" class="narrow-font">
+	background image by
+	<a href="http://jenniferwetzel.com/">Jennifer Wetzel</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+    <script type="text/javascript">
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-40183531-1']);
+      _gaq.push(['_trackPageview']);
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+    </script>
+  </body>
+</html>
+

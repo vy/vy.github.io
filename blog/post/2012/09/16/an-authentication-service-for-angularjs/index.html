@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>An Authentication Service for AngularJS</title>
+    <link rel="stylesheet" href="/css/bootstrap.css">
+    <link rel="stylesheet" href="/css/bootstrap-responsive.css">
+    <script src="/js/bootstrap.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="/css/common.css">
+    <meta name="generator" content="nanoc 3.6.2">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/post.css">
+  </head>
+  <body>
+    <div id="menu">
+      <div><a href="/">Home</a></div><div><a href="/about/">About</a></div><div><a href="/blog/">Blog</a></div><div><a href="/code/">Code</a></div><div><a href="/blog/feed/">Feed</a></div>
+    </div>
+    
+
+<div class="container">
+  <div class="row-fluid">
+    <div class="offset2 span8">
+      <div id="post" class="more-white-box rounded-corners">
+	<div class="head">
+	  <div class="title">An Authentication Service for AngularJS</div>
+	  <div class="subtitle">posted at
+	    September 16, 2012
+	    with tags <a href="http://technorati.com/tag/angularjs" rel="tag">angularjs</a>, <a href="http://technorati.com/tag/coffeescript" rel="tag">coffeescript</a>, <a href="http://technorati.com/tag/javascript" rel="tag">javascript</a>
+	  </div>
+	  <div class="share">
+	    <!-- AddThis Button BEGIN -->
+	    <div class="addthis_toolbox addthis_default_style ">
+	      <a class="addthis_button_preferred_1"></a>
+	      <a class="addthis_button_preferred_2"></a>
+	      <a class="addthis_button_preferred_3"></a>
+	      <a class="addthis_button_preferred_4"></a>
+	      <a class="addthis_button_compact"></a>
+	    </div>
+	    <script type="text/javascript">var addthis_config = {"data_track_addressbar":true};</script>
+	    <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-5144adf75211a62b"></script>
+	    <!-- AddThis Button END -->
+	  </div>
+	</div>
+	<div class="body">
+
+	  <p>I am so tired to form up explanatory, coherent sentences, but at the same time I really like to share a user authentication service that I wrote for <a href="http://www.angularjs.org/">AngularJS</a>. Hence, pardon my brevity.</p>
+
+<p>In this example I use RailwayJS with CoffeeScript both at the client- and server-side. (See my previous <a href="/blog/post/2012/09/16/auto-compiling-assets-with-connect-assets/">post</a> on auto-compiling assets with connect-assets.) Here is the scenario: You have <code>assignments.html</code> such that only authenticated users are allowed.</p>
+
+<p>First things first, here is our <code>/config/routes.coffee</code>:</p>
+
+<pre><code class="language-coffeescript"><span class="nv">exports.routes = </span><span class="nf">(map)-&gt;</span>
+  <span class="nx">map</span><span class="p">.</span><span class="nx">post</span>  <span class="s">'/login'</span><span class="p">,</span>                   <span class="s">'home#login'</span>
+  <span class="nx">map</span><span class="p">.</span><span class="nx">post</span>  <span class="s">'/logout'</span><span class="p">,</span>                  <span class="s">'home#logout'</span>
+  <span class="nx">map</span><span class="p">.</span><span class="nx">get</span>   <span class="s">'/'</span><span class="p">,</span>                        <span class="s">'home#index'</span></code></pre>
+
+<p>Then we implement our controller <code>/app/controllers/home_controller.coffee</code> as follows.</p>
+
+<pre><code class="language-coffeescript"><span class="nv">moment = </span><span class="nx">require</span><span class="p">(</span><span class="s">'moment'</span><span class="p">)</span>
+
+<span class="nx">action</span> <span class="s">'index'</span><span class="p">,</span> <span class="nf">-&gt;</span>
+    <span class="nx">render</span><span class="p">(</span><span class="nv">user: </span><span class="nx">request</span><span class="p">.</span><span class="nx">session</span><span class="p">.</span><span class="nx">user</span><span class="p">)</span>
+
+<span class="nx">action</span> <span class="s">'login'</span><span class="p">,</span> <span class="nf">-&gt;</span>
+    <span class="nx">authenticate</span> <span class="nx">request</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">username</span><span class="p">,</span> <span class="nx">request</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">password</span><span class="p">,</span> <span class="nf">(ret) -&gt;</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">ret</span><span class="p">)</span>
+            <span class="nv">request.session.user =</span>
+                <span class="nv">name: </span><span class="nx">request</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">username</span><span class="p">,</span>
+                <span class="nv">time: </span><span class="nx">moment</span><span class="p">().</span><span class="nx">unix</span><span class="p">()</span>
+        <span class="nx">send</span><span class="p">(</span><span class="nv">result: </span><span class="nx">ret</span><span class="p">)</span>
+
+<span class="nx">action</span> <span class="s">'logout'</span><span class="p">,</span> <span class="nf">-&gt;</span>
+    <span class="nx">request</span><span class="p">.</span><span class="nx">session</span><span class="p">.</span><span class="nx">destroy</span><span class="p">()</span>
+    <span class="nx">redirect</span><span class="p">(</span><span class="s">'/'</span><span class="p">)</span></code></pre>
+
+<p>Note that the <code>authenticate</code> used in <code>login</code> action handler is meant to be provided by you.</p>
+
+<p>Later, we write <code>/app/views/home/index.ejs</code> to fire up AngularJS:</p>
+
+<pre><code class="language-html"><span class="nt">&lt;div</span> <span class="na">ng-app=</span><span class="s">"project"</span><span class="nt">&gt;</span>
+    <span class="err">&lt;</span>%- javascript_include_tag('angular', 'angular-resource') %&gt;
+    <span class="err">&lt;</span>%- js('app') %&gt;
+    <span class="err">&lt;</span>%- js('controllers') %&gt;
+    <span class="err">&lt;</span>%- js('services') %&gt;
+    <span class="nt">&lt;div</span> <span class="na">ng-view</span><span class="nt">&gt;&lt;/div&gt;</span>
+<span class="nt">&lt;/div&gt;</span></code></pre>
+
+<p>We first start by implementing <code>app.js</code> of AngularJS in <code>/assets/js/app.coffee</code>:</p>
+
+<pre><code class="language-coffeescript"><span class="nx">angular</span><span class="p">.</span><span class="nx">module</span><span class="p">(</span><span class="s">'project'</span><span class="p">,</span> <span class="p">[</span><span class="s">'projectServices'</span><span class="p">])</span>
+    <span class="p">.</span><span class="nx">config</span> <span class="nf">($routeProvider) -&gt;</span>
+        <span class="nx">$routeProvider</span>
+            <span class="p">.</span><span class="nx">when</span><span class="p">(</span><span class="s">'/login'</span><span class="p">,</span>
+                <span class="nv">templateUrl: </span><span class="s">'partials/login.html'</span><span class="p">,</span>
+                <span class="nv">controller: </span><span class="nx">LoginCtrl</span><span class="p">)</span>
+            <span class="p">.</span><span class="nx">when</span><span class="p">(</span><span class="s">'/assignments'</span><span class="p">,</span>
+                <span class="nv">templateUrl: </span><span class="s">'partials/assignments.html'</span><span class="p">,</span>
+                <span class="nv">controller: </span><span class="nx">AssignmentListCtrl</span><span class="p">)</span>
+            <span class="p">.</span><span class="nx">otherwise</span><span class="p">(</span><span class="nv">redirectTo: </span><span class="s">'/login'</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">run</span> <span class="nf">($rootScope, $location, User) -&gt;</span>
+        <span class="nx">$rootScope</span><span class="p">.</span><span class="nx">$watch</span> <span class="o">\</span>
+            <span class="p">()</span> <span class="nf">-&gt;</span> <span class="nx">$location</span><span class="p">.</span><span class="nx">path</span><span class="p">(),</span>
+            <span class="nf">(next, prev) -&gt;</span>
+                <span class="k">if</span> <span class="o">not</span> <span class="nx">User</span><span class="p">.</span><span class="nx">isAuthenticated</span><span class="p">()</span> <span class="o">and</span> <span class="nx">next</span> <span class="o">isnt</span> <span class="s">'/login'</span>
+                    <span class="nx">$location</span><span class="p">.</span><span class="nx">path</span><span class="p">(</span><span class="s">"/login"</span><span class="p">),</span>
+            <span class="kc">true</span></code></pre>
+
+<p>The extra bit for watching on <code>$rootScope</code> is to check access to authentication required pages.</p>
+
+<p>After <code>app.js</code>, we implement <code>/assets/js/controllers.coffee</code>:</p>
+
+<pre><code class="language-coffeescript"><span class="nb">window</span><span class="p">.</span><span class="nv">LoginCtrl = </span><span class="nf">($scope, $location, User) -&gt;</span>
+    <span class="nv">$scope.login = </span><span class="nf">-&gt;</span>
+        <span class="nx">User</span><span class="p">.</span><span class="nx">login</span> <span class="nx">$scope</span><span class="p">.</span><span class="nx">username</span><span class="p">,</span> <span class="nx">$scope</span><span class="p">.</span><span class="nx">password</span><span class="p">,</span> <span class="nf">(result) -&gt;</span>
+            <span class="k">if</span> <span class="o">!</span><span class="nx">result</span>
+                <span class="nb">window</span><span class="p">.</span><span class="nx">alert</span><span class="p">(</span><span class="s">'Authentication failed!'</span><span class="p">)</span>
+            <span class="k">else</span>
+                <span class="nx">$scope</span><span class="p">.</span><span class="nx">$apply</span> <span class="nf">-&gt;</span> <span class="nx">$location</span><span class="p">.</span><span class="nx">path</span><span class="p">(</span><span class="s">'/assignments'</span><span class="p">)</span>
+
+<span class="nb">window</span><span class="p">.</span><span class="nv">AssignmentListCtrl = </span><span class="nf">($scope, User) -&gt;</span>
+    <span class="nv">$scope.User = </span><span class="nx">User</span></code></pre>
+
+<p>For each controller, we implement a view, that is, <code>/public/partials/login.html</code></p>
+
+<pre><code class="language-html"><span class="nt">&lt;div&gt;</span>
+    <span class="nt">&lt;form&gt;</span>
+        <span class="nt">&lt;label&gt;</span>Username: <span class="nt">&lt;input</span> <span class="na">type=</span><span class="s">"text"</span> <span class="na">ng-model=</span><span class="s">"username"</span><span class="nt">&gt;&lt;/label&gt;</span>
+        <span class="nt">&lt;label&gt;</span>Password: <span class="nt">&lt;input</span> <span class="na">type=</span><span class="s">"password"</span> <span class="na">ng-model=</span><span class="s">"password"</span><span class="nt">&gt;&lt;/label&gt;</span>
+        <span class="nt">&lt;button</span> <span class="na">ng-click=</span><span class="s">"login()"</span><span class="nt">&gt;</span>Login<span class="nt">&lt;/button&gt;</span>
+    <span class="nt">&lt;/form&gt;</span>
+<span class="nt">&lt;/div&gt;</span></code></pre>
+
+<p>and <code>/public/partials/assignments.html</code>:</p>
+
+<pre><code class="language-html"><span class="nt">&lt;p&gt;</span>Welcome, {{User.getName()}}!<span class="nt">&lt;/p&gt;</span>
+<span class="nt">&lt;button</span> <span class="na">ng-click=</span><span class="s">"User.logout()"</span><span class="nt">&gt;</span>Logout<span class="nt">&lt;/button&gt;</span></code></pre>
+
+<p>And here goes the magic, <code>/assets/js/services.coffee</code>:</p>
+
+<pre><code class="language-coffeescript"><span class="nx">angular</span><span class="p">.</span><span class="nx">module</span><span class="p">(</span><span class="s">'projectServices'</span><span class="p">,</span> <span class="p">[])</span>
+    <span class="p">.</span><span class="nx">factory</span> <span class="s">'User'</span><span class="p">,</span> <span class="nf">-&gt;</span>
+        <span class="vi">@authenticated = </span><span class="kc">false</span>
+        <span class="vi">@name = </span><span class="kc">null</span>
+        <span class="nv">isAuthenticated: </span><span class="o">=&gt;</span> <span class="nx">@authenticated</span>
+        <span class="nv">getName: </span><span class="o">=&gt;</span> <span class="nx">@name</span>
+        <span class="nv">login: </span><span class="nf">(username, password, callback) =&gt;</span>
+            <span class="nx">$</span><span class="p">.</span><span class="nx">post</span> <span class="s">'/login'</span><span class="p">,</span>
+                <span class="p">{</span><span class="nv">username: </span><span class="nx">username</span><span class="p">,</span> <span class="nv">password: </span><span class="nx">password</span><span class="p">},</span>
+                <span class="p">(</span><span class="nf">(data) =&gt;</span>
+                    <span class="k">if</span> <span class="nx">data</span><span class="p">.</span><span class="nx">result</span>
+                        <span class="vi">@name = </span><span class="nx">username</span>
+                        <span class="vi">@authenticated = </span><span class="kc">true</span>
+                    <span class="nx">callback</span><span class="p">(</span><span class="nx">data</span><span class="p">.</span><span class="nx">result</span><span class="p">)),</span>
+                <span class="s">'json'</span>
+        <span class="nv">logout: </span><span class="nf">(callback) =&gt;</span>
+            <span class="k">if</span> <span class="nx">@authenticated</span>
+                <span class="nx">$</span><span class="p">.</span><span class="nx">post</span> <span class="s">'/logout'</span><span class="p">,</span> <span class="p">{},</span>
+                    <span class="p">(</span><span class="nf">(data) =&gt;</span>
+                        <span class="k">if</span> <span class="nx">data</span><span class="p">.</span><span class="nx">result</span>
+                            <span class="vi">@authenticated = </span><span class="kc">false</span><span class="p">;</span>
+                        <span class="nx">callback</span><span class="p">(</span><span class="nx">data</span><span class="p">.</span><span class="nx">result</span><span class="p">)),</span>
+                    <span class="s">'json'</span>
+            <span class="k">else</span> <span class="nx">callback</span><span class="p">(</span><span class="kc">false</span><span class="p">)</span></code></pre>
+
+<p>Hope it works for you as well.</p>
+
+<p><strong>Edit:</strong> Thanks <a href="https://plus.google.com/100882799970411374993">Krisztián Kerék</a> for spotting the routing problem related with listening on <code>$rootScope</code> for <code>$routeChangeStart</code>. Replaced it with <code>$rootScope.$watch</code> as suggested in <a href="http://stackoverflow.com/a/15029387/1278899">this</a> StackOverflow post.</p>
+
+	  <script type="text/javascript">
+	    $("#post table").attr("class", "table table-hover");
+	  </script>
+
+	  <div id="disqus_thread"></div>
+	  <script type="text/javascript">
+	  var disqus_shortname = 'vyazici';
+	  var disqus_identifier = '/blog/post/20120916-an-authentication-service-for-angularjs/';
+	  var disqus_title = 'An Authentication Service for AngularJS';
+	  (function() {
+	  	var dsq = document.createElement('script');
+	  	dsq.type = 'text/javascript';
+	  	dsq.async = true;
+	  	dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+	  	(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+	  })();
+	  </script>
+
+	</div>
+      </div>
+      <div id="bgauthor" class="narrow-font">
+	background image by
+	<a href="http://jenniferwetzel.com/">Jennifer Wetzel</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+    <script type="text/javascript">
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-40183531-1']);
+      _gaq.push(['_trackPageview']);
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+    </script>
+  </body>
+</html>
+

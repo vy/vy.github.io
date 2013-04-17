@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Performance of Linux IP Aliased Network Interfaces: Lessons Learnt</title>
+    <link rel="stylesheet" href="/css/bootstrap.css">
+    <link rel="stylesheet" href="/css/bootstrap-responsive.css">
+    <script src="/js/bootstrap.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="/css/common.css">
+    <meta name="generator" content="nanoc 3.6.2">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/post.css">
+  </head>
+  <body>
+    <div id="menu">
+      <div><a href="/">Home</a></div><div><a href="/about/">About</a></div><div><a href="/blog/">Blog</a></div><div><a href="/code/">Code</a></div><div><a href="/blog/feed/">Feed</a></div>
+    </div>
+    
+
+<div class="container">
+  <div class="row-fluid">
+    <div class="offset2 span8">
+      <div id="post" class="more-white-box rounded-corners">
+	<div class="head">
+	  <div class="title">Performance of Linux IP Aliased Network Interfaces: Lessons Learnt</div>
+	  <div class="subtitle">posted at
+	    June 4, 2012
+	    with tags <a href="http://technorati.com/tag/kernel" rel="tag">kernel</a>, <a href="http://technorati.com/tag/linux" rel="tag">linux</a>
+	  </div>
+	  <div class="share">
+	    <!-- AddThis Button BEGIN -->
+	    <div class="addthis_toolbox addthis_default_style ">
+	      <a class="addthis_button_preferred_1"></a>
+	      <a class="addthis_button_preferred_2"></a>
+	      <a class="addthis_button_preferred_3"></a>
+	      <a class="addthis_button_preferred_4"></a>
+	      <a class="addthis_button_compact"></a>
+	    </div>
+	    <script type="text/javascript">var addthis_config = {"data_track_addressbar":true};</script>
+	    <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-5144adf75211a62b"></script>
+	    <!-- AddThis Button END -->
+	  </div>
+	</div>
+	<div class="body">
+
+	  <p>In an earlier <a href="/blog/post/2012/05/11/performance-of-linux-ip-alias/">post</a>, I had put together a set of benchmarks to measure the performance of IP aliased network interfaces in Linux. While I was expecting a performance degredation due to IP aliasing related book keeping at the kernel level, suprisingly results were pointing out that the overall network throughput measured over the used physical interface increases proportional to the number of aliased interfaces. In this post, I will re-investigate the subject with the lessons I learnt from my previous try.</p>
+
+<p>To begin with, I want to address <a href="http://utcc.utoronto.ca/~cks/">Chris Siebenmann</a>’s <a href="http://utcc.utoronto.ca/~cks/space/blog/tech/NetworkPerfBasicStep?showcomments">concerns</a> regarding the raw performance of the used network interface card. For this purpose, I first replaced the NIC with a real one (RTL8111/8168B) that is capable of achieving gigabit rates. Then, I started playing with <code>iperf</code> parameters. After a couple of tries, I figured out that the game changer is <strong>TCP MSS (maximum segment size)</strong> for me. Setting MSS to 1448 helped me to boost my speed to gigabit rates. Other configurations (e.g., disabling TCP delays, i.e., Nagle’s algorithm) did not change the results that much, but I present them hereby anyway.</p>
+
+<p>New results are as follows. (Each pass is set to run for 60 seconds.)</p>
+
+<table><tbody>
+<tr>
+<td><em># of alias</em></td>
+      <td>1</td>
+      <td>2</td>
+      <td>4</td>
+      <td>8</td>
+      <td>16</td>
+      <td>32</td>
+      <td>64</td>
+    </tr>
+<tr>
+<td>
+<em>Kbits/sec</em> (tcp)</td>
+      <td>920,462</td>
+      <td>921,468</td>
+      <td>921,311</td>
+      <td>920,909</td>
+      <td>920,679</td>
+      <td>920,770</td>
+      <td>922,861</td>
+    </tr>
+<tr>
+<td>
+<em>Kbits/sec</em> (nodelay)</td>
+      <td>921,261</td>
+      <td>921,184</td>
+      <td>921,179</td>
+      <td>920,832</td>
+      <td>920,629</td>
+      <td>920,732</td>
+      <td>921,521</td>
+    </tr>
+<tr>
+<td><em># of alias</em></td>
+      <td>96</td>
+      <td>128</td>
+      <td>160</td>
+      <td>192</td>
+      <td>224</td>
+      <td>254</td>
+      <td> </td>
+    </tr>
+<tr>
+<td>
+<em>Kbits/sec</em> (tcp)</td>
+      <td>926,282</td>
+      <td>969,967</td>
+      <td>949,506</td>
+      <td>952,449</td>
+      <td>986,355</td>
+      <td>990,832</td>
+      <td> </td>
+    </tr>
+<tr>
+<td>
+<em>Kbits/sec</em> (nodelay)</td>
+      <td>925,444</td>
+      <td>945,879</td>
+      <td>949,204</td>
+      <td>953,509</td>
+      <td>973,846</td>
+      <td>993,143</td>
+      <td> </td>
+    </tr>
+</tbody></table><p><img src="results.jpg" alt="Results"></p>
+
+<p>Ok, the results are cool. But how do we explain them? For this purpose, by finding his name from Wikipedia <a href="http://en.wikipedia.org/wiki/IP_aliasing">IP Aliasing</a> page, I got in touch with <strong><a href="http://juanjosec.blogspot.com/">Juan José Ciarlante</a> – the author of first IP aliasing support in Linux kernel in 1995</strong> – and he kindly replied my questions. Below, I directly quote from his own words.</p>
+
+<blockquote>
+  <p>you may be “just” exploiting the fact that you’re using more TCP connections (==N_WORKERS) as number of aliases increases, and thus increasing the “parallelism of your transferring pipes”, much in a way p2p networks do (spread the downloading between zillion of connections), suggest reading about TCP congestion window control semantics.</p>
+</blockquote>
+
+<p>Finally, we have a valid answer!</p>
+
+	  <script type="text/javascript">
+	    $("#post table").attr("class", "table table-hover");
+	  </script>
+
+	  <div id="disqus_thread"></div>
+	  <script type="text/javascript">
+	  var disqus_shortname = 'vyazici';
+	  var disqus_identifier = '/blog/post/20120604-performance-of-linux-ip-alias-lessons-learnt/';
+	  var disqus_title = 'Performance of Linux IP Aliased Network Interfaces: Lessons Learnt';
+	  (function() {
+	  	var dsq = document.createElement('script');
+	  	dsq.type = 'text/javascript';
+	  	dsq.async = true;
+	  	dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+	  	(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+	  })();
+	  </script>
+
+	</div>
+      </div>
+      <div id="bgauthor" class="narrow-font">
+	background image by
+	<a href="http://jenniferwetzel.com/">Jennifer Wetzel</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+    <script type="text/javascript">
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-40183531-1']);
+      _gaq.push(['_trackPageview']);
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+    </script>
+  </body>
+</html>
+

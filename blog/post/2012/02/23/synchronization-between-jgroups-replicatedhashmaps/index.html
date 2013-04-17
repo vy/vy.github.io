@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Synchronization Between JGroups.ReplicatedHashMap's</title>
+    <link rel="stylesheet" href="/css/bootstrap.css">
+    <link rel="stylesheet" href="/css/bootstrap-responsive.css">
+    <script src="/js/bootstrap.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="/css/common.css">
+    <meta name="generator" content="nanoc 3.6.2">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/post.css">
+  </head>
+  <body>
+    <div id="menu">
+      <div><a href="/">Home</a></div><div><a href="/about/">About</a></div><div><a href="/blog/">Blog</a></div><div><a href="/code/">Code</a></div><div><a href="/blog/feed/">Feed</a></div>
+    </div>
+    
+
+<div class="container">
+  <div class="row-fluid">
+    <div class="offset2 span8">
+      <div id="post" class="more-white-box rounded-corners">
+	<div class="head">
+	  <div class="title">Synchronization Between JGroups.ReplicatedHashMap's</div>
+	  <div class="subtitle">posted at
+	    February 23, 2012
+	    with tags <a href="http://technorati.com/tag/java" rel="tag">java</a>, <a href="http://technorati.com/tag/jgroups" rel="tag">jgroups</a>
+	  </div>
+	  <div class="share">
+	    <!-- AddThis Button BEGIN -->
+	    <div class="addthis_toolbox addthis_default_style ">
+	      <a class="addthis_button_preferred_1"></a>
+	      <a class="addthis_button_preferred_2"></a>
+	      <a class="addthis_button_preferred_3"></a>
+	      <a class="addthis_button_preferred_4"></a>
+	      <a class="addthis_button_compact"></a>
+	    </div>
+	    <script type="text/javascript">var addthis_config = {"data_track_addressbar":true};</script>
+	    <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-5144adf75211a62b"></script>
+	    <!-- AddThis Button END -->
+	  </div>
+	</div>
+	<div class="body">
+
+	  <p><a href="http://www.jgroups.org/javadoc/org/jgroups/blocks/ReplicatedHashMap.html"><code>ReplicatedHashMap</code></a> of <a href="http://www.jgroups.org/">JGroups</a> provides a distributed <a href="http://docs.oracle.com/javase/6/docs/api/java/util/concurrent/ConcurrentHashMap.html"><code>ConcurrentHashMap</code></a> implementation. In its simplest form, it propagates every local change to all other instances in the cluster and you get your replicated-HashMap between available cluster members.</p>
+
+<p>In a cluster environment, new node arrivals are highly anticipated, but <code>ReplicatedHashMap</code> doesn’t really keep up with the late joiners. See below execution flow for a late joiner scenario.</p>
+
+<table>
+<thead><tr>
+<th style="text-align: center">Time</th>
+      <th>Node A</th>
+      <th>Node B</th>
+    </tr></thead>
+<tbody>
+<tr>
+<td style="text-align: center">1</td>
+      <td>join</td>
+      <td> </td>
+    </tr>
+<tr>
+<td style="text-align: center">2</td>
+      <td>send 1</td>
+      <td> </td>
+    </tr>
+<tr>
+<td style="text-align: center">3</td>
+      <td>recv 1</td>
+      <td> </td>
+    </tr>
+<tr>
+<td style="text-align: center">4</td>
+      <td>observe {1}</td>
+      <td> </td>
+    </tr>
+<tr>
+<td style="text-align: center">5</td>
+      <td> </td>
+      <td>join</td>
+    </tr>
+<tr>
+<td style="text-align: center">6</td>
+      <td> </td>
+      <td>observe {}</td>
+    </tr>
+<tr>
+<td style="text-align: center">7</td>
+      <td> </td>
+      <td>send 2</td>
+    </tr>
+<tr>
+<td style="text-align: center">8</td>
+      <td>recv 2</td>
+      <td>recv 2</td>
+    </tr>
+<tr>
+<td style="text-align: center">9</td>
+      <td>observe {1,2}</td>
+      <td>observe {2}</td>
+    </tr>
+</tbody>
+</table><p>In the above figure, nodes are out of sync at time steps 6 and 9. To avoid such cases, we need to force <code>ReplicatedHashMap</code> for a sync during initialization. For this purpose, quoting with Bela Ban’s (author of JGroups) words,</p>
+
+<ol>
+<li>Move <code>JChannel.connect()</code> after the creation of <code>ReplicatedHashMap</code>,</li>
+  <li>I also suggest to call <code>ReplicatedHashmap.start()</code>, or else there won’t be any state transfer.</li>
+</ol><p>See <a href="http://comments.gmane.org/gmane.comp.java.javagroups.general/7665">ReplicatedHashMap Updates for Late Joiners</a> post in the mailing-list for the related discussion.</p>
+
+	  <script type="text/javascript">
+	    $("#post table").attr("class", "table table-hover");
+	  </script>
+
+	  <div id="disqus_thread"></div>
+	  <script type="text/javascript">
+	  var disqus_shortname = 'vyazici';
+	  var disqus_identifier = '/blog/post/20120223-synchronization-between-jgroups-replicatedhashmaps/';
+	  var disqus_title = 'Synchronization Between JGroups.ReplicatedHashMap's';
+	  (function() {
+	  	var dsq = document.createElement('script');
+	  	dsq.type = 'text/javascript';
+	  	dsq.async = true;
+	  	dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+	  	(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+	  })();
+	  </script>
+
+	</div>
+      </div>
+      <div id="bgauthor" class="narrow-font">
+	background image by
+	<a href="http://jenniferwetzel.com/">Jennifer Wetzel</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+    <script type="text/javascript">
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-40183531-1']);
+      _gaq.push(['_trackPageview']);
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+    </script>
+  </body>
+</html>
+

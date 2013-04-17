@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>RPC (Remote Procedure Call) with Hazelcast</title>
+    <link rel="stylesheet" href="/css/bootstrap.css">
+    <link rel="stylesheet" href="/css/bootstrap-responsive.css">
+    <script src="/js/bootstrap.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="/css/common.css">
+    <meta name="generator" content="nanoc 3.6.2">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/post.css">
+  </head>
+  <body>
+    <div id="menu">
+      <div><a href="/">Home</a></div><div><a href="/about/">About</a></div><div><a href="/blog/">Blog</a></div><div><a href="/code/">Code</a></div><div><a href="/blog/feed/">Feed</a></div>
+    </div>
+    
+
+<div class="container">
+  <div class="row-fluid">
+    <div class="offset2 span8">
+      <div id="post" class="more-white-box rounded-corners">
+	<div class="head">
+	  <div class="title">RPC (Remote Procedure Call) with Hazelcast</div>
+	  <div class="subtitle">posted at
+	    June 21, 2012
+	    with tags <a href="http://technorati.com/tag/hazelcast" rel="tag">hazelcast</a>, <a href="http://technorati.com/tag/java" rel="tag">java</a>
+	  </div>
+	  <div class="share">
+	    <!-- AddThis Button BEGIN -->
+	    <div class="addthis_toolbox addthis_default_style ">
+	      <a class="addthis_button_preferred_1"></a>
+	      <a class="addthis_button_preferred_2"></a>
+	      <a class="addthis_button_preferred_3"></a>
+	      <a class="addthis_button_preferred_4"></a>
+	      <a class="addthis_button_compact"></a>
+	    </div>
+	    <script type="text/javascript">var addthis_config = {"data_track_addressbar":true};</script>
+	    <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-5144adf75211a62b"></script>
+	    <!-- AddThis Button END -->
+	  </div>
+	</div>
+	<div class="body">
+
+	  <p>Despite the fact that <a href="http://www.hazelcast.com/">Hazelcast</a> is a data distribution (particularly, peer-to-peer) platform for Java, its group communication mechanics can be utilized for remote procedure calls in a similar fashion to <a href="http://vyazici.blogspot.com/2012/04/rpc-remote-procedure-call-with-jgroups.html">JGroups remote procedure calls</a>. Further, to ease this workflow, Hazelcast provides <a href="http://hazelcast.com/docs/2.1/manual/multi_html/ch09.html">distributed executor service</a> to execute <a href="http://docs.oracle.com/javase/6/docs/api/java/util/concurrent/Callable.html"><code>Callable</code></a> and <a href="http://docs.oracle.com/javase/6/docs/api/java/lang/Runnable.html"><code>Runnable</code></a> instances on the remote cluster members. Now, let’s glue things together for making remote procedure calls on Hazelcast cluster members.</p>
+
+<p>Assuming that you have some familiarity with executor services, check out below <code>SimpleRPC</code> class, which makes use of the Hazelcast executor service to invoke a <code>Call</code> instance on every cluster member.</p>
+
+<pre><code class="language-java"><span class="kn">import</span> <span class="nn">com.hazelcast.core.Hazelcast</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">com.hazelcast.core.MultiTask</span><span class="o">;</span>
+
+<span class="kn">import</span> <span class="nn">java.util.Arrays</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">java.util.Collection</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">java.util.concurrent.ExecutionException</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">java.util.concurrent.ExecutorService</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">java.util.concurrent.TimeUnit</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">java.util.concurrent.TimeoutException</span><span class="o">;</span>
+
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">SimpleRPC</span> <span class="o">{</span>
+    <span class="kd">private</span> <span class="kd">static</span> <span class="n">SimpleRPC</span> <span class="n">instance</span> <span class="o">=</span> <span class="kc">null</span><span class="o">;</span>
+
+    <span class="kd">private</span> <span class="nf">SimpleRPC</span><span class="o">()</span> <span class="o">{}</span>
+
+    <span class="kd">public</span> <span class="kd">static</span> <span class="n">SimpleRPC</span> <span class="nf">getInstance</span><span class="o">()</span> <span class="o">{</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">instance</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span>
+            <span class="n">instance</span> <span class="o">=</span> <span class="k">new</span> <span class="n">SimpleRPC</span><span class="o">();</span>
+        <span class="k">return</span> <span class="n">instance</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="nd">@SuppressWarnings</span><span class="o">(</span><span class="s">"unused"</span><span class="o">)</span>
+    <span class="kd">public</span> <span class="kt">boolean</span> <span class="nf">callMe</span><span class="o">(</span><span class="n">String</span> <span class="n">input</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">String</span><span class="o">.</span><span class="na">format</span><span class="o">(</span><span class="s">"callMe('%s') is called!"</span><span class="o">,</span> <span class="n">input</span><span class="o">));</span>
+        <span class="k">return</span> <span class="kc">true</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">callEvery</span><span class="o">(</span><span class="n">String</span> <span class="n">input</span><span class="o">)</span>
+            <span class="kd">throws</span> <span class="n">ExecutionException</span><span class="o">,</span> <span class="n">TimeoutException</span><span class="o">,</span> <span class="n">InterruptedException</span> <span class="o">{</span>
+        <span class="n">MultiTask</span><span class="o">&lt;</span><span class="n">Boolean</span><span class="o">&gt;</span> <span class="n">task</span> <span class="o">=</span> <span class="k">new</span> <span class="n">MultiTask</span><span class="o">&lt;</span><span class="n">Boolean</span><span class="o">&gt;(</span><span class="k">new</span> <span class="n">Call</span><span class="o">(</span><span class="n">input</span><span class="o">),</span>
+                <span class="n">Hazelcast</span><span class="o">.</span><span class="na">getCluster</span><span class="o">().</span><span class="na">getMembers</span><span class="o">());</span>
+        <span class="n">ExecutorService</span> <span class="n">executorService</span> <span class="o">=</span> <span class="n">Hazelcast</span><span class="o">.</span><span class="na">getExecutorService</span><span class="o">();</span>
+        <span class="n">executorService</span><span class="o">.</span><span class="na">execute</span><span class="o">(</span><span class="n">task</span><span class="o">);</span>
+        <span class="n">Collection</span><span class="o">&lt;</span><span class="n">Boolean</span><span class="o">&gt;</span> <span class="n">results</span> <span class="o">=</span> <span class="n">task</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="mi">3</span><span class="o">,</span> <span class="n">TimeUnit</span><span class="o">.</span><span class="na">SECONDS</span><span class="o">);</span>
+        <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">String</span><span class="o">.</span><span class="na">format</span><span class="o">(</span><span class="s">"callEvery('%s'): %s"</span><span class="o">,</span>
+                <span class="n">input</span><span class="o">,</span> <span class="n">Arrays</span><span class="o">.</span><span class="na">toString</span><span class="o">(</span><span class="n">results</span><span class="o">.</span><span class="na">toArray</span><span class="o">())));</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="n">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">Exception</span> <span class="o">{</span>
+        <span class="n">SimpleRPC</span><span class="o">.</span><span class="na">getInstance</span><span class="o">().</span><span class="na">callEvery</span><span class="o">(</span><span class="s">"foo bar baz"</span><span class="o">);</span>
+    <span class="o">}</span>
+<span class="o">}</span></code></pre>
+
+<p>Since <code>SimpleRPC</code> is a singleton, whose instance is accessible via its <code>getInstance()</code> method, foreign classes can easily invoke its <code>callMe()</code> instance method. Now let’s implement the <code>Call</code> class, which is anticipated to encapsulate the necessary mechanics to make a call to <code>SimpleRPC.getInstance().callMe()</code> on each cluster member.</p>
+
+<pre><code class="language-java"><span class="kn">import</span> <span class="nn">java.io.Serializable</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">java.util.concurrent.Callable</span><span class="o">;</span>
+
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">Call</span> <span class="kd">implements</span> <span class="n">Callable</span><span class="o">&lt;</span><span class="n">Boolean</span><span class="o">&gt;,</span> <span class="n">Serializable</span> <span class="o">{</span>
+    <span class="kd">protected</span> <span class="n">String</span> <span class="n">input</span><span class="o">;</span>
+
+    <span class="kd">public</span> <span class="nf">Call</span><span class="o">(</span><span class="n">String</span> <span class="n">input</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">input</span> <span class="o">=</span> <span class="n">input</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="n">Boolean</span> <span class="nf">call</span><span class="o">()</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="n">SimpleRPC</span><span class="o">.</span><span class="na">getInstance</span><span class="o">().</span><span class="na">callMe</span><span class="o">(</span><span class="n">input</span><span class="o">);</span>
+    <span class="o">}</span>
+<span class="o">}</span></code></pre>
+
+<p>Simple, eh?</p>
+
+	  <script type="text/javascript">
+	    $("#post table").attr("class", "table table-hover");
+	  </script>
+
+	  <div id="disqus_thread"></div>
+	  <script type="text/javascript">
+	  var disqus_shortname = 'vyazici';
+	  var disqus_identifier = '/blog/post/20120621-rpc-with-hazelcast/';
+	  var disqus_title = 'RPC (Remote Procedure Call) with Hazelcast';
+	  (function() {
+	  	var dsq = document.createElement('script');
+	  	dsq.type = 'text/javascript';
+	  	dsq.async = true;
+	  	dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+	  	(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+	  })();
+	  </script>
+
+	</div>
+      </div>
+      <div id="bgauthor" class="narrow-font">
+	background image by
+	<a href="http://jenniferwetzel.com/">Jennifer Wetzel</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+    <script type="text/javascript">
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-40183531-1']);
+      _gaq.push(['_trackPageview']);
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+    </script>
+  </body>
+</html>
+

@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>OpenVSwitch Installation Notes: OpenFlow Toolbelt</title>
+    <link rel="stylesheet" href="/css/bootstrap.css">
+    <link rel="stylesheet" href="/css/bootstrap-responsive.css">
+    <script src="/js/bootstrap.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="/css/common.css">
+    <meta name="generator" content="nanoc 3.6.2">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/post.css">
+  </head>
+  <body>
+    <div id="menu">
+      <div><a href="/">Home</a></div><div><a href="/about/">About</a></div><div><a href="/blog/">Blog</a></div><div><a href="/code/">Code</a></div><div><a href="/blog/feed/">Feed</a></div>
+    </div>
+    
+
+<div class="container">
+  <div class="row-fluid">
+    <div class="offset2 span8">
+      <div id="post" class="more-white-box rounded-corners">
+	<div class="head">
+	  <div class="title">OpenVSwitch Installation Notes: OpenFlow Toolbelt</div>
+	  <div class="subtitle">posted at
+	    May 27, 2012
+	    with tags <a href="http://technorati.com/tag/openflow" rel="tag">openflow</a>, <a href="http://technorati.com/tag/openvswitch" rel="tag">openvswitch</a>, <a href="http://technorati.com/tag/sdn" rel="tag">sdn</a>
+	  </div>
+	  <div class="share">
+	    <!-- AddThis Button BEGIN -->
+	    <div class="addthis_toolbox addthis_default_style ">
+	      <a class="addthis_button_preferred_1"></a>
+	      <a class="addthis_button_preferred_2"></a>
+	      <a class="addthis_button_preferred_3"></a>
+	      <a class="addthis_button_preferred_4"></a>
+	      <a class="addthis_button_compact"></a>
+	    </div>
+	    <script type="text/javascript">var addthis_config = {"data_track_addressbar":true};</script>
+	    <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-5144adf75211a62b"></script>
+	    <!-- AddThis Button END -->
+	  </div>
+	</div>
+	<div class="body">
+
+	  <p>In the lab, I quite often find my self installing <a href="http://www.openvswitch.org/">Open vSwitch</a> instances, configuring network parameters for certain functionality and probing network interfaces to check connectivity, again and again. You know, the daily routines in an <a href="http://www.openflow.org/">OpenFlow</a> research laboratory. To ease the workflow, I put together a small <em>toolbelt</em>.</p>
+
+<pre><code class="language-bash"><span class="nv">$ </span>of-toolbelt.sh
+Usage: of-toolbelt.sh &lt;ACTION&gt;
+Actions: ofctl
+         vsctl
+         vswitchd
+         insmod
+         db_create
+         db_start
+         get_controller
+         set_controller
+         del_controller
+         get_dpid
+         set_dpid
+         get_stp
+         set_stp
+         dl_ovs
+         install_ovs
+         ethtool_help
+         arping_help
+<span class="nv">$ </span>of-toolbelt.sh dl_ovs
+<span class="nv">$ </span>of-toolbelt.sh install_ovs openvswitch-1.4.1.tar.gz
+<span class="nv">$ </span>of-toolbelt.sh db_create
+<span class="nv">$ </span>of-toolbelt.sh db_start
+<span class="nv">$ </span>of-toolbelt.sh vsctl add-br br0
+<span class="nv">$ </span>of-toolbelt.sh set_dpid br0 1
+<span class="nv">$ </span>of-toolbelt.sh get_dpid br0
+<span class="s2">"0000000000000001"</span>
+<span class="nv">$ </span>of-toolbelt.sh get_stp br0
+<span class="nb">false</span>
+<span class="nv">$ </span>of-toolbelt.sh set_stp br0 <span class="nb">true</span>
+<span class="nv">$ </span>of-toolbelt.sh insmod
+<span class="nv">$ </span>of-toolbelt.sh vswitchd
+<span class="nv">$ </span>of-toolbelt.sh ethtool_help
+ethtool eth0
+ethtool -s eth0 speed 10 duplex full autoneg off
+ethtool -s eth0 autoneg on
+ethtool -s eth0 autoneg on adver 0x001    <span class="c"># 10 Half</span>
+                                 0x002    <span class="c"># 10 Full</span>
+                                 0x004    <span class="c"># 100 Half</span>
+                                 0x008    <span class="c"># 100 Full</span>
+                                 0x010    <span class="c"># 1000 Half(not supported by IEEE standards)</span>
+                                 0x020    <span class="c"># 1000 Full</span>
+                                 0x8000   <span class="c"># 2500 Full(not supported by IEEE standards)</span>
+                                 0x1000   <span class="c"># 10000 Full</span>
+                                 0x03F    <span class="c"># Auto</span>
+<span class="nv">$ </span>sudo ethtool -s eth0 speed 10 duplex half autoneg off
+<span class="nv">$ </span>of-toolbelt.sh vsctl add-port br0 eth0</code></pre>
+
+<p>You can find the sources in the following gist. Feel free to use it for your own purpose. (<em>Free</em> as in <em>free beer</em>.) No need to say but here it goes: Comments/Contributions are highly welcome.</p>
+
+<script src="https://gist.github.com/2814489.js?file=of-toolbelt.sh"></script>
+
+	  <script type="text/javascript">
+	    $("#post table").attr("class", "table table-hover");
+	  </script>
+
+	  <div id="disqus_thread"></div>
+	  <script type="text/javascript">
+	  var disqus_shortname = 'vyazici';
+	  var disqus_identifier = '/blog/post/20120527-openflow-toolbelt/';
+	  var disqus_title = 'OpenVSwitch Installation Notes: OpenFlow Toolbelt';
+	  (function() {
+	  	var dsq = document.createElement('script');
+	  	dsq.type = 'text/javascript';
+	  	dsq.async = true;
+	  	dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+	  	(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+	  })();
+	  </script>
+
+	</div>
+      </div>
+      <div id="bgauthor" class="narrow-font">
+	background image by
+	<a href="http://jenniferwetzel.com/">Jennifer Wetzel</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+    <script type="text/javascript">
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-40183531-1']);
+      _gaq.push(['_trackPageview']);
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+    </script>
+  </body>
+</html>
+
