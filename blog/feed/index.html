@@ -2,13 +2,79 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <id>https://vy.github.io//</id>
   <title>Volkan Yazıcı's Soap Co.</title>
-  <updated>2013-04-14T16:36:00Z</updated>
+  <updated>2013-04-19T08:37:00Z</updated>
   <link rel="alternate" href="https://vy.github.io//"/>
   <link rel="self" href="https://vy.github.io//blog/feed/"/>
   <author>
     <name>Volkan Yazıcı</name>
     <uri>https://vy.github.io/</uri>
   </author>
+  <entry>
+    <id>tag:vy.github.io,2013-04-19://blog/post/2013/04/19/benchmarking-mininet/</id>
+    <title type="html">Benchmarking Mininet</title>
+    <published>2013-04-19T08:37:00Z</published>
+    <updated>2013-04-19T08:37:00Z</updated>
+    <link rel="alternate" href="https://vy.github.io//blog/post/2013/04/19/benchmarking-mininet/"/>
+    <content type="html">&lt;p&gt;In the realm of software-defined networking, unless you own a data center as a play ground and have some serious amount of cash to spread over the technicians to program this infrastructure for you, you will inevitably meet with the mighty &lt;a href="https://github.com/mininet/mininet"&gt;mininet&lt;/a&gt;. mininet is a rapid prototyping tool for emulating software-defined networks. At its core, it uses process-based virtualization and network namespace tricks in Linux kernel to create a virtual network composed of controllers, hosts and switches.&lt;/p&gt;
+
+&lt;p&gt;Recently for an experimental testbed, I needed to figure out how far can we go with mininet. That is, what is the maximum possible size of a virtual network that I can create using mininet and how long would it take to create it?&lt;/p&gt;
+
+&lt;p&gt;Before going into the details with the benchmark, first, let me share with you the server and software specifications of the deployment environment that mininet will be running.&lt;/p&gt;
+
+&lt;table&gt;&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;Server&lt;/td&gt;
+      &lt;td&gt;&lt;a href="http://www-03.ibm.com/systems/x/hardware/rack/x3650m3/"&gt;IBM System x3650 M3&lt;/a&gt;&lt;/td&gt;
+    &lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Memory&lt;/td&gt;
+      &lt;td&gt;28 GB (4+3*8)&lt;/td&gt;
+    &lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;CPU&lt;/td&gt;
+      &lt;td&gt;6-core 2.40GHz Intel Xeon E5645 CPU&lt;/td&gt;
+    &lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;OS&lt;/td&gt;
+      &lt;td&gt;Ubuntu 12.10 x86-64&lt;/td&gt;
+    &lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Kernel&lt;/td&gt;
+      &lt;td&gt;3.5.0-26-generic&lt;/td&gt;
+    &lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;mininet&lt;/td&gt;
+      &lt;td&gt;2.0.0d2&lt;/td&gt;
+    &lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Open vSwitch&lt;/td&gt;
+      &lt;td&gt;1.4.3&lt;/td&gt;
+    &lt;/tr&gt;
+&lt;/tbody&gt;&lt;/table&gt;&lt;p&gt;In order to benchmark mininet, I used a simple bash function as follows.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-bash"&gt;&lt;span class="k"&gt;for &lt;/span&gt;n in 1 &lt;span class="sb"&gt;`&lt;/span&gt;seq 32 32 1024&lt;span class="sb"&gt;`&lt;/span&gt;; &lt;span class="k"&gt;do&lt;/span&gt;
+&lt;span class="k"&gt;    &lt;/span&gt;&lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="s2"&gt;"n: $n"&lt;/span&gt;
+    &lt;span class="nb"&gt;echo&lt;/span&gt; -e &lt;span class="s2"&gt;"h1 free -m | grep ^Mem | awk '{print \"mem: \" \$3}'\nexit"&lt;/span&gt; | &lt;span class="se"&gt;\&lt;/span&gt;
+        mn --topo&lt;span class="o"&gt;=&lt;/span&gt;linear,&lt;span class="nv"&gt;$n&lt;/span&gt; 2&amp;gt;&amp;amp;1 | &lt;span class="se"&gt;\&lt;/span&gt;
+        grep -E &lt;span class="s2"&gt;"^(mem:|completed in)"&lt;/span&gt;
+&lt;span class="k"&gt;done&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;For varying sizes of &lt;code&gt;n&lt;/code&gt;, this command lets mininet to&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;create a virtual network composed of &lt;code&gt;n&lt;/code&gt; serially connected (particularly, &lt;a href="http://openvswitch.org/"&gt;Open vSwitch&lt;/a&gt;) switches,&lt;/li&gt;
+  &lt;li&gt;where a single host is attached to each switch and&lt;/li&gt;
+  &lt;li&gt;the switches are connected to a central controller.&lt;/li&gt;
+&lt;/ol&gt;&lt;p&gt;Put another way, created network will have &lt;code&gt;2n+1&lt;/code&gt; nodes (a central controller, &lt;code&gt;n&lt;/code&gt; switches, &lt;code&gt;n&lt;/code&gt; hosts) and &lt;code&gt;3n-1&lt;/code&gt; links.&lt;/p&gt;
+
+&lt;p&gt;Deployed script measures two things: 1) the memory usage of the server right after starting the mininet, and 2) the time it takes to start and shutdown the mininet. Results are as follows. (See &lt;a href="mininet.dat"&gt;mininet.dat&lt;/a&gt; and &lt;a href="plot.gnu"&gt;plot.gnu&lt;/a&gt; for the raw results and the used Gnuplot script, respectively.)&lt;/p&gt;
+
+&lt;p&gt;&lt;img src="time.jpg" alt="Timings"&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src="memory.jpg" alt="Memory Usage"&gt;&lt;/p&gt;
+
+&lt;p&gt;Note that while plotting the memory usage, I subtracted the memory usage of the system at stale state from the results.&lt;/p&gt;</content>
+  </entry>
   <entry>
     <id>tag:vy.github.io,2013-04-14://blog/post/2013/04/14/migrating-from-blogspot/</id>
     <title type="html">Migrating from Blogspot to Nanoc</title>
@@ -772,66 +838,6 @@ target/
 &lt;/blockquote&gt;
 
 &lt;p&gt;Finally, we have a valid answer!&lt;/p&gt;</content>
-  </entry>
-  <entry>
-    <id>tag:vy.github.io,2012-05-27://blog/post/2012/05/27/openflow-toolbelt/</id>
-    <title type="html">OpenVSwitch Installation Notes: OpenFlow Toolbelt</title>
-    <published>2012-05-27T07:58:00Z</published>
-    <updated>2012-05-27T07:58:00Z</updated>
-    <link rel="alternate" href="https://vy.github.io//blog/post/2012/05/27/openflow-toolbelt/"/>
-    <content type="html">&lt;p&gt;In the lab, I quite often find my self installing &lt;a href="http://www.openvswitch.org/"&gt;Open vSwitch&lt;/a&gt; instances, configuring network parameters for certain functionality and probing network interfaces to check connectivity, again and again. You know, the daily routines in an &lt;a href="http://www.openflow.org/"&gt;OpenFlow&lt;/a&gt; research laboratory. To ease the workflow, I put together a small &lt;em&gt;toolbelt&lt;/em&gt;.&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="language-bash"&gt;&lt;span class="nv"&gt;$ &lt;/span&gt;of-toolbelt.sh
-Usage: of-toolbelt.sh &amp;lt;ACTION&amp;gt;
-Actions: ofctl
-         vsctl
-         vswitchd
-         insmod
-         db_create
-         db_start
-         get_controller
-         set_controller
-         del_controller
-         get_dpid
-         set_dpid
-         get_stp
-         set_stp
-         dl_ovs
-         install_ovs
-         ethtool_help
-         arping_help
-&lt;span class="nv"&gt;$ &lt;/span&gt;of-toolbelt.sh dl_ovs
-&lt;span class="nv"&gt;$ &lt;/span&gt;of-toolbelt.sh install_ovs openvswitch-1.4.1.tar.gz
-&lt;span class="nv"&gt;$ &lt;/span&gt;of-toolbelt.sh db_create
-&lt;span class="nv"&gt;$ &lt;/span&gt;of-toolbelt.sh db_start
-&lt;span class="nv"&gt;$ &lt;/span&gt;of-toolbelt.sh vsctl add-br br0
-&lt;span class="nv"&gt;$ &lt;/span&gt;of-toolbelt.sh set_dpid br0 1
-&lt;span class="nv"&gt;$ &lt;/span&gt;of-toolbelt.sh get_dpid br0
-&lt;span class="s2"&gt;"0000000000000001"&lt;/span&gt;
-&lt;span class="nv"&gt;$ &lt;/span&gt;of-toolbelt.sh get_stp br0
-&lt;span class="nb"&gt;false&lt;/span&gt;
-&lt;span class="nv"&gt;$ &lt;/span&gt;of-toolbelt.sh set_stp br0 &lt;span class="nb"&gt;true&lt;/span&gt;
-&lt;span class="nv"&gt;$ &lt;/span&gt;of-toolbelt.sh insmod
-&lt;span class="nv"&gt;$ &lt;/span&gt;of-toolbelt.sh vswitchd
-&lt;span class="nv"&gt;$ &lt;/span&gt;of-toolbelt.sh ethtool_help
-ethtool eth0
-ethtool -s eth0 speed 10 duplex full autoneg off
-ethtool -s eth0 autoneg on
-ethtool -s eth0 autoneg on adver 0x001    &lt;span class="c"&gt;# 10 Half&lt;/span&gt;
-                                 0x002    &lt;span class="c"&gt;# 10 Full&lt;/span&gt;
-                                 0x004    &lt;span class="c"&gt;# 100 Half&lt;/span&gt;
-                                 0x008    &lt;span class="c"&gt;# 100 Full&lt;/span&gt;
-                                 0x010    &lt;span class="c"&gt;# 1000 Half(not supported by IEEE standards)&lt;/span&gt;
-                                 0x020    &lt;span class="c"&gt;# 1000 Full&lt;/span&gt;
-                                 0x8000   &lt;span class="c"&gt;# 2500 Full(not supported by IEEE standards)&lt;/span&gt;
-                                 0x1000   &lt;span class="c"&gt;# 10000 Full&lt;/span&gt;
-                                 0x03F    &lt;span class="c"&gt;# Auto&lt;/span&gt;
-&lt;span class="nv"&gt;$ &lt;/span&gt;sudo ethtool -s eth0 speed 10 duplex half autoneg off
-&lt;span class="nv"&gt;$ &lt;/span&gt;of-toolbelt.sh vsctl add-port br0 eth0&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;You can find the sources in the following gist. Feel free to use it for your own purpose. (&lt;em&gt;Free&lt;/em&gt; as in &lt;em&gt;free beer&lt;/em&gt;.) No need to say but here it goes: Comments/Contributions are highly welcome.&lt;/p&gt;
-
-&lt;script src="https://gist.github.com/2814489.js?file=of-toolbelt.sh"&gt;&lt;/script&gt;</content>
   </entry>
 </feed>
 

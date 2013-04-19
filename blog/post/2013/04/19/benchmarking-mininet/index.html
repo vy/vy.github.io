@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Benchmarking Mininet</title>
+    <link rel="stylesheet" href="/css/bootstrap.css">
+    <link rel="stylesheet" href="/css/bootstrap-responsive.css">
+    <script src="/js/bootstrap.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="/css/common.css">
+    <meta name="generator" content="nanoc 3.6.2">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/post.css">
+    <script type="text/javascript">
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-40183531-1']);
+      _gaq.push(['_trackPageview']);
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="menu">
+      <div><a href="/">Home</a></div><div><a href="/about/">About</a></div><div><a href="/blog/">Blog</a></div><div><a href="/code/">Code</a></div><div><a href="/blog/feed/">Feed</a></div>
+    </div>
+    
+
+<div class="container">
+  <div class="row-fluid">
+    <div class="offset2 span8">
+      <div id="post" class="more-white-box rounded-corners">
+	<div class="head">
+	  <div class="title">Benchmarking Mininet</div>
+	  <div class="subtitle">posted at
+	    April 19, 2013
+	    with tags <a href="http://technorati.com/tag/openflow" rel="tag">openflow</a>, <a href="http://technorati.com/tag/networking" rel="tag">networking</a>, <a href="http://technorati.com/tag/mininet" rel="tag">mininet</a>, <a href="http://technorati.com/tag/sdn" rel="tag">sdn</a>
+	  </div>
+	  <div class="share">
+	    <!-- AddThis Button BEGIN -->
+	    <div class="addthis_toolbox addthis_default_style ">
+	      <a class="addthis_button_preferred_1"></a>
+	      <a class="addthis_button_preferred_2"></a>
+	      <a class="addthis_button_preferred_3"></a>
+	      <a class="addthis_button_preferred_4"></a>
+	      <a class="addthis_button_compact"></a>
+	    </div>
+	    <script type="text/javascript">var addthis_config = {"data_track_addressbar":true};</script>
+	    <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-5144adf75211a62b"></script>
+	    <!-- AddThis Button END -->
+	  </div>
+	</div>
+	<div class="body">
+
+	  <p>In the realm of software-defined networking, unless you own a data center as a play ground and have some serious amount of cash to spread over the technicians to program this infrastructure for you, you will inevitably meet with the mighty <a href="https://github.com/mininet/mininet">mininet</a>. mininet is a rapid prototyping tool for emulating software-defined networks. At its core, it uses process-based virtualization and network namespace tricks in Linux kernel to create a virtual network composed of controllers, hosts and switches.</p>
+
+<p>Recently for an experimental testbed, I needed to figure out how far can we go with mininet. That is, what is the maximum possible size of a virtual network that I can create using mininet and how long would it take to create it?</p>
+
+<p>Before going into the details with the benchmark, first, let me share with you the server and software specifications of the deployment environment that mininet will be running.</p>
+
+<table><tbody>
+<tr>
+<td>Server</td>
+      <td><a href="http://www-03.ibm.com/systems/x/hardware/rack/x3650m3/">IBM System x3650 M3</a></td>
+    </tr>
+<tr>
+<td>Memory</td>
+      <td>28 GB (4+3*8)</td>
+    </tr>
+<tr>
+<td>CPU</td>
+      <td>6-core 2.40GHz Intel Xeon E5645 CPU</td>
+    </tr>
+<tr>
+<td>OS</td>
+      <td>Ubuntu 12.10 x86-64</td>
+    </tr>
+<tr>
+<td>Kernel</td>
+      <td>3.5.0-26-generic</td>
+    </tr>
+<tr>
+<td>mininet</td>
+      <td>2.0.0d2</td>
+    </tr>
+<tr>
+<td>Open vSwitch</td>
+      <td>1.4.3</td>
+    </tr>
+</tbody></table><p>In order to benchmark mininet, I used a simple bash function as follows.</p>
+
+<pre><code class="language-bash"><span class="k">for </span>n in 1 <span class="sb">`</span>seq 32 32 1024<span class="sb">`</span>; <span class="k">do</span>
+<span class="k">    </span><span class="nb">echo</span> <span class="s2">"n: $n"</span>
+    <span class="nb">echo</span> -e <span class="s2">"h1 free -m | grep ^Mem | awk '{print \"mem: \" \$3}'\nexit"</span> | <span class="se">\</span>
+        mn --topo<span class="o">=</span>linear,<span class="nv">$n</span> 2&gt;&amp;1 | <span class="se">\</span>
+        grep -E <span class="s2">"^(mem:|completed in)"</span>
+<span class="k">done</span></code></pre>
+
+<p>For varying sizes of <code>n</code>, this command lets mininet to</p>
+
+<ol>
+<li>create a virtual network composed of <code>n</code> serially connected (particularly, <a href="http://openvswitch.org/">Open vSwitch</a>) switches,</li>
+  <li>where a single host is attached to each switch and</li>
+  <li>the switches are connected to a central controller.</li>
+</ol><p>Put another way, created network will have <code>2n+1</code> nodes (a central controller, <code>n</code> switches, <code>n</code> hosts) and <code>3n-1</code> links.</p>
+
+<p>Deployed script measures two things: 1) the memory usage of the server right after starting the mininet, and 2) the time it takes to start and shutdown the mininet. Results are as follows. (See <a href="mininet.dat">mininet.dat</a> and <a href="plot.gnu">plot.gnu</a> for the raw results and the used Gnuplot script, respectively.)</p>
+
+<p><img src="time.jpg" alt="Timings"></p>
+
+<p><img src="memory.jpg" alt="Memory Usage"></p>
+
+<p>Note that while plotting the memory usage, I subtracted the memory usage of the system at stale state from the results.</p>
+
+	  <script type="text/javascript">
+	    $("#post table").attr("class", "table table-hover");
+	  </script>
+
+	  <div id="disqus_thread"></div>
+	  <script type="text/javascript">
+	  var disqus_shortname = 'vyazici';
+	  var disqus_identifier = '/blog/post/20130419-benchmarking-mininet/';
+	  var disqus_title = 'Benchmarking Mininet';
+	  (function() {
+	  	var dsq = document.createElement('script');
+	  	dsq.type = 'text/javascript';
+	  	dsq.async = true;
+	  	dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+	  	(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+	  })();
+	  </script>
+
+	</div>
+      </div>
+      <div id="bgauthor" class="narrow-font">
+	background image by
+	<a href="http://jenniferwetzel.com/">Jennifer Wetzel</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+  </body>
+</html>
+
