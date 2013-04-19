@@ -2,14 +2,20 @@
 # -*- coding: utf-8 -*-
 
 preprocess do
-  tags = items
+  # Remove private items.
+  @items.reject! { |item|
+    /%private.[A-Za-z0-9]+$/.match(item.identifier.chop + "." + item[:extension])
+  }
+
+  # Generate tags.
+  tags = @items
     .map { |item| item[:tags] }
     .flatten.uniq.delete_if { |tag| tag.nil? }
   tags.each { |tag|
     rawcontent = "<%= render('blog', :tag => '#{tag}') %>"
     attributes = { :title => "Blog/#{tag}" }
     identifier = tag_identifier(tag)
-    items << Nanoc::Item.new(rawcontent, attributes, identifier, :binary => false)
+    @items << Nanoc::Item.new(rawcontent, attributes, identifier, :binary => false)
   }
 end
 
