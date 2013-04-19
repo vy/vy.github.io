@@ -14,7 +14,10 @@
 	    %>
 	    <%=
 	       unless @item[:tags].nil?
-	         "with tags #{tags_for(@item)}"
+	           "with tags " + \
+	            @item[:tags].map { |tag|
+                    link_to(tag, tag_identifier(tag))
+                } .join(", ")
 	       end
 	    %>
 	  </div>
