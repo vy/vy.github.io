@@ -5,6 +5,7 @@ title: "OpenVSwitch Installation Notes: OpenFlow Toolbelt"
 tags:
   - openflow
   - openvswitch
+  - networking
   - sdn
 ---
 

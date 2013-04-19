@@ -5,6 +5,7 @@ title: Performance of Linux IP Aliased Network Interfaces
 tags:
   - kernel
   - linux
+  - networking
 ---
 
 > **TL;DR** -- I put together a setup to measure the performance of IP aliasing in Linux. As the numbers at the bottom of the post describe, observed throughput increases as the number of aliases increase. WTF?

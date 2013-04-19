@@ -5,6 +5,7 @@ title: "Performance of Linux IP Aliased Network Interfaces: Lessons Learnt"
 tags:
   - kernel
   - linux
+  - networking
 ---
 
 In an earlier <%= link_to "post", @items["/blog/post/20120511-performance-of-linux-ip-alias/"] %>, I had put together a set of benchmarks to measure the performance of IP aliased network interfaces in Linux. While I was expecting a performance degredation due to IP aliasing related book keeping at the kernel level, suprisingly results were pointing out that the overall network throughput measured over the used physical interface increases proportional to the number of aliased interfaces. In this post, I will re-investigate the subject with the lessons I learnt from my previous try.
