@@ -21,7 +21,8 @@ Before going into the details with the benchmark, first, let me share with you t
 |OS|Ubuntu 12.10 x86-64|
 |Kernel|3.5.0-26-generic|
 |mininet|2.0.0d2|
-|Open vSwitch|1.4.3|
+|[Open vSwitch](http://www.openvswitch.org/)|1.4.3|
+|[OpenFlow Reference Implementation](http://www.openflow.org/wp/downloads/)|1.0.0|
 
 In order to benchmark mininet, I used a simple bash function as follows.
 
@@ -35,16 +36,20 @@ In order to benchmark mininet, I used a simple bash function as follows.
 
 For varying sizes of `n`, this command lets mininet to
 
-1. create a virtual network composed of `n` serially connected (particularly, [Open vSwitch](http://openvswitch.org/)) switches,
+1. create a virtual network composed of `n` serially connected switches,
 2. where a single host is attached to each switch and
 3. the switches are connected to a central controller.
 
 Put another way, created network will have `2n+1` nodes (a central controller, `n` switches, `n` hosts) and `3n-1` links.
 
-Deployed script measures two things: 1) the memory usage of the server right after starting the mininet, and 2) the time it takes to start and shutdown the mininet. Results are as follows. (See [mininet.dat](mininet.dat) and [plot.gnu](plot.gnu) for the raw results and the used Gnuplot script, respectively.)
+Deployed script measures two things: 1) the memory usage of the server right after starting the mininet, and 2) the time it takes to start and shutdown the mininet. Results are as follows. (See [mininet-ovs.dat](mininet-ovs.dat) and [mininet-ref.dat](mininet-ref.dat) for raw results generated using Open vSwitch and OpenFlow reference implementation, respectively. Employed Gnuplot script [plot.gnu](plot.gnu) is also shared.)
 
 ![Timings](time.jpg)
 
 ![Memory Usage](memory.jpg)
 
-Note that while plotting the memory usage, I subtracted the memory usage of the system at stale state from the results.
+Timing numbers point out that as the number of switches increase, initialization of the whole network exposes a significant runtime overhead, regardless of the switch implementation that is used. That being said, OpenFlow reference implementation consumes a much less amount of memory compared to the Open vSwitch. On the other hand, this advantage of it should be taken with a grain of salt, because Open vSwitch is known to perform much better and supports many standards that are missing in the reference implementation. (For instance, I was once bitten by OpenFlow forwarding LLDP packets across switches, where it shouldn't.)
+
+To sum it up, while mininet is an awesome tool to compose and emulate software-defined networks, it has its own limitations on the size of the network. These basic benchmarks should hopefully give you an idea about mininet's runtime and memory characteristics proportional with the number of switches.
+
+**Note:** Thanks Bob Lantz for [his suggestion](https://mailman.stanford.edu/pipermail/openflow-discuss/2013-April/004477.html) on using the switch distributed with the [OpenFlow reference implementation](http://www.openflow.org/wp/downloads/). 
