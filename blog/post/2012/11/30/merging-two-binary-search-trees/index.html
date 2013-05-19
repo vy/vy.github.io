@@ -39,7 +39,6 @@
 	    with tags <a href="/blog/tag/algorithm">algorithm</a>, <a href="/blog/tag/cpp">cpp</a>
 	  </div>
 	  <div class="share">
-	    <!-- AddThis Button BEGIN -->
 	    <div class="addthis_toolbox addthis_default_style ">
 	      <a class="addthis_button_preferred_1"></a>
 	      <a class="addthis_button_preferred_2"></a>
@@ -47,9 +46,8 @@
 	      <a class="addthis_button_preferred_4"></a>
 	      <a class="addthis_button_compact"></a>
 	    </div>
-	    <script type="text/javascript">var addthis_config = {"data_track_addressbar":true};</script>
+	    <script type="text/javascript">var addthis_config = {"data_track_addressbar":false};</script>
 	    <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-5144adf75211a62b"></script>
-	    <!-- AddThis Button END -->
 	  </div>
 	</div>
 	<div class="body">
@@ -61,9 +59,11 @@
 <p>You can first start by checking the <a href="https://www.google.com/search?q=merge+binary+search+tree">Google results</a>. But, as usual, I am kind enough to provide you a tl;dr version: In order to merge two BSTs of size m and n nodes, there are a couple of common approaches of fixed O(m+n) processing time and space complexity, some of which are listed as follows.</p>
 
 <ul>
-<li>Insert given BSTs into a newly created BST.</li>
+  <li>Insert given BSTs into a newly created BST.</li>
   <li>Create an array of elements of the first BST in sorted order, and use this array to merge the results to a new BST while traversing the second BST.</li>
-</ul><p>Further exposure to the higher doses of the problem is available through <a href="http://stackoverflow.com/questions/1008513/how-to-merge-two-bsts-efficiently">this</a> and <a href="http://stackoverflow.com/questions/7540546/merging-2-binary-search-trees">this</a> StackOverflow threads.</p>
+</ul>
+
+<p>Further exposure to the higher doses of the problem is available through <a href="http://stackoverflow.com/questions/1008513/how-to-merge-two-bsts-efficiently">this</a> and <a href="http://stackoverflow.com/questions/7540546/merging-2-binary-search-trees">this</a> StackOverflow threads.</p>
 
 <h1 id="on-complexity">On Complexity</h1>
 
@@ -107,6 +107,7 @@
 <h1 id="the-code">The Code</h1>
 
 <p>I implemented a streamer (<code>NodeStream</code>), stream merger (<code>MergeNodeStream</code>), and a vector merger (<code>MergeNodeVector</code>) in C++ and Scala. Code is accessible through this <a href="https://gist.github.com/4171977">Gist</a>. You can also find implementations of the algorithm in <a href="https://gist.github.com/8be224c9cfb423dcc0f3">C++ using Boost Coroutines</a> and <a href="https://gist.github.com/4181097">Haskell</a> written by <a href="http://www.blogger.com/profile/01427008889073096042">Remko</a>.</p>
+
 
 	  <script type="text/javascript">
 	    $("#post table").attr("class", "table table-hover");

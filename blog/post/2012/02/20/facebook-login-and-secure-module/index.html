@@ -39,7 +39,6 @@
 	    with tags <a href="/blog/tag/facebook">facebook</a>, <a href="/blog/tag/java">java</a>, <a href="/blog/tag/play-framework">play framework</a>
 	  </div>
 	  <div class="share">
-	    <!-- AddThis Button BEGIN -->
 	    <div class="addthis_toolbox addthis_default_style ">
 	      <a class="addthis_button_preferred_1"></a>
 	      <a class="addthis_button_preferred_2"></a>
@@ -47,9 +46,8 @@
 	      <a class="addthis_button_preferred_4"></a>
 	      <a class="addthis_button_compact"></a>
 	    </div>
-	    <script type="text/javascript">var addthis_config = {"data_track_addressbar":true};</script>
+	    <script type="text/javascript">var addthis_config = {"data_track_addressbar":false};</script>
 	    <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-5144adf75211a62b"></script>
-	    <!-- AddThis Button END -->
 	  </div>
 	</div>
 	<div class="body">
@@ -224,6 +222,7 @@ play secure:ov --layout</code></pre>
 <p>Now you can just use <code>@With(Secure.class)</code> annotations to define access control for your controllers. (As a next step, you might want to create a <code>Users</code> CRUD controller with access control.)</p>
 
 <p><strong>Edit:</strong> Don’t forget to checkout the <a href="http://github.com/vy/play-facebook">play-facebook</a>, which is ready to go Play Framework application with Facebook Login integration. It follows the mechanics described in here and provides an archetype to bootstrap custom applications.</p>
+
 
 	  <script type="text/javascript">
 	    $("#post table").attr("class", "table table-hover");

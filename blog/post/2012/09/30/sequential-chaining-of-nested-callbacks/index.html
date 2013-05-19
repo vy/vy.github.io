@@ -39,7 +39,6 @@
 	    with tags <a href="/blog/tag/coffeescript">coffeescript</a>, <a href="/blog/tag/concurrency">concurrency</a>, <a href="/blog/tag/javascript">javascript</a>
 	  </div>
 	  <div class="share">
-	    <!-- AddThis Button BEGIN -->
 	    <div class="addthis_toolbox addthis_default_style ">
 	      <a class="addthis_button_preferred_1"></a>
 	      <a class="addthis_button_preferred_2"></a>
@@ -47,9 +46,8 @@
 	      <a class="addthis_button_preferred_4"></a>
 	      <a class="addthis_button_compact"></a>
 	    </div>
-	    <script type="text/javascript">var addthis_config = {"data_track_addressbar":true};</script>
+	    <script type="text/javascript">var addthis_config = {"data_track_addressbar":false};</script>
 	    <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-5144adf75211a62b"></script>
-	    <!-- AddThis Button END -->
 	  </div>
 	</div>
 	<div class="body">
@@ -277,6 +275,7 @@
 <p>Mission accomplished! Now we have a fully-fledged sequencer where we can dynamically push tasks with different priorities.</p>
 
 <p>Note that while <code>PrioritizedSequentialExecutor</code> is quite good at doing what it is advertised for, especially compared to the lines of code written, there exists other libraries (e.g., <a href="https://github.com/substack/node-seq">seq</a>, <a href="https://github.com/substack/node-chainsaw">chainsaw</a>, <a href="https://github.com/coolaj86/futures">futures</a>, <a href="https://github.com/caolan/async">async</a>, <a href="https://github.com/JeffreyZhao/wind">windjs</a>, <a href="https://github.com/Sage/streamlinejs">streamlinejs</a>, etc.) with similar flow-control purposes. While you are at it, you might want to check them out too.</p>
+
 
 	  <script type="text/javascript">
 	    $("#post table").attr("class", "table table-hover");

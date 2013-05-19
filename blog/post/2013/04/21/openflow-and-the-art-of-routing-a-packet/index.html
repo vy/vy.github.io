@@ -36,7 +36,7 @@
 	  <div class="title">OpenFlow and the Art of Packet Routing</div>
 	  <div class="subtitle">posted at
 	    April 21, 2013
-	    with tags <a href="http://technorati.com/tag/openflow" rel="tag">openflow</a>, <a href="http://technorati.com/tag/networking" rel="tag">networking</a>
+	    with tags <a href="/blog/tag/openflow">openflow</a>, <a href="/blog/tag/networking">networking</a>
 	  </div>
 	  <div class="share">
 	    <!-- AddThis Button BEGIN -->
@@ -54,11 +54,11 @@
 	</div>
 	<div class="body">
 
-	  <p>Plenty of things have been said and written about OpenFlow. Experts from the industry shared their thoughts and experiences. Crowds on Twitter witnessed the trends that are roused with the rise of software-defined networking and OpenFlow. But so far not much has been said about the internals of the underlying technology. They unfortunately ignored a serious part of the audience… us.</p>
+	  <p>Plenty of things have been said and written about OpenFlow. Experts from the industry shared their thoughts and experiences. Crowds on Twitter witnessed the trends that are roused with the rise of software-defined networking and OpenFlow. But so far not much has been said about the internals of the underlying technology. They unfortunately ignored a serious part of the audience… us, the developers.</p>
 
 <p><a href="http://youtu.be/8To-6VIJZRE"><img src="developers.gif" alt="Steve Ballmer and Developers"></a></p>
 
-<p>Yes, developers… In this blog post I will try to fill this gap and step by step guide you through routing a packet in an OpenFlow network. Buckle your seat belt Dorothy!</p>
+<p>In this blog post I will try to fill this gap and step by step guide you through routing a packet in an OpenFlow network. Buckle your seat belt Dorothy!</p>
 
 <h1 id="traditional-networking">Traditional Networking</h1>
 
@@ -66,7 +66,7 @@
 
 <p><img src="traditional-network.svg" alt="Traditional L2 Network"></p>
 
-<p>Every L2 switch operating in <em>learning switch</em> mode works according to a pretty basic rule: Do I know the hardware address of the host this packet is destined to? If yes, forward the packet to the port the host is last observed on, otherwise, flood it through all available ports, except the incoming one. Simultaneously, the switch also <em>learns</em> the hardware address of the host the packet is originated from. Hence, whenever it matches a packet destined to this host, it knows where to forward it to. Observed hardware address to port map is stored in a <em>forwarding table</em> composed of forwarding rules as follows.</p>
+<p>Every L2 switch operating in <em>learning switch</em> mode works according to a pretty basic rule: Do I know the hardware address of the host this packet is destined to? If yes, forward the packet to the port the host is last observed on, otherwise, flood it through all available ports, except the incoming one. Simultaneously, the switch also <em>learns</em> the hardware address of the host the packet is originated from. Hence, whenever it matches a packet destined to this host, it will know where to forward it to. Observed hardware address to port map is stored in a <em>forwarding table</em> composed of forwarding rules as follows.</p>
 
 <table>
 <thead><tr>
@@ -87,7 +87,7 @@
       <td style="text-align: left">1</td>
     </tr>
 </tbody>
-</table><p>The interpretation of this table is simple: if there is a packet destined to a device with hardware address (that is, <a href="http://en.wikipedia.org/wiki/MAC_address">MAC address</a>) <code>00:24:54:b9:1c:f8</code>, route it through port 1, if it is destined to <code>e8:39:df:6a:21:2a</code>, route it through port 3, etc. Note that forwarding decision is based on the L2 address of the destined host, that is, the switch is oblivious to the information exposed by higher layers. (For instance, an L2 switch does not take the destined IP address, transport protocol (TCP, UDP, etc.) into account.)</p>
+</table><p>The interpretation of this table is simple: if there is a packet destined to a device with hardware address (that is, <a href="http://en.wikipedia.org/wiki/MAC_address">MAC address</a>) <code>00:24:54:b9:1c:f8</code>, route it through port 1, if it is destined to <code>e8:39:df:6a:21:2a</code>, route it through port 3, etc. Note that forwarding decision is based on the L2 address of the destined host, that is, the switch is oblivious to the information exposed by the higher layers. (For instance, an L2 switch does not take the destined IP address, transport protocol (TCP, UDP, etc.), and/or application protocol (HTTP, FTP, etc.) into account.)</p>
 
 <p>This hardware address based forwarding mechanism necessitates hosts to attach the hardware address of the destination host while sending a packet to the network. For that purpose, every (decent) operating system has an <a href="http://en.wikipedia.org/wiki/Address_Resolution_Protocol">ARP</a> cache for mapping IP addresses to the hardware addresses. Consider my current ARP cache as of this writing.</p>
 
@@ -96,12 +96,12 @@
   ? (10.100.92.10) at 1c:6f:65:aa:79:48 [ether] on eth0
 </code></pre>
 
-<p>But initially, how does a host know the hardware address of a remote host? In a broad sense, <strong>how does H1 really connect to H2 in a traditional network composed of L2 switches?</strong> Let’s step by step investigate the network traffic for a scenario where H1 tries to send an ICMP echo request to (that is, <a href="http://en.wikipedia.org/wiki/Ping_%28networking_utility%29">ping</a>) H2. (Initially we assume that the forwarding table of S1 is empty, H1 and H2 have no entries in their ARP caches and H1 knows the IP address of H2.)</p>
+<p>But initially, how does a host know the hardware address of a remote host? In a broad sense, <strong>how does H1 really connect to H2 in a traditional network composed of L2 switches?</strong> Let’s step by step investigate the network traffic for a scenario where H1 tries to send an ICMP echo request (that is, <a href="http://en.wikipedia.org/wiki/Ping_%28networking_utility%29">ping</a>) to H2. (Initially we assume that the forwarding table of S1 is empty, H1 and H2 have no entries in their ARP caches and H1 knows the IP address of H2.)</p>
 
 <ol>
 <li>H1 needs the hardware address of the machine assigned to H2’s IP address <code>10.0.0.2</code>.
     <ul>
-<li>It first checks the ARP cache. Since an ARP entry for IP address is initially missing in H1’s ARP cache, it <em>broadcasts</em> an <em>ARP request</em> asking for <em>the hardware address of <code>10.0.0.2</code></em>.</li>
+<li>It first checks its ARP cache. Since an ARP entry for IP address is initially missing in H1’s ARP cache, it <em>broadcasts</em> an <em>ARP request</em> asking for <em>the hardware address of <code>10.0.0.2</code></em>.</li>
       <li>Along with the request, H1 attaches its IP and hardware address. H2 will use this information to send the reply back.</li>
     </ul>
 </li>
@@ -143,7 +143,9 @@
 
 <p><img src="complex-network.jpg" alt="Complex Network"></p>
 
-<p>For the cases we investigated above, there is always a single route between the source and the destination, no more, no less. Hence, the only choice a switch would make will lead it to <em>the optimal route</em>. (Optimality in routing is a pretty ambiguous term unless given the used context. For instance, it can refer to the shortest path in terms of hop count, the least loaded path, the cheapest path if it involves two inter-connecting ISPs, etc. In this post, by optimal I refer to the hop-count-based shortest path.) In a topology with loops, how will the switches tackle the problem of flooding storms? (That is, in a triangular topology between switches S1, S2, and S3, S1 floods a packet to S2, S2 floods the packet to S3, S3 floods the packet back to S1, and S1 again tries to flood the same packet to S2, and so on.) For a case where multiple routes exist between the endpoints, how will a switch decide on which route to prefer while forwarding a packet? Luckily these problems have been addressed in the literature by the so called <em>routing protocols</em> (<a href="http://en.wikipedia.org/wiki/Spanning_Tree_Protocol">STP</a>, <a href="http://en.wikipedia.org/wiki/Open_Shortest_Path_First">OSPF</a>, <a href="http://en.wikipedia.org/wiki/IS-IS">IS-IS</a>, etc.) that is used for the purpose of coordination and cooperation between the switches. The real-world deployment of a routing protocol is known to be a time consuming process. (For instance, IETF standardization of <a href="http://conference.apnic.net/__data/assets/pdf_file/0004/58882/trillapricot8_1361288177.pdf">TRILL</a> took almost 6 years. God knows when it will ever have a wide adoptance.) In addition, the introduced protocols are expected to run in a distributed fashion between individual switches, provide backward compatibility with existing infrastructures and need to be implemented on the hardware for each switch. These restrictions put the network into an ossified state, where it almost becomes practically impossible to evolve the network without replacing the hardware. Enter the software-defined networking!</p>
+<p>For the cases we investigated above, there is always a single route between the source and the destination, no more, no less. Hence, the only choice a switch would make will lead it to <em>the optimal route</em>. (Optimality in routing is a pretty ambiguous term unless given the used context. For instance, it can refer to the shortest path in terms of hop count, the least loaded path, the cheapest path if it involves two inter-connecting <a href="http://en.wikipedia.org/wiki/Autonomous_System_%28Internet%29">autonomous system</a>s, etc. In this post, by optimal I will refer to the hop-count-based shortest path.) In a topology with loops, how will the switches tackle the problem of flooding storms? (That is, in a triangular topology between switches S1, S2, and S3, S1 floods a packet to S2, S2 floods the packet to S3, S3 floods the packet back to S1, and S1 again tries to flood the same packet to S2, and so on.) For a case where multiple routes exist between the endpoints, how will a switch decide on which route to prefer while forwarding a packet? Luckily these problems have been addressed in the literature by the so called <em>routing protocols</em> (<a href="http://en.wikipedia.org/wiki/Spanning_Tree_Protocol">STP</a>, <a href="http://en.wikipedia.org/wiki/Open_Shortest_Path_First">OSPF</a>, <a href="http://en.wikipedia.org/wiki/IS-IS">IS-IS</a>, etc.) that is used for the purpose of coordination and cooperation between the switches.</p>
+
+<p>The real-world deployment of a routing protocol is known to be a time consuming process. (For instance, IETF standardization of <a href="http://conference.apnic.net/__data/assets/pdf_file/0004/58882/trillapricot8_1361288177.pdf">TRILL</a> took almost 6 years. God knows when it will ever have a wide adoptance.) In addition, the introduced protocols are expected to run in a distributed fashion between individual switches, provide backward compatibility with the existing infrastructures and need to be implemented on the hardware for each switch. These restrictions put the network into an ossified state, where it almost becomes practically impossible to evolve the network without replacing the hardware. Enter the software-defined networking!</p>
 
 <h1 id="software-defined-networking">Software-Defined Networking</h1>
 
@@ -162,17 +164,21 @@
   <dd>The communication medium between the control plane driver (i.e., <em>controller</em>) and the applications.</dd>
   <dt>Soutbound Interface</dt>
   <dd>The communication medium between the data and control planes.</dd>
-</dl><p>Before going into the details, let’s try to evaluate the above ping scenario in an SDN environment this time. Again consider a network composed of 2 hosts and a single switch sitting in between. Let switch be connected to a controller C1 that hosts a simple routing application, e.g., a learning switch application. Workflow is as follows.</p>
+</dl><p>Before going into the details, let’s try to evaluate the above ping scenario in an SDN environment this time. Again consider a network composed of 2 hosts and a single switch sitting in between. Let the switch be connected to a controller C1 that hosts a simple routing application, e.g., a learning switch application. Workflow is as follows.</p>
 
 <ol>
 <li>H1 sends an ARP request to S1.</li>
-  <li>ARP request does not match with existing rules on S1 and S1 redirects the packet to the controller.</li>
+  <li>ARP request does not match with the existing rules on S1 and S1 redirects the packet to the controller.</li>
   <li>It is the first time C1 is exposed to H1 and it does not know where to forward the packet to. Hence, C1 tells S1 to flood the packet.</li>
   <li>Flooding command reaches to S1 and S1 floods the packet.</li>
   <li>Flooded ARP request reaches to H2 and H2 replies back.</li>
   <li>ARP reply reaches to S1 and due to packet match miss, S1 forwards the packet to C1.</li>
-  <li>C1 has previously observed that</li>
-</ol>
+  <li>C1 has previously observed that H1 is reachable through port 1 of S1, hence, C1 sends the packet to S1 to send it to port 1.</li>
+  <li>Due to sent command from C1, S1 sends the packet to port 1.</li>
+  <li>H1 receives the ARP reply.</li>
+</ol><p>It appears that nothing much changed from our previous traditional network scenario. This is a little bit disappointing. We introduced one more hop (that is, the controller) that a packet needs to traverse through, but the result is still the same. No, we have given this example to demonstrate the basic working of a software-defined network composed of a single switch and two hosts. Yes, due to the small size of the network we could not evaluate the benefit that was granted with the SDN premise, but consider a larger network with multiple paths between end points.</p>
+
+<p><img src="sdn-multipath.svg" alt="SDN with Multiple Paths"></p>
 
 	  <script type="text/javascript">
 	    $("#post table").attr("class", "table table-hover");

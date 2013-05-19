@@ -39,7 +39,6 @@
 	    with tags <a href="/blog/tag/java">java</a>
 	  </div>
 	  <div class="share">
-	    <!-- AddThis Button BEGIN -->
 	    <div class="addthis_toolbox addthis_default_style ">
 	      <a class="addthis_button_preferred_1"></a>
 	      <a class="addthis_button_preferred_2"></a>
@@ -47,9 +46,8 @@
 	      <a class="addthis_button_preferred_4"></a>
 	      <a class="addthis_button_compact"></a>
 	    </div>
-	    <script type="text/javascript">var addthis_config = {"data_track_addressbar":true};</script>
+	    <script type="text/javascript">var addthis_config = {"data_track_addressbar":false};</script>
 	    <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-5144adf75211a62b"></script>
-	    <!-- AddThis Button END -->
 	  </div>
 	</div>
 	<div class="body">
@@ -57,9 +55,11 @@
 	  <p>A couple of weeks ago, friends from the university knocked my door. They were given an assignment to implement a HTTP <a href="http://en.wikipedia.org/wiki/Proxy_server">Proxy Server</a>. I tried to do my best and told them the basics. That is, they should first simply read the HTTP headers line by line, and then read the rest of the stream in bytes. After that, the mechanics are easy:</p>
 
 <ol>
-<li>Pass the request headers from browser to the server, which is, provided by <code>Host</code> header in the browser request,</li>
+  <li>Pass the request headers from browser to the server, which is, provided by <code>Host</code> header in the browser request,</li>
   <li>Pass back the response sent by server to the browser.</li>
-</ol><p>Easy, right? Just before the homework due, my door knocked again. Suprise! Suprise! They couldn’t properly read the server data after reading the headers. It sounded like a trivial problem at first, as hours pass by while I’m trying to fix the code, it appeared to be not like so. Since you are here for the code, let me first show you the working draft.</p>
+</ol>
+
+<p>Easy, right? Just before the homework due, my door knocked again. Suprise! Suprise! They couldn’t properly read the server data after reading the headers. It sounded like a trivial problem at first, as hours pass by while I’m trying to fix the code, it appeared to be not like so. Since you are here for the code, let me first show you the working draft.</p>
 
 <pre><code class="language-java"><span class="kn">import</span> <span class="nn">java.io.*</span><span class="o">;</span>
 <span class="kn">import</span> <span class="nn">java.net.InetAddress</span><span class="o">;</span>
@@ -213,6 +213,7 @@
 <span class="o">}</span></code></pre>
 
 <p>The truth is, it took my almost four hours to find and squash the bug. <code>serverSocket.shutdownOutput()</code> was a low hanging one, it solved the problem of web server waiting to start sending data. But take a closer look at the <code>readHeaders()</code> method. You see the mess? Particularly, the ones with stream arithmetic using <code>mark()</code>, <code>reset()</code> and <code>skip()</code> calls. The problem was, in order to make <code>readLine()</code> requests on an <code>InputStream</code>, you first need to wrap it with a <code>BufferedReader</code>. But once you wrap it up and make a call to <code>readLine()</code>, <code>BufferedReader</code> buffers the input stream to a position that is much more advanced than you generally expect it to be. Hence, after you finish reading headers and continue with reading the response data in bytes, <code>read()</code> tells you that there is nothing left to read. To avoid such nasty bugs, after reading from an <code>InputStream</code> using some sort of buffered reader, do not forget to reset the stream to a position where you expect it to be.</p>
+
 
 	  <script type="text/javascript">
 	    $("#post table").attr("class", "table table-hover");

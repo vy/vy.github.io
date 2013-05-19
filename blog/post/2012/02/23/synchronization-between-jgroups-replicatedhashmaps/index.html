@@ -39,7 +39,6 @@
 	    with tags <a href="/blog/tag/java">java</a>, <a href="/blog/tag/jgroups">jgroups</a>
 	  </div>
 	  <div class="share">
-	    <!-- AddThis Button BEGIN -->
 	    <div class="addthis_toolbox addthis_default_style ">
 	      <a class="addthis_button_preferred_1"></a>
 	      <a class="addthis_button_preferred_2"></a>
@@ -47,9 +46,8 @@
 	      <a class="addthis_button_preferred_4"></a>
 	      <a class="addthis_button_compact"></a>
 	    </div>
-	    <script type="text/javascript">var addthis_config = {"data_track_addressbar":true};</script>
+	    <script type="text/javascript">var addthis_config = {"data_track_addressbar":false};</script>
 	    <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-5144adf75211a62b"></script>
-	    <!-- AddThis Button END -->
 	  </div>
 	</div>
 	<div class="body">
@@ -59,64 +57,71 @@
 <p>In a cluster environment, new node arrivals are highly anticipated, but <code>ReplicatedHashMap</code> doesn’t really keep up with the late joiners. See below execution flow for a late joiner scenario.</p>
 
 <table>
-<thead><tr>
-<th style="text-align: center">Time</th>
+  <thead>
+    <tr>
+      <th style="text-align: center">Time</th>
       <th>Node A</th>
       <th>Node B</th>
-    </tr></thead>
-<tbody>
-<tr>
-<td style="text-align: center">1</td>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: center">1</td>
       <td>join</td>
       <td> </td>
     </tr>
-<tr>
-<td style="text-align: center">2</td>
+    <tr>
+      <td style="text-align: center">2</td>
       <td>send 1</td>
       <td> </td>
     </tr>
-<tr>
-<td style="text-align: center">3</td>
+    <tr>
+      <td style="text-align: center">3</td>
       <td>recv 1</td>
       <td> </td>
     </tr>
-<tr>
-<td style="text-align: center">4</td>
+    <tr>
+      <td style="text-align: center">4</td>
       <td>observe {1}</td>
       <td> </td>
     </tr>
-<tr>
-<td style="text-align: center">5</td>
+    <tr>
+      <td style="text-align: center">5</td>
       <td> </td>
       <td>join</td>
     </tr>
-<tr>
-<td style="text-align: center">6</td>
+    <tr>
+      <td style="text-align: center">6</td>
       <td> </td>
       <td>observe {}</td>
     </tr>
-<tr>
-<td style="text-align: center">7</td>
+    <tr>
+      <td style="text-align: center">7</td>
       <td> </td>
       <td>send 2</td>
     </tr>
-<tr>
-<td style="text-align: center">8</td>
+    <tr>
+      <td style="text-align: center">8</td>
       <td>recv 2</td>
       <td>recv 2</td>
     </tr>
-<tr>
-<td style="text-align: center">9</td>
+    <tr>
+      <td style="text-align: center">9</td>
       <td>observe {1,2}</td>
       <td>observe {2}</td>
     </tr>
-</tbody>
-</table><p>In the above figure, nodes are out of sync at time steps 6 and 9. To avoid such cases, we need to force <code>ReplicatedHashMap</code> for a sync during initialization. For this purpose, quoting with Bela Ban’s (author of JGroups) words,</p>
+  </tbody>
+</table>
+
+<p>In the above figure, nodes are out of sync at time steps 6 and 9. To avoid such cases, we need to force <code>ReplicatedHashMap</code> for a sync during initialization. For this purpose, quoting with Bela Ban’s (author of JGroups) words,</p>
 
 <ol>
-<li>Move <code>JChannel.connect()</code> after the creation of <code>ReplicatedHashMap</code>,</li>
+  <li>Move <code>JChannel.connect()</code> after the creation of <code>ReplicatedHashMap</code>,</li>
   <li>I also suggest to call <code>ReplicatedHashmap.start()</code>, or else there won’t be any state transfer.</li>
-</ol><p>See <a href="http://comments.gmane.org/gmane.comp.java.javagroups.general/7665">ReplicatedHashMap Updates for Late Joiners</a> post in the mailing-list for the related discussion.</p>
+</ol>
+
+<p>See <a href="http://comments.gmane.org/gmane.comp.java.javagroups.general/7665">ReplicatedHashMap Updates for Late Joiners</a> post in the mailing-list for the related discussion.</p>
+
 
 	  <script type="text/javascript">
 	    $("#post table").attr("class", "table table-hover");

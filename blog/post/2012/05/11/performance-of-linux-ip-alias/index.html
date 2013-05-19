@@ -39,7 +39,6 @@
 	    with tags <a href="/blog/tag/kernel">kernel</a>, <a href="/blog/tag/linux">linux</a>, <a href="/blog/tag/networking">networking</a>
 	  </div>
 	  <div class="share">
-	    <!-- AddThis Button BEGIN -->
 	    <div class="addthis_toolbox addthis_default_style ">
 	      <a class="addthis_button_preferred_1"></a>
 	      <a class="addthis_button_preferred_2"></a>
@@ -47,9 +46,8 @@
 	      <a class="addthis_button_preferred_4"></a>
 	      <a class="addthis_button_compact"></a>
 	    </div>
-	    <script type="text/javascript">var addthis_config = {"data_track_addressbar":true};</script>
+	    <script type="text/javascript">var addthis_config = {"data_track_addressbar":false};</script>
 	    <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-5144adf75211a62b"></script>
-	    <!-- AddThis Button END -->
 	  </div>
 	</div>
 	<div class="body">
@@ -171,9 +169,10 @@ client<span class="nv">$ </span>./client.sh 192.168.2.%d 32 30</code></pre>
 
 <p>Ok, too much talk so far. Let’s get to results. (Timeout is set to 60 seconds.)</p>
 
-<table><tbody>
-<tr>
-<td><em># of alias</em></td>
+<table>
+  <tbody>
+    <tr>
+      <td><em># of alias</em></td>
       <td>1</td>
       <td>2</td>
       <td>4</td>
@@ -182,8 +181,8 @@ client<span class="nv">$ </span>./client.sh 192.168.2.%d 32 30</code></pre>
       <td>32</td>
       <td>64</td>
     </tr>
-<tr>
-<td><em>Kbits/sec</em></td>
+    <tr>
+      <td><em>Kbits/sec</em></td>
       <td>615,216</td>
       <td>612,580</td>
       <td>616,071</td>
@@ -192,8 +191,8 @@ client<span class="nv">$ </span>./client.sh 192.168.2.%d 32 30</code></pre>
       <td>615,340</td>
       <td>618,838</td>
     </tr>
-<tr>
-<td><em># of alias</em></td>
+    <tr>
+      <td><em># of alias</em></td>
       <td>96</td>
       <td>128</td>
       <td>160</td>
@@ -202,8 +201,8 @@ client<span class="nv">$ </span>./client.sh 192.168.2.%d 32 30</code></pre>
       <td>254</td>
       <td> </td>
     </tr>
-<tr>
-<td><em>Kbits/sec</em></td>
+    <tr>
+      <td><em>Kbits/sec</em></td>
       <td>622,344</td>
       <td>654,269</td>
       <td>640,364</td>
@@ -212,9 +211,13 @@ client<span class="nv">$ </span>./client.sh 192.168.2.%d 32 30</code></pre>
       <td>670,788</td>
       <td> </td>
     </tr>
-</tbody></table><p><img src="results.jpg" alt="Results"></p>
+  </tbody>
+</table>
+
+<p><img src="results.jpg" alt="Results"></p>
 
 <p>As the numbers suggest, Linux IP aliasing does a fairly good job that the overhead imposed by the aliases are nearly negligible. (At least I hope that is something I succeeded in measuring.) But the strange thing is, there is an improvement in the throughput as the number of network interfaces increase. What might be the explanation of this observation? Is my setup mistaken? I will be happy to hear your ideas.</p>
+
 
 	  <script type="text/javascript">
 	    $("#post table").attr("class", "table table-hover");

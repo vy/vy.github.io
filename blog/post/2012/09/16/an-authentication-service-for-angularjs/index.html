@@ -39,7 +39,6 @@
 	    with tags <a href="/blog/tag/angularjs">angularjs</a>, <a href="/blog/tag/coffeescript">coffeescript</a>, <a href="/blog/tag/javascript">javascript</a>
 	  </div>
 	  <div class="share">
-	    <!-- AddThis Button BEGIN -->
 	    <div class="addthis_toolbox addthis_default_style ">
 	      <a class="addthis_button_preferred_1"></a>
 	      <a class="addthis_button_preferred_2"></a>
@@ -47,9 +46,8 @@
 	      <a class="addthis_button_preferred_4"></a>
 	      <a class="addthis_button_compact"></a>
 	    </div>
-	    <script type="text/javascript">var addthis_config = {"data_track_addressbar":true};</script>
+	    <script type="text/javascript">var addthis_config = {"data_track_addressbar":false};</script>
 	    <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-5144adf75211a62b"></script>
-	    <!-- AddThis Button END -->
 	  </div>
 	</div>
 	<div class="body">
@@ -176,6 +174,7 @@
 <p>Hope it works for you as well.</p>
 
 <p><strong>Edit:</strong> Thanks <a href="https://plus.google.com/100882799970411374993">Krisztián Kerék</a> for spotting the routing problem related with listening on <code>$rootScope</code> for <code>$routeChangeStart</code>. Replaced it with <code>$rootScope.$watch</code> as suggested in <a href="http://stackoverflow.com/a/15029387/1278899">this</a> StackOverflow post.</p>
+
 
 	  <script type="text/javascript">
 	    $("#post table").attr("class", "table table-hover");

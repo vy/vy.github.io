@@ -39,7 +39,6 @@
 	    with tags <a href="/blog/tag/intellij">intellij</a>, <a href="/blog/tag/java">java</a>, <a href="/blog/tag/sbt">sbt</a>, <a href="/blog/tag/scala">scala</a>
 	  </div>
 	  <div class="share">
-	    <!-- AddThis Button BEGIN -->
 	    <div class="addthis_toolbox addthis_default_style ">
 	      <a class="addthis_button_preferred_1"></a>
 	      <a class="addthis_button_preferred_2"></a>
@@ -47,9 +46,8 @@
 	      <a class="addthis_button_preferred_4"></a>
 	      <a class="addthis_button_compact"></a>
 	    </div>
-	    <script type="text/javascript">var addthis_config = {"data_track_addressbar":true};</script>
+	    <script type="text/javascript">var addthis_config = {"data_track_addressbar":false};</script>
 	    <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-5144adf75211a62b"></script>
-	    <!-- AddThis Button END -->
 	  </div>
 	</div>
 	<div class="body">
@@ -77,22 +75,26 @@
 <p>At its core, SBT uses <a href="http://ant.apache.org/ivy/">Apache Ivy</a>, which has its own nasty ways of dealing with downloaded JARs under <code>~/.ivy2</code>. Instead of manually defining IDEA module dependencies for each JAR a project uses, lucky for us, there exists an SBT plugin for this purpose: <a href="https://github.com/mpeltonen/sbt-idea">sbt-idea</a>. Basically, sbt-idea enhances SBT with a new task, called <em>gen-idea</em>, which creates IDEA project files with necessary module dependencies induced by SBT. That is,</p>
 
 <ol>
-<li>Add your dependencies to your SBT configuration,</li>
+  <li>Add your dependencies to your SBT configuration,</li>
   <li>Call <code>sbt update</code> to download/update project dependencies,</li>
   <li>Call <code>sbt gen-idea</code> to create IDEA project files,</li>
   <li>Open created project from IDEA.</li>
-</ol><h1 id="what-are-the-idea-modules-created-by-sbt-idea">What are the IDEA modules created by sbt-idea?</h1>
+</ol>
+
+<h1 id="what-are-the-idea-modules-created-by-sbt-idea">What are the IDEA modules created by sbt-idea?</h1>
 
 <p>In addition to below directories, SBT dependencies are added to the IDEA module configuration.</p>
 
 <ul>
-<li>
+  <li>
 <strong>Source Folders:</strong> <code>src/main/{scala,java,resources}</code>
 </li>
   <li>
 <strong>Test Source Folders:</strong> <code>src/test/{scala,java,resources}</code>
 </li>
-</ul><h1 id="what-about-testing">What about testing?</h1>
+</ul>
+
+<h1 id="what-about-testing">What about testing?</h1>
 
 <p>SBT supports a couple of testing frameworks, e.g., <a href="http://etorreborre.github.com/specs2/">specs2</a>, <a href="http://code.google.com/p/scalacheck/">ScalaCheck</a>, and
 <a href="http://www.artima.com/scalatest/">ScalaTest</a>. See <a href="http://www.scala-sbt.org/release/docs/Detailed-Topics/Testing.html">Testing</a> section of the SBT documentation for a detailed discussion.</p>
@@ -181,6 +183,7 @@ target/
 <span class="o">}</span></code></pre>
 
 <p>Enjoy the rest by either creating your own IDEA run configurations, or manually running tasks within the SBT console. (As a final note, while creating IDEA run configurations, you can use SBT <em>Before Launch</em> task provided by IDEA SBT plugin.)</p>
+
 
 	  <script type="text/javascript">
 	    $("#post table").attr("class", "table table-hover");

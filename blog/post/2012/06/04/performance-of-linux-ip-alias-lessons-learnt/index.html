@@ -39,7 +39,6 @@
 	    with tags <a href="/blog/tag/kernel">kernel</a>, <a href="/blog/tag/linux">linux</a>, <a href="/blog/tag/networking">networking</a>
 	  </div>
 	  <div class="share">
-	    <!-- AddThis Button BEGIN -->
 	    <div class="addthis_toolbox addthis_default_style ">
 	      <a class="addthis_button_preferred_1"></a>
 	      <a class="addthis_button_preferred_2"></a>
@@ -47,9 +46,8 @@
 	      <a class="addthis_button_preferred_4"></a>
 	      <a class="addthis_button_compact"></a>
 	    </div>
-	    <script type="text/javascript">var addthis_config = {"data_track_addressbar":true};</script>
+	    <script type="text/javascript">var addthis_config = {"data_track_addressbar":false};</script>
 	    <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-5144adf75211a62b"></script>
-	    <!-- AddThis Button END -->
 	  </div>
 	</div>
 	<div class="body">
@@ -60,9 +58,10 @@
 
 <p>New results are as follows. (Each pass is set to run for 60 seconds.)</p>
 
-<table><tbody>
-<tr>
-<td><em># of alias</em></td>
+<table>
+  <tbody>
+    <tr>
+      <td><em># of alias</em></td>
       <td>1</td>
       <td>2</td>
       <td>4</td>
@@ -71,8 +70,8 @@
       <td>32</td>
       <td>64</td>
     </tr>
-<tr>
-<td>
+    <tr>
+      <td>
 <em>Kbits/sec</em> (tcp)</td>
       <td>920,462</td>
       <td>921,468</td>
@@ -82,8 +81,8 @@
       <td>920,770</td>
       <td>922,861</td>
     </tr>
-<tr>
-<td>
+    <tr>
+      <td>
 <em>Kbits/sec</em> (nodelay)</td>
       <td>921,261</td>
       <td>921,184</td>
@@ -93,8 +92,8 @@
       <td>920,732</td>
       <td>921,521</td>
     </tr>
-<tr>
-<td><em># of alias</em></td>
+    <tr>
+      <td><em># of alias</em></td>
       <td>96</td>
       <td>128</td>
       <td>160</td>
@@ -103,8 +102,8 @@
       <td>254</td>
       <td> </td>
     </tr>
-<tr>
-<td>
+    <tr>
+      <td>
 <em>Kbits/sec</em> (tcp)</td>
       <td>926,282</td>
       <td>969,967</td>
@@ -114,8 +113,8 @@
       <td>990,832</td>
       <td> </td>
     </tr>
-<tr>
-<td>
+    <tr>
+      <td>
 <em>Kbits/sec</em> (nodelay)</td>
       <td>925,444</td>
       <td>945,879</td>
@@ -125,7 +124,10 @@
       <td>993,143</td>
       <td> </td>
     </tr>
-</tbody></table><p><img src="results.jpg" alt="Results"></p>
+  </tbody>
+</table>
+
+<p><img src="results.jpg" alt="Results"></p>
 
 <p>Ok, the results are cool. But how do we explain them? For this purpose, by finding his name from Wikipedia <a href="http://en.wikipedia.org/wiki/IP_aliasing">IP Aliasing</a> page, I got in touch with <strong><a href="http://juanjosec.blogspot.com/">Juan José Ciarlante</a> – the author of first IP aliasing support in Linux kernel in 1995</strong> – and he kindly replied my questions. Below, I directly quote from his own words.</p>
 
@@ -134,6 +136,7 @@
 </blockquote>
 
 <p>Finally, we have a valid answer!</p>
+
 
 	  <script type="text/javascript">
 	    $("#post table").attr("class", "table table-hover");

@@ -39,7 +39,6 @@
 	    with tags <a href="/blog/tag/latex">latex</a>
 	  </div>
 	  <div class="share">
-	    <!-- AddThis Button BEGIN -->
 	    <div class="addthis_toolbox addthis_default_style ">
 	      <a class="addthis_button_preferred_1"></a>
 	      <a class="addthis_button_preferred_2"></a>
@@ -47,9 +46,8 @@
 	      <a class="addthis_button_preferred_4"></a>
 	      <a class="addthis_button_compact"></a>
 	    </div>
-	    <script type="text/javascript">var addthis_config = {"data_track_addressbar":true};</script>
+	    <script type="text/javascript">var addthis_config = {"data_track_addressbar":false};</script>
 	    <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-5144adf75211a62b"></script>
-	    <!-- AddThis Button END -->
 	  </div>
 	</div>
 	<div class="body">
@@ -59,7 +57,7 @@
 <p>First, note that there is a certain directory structure I stick to.</p>
 
 <ul>
-<li>
+  <li>
 <code>/</code> – LaTeX (.tex) and BibTeX (<code>.bib</code>) files are placed here.</li>
   <li>
 <code>/constants.tex</code> – LaTeX file for constants (variables, definitions, commands, etc.) shared between LaTeX and XFig files.</li>
@@ -70,7 +68,9 @@
   <li><code>/figs/fig2eps.sh</code></li>
   <li>
 <code>/figs/make.sh</code> – Compiles the XFig and Gnuplot into EPS format.</li>
-</ul><p>Below is the entry point, <code>/make.sh</code>. (Make sure you have <code>latex</code>, <code>bibtex</code>, <code>dvips</code>, and <code>pspdf</code> commands available.)</p>
+</ul>
+
+<p>Below is the entry point, <code>/make.sh</code>. (Make sure you have <code>latex</code>, <code>bibtex</code>, <code>dvips</code>, and <code>pspdf</code> commands available.)</p>
 
 <pre><code class="language-bash"><span class="c">#!/bin/bash</span>
 
@@ -227,6 +227,7 @@ rm -f <span class="se">\</span>
 <p>and you are ready to go.</p>
 
 <p>Scripts need a little bit more cleaning and they are probably not the most correct ones. Anyway, they served well until now, and I hope they would for you as well.</p>
+
 
 	  <script type="text/javascript">
 	    $("#post table").attr("class", "table table-hover");

@@ -39,7 +39,6 @@
 	    with tags <a href="/blog/tag/java">java</a>, <a href="/blog/tag/jgroups">jgroups</a>
 	  </div>
 	  <div class="share">
-	    <!-- AddThis Button BEGIN -->
 	    <div class="addthis_toolbox addthis_default_style ">
 	      <a class="addthis_button_preferred_1"></a>
 	      <a class="addthis_button_preferred_2"></a>
@@ -47,9 +46,8 @@
 	      <a class="addthis_button_preferred_4"></a>
 	      <a class="addthis_button_compact"></a>
 	    </div>
-	    <script type="text/javascript">var addthis_config = {"data_track_addressbar":true};</script>
+	    <script type="text/javascript">var addthis_config = {"data_track_addressbar":false};</script>
 	    <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-5144adf75211a62b"></script>
-	    <!-- AddThis Button END -->
 	  </div>
 	</div>
 	<div class="body">
@@ -104,6 +102,7 @@
 <p>Later, I copied (say) <code>udp.xml</code> from JGroups sources to <code>META-INF/channel.xml</code>. And I added <code>singleton_name="shared"</code> line to the protocol specification in <code>META-INF/channel.xml</code> file.</p>
 
 <p>Now, my individual classes make calls to <code>ChannelFactory.getInstance().create()</code> to get a channel dedicated to them. And while program shuts down, I just make a call to <code>ChannelFactory.getInstance().clear()</code> to tidy things up.</p>
+
 
 	  <script type="text/javascript">
 	    $("#post table").attr("class", "table table-hover");
