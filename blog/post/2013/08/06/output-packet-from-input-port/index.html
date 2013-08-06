@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>How come a packet gets output from its input port?</title>
+    <link rel="stylesheet" href="/css/bootstrap.css">
+    <link rel="stylesheet" href="/css/bootstrap-responsive.css">
+    <script src="/js/bootstrap.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="/css/common.css">
+    <meta name="generator" content="nanoc 3.6.4">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/post.css">
+    <script type="text/javascript">
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-40183531-1']);
+      _gaq.push(['_trackPageview']);
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="menu">
+      <div><a href="/">Home</a></div><div><a href="/about/">About</a></div><div><a href="/blog/">Blog</a></div><div><a href="/code/">Code</a></div><div><a href="/blog/feed/">Feed</a></div>
+    </div>
+    
+
+<div class="container">
+  <div class="row-fluid">
+    <div class="offset2 span8">
+      <div id="post" class="more-white-box rounded-corners">
+	<div class="head">
+	  <div class="title">How come a packet gets output from its input port?</div>
+	  <div class="subtitle">posted at
+	    August 6, 2013
+	    with tags <a href="/blog/tag/networking">networking</a>, <a href="/blog/tag/openflow">openflow</a>, <a href="/blog/tag/sdn">sdn</a>
+	  </div>
+	  <div class="share">
+	    <div class="addthis_toolbox addthis_default_style ">
+	      <a class="addthis_button_preferred_1"></a>
+	      <a class="addthis_button_preferred_2"></a>
+	      <a class="addthis_button_preferred_3"></a>
+	      <a class="addthis_button_preferred_4"></a>
+	      <a class="addthis_button_compact"></a>
+	    </div>
+	    <script type="text/javascript">var addthis_config = {"data_track_addressbar":false};</script>
+	    <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-5144adf75211a62b"></script>
+	  </div>
+	</div>
+	<div class="body">
+
+	  <p>A couple of weeks ago I spotted a really suspicious flow in the logs that directly made me think of a bug at the controller. A packet was arriving to a port of a switch and was getting output from the very same port of the switch. This was kind of weird. If it is supposed to be transmitted back again, then why was it ended up here in the first hand? Was it because of a bug at the controller that first redirected the packet to the switch and then redirected it backwards to the previous switch? A logical fault at the controller was definitely the first suspect here. But later it turned out that this was not the case. The details are as follows.</p>
+
+<p><img src="topology.jpg" alt="SDN Topology"></p>
+
+<p>Consider the above topology, where three switches <code>s1</code>, <code>s2</code>, <code>s3</code> are connected linearly and all together managed by the controller <code>c1</code>. In addition, <code>s1</code> and <code>s2</code> is connected to two hosts <code>h1</code> and <code>h2</code>, respectively. The controller, switches, hosts, their connections, and connection port numbers are given in the figure. The scenario generating the subtle gotcha is as follows.</p>
+
+<ol>
+<li>
+<code>h2</code> sends a packet destined to <code>h1</code>, whose attachment point is not learnt yet by <code>c1</code>.</li>
+  <li>Hence, upon arrival of the packet from <code>s2</code>, <code>c1</code> commands <code>s2</code> to flood the request.</li>
+  <li>The flooded request goes to <code>s1</code> and <code>s3</code>.</li>
+  <li>Upon arrival of the packet to <code>s1</code>, <code>s1</code> sends the packet to <code>c1</code> again.</li>
+  <li>Since <code>c1</code> still does not know the attachment point of <code>h1</code>, <code>c1</code> commands <code>s1</code> to flood the request for a second time.</li>
+  <li>Flooded request from <code>s1</code> reaches to <code>h1</code> and <code>h1</code> replies back.</li>
+  <li>With <code>h1</code>s response, <code>c1</code> learns the attachment point of <code>h1</code>.</li>
+  <li>In the meantime, <code>s2</code>s flood (see 3rd step) reaches to <code>s3</code>
+</li>
+  <li>Now <code>c1</code> knows the attachment point of the <code>h1</code>. Consequently, <code>c1</code> figures out that the route to <code>h1</code> goes through <code>s1</code> and <code>s1</code> is reachable by <code>p1</code> of <code>s3</code>. Hence, <code>c1</code> commands <code>s3</code> to output the packet from the very same input port of the packet.</li>
+</ol><p>I do not have a single idea about the probability of such a subtle bug, but somehow it happened to exist in my logs, right at the lines I was just taking a glance and wasted my whole day. The saying was right, network is really unreliable. Gorgeous!</p>
+
+	  <script type="text/javascript">
+	    $("#post table").attr("class", "table table-hover");
+	  </script>
+
+	  <div id="disqus_thread"></div>
+	  <script type="text/javascript">
+	  var disqus_shortname = 'vyazici';
+	  var disqus_identifier = '/blog/post/20130806-output-packet-from-input-port/';
+	  var disqus_title = 'How come a packet gets output from its input port?';
+	  (function() {
+	  	var dsq = document.createElement('script');
+	  	dsq.type = 'text/javascript';
+	  	dsq.async = true;
+	  	dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+	  	(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+	  })();
+	  </script>
+
+	</div>
+      </div>
+      <div id="bgauthor" class="narrow-font">
+	background image by
+	<a href="http://jenniferwetzel.com/">Jennifer Wetzel</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+  </body>
+</html>
+

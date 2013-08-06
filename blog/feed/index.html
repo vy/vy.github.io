@@ -2,13 +2,39 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <id>https://vy.github.io//</id>
   <title>Volkan Yazıcı's Soap Co.</title>
-  <updated>2013-07-31T17:11:00Z</updated>
+  <updated>2013-08-06T17:29:00Z</updated>
   <link rel="alternate" href="https://vy.github.io//"/>
   <link rel="self" href="https://vy.github.io//blog/feed/"/>
   <author>
     <name>Volkan Yazıcı</name>
     <uri>https://vy.github.io/</uri>
   </author>
+  <entry>
+    <id>tag:vy.github.io,2013-08-06://blog/post/2013/08/06/output-packet-from-input-port/</id>
+    <title type="html">How come a packet gets output from its input port?</title>
+    <published>2013-08-06T17:29:00Z</published>
+    <updated>2013-08-06T17:29:00Z</updated>
+    <link rel="alternate" href="https://vy.github.io//blog/post/2013/08/06/output-packet-from-input-port/"/>
+    <content type="html">&lt;p&gt;A couple of weeks ago I spotted a really suspicious flow in the logs that directly made me think of a bug at the controller. A packet was arriving to a port of a switch and was getting output from the very same port of the switch. This was kind of weird. If it is supposed to be transmitted back again, then why was it ended up here in the first hand? Was it because of a bug at the controller that first redirected the packet to the switch and then redirected it backwards to the previous switch? A logical fault at the controller was definitely the first suspect here. But later it turned out that this was not the case. The details are as follows.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src="topology.jpg" alt="SDN Topology"&gt;&lt;/p&gt;
+
+&lt;p&gt;Consider the above topology, where three switches &lt;code&gt;s1&lt;/code&gt;, &lt;code&gt;s2&lt;/code&gt;, &lt;code&gt;s3&lt;/code&gt; are connected linearly and all together managed by the controller &lt;code&gt;c1&lt;/code&gt;. In addition, &lt;code&gt;s1&lt;/code&gt; and &lt;code&gt;s2&lt;/code&gt; is connected to two hosts &lt;code&gt;h1&lt;/code&gt; and &lt;code&gt;h2&lt;/code&gt;, respectively. The controller, switches, hosts, their connections, and connection port numbers are given in the figure. The scenario generating the subtle gotcha is as follows.&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;
+&lt;code&gt;h2&lt;/code&gt; sends a packet destined to &lt;code&gt;h1&lt;/code&gt;, whose attachment point is not learnt yet by &lt;code&gt;c1&lt;/code&gt;.&lt;/li&gt;
+  &lt;li&gt;Hence, upon arrival of the packet from &lt;code&gt;s2&lt;/code&gt;, &lt;code&gt;c1&lt;/code&gt; commands &lt;code&gt;s2&lt;/code&gt; to flood the request.&lt;/li&gt;
+  &lt;li&gt;The flooded request goes to &lt;code&gt;s1&lt;/code&gt; and &lt;code&gt;s3&lt;/code&gt;.&lt;/li&gt;
+  &lt;li&gt;Upon arrival of the packet to &lt;code&gt;s1&lt;/code&gt;, &lt;code&gt;s1&lt;/code&gt; sends the packet to &lt;code&gt;c1&lt;/code&gt; again.&lt;/li&gt;
+  &lt;li&gt;Since &lt;code&gt;c1&lt;/code&gt; still does not know the attachment point of &lt;code&gt;h1&lt;/code&gt;, &lt;code&gt;c1&lt;/code&gt; commands &lt;code&gt;s1&lt;/code&gt; to flood the request for a second time.&lt;/li&gt;
+  &lt;li&gt;Flooded request from &lt;code&gt;s1&lt;/code&gt; reaches to &lt;code&gt;h1&lt;/code&gt; and &lt;code&gt;h1&lt;/code&gt; replies back.&lt;/li&gt;
+  &lt;li&gt;With &lt;code&gt;h1&lt;/code&gt;s response, &lt;code&gt;c1&lt;/code&gt; learns the attachment point of &lt;code&gt;h1&lt;/code&gt;.&lt;/li&gt;
+  &lt;li&gt;In the meantime, &lt;code&gt;s2&lt;/code&gt;s flood (see 3rd step) reaches to &lt;code&gt;s3&lt;/code&gt;
+&lt;/li&gt;
+  &lt;li&gt;Now &lt;code&gt;c1&lt;/code&gt; knows the attachment point of the &lt;code&gt;h1&lt;/code&gt;. Consequently, &lt;code&gt;c1&lt;/code&gt; figures out that the route to &lt;code&gt;h1&lt;/code&gt; goes through &lt;code&gt;s1&lt;/code&gt; and &lt;code&gt;s1&lt;/code&gt; is reachable by &lt;code&gt;p1&lt;/code&gt; of &lt;code&gt;s3&lt;/code&gt;. Hence, &lt;code&gt;c1&lt;/code&gt; commands &lt;code&gt;s3&lt;/code&gt; to output the packet from the very same input port of the packet.&lt;/li&gt;
+&lt;/ol&gt;&lt;p&gt;I do not have a single idea about the probability of such a subtle bug, but somehow it happened to exist in my logs, right at the lines I was just taking a glance and wasted my whole day. The saying was right, network is really unreliable. Gorgeous!&lt;/p&gt;</content>
+  </entry>
   <entry>
     <id>tag:vy.github.io,2013-07-31://blog/post/2013/07/31/openflow-controllers/</id>
     <title type="html">On the OpenFlow Controllers</title>
@@ -907,78 +933,6 @@ target/
 &lt;p&gt;One minor glitch that you need to pay attention is, while using connect-assets, you &lt;em&gt;must&lt;/em&gt; include asset files using accessor functions – &lt;code&gt;js()&lt;/code&gt; and &lt;code&gt;css()&lt;/code&gt; – provided by connect-assets. These functions in addition to generating necessary &lt;code&gt;&amp;lt;script src="..."&amp;gt;&amp;lt;/script&amp;gt;&lt;/code&gt; tag, also register the file into the asset processor service. connect-assets auto-compiles an asset the first time it is called and caches the produced output in memory; later calls will be served from the cache. (It also provides options to write produced outputs to disk and watch file changes.) For instance, say you want to use &lt;code&gt;/assets/js/main.coffee&lt;/code&gt; in &lt;code&gt;/app/views/main/index.ejs&lt;/code&gt; file. For this purpose, you need to add &lt;code&gt;&amp;lt;%- js('main') %&amp;gt;&lt;/code&gt; into your view for enabling connect-assets serving your &lt;code&gt;main.coffee&lt;/code&gt; file.&lt;/p&gt;
 
 &lt;p&gt;As a final note, since connect-assets is a &lt;a href="http://www.senchalabs.org/connect/"&gt;Connect&lt;/a&gt; plugin, you should be able to run it on any other web framework that runs on Connect or &lt;a href="http://expressjs.com/"&gt;ExpressJS&lt;/a&gt;.&lt;/p&gt;</content>
-  </entry>
-  <entry>
-    <id>tag:vy.github.io,2012-06-21://blog/post/2012/06/21/rpc-with-hazelcast/</id>
-    <title type="html">RPC (Remote Procedure Call) with Hazelcast</title>
-    <published>2012-06-21T11:16:00Z</published>
-    <updated>2012-06-21T11:16:00Z</updated>
-    <link rel="alternate" href="https://vy.github.io//blog/post/2012/06/21/rpc-with-hazelcast/"/>
-    <content type="html">&lt;p&gt;Despite the fact that &lt;a href="http://www.hazelcast.com/"&gt;Hazelcast&lt;/a&gt; is a data distribution (particularly, peer-to-peer) platform for Java, its group communication mechanics can be utilized for remote procedure calls in a similar fashion to &lt;a href="http://vyazici.blogspot.com/2012/04/rpc-remote-procedure-call-with-jgroups.html"&gt;JGroups remote procedure calls&lt;/a&gt;. Further, to ease this workflow, Hazelcast provides &lt;a href="http://hazelcast.com/docs/2.1/manual/multi_html/ch09.html"&gt;distributed executor service&lt;/a&gt; to execute &lt;a href="http://docs.oracle.com/javase/6/docs/api/java/util/concurrent/Callable.html"&gt;&lt;code&gt;Callable&lt;/code&gt;&lt;/a&gt; and &lt;a href="http://docs.oracle.com/javase/6/docs/api/java/lang/Runnable.html"&gt;&lt;code&gt;Runnable&lt;/code&gt;&lt;/a&gt; instances on the remote cluster members. Now, let’s glue things together for making remote procedure calls on Hazelcast cluster members.&lt;/p&gt;
-
-&lt;p&gt;Assuming that you have some familiarity with executor services, check out below &lt;code&gt;SimpleRPC&lt;/code&gt; class, which makes use of the Hazelcast executor service to invoke a &lt;code&gt;Call&lt;/code&gt; instance on every cluster member.&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="language-java"&gt;&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;com.hazelcast.core.Hazelcast&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
-&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;com.hazelcast.core.MultiTask&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
-
-&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;java.util.Arrays&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
-&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;java.util.Collection&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
-&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;java.util.concurrent.ExecutionException&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
-&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;java.util.concurrent.ExecutorService&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
-&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;java.util.concurrent.TimeUnit&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
-&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;java.util.concurrent.TimeoutException&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
-
-&lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kd"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;SimpleRPC&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
-    &lt;span class="kd"&gt;private&lt;/span&gt; &lt;span class="kd"&gt;static&lt;/span&gt; &lt;span class="n"&gt;SimpleRPC&lt;/span&gt; &lt;span class="n"&gt;instance&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="kc"&gt;null&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
-
-    &lt;span class="kd"&gt;private&lt;/span&gt; &lt;span class="nf"&gt;SimpleRPC&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;{}&lt;/span&gt;
-
-    &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kd"&gt;static&lt;/span&gt; &lt;span class="n"&gt;SimpleRPC&lt;/span&gt; &lt;span class="nf"&gt;getInstance&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
-        &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;instance&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="kc"&gt;null&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
-            &lt;span class="n"&gt;instance&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="n"&gt;SimpleRPC&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
-        &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;instance&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
-    &lt;span class="o"&gt;}&lt;/span&gt;
-
-    &lt;span class="nd"&gt;@SuppressWarnings&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="s"&gt;"unused"&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
-    &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kt"&gt;boolean&lt;/span&gt; &lt;span class="nf"&gt;callMe&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;String&lt;/span&gt; &lt;span class="n"&gt;input&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
-        &lt;span class="n"&gt;System&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;out&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;println&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;String&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;format&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="s"&gt;"callMe('%s') is called!"&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;input&lt;/span&gt;&lt;span class="o"&gt;));&lt;/span&gt;
-        &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="kc"&gt;true&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
-    &lt;span class="o"&gt;}&lt;/span&gt;
-
-    &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;callEvery&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;String&lt;/span&gt; &lt;span class="n"&gt;input&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
-            &lt;span class="kd"&gt;throws&lt;/span&gt; &lt;span class="n"&gt;ExecutionException&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;TimeoutException&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;InterruptedException&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
-        &lt;span class="n"&gt;MultiTask&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;Boolean&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;task&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="n"&gt;MultiTask&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;Boolean&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;(&lt;/span&gt;&lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="n"&gt;Call&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;input&lt;/span&gt;&lt;span class="o"&gt;),&lt;/span&gt;
-                &lt;span class="n"&gt;Hazelcast&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;getCluster&lt;/span&gt;&lt;span class="o"&gt;().&lt;/span&gt;&lt;span class="na"&gt;getMembers&lt;/span&gt;&lt;span class="o"&gt;());&lt;/span&gt;
-        &lt;span class="n"&gt;ExecutorService&lt;/span&gt; &lt;span class="n"&gt;executorService&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;Hazelcast&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;getExecutorService&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
-        &lt;span class="n"&gt;executorService&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;execute&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;task&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
-        &lt;span class="n"&gt;Collection&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;Boolean&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;results&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;task&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;get&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;3&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;TimeUnit&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;SECONDS&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
-        &lt;span class="n"&gt;System&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;out&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;println&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;String&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;format&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="s"&gt;"callEvery('%s'): %s"&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt;
-                &lt;span class="n"&gt;input&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;Arrays&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;toString&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;results&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;toArray&lt;/span&gt;&lt;span class="o"&gt;())));&lt;/span&gt;
-    &lt;span class="o"&gt;}&lt;/span&gt;
-
-    &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kd"&gt;static&lt;/span&gt; &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;main&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;String&lt;/span&gt;&lt;span class="o"&gt;[]&lt;/span&gt; &lt;span class="n"&gt;args&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="kd"&gt;throws&lt;/span&gt; &lt;span class="n"&gt;Exception&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
-        &lt;span class="n"&gt;SimpleRPC&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;getInstance&lt;/span&gt;&lt;span class="o"&gt;().&lt;/span&gt;&lt;span class="na"&gt;callEvery&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="s"&gt;"foo bar baz"&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
-    &lt;span class="o"&gt;}&lt;/span&gt;
-&lt;span class="o"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Since &lt;code&gt;SimpleRPC&lt;/code&gt; is a singleton, whose instance is accessible via its &lt;code&gt;getInstance()&lt;/code&gt; method, foreign classes can easily invoke its &lt;code&gt;callMe()&lt;/code&gt; instance method. Now let’s implement the &lt;code&gt;Call&lt;/code&gt; class, which is anticipated to encapsulate the necessary mechanics to make a call to &lt;code&gt;SimpleRPC.getInstance().callMe()&lt;/code&gt; on each cluster member.&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="language-java"&gt;&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;java.io.Serializable&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
-&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;java.util.concurrent.Callable&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
-
-&lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kd"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;Call&lt;/span&gt; &lt;span class="kd"&gt;implements&lt;/span&gt; &lt;span class="n"&gt;Callable&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;Boolean&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;,&lt;/span&gt; &lt;span class="n"&gt;Serializable&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
-    &lt;span class="kd"&gt;protected&lt;/span&gt; &lt;span class="n"&gt;String&lt;/span&gt; &lt;span class="n"&gt;input&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
-
-    &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="nf"&gt;Call&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;String&lt;/span&gt; &lt;span class="n"&gt;input&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
-        &lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;input&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;input&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
-    &lt;span class="o"&gt;}&lt;/span&gt;
-
-    &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="n"&gt;Boolean&lt;/span&gt; &lt;span class="nf"&gt;call&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
-        &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;SimpleRPC&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;getInstance&lt;/span&gt;&lt;span class="o"&gt;().&lt;/span&gt;&lt;span class="na"&gt;callMe&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;input&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
-    &lt;span class="o"&gt;}&lt;/span&gt;
-&lt;span class="o"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Simple, eh?&lt;/p&gt;</content>
   </entry>
 </feed>
 
