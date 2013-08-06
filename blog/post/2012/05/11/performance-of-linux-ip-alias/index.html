@@ -8,7 +8,7 @@
     <script src="/js/bootstrap.js"></script>
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
     <link rel="stylesheet" href="/css/common.css">
-    <meta name="generator" content="nanoc 3.6.2">
+    <meta name="generator" content="nanoc 3.6.4">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/css/post.css">
     <script type="text/javascript">
@@ -169,10 +169,9 @@ client<span class="nv">$ </span>./client.sh 192.168.2.%d 32 30</code></pre>
 
 <p>Ok, too much talk so far. Let’s get to results. (Timeout is set to 60 seconds.)</p>
 
-<table>
-  <tbody>
-    <tr>
-      <td><em># of alias</em></td>
+<table><tbody>
+<tr>
+<td><em># of alias</em></td>
       <td>1</td>
       <td>2</td>
       <td>4</td>
@@ -181,8 +180,8 @@ client<span class="nv">$ </span>./client.sh 192.168.2.%d 32 30</code></pre>
       <td>32</td>
       <td>64</td>
     </tr>
-    <tr>
-      <td><em>Kbits/sec</em></td>
+<tr>
+<td><em>Kbits/sec</em></td>
       <td>615,216</td>
       <td>612,580</td>
       <td>616,071</td>
@@ -191,8 +190,8 @@ client<span class="nv">$ </span>./client.sh 192.168.2.%d 32 30</code></pre>
       <td>615,340</td>
       <td>618,838</td>
     </tr>
-    <tr>
-      <td><em># of alias</em></td>
+<tr>
+<td><em># of alias</em></td>
       <td>96</td>
       <td>128</td>
       <td>160</td>
@@ -201,8 +200,8 @@ client<span class="nv">$ </span>./client.sh 192.168.2.%d 32 30</code></pre>
       <td>254</td>
       <td> </td>
     </tr>
-    <tr>
-      <td><em>Kbits/sec</em></td>
+<tr>
+<td><em>Kbits/sec</em></td>
       <td>622,344</td>
       <td>654,269</td>
       <td>640,364</td>
@@ -211,13 +210,9 @@ client<span class="nv">$ </span>./client.sh 192.168.2.%d 32 30</code></pre>
       <td>670,788</td>
       <td> </td>
     </tr>
-  </tbody>
-</table>
-
-<p><img src="results.jpg" alt="Results"></p>
+</tbody></table><p><img src="results.jpg" alt="Results"></p>
 
 <p>As the numbers suggest, Linux IP aliasing does a fairly good job that the overhead imposed by the aliases are nearly negligible. (At least I hope that is something I succeeded in measuring.) But the strange thing is, there is an improvement in the throughput as the number of network interfaces increase. What might be the explanation of this observation? Is my setup mistaken? I will be happy to hear your ideas.</p>
-
 
 	  <script type="text/javascript">
 	    $("#post table").attr("class", "table table-hover");

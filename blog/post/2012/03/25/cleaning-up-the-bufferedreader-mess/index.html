@@ -8,7 +8,7 @@
     <script src="/js/bootstrap.js"></script>
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
     <link rel="stylesheet" href="/css/common.css">
-    <meta name="generator" content="nanoc 3.6.2">
+    <meta name="generator" content="nanoc 3.6.4">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/css/post.css">
     <script type="text/javascript">
@@ -55,11 +55,9 @@
 	  <p>A couple of weeks ago, friends from the university knocked my door. They were given an assignment to implement a HTTP <a href="http://en.wikipedia.org/wiki/Proxy_server">Proxy Server</a>. I tried to do my best and told them the basics. That is, they should first simply read the HTTP headers line by line, and then read the rest of the stream in bytes. After that, the mechanics are easy:</p>
 
 <ol>
-  <li>Pass the request headers from browser to the server, which is, provided by <code>Host</code> header in the browser request,</li>
+<li>Pass the request headers from browser to the server, which is, provided by <code>Host</code> header in the browser request,</li>
   <li>Pass back the response sent by server to the browser.</li>
-</ol>
-
-<p>Easy, right? Just before the homework due, my door knocked again. Suprise! Suprise! They couldn’t properly read the server data after reading the headers. It sounded like a trivial problem at first, as hours pass by while I’m trying to fix the code, it appeared to be not like so. Since you are here for the code, let me first show you the working draft.</p>
+</ol><p>Easy, right? Just before the homework due, my door knocked again. Suprise! Suprise! They couldn’t properly read the server data after reading the headers. It sounded like a trivial problem at first, as hours pass by while I’m trying to fix the code, it appeared to be not like so. Since you are here for the code, let me first show you the working draft.</p>
 
 <pre><code class="language-java"><span class="kn">import</span> <span class="nn">java.io.*</span><span class="o">;</span>
 <span class="kn">import</span> <span class="nn">java.net.InetAddress</span><span class="o">;</span>
@@ -213,7 +211,6 @@
 <span class="o">}</span></code></pre>
 
 <p>The truth is, it took my almost four hours to find and squash the bug. <code>serverSocket.shutdownOutput()</code> was a low hanging one, it solved the problem of web server waiting to start sending data. But take a closer look at the <code>readHeaders()</code> method. You see the mess? Particularly, the ones with stream arithmetic using <code>mark()</code>, <code>reset()</code> and <code>skip()</code> calls. The problem was, in order to make <code>readLine()</code> requests on an <code>InputStream</code>, you first need to wrap it with a <code>BufferedReader</code>. But once you wrap it up and make a call to <code>readLine()</code>, <code>BufferedReader</code> buffers the input stream to a position that is much more advanced than you generally expect it to be. Hence, after you finish reading headers and continue with reading the response data in bytes, <code>read()</code> tells you that there is nothing left to read. To avoid such nasty bugs, after reading from an <code>InputStream</code> using some sort of buffered reader, do not forget to reset the stream to a position where you expect it to be.</p>
-
 
 	  <script type="text/javascript">
 	    $("#post table").attr("class", "table table-hover");

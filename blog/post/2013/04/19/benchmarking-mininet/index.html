@@ -8,7 +8,7 @@
     <script src="/js/bootstrap.js"></script>
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
     <link rel="stylesheet" href="/css/common.css">
-    <meta name="generator" content="nanoc 3.6.2">
+    <meta name="generator" content="nanoc 3.6.4">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/css/post.css">
     <script type="text/javascript">
@@ -58,44 +58,40 @@
 
 <p>Before going into the details with the benchmark, first, let me share with you the server and software specifications of the deployment environment that mininet will be running.</p>
 
-<table>
-  <tbody>
-    <tr>
-      <td>Server</td>
+<table><tbody>
+<tr>
+<td>Server</td>
       <td><a href="http://www-03.ibm.com/systems/x/hardware/rack/x3650m3/">IBM System x3650 M3</a></td>
     </tr>
-    <tr>
-      <td>Memory</td>
+<tr>
+<td>Memory</td>
       <td>28 GB (4+3*8)</td>
     </tr>
-    <tr>
-      <td>CPU</td>
+<tr>
+<td>CPU</td>
       <td>6-core 2.40GHz Intel Xeon E5645 CPU</td>
     </tr>
-    <tr>
-      <td>OS</td>
+<tr>
+<td>OS</td>
       <td>Ubuntu 12.10 x86-64</td>
     </tr>
-    <tr>
-      <td>Kernel</td>
+<tr>
+<td>Kernel</td>
       <td>3.5.0-26-generic</td>
     </tr>
-    <tr>
-      <td>mininet</td>
+<tr>
+<td>mininet</td>
       <td>2.0.0d2</td>
     </tr>
-    <tr>
-      <td><a href="http://www.openvswitch.org/">Open vSwitch</a></td>
+<tr>
+<td><a href="http://www.openvswitch.org/">Open vSwitch</a></td>
       <td>1.4.3</td>
     </tr>
-    <tr>
-      <td><a href="http://www.openflow.org/wp/downloads/">OpenFlow Reference Implementation</a></td>
+<tr>
+<td><a href="http://www.openflow.org/wp/downloads/">OpenFlow Reference Implementation</a></td>
       <td>1.0.0</td>
     </tr>
-  </tbody>
-</table>
-
-<p>In order to benchmark mininet, I used a simple bash function as follows.</p>
+</tbody></table><p>In order to benchmark mininet, I used a simple bash function as follows.</p>
 
 <pre><code class="language-bash"><span class="k">for </span>n in 1 <span class="sb">`</span>seq 32 32 1024<span class="sb">`</span>; <span class="k">do</span>
 <span class="k">    </span><span class="nb">echo</span> <span class="s2">"n: $n"</span>
@@ -107,12 +103,10 @@
 <p>For varying sizes of <code>n</code>, this command lets mininet to</p>
 
 <ol>
-  <li>create a virtual network composed of <code>n</code> serially connected switches,</li>
+<li>create a virtual network composed of <code>n</code> serially connected switches,</li>
   <li>where a single host is attached to each switch and</li>
   <li>the switches are connected to a central controller.</li>
-</ol>
-
-<p>Put another way, created network will have <code>2n+1</code> nodes (a central controller, <code>n</code> switches, <code>n</code> hosts) and <code>3n-1</code> links.</p>
+</ol><p>Put another way, created network will have <code>2n+1</code> nodes (a central controller, <code>n</code> switches, <code>n</code> hosts) and <code>3n-1</code> links.</p>
 
 <p>Deployed script measures two things: 1) the memory usage of the server right after starting the mininet, and 2) the time it takes to start and shutdown the mininet. Results are as follows. (See <a href="mininet-ovs.dat">mininet-ovs.dat</a> and <a href="mininet-ref.dat">mininet-ref.dat</a> for raw results generated using Open vSwitch and OpenFlow reference implementation, respectively. Employed Gnuplot script <a href="plot.gnu">plot.gnu</a> is also shared.)</p>
 
@@ -125,7 +119,6 @@
 <p>To sum it up, while mininet is an awesome tool to compose and emulate software-defined networks, it has its own limitations on the size of the network. These basic benchmarks should hopefully give you an idea about mininet’s runtime and memory characteristics proportional with the number of switches.</p>
 
 <p><strong>Note:</strong> Thanks Bob Lantz for <a href="https://mailman.stanford.edu/pipermail/openflow-discuss/2013-April/004477.html">his suggestion</a> on using the switch distributed with the <a href="http://www.openflow.org/wp/downloads/">OpenFlow reference implementation</a>.</p>
-
 
 	  <script type="text/javascript">
 	    $("#post table").attr("class", "table table-hover");

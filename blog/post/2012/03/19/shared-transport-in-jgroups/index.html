@@ -8,7 +8,7 @@
     <script src="/js/bootstrap.js"></script>
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
     <link rel="stylesheet" href="/css/common.css">
-    <meta name="generator" content="nanoc 3.6.2">
+    <meta name="generator" content="nanoc 3.6.4">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/css/post.css">
     <script type="text/javascript">
@@ -102,7 +102,6 @@
 <p>Later, I copied (say) <code>udp.xml</code> from JGroups sources to <code>META-INF/channel.xml</code>. And I added <code>singleton_name="shared"</code> line to the protocol specification in <code>META-INF/channel.xml</code> file.</p>
 
 <p>Now, my individual classes make calls to <code>ChannelFactory.getInstance().create()</code> to get a channel dedicated to them. And while program shuts down, I just make a call to <code>ChannelFactory.getInstance().clear()</code> to tidy things up.</p>
-
 
 	  <script type="text/javascript">
 	    $("#post table").attr("class", "table table-hover");

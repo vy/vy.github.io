@@ -8,7 +8,7 @@
     <script src="/js/bootstrap.js"></script>
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
     <link rel="stylesheet" href="/css/common.css">
-    <meta name="generator" content="nanoc 3.6.2">
+    <meta name="generator" content="nanoc 3.6.4">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/css/post.css">
     <script type="text/javascript">
@@ -57,7 +57,7 @@
 <p>First, note that there is a certain directory structure I stick to.</p>
 
 <ul>
-  <li>
+<li>
 <code>/</code> – LaTeX (.tex) and BibTeX (<code>.bib</code>) files are placed here.</li>
   <li>
 <code>/constants.tex</code> – LaTeX file for constants (variables, definitions, commands, etc.) shared between LaTeX and XFig files.</li>
@@ -68,9 +68,7 @@
   <li><code>/figs/fig2eps.sh</code></li>
   <li>
 <code>/figs/make.sh</code> – Compiles the XFig and Gnuplot into EPS format.</li>
-</ul>
-
-<p>Below is the entry point, <code>/make.sh</code>. (Make sure you have <code>latex</code>, <code>bibtex</code>, <code>dvips</code>, and <code>pspdf</code> commands available.)</p>
+</ul><p>Below is the entry point, <code>/make.sh</code>. (Make sure you have <code>latex</code>, <code>bibtex</code>, <code>dvips</code>, and <code>pspdf</code> commands available.)</p>
 
 <pre><code class="language-bash"><span class="c">#!/bin/bash</span>
 
@@ -227,7 +225,6 @@ rm -f <span class="se">\</span>
 <p>and you are ready to go.</p>
 
 <p>Scripts need a little bit more cleaning and they are probably not the most correct ones. Anyway, they served well until now, and I hope they would for you as well.</p>
-
 
 	  <script type="text/javascript">
 	    $("#post table").attr("class", "table table-hover");
