@@ -5,7 +5,6 @@ title: On the OpenFlow Controllers
 tags:
   - cpp
   - java
-  - jgroups
   - networking
   - openflow
   - python
