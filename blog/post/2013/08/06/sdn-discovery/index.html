@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Discovery in Software-Defined Networks</title>
+    <link rel="stylesheet" href="/css/bootstrap.css">
+    <link rel="stylesheet" href="/css/bootstrap-responsive.css">
+    <script src="/js/bootstrap.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="/css/common.css">
+    <meta name="generator" content="nanoc 3.6.4">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/post.css">
+    <script type="text/javascript">
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-40183531-1']);
+      _gaq.push(['_trackPageview']);
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="menu">
+      <div><a href="/">Home</a></div><div><a href="/about/">About</a></div><div><a href="/blog/">Blog</a></div><div><a href="/code/">Code</a></div><div><a href="/blog/feed/">Feed</a></div>
+    </div>
+    
+
+<div class="container">
+  <div class="row-fluid">
+    <div class="offset2 span8">
+      <div id="post" class="more-white-box rounded-corners">
+	<div class="head">
+	  <div class="title">Discovery in Software-Defined Networks</div>
+	  <div class="subtitle">posted at
+	    August 6, 2013
+	    with tags <a href="/blog/tag/networking">networking</a>, <a href="/blog/tag/openflow">openflow</a>, <a href="/blog/tag/sdn">sdn</a>
+	  </div>
+	  <div class="share">
+	    <div class="addthis_toolbox addthis_default_style ">
+	      <a class="addthis_button_preferred_1"></a>
+	      <a class="addthis_button_preferred_2"></a>
+	      <a class="addthis_button_preferred_3"></a>
+	      <a class="addthis_button_preferred_4"></a>
+	      <a class="addthis_button_compact"></a>
+	    </div>
+	    <script type="text/javascript">var addthis_config = {"data_track_addressbar":false};</script>
+	    <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-5144adf75211a62b"></script>
+	  </div>
+	</div>
+	<div class="body">
+
+	  <p><em>Discovery</em> can mean a couple of things in a software-defined network including, but is not limited to, the discovery of the 1) switches, 2) links, and 3) hosts. In this blog post I will briefly describe the basics of the underlying plumbing for these three <em>discovery</em> tasks. Note that I will assume that the OpenFlow is employed as the south-bound protocol.</p>
+
+<h1 id="discovery-of-the-switches">Discovery of the Switches</h1>
+
+<p>So how does a controller get to know the switches in its control domain and their features? A switch is initially configured with a <em>master</em> controller IP address and a set of <em>slave</em> controller IP addresses. While the most recent OpenFlow specifications allow a switch to simultaneously connect to multiple controllers, for simplicity, in this post I will assume that a switch first tries to connect to the master controller and if the connection fails, picks one of the slave controllers – that is, a switch is connected to a single controller at a time.</p>
+
+<p>When the switch establishes a (TCP) connection to a controller, controller sends a <em>feature request</em> message to the switch and waits for a reply. When the reply reaches to the controller, controller gets informed about the features provided by the switch, for instance, the datapath ID (i.e., DPID), list of ports, etc.</p>
+
+<h1 id="discovery-of-the-links">Discovery of the Links</h1>
+
+<p>When a switch connects to a controller, controller periodically (e.g., every 5 seconds) commands the switch to flood LLDP (Link Layer Discovery Protocol) and BDDP (Broadcast Domain Discovery Protocol) packets through all of its ports. A discovery protocol packet typically contains the DPID of the sender along with the port of the switch that the message originates from. The reserved set of destination MAC addresses and <code>ethertype</code>s used by the discovery protocol packets lets the controller to differentiate them with the other data packets. LLDP is used to discover direct links between switches and BDDP is used to discover the switches in the same broadcast domain. LLDP and BDDP differ from each other by the <code>ethertype</code>s they use.</p>
+
+<p><img src="network.jpg" alt="SDN Topology"></p>
+
+<p>Consider the above network topology, where <code>s1</code>, <code>s2</code>, and <code>s3</code> are connected to a controller and <code>s4</code> is a non-OpenFlow switch. Further, each switch is connected to a host. Note that the port numbers are denoted by the numbers at the endpoints of the links. After controller connections to <code>s1</code>, <code>s2</code>, <code>s3</code> get established, the controller commands all three switches to flood LLDP packets. Consequently, LLDP packet sent by <code>p1</code> of <code>s1</code> (i.e., 1st port of the 1st switch) reaches to <code>p1</code> of <code>s3</code> and <code>s3</code> forwards this packet to the controller. Since the LLDP packet sent by <code>s1</code> is actuated by the controller itself, upon receiving the LLDP packet from <code>s3</code>, controller discovers that there is a link from <code>p1</code> of <code>s1</code> to <code>p1</code> of <code>s3</code>. Likewise, the LLDP packet sent by <code>p2</code> of <code>s2</code> reaches to <code>p2</code> of <code>s1</code> and the controller learns that there is a link from <code>s1</code> to <code>s2</code> as well, and so on. Proceeding in this way the controller eventually figures out all the <em>direct</em> links in the topology – we will come to the case for <code>s4</code>. Note that upon receiving an LLDP packet, controller does not forward these packets any further, LLDP packets just acknowledge the controller about the direct links between the switches.</p>
+
+<p>Since <code>s4</code> is a non-OpenFlow switch, it does not flood any LLDP packets and even if it would do so, since <code>s4</code> is not known by the controller, the LLDP packets originate from <code>s4</code> to the OpenFlow controler’s domain will not mean anything to the controller. On the other hand topology tells us that <code>p1</code> of <code>s2</code> is reachable by <code>p2</code> of <code>s3</code>, in other words, they are in the same <em>broadcast domain</em>, but they do not have a direct link between each other. In this case, LLDP and BDDP packets flooded by <code>s2</code> and <code>s3</code> reaches to the non-OpenFlow switch <code>s4</code>. Since LLDP packets are used for direct link discoveries LLDPs get dropped immediatly at the <code>s4</code>. However, BDDP packets are broadcasted by non-OpenFlow switches and they make their way to <code>s2</code> and <code>s3</code>. By this way the controller discovers that there is an indirect connection between <code>p1</code> of <code>s2</code> and <code>p2</code> of <code>s3</code> and these switches are in the same broadcast domain.</p>
+
+<h1 id="discovery-of-the-hosts">Discovery of the Hosts</h1>
+
+<p>Using a combination of LLDP and BDDP packets, controller discovers the direct and indirect connections between the switches. Further, controller also keeps an eye on the liveliness of the connections regularly with periodical checks. Equipped with the knowledge of the network topology, controller can determine the shortest path from a source switch port to a destination switch port. But how does it discover the hosts? That is, how does the controller discover the <em>attachment point(s)</em> of a host?</p>
+
+<p>Considering the previously illustrated network topology, let’s assume that <code>h1</code> pings <code>h2</code>. When ping request reaches to <code>s1</code>, since there were no previously installed rule(s) for the incoming flow, <code>s1</code> will forward the first packet of the flow to the controller. This is the first time the controller observes a message originating from <code>h1</code>. Hence, the controller discovers that <code>p3</code> of <code>s1</code> is an attachment point for <code>h1</code>. But the controller still does not have any knowledge on the attachment points for the destination <code>h2</code>. Thus, the controller tells <code>s1</code> to flood the packet. Due to flooding, the ping request reaches to <code>s2</code> and <code>s3</code>. For simplicity, let’s assume that the flood first arrived to <code>s2</code>. Since <code>s2</code> does not have any corresponding rules for the flow, <code>s2</code> forwards the packet to the controller. Controller still does not know the attachment point of <code>h2</code> and hence commands to <code>s2</code> to flood the packet again. After this second flood, the ping request reaches to <code>h2</code> and <code>h2</code> replies back. Upon <code>s2</code> receiving <code>h2</code>s reply from <code>p3</code>, it forwards the reply to the controller. Now the controller discovers that <code>p3</code> of <code>s2</code> is an attachment point for <code>h2</code>. Since controller has previously discovered <code>h1</code>s attachment point, it knows that the reply needs to be routed from <code>p3</code> to <code>p2</code> of <code>s2</code> and then from <code>p2</code> to <code>p3</code> of <code>s1</code>. Consequently, controller installs the appropriate rules to the switches <code>s1</code> and <code>s2</code>, and finally commands <code>s2</code> to send the ping reply from <code>p2</code>.</p>
+
+<p>Hosts <code>h1</code>, <code>h2</code> and <code>h3</code> all have a single attachment point from the point of view of the controller. Say this time <code>h1</code> pings <code>h4</code>. Since the controller does not know the attachment point of <code>h4</code>, it will repeatedly flood the request until it makes its way to <code>s4</code> and then <code>h4</code>. <code>h4</code>s reply might reach to the controller network either from <code>p1</code> of <code>s2</code> or <code>p2</code> of <code>s3</code>. Further, each packet originating from <code>h4</code> can be routed across different paths by <code>s4</code> too. To handle such cases, controllers generally assign multiple attachment points for <code>h4</code>.</p>
+
+	  <script type="text/javascript">
+	    $("#post table").attr("class", "table table-hover");
+	  </script>
+
+	  <div id="disqus_thread"></div>
+	  <script type="text/javascript">
+	  var disqus_shortname = 'vyazici';
+	  var disqus_identifier = '/blog/post/20130806-sdn-discovery/';
+	  var disqus_title = 'Discovery in Software-Defined Networks';
+	  (function() {
+	  	var dsq = document.createElement('script');
+	  	dsq.type = 'text/javascript';
+	  	dsq.async = true;
+	  	dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+	  	(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+	  })();
+	  </script>
+
+	</div>
+      </div>
+      <div id="bgauthor" class="narrow-font">
+	background image by
+	<a href="http://jenniferwetzel.com/">Jennifer Wetzel</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+  </body>
+</html>
+
