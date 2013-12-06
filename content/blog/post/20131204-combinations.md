@@ -73,22 +73,25 @@ Lucky for us, there exists a vast literature for [combinatorial number
 system](http://en.wikipedia.org/wiki/Combinatorial_number_system), where people
 come up with a way to enumerate combinations. Long story short, combinatorial
 number system presents a mapping between natural numbers (taken to include 0)
-and the combinations. To begin with, we first need to talk about *combinadics*.
-
-In a combinatorial number system of degree $$r$$, each natural number
-$$b\in\mathbb{N}$$ map to a one and only one *combinadic*
-$$[d_1, d_2, \dots, d_k]$$ given in the following equation.
+and the combinations. In a combinatorial number system of degree $$r$$, each
+natural number $$b\in\mathbb{N}$$ map to a one and only one r-combination
+$$[d_1, d_2, \dots, d_r]$$ with the following equality.
 
 $$
 b = {d_1 \choose r} + {d_2 \choose r-1} + \dots + {d_r \choose 1},\\
 \textrm{ where } d_1 > d_2 > \dots > d_r.
 $$
 
-For instance, let $$b=8$$ and $$r=2$$. Here $$b$$ corresponds to the combinadic
-$$[4, 2]$$ in combinatorial number system of degree $$r$$ with the following
-equality.
+For instance, let $$b=8$$ and $$r=2$$. Here $$b$$ corresponds to the
+2-combination $$[4, 2]$$ in combinatorial number system of degree 2 with the
+following equality.
 
 $$8 = {4 \choose 2} + {2 \choose 1}$$
+
+The r-combination of a given number $$b$$ can be computed using the following
+greedy algorithm: take $$d_i$$ maximal with $${d_i \choose i} \leq b$$, then
+take $$d_{i-1}$$ maximal with $${d_{i-1} \choose i-1} \leq b - {d_i \choose i}$$,
+and so forth.
 
 So far so good. Let's do the magic. Suppose that we want to enumerate the
 combinations of 5-choose-2. That is, we want the following mapping.
@@ -108,9 +111,9 @@ scratch.
 1. First, we set $$i$$ to the index of the combination we are interested in: $$i=3$$
 2. Second, we set $$j$$ to the dual index of $$i$$ in $${5 \choose 2}$$ system:
    $$j = {5 \choose 2} - i - 1 = 6$$.
-3. Now let's find the combinadic of $$j$$: $$6 = {4 \choose 2} + {0 \choose 1}$$,
-   that is, the combinadic corresponding to $$j=6$$ is $$[4, 0]$$.
-4. Next we subtract the found comdinadic from the mask $$[4, 4]$$, where 4's
+3. Now let's find the 2-combination of $$j$$: $$6 = {4 \choose 2} + {0 \choose 1}$$,
+   that is, the 2-combination corresponding to $$j=6$$ is $$[4, 0]$$.
+4. Next we subtract the found 2-combination from the mask $$[4, 4]$$, where 4's
    comes from $$5-1$$: $$[4, 4] - [4, 0] = [0, 4]$$.
 
 Yay! 3rd combination of $${5 \choose 2}$$ system is $$[0, 4]$$! Hrm... Was that
@@ -119,9 +122,9 @@ a coincidence? Let's give it another try with 8th combination this time.
 1. First, we set $$i$$ to the index of the combination we are interested in: $$i=8$$
 2. Second, we set $$j$$ to the dual index of $$i$$ in $${5 \choose 2}$$ system:
    $$j = {5 \choose 2} - i - 1 = 1$$.
-3. Now let's find the combinadic of $$j$$: $$1 = {2 \choose 2} + {0 \choose 1}$$,
-   that is, the combinadic corresponding to $$j=1$$ is $$[2, 0]$$.
-4. Next we subtract the found comdinadic from the mask $$[4, 4]$$:
+3. Now let's find the 2-combination of $$j$$: $$1 = {2 \choose 2} + {0 \choose 1}$$,
+   that is, the 2-combination corresponding to $$j=1$$ is $$[2, 0]$$.
+4. Next we subtract the found 2-combination from the mask $$[4, 4]$$:
    $$[4, 4] - [2, 0] = [2, 4]$$.
 
 8th combination turns out to be $$[2, 4]$$. Eureka!
@@ -129,11 +132,11 @@ a coincidence? Let's give it another try with 8th combination this time.
 Conclusion
 ==========
 
-We have shown that using combinadics one can compute the $$k$$'th combination
-among the lexicographically ordered set of combinations of $$n$$-choose-$$r$$,
-where $$0 \leq k \lt {n \choose r}$$. Using this method we can partition the
-space of all combinations into multiple subsets and generate each of them
-individually. For this purpose, I put together a Java library:
+We have shown that using $$r$$-combinations one can compute the $$k$$'th
+combination among the lexicographically ordered set of combinations of
+$$n$$-choose-$$r$$, where $$0 \leq k \lt {n \choose r}$$. Using this method we
+can partition the space of all combinations into multiple subsets and generate
+each of them individually. For this purpose, I put together a Java library:
 [combination](https://github.com/vy/combination). Here is a sample snippet.
 
     #!java
