@@ -69,20 +69,23 @@ compute the &lt;script type="math/tex"&gt;{m+1}&lt;/script&gt;‘th combination 
 system&lt;/a&gt;, where people
 come up with a way to enumerate combinations. Long story short, combinatorial
 number system presents a mapping between natural numbers (taken to include 0)
-and the combinations. To begin with, we first need to talk about &lt;em&gt;combinadics&lt;/em&gt;.&lt;/p&gt;
-
-&lt;p&gt;In a combinatorial number system of degree &lt;script type="math/tex"&gt;r&lt;/script&gt;, each natural number
-&lt;script type="math/tex"&gt;b\in\mathbb{N}&lt;/script&gt; map to a one and only one &lt;em&gt;combinadic&lt;/em&gt;
-&lt;script type="math/tex"&gt;[d_1, d_2, \dots, d_k]&lt;/script&gt; given in the following equation.&lt;/p&gt;
+and the combinations. In a combinatorial number system of degree &lt;script type="math/tex"&gt;r&lt;/script&gt;, each
+natural number &lt;script type="math/tex"&gt;b\in\mathbb{N}&lt;/script&gt; map to a one and only one r-combination
+&lt;script type="math/tex"&gt;[d_1, d_2, \dots, d_r]&lt;/script&gt; with the following equality.&lt;/p&gt;
 
 &lt;script type="math/tex; mode=display"&gt;
 b = {d_1 \choose r} + {d_2 \choose r-1} + \dots + {d_r \choose 1},\\
 \textrm{ where } d_1 &gt; d_2 &gt; \dots &gt; d_r.
-&lt;/script&gt;&lt;p&gt;For instance, let &lt;script type="math/tex"&gt;b=8&lt;/script&gt; and &lt;script type="math/tex"&gt;r=2&lt;/script&gt;. Here &lt;script type="math/tex"&gt;b&lt;/script&gt; corresponds to the combinadic
-&lt;script type="math/tex"&gt;[4, 2]&lt;/script&gt; in combinatorial number system of degree &lt;script type="math/tex"&gt;r&lt;/script&gt; with the following
-equality.&lt;/p&gt;
+&lt;/script&gt;&lt;p&gt;For instance, let &lt;script type="math/tex"&gt;b=8&lt;/script&gt; and &lt;script type="math/tex"&gt;r=2&lt;/script&gt;. Here &lt;script type="math/tex"&gt;b&lt;/script&gt; corresponds to the
+2-combination &lt;script type="math/tex"&gt;[4, 2]&lt;/script&gt; in combinatorial number system of degree 2 with the
+following equality.&lt;/p&gt;
 
-&lt;script type="math/tex; mode=display"&gt;8 = {4 \choose 2} + {2 \choose 1}&lt;/script&gt;&lt;p&gt;So far so good. Let’s do the magic. Suppose that we want to enumerate the
+&lt;script type="math/tex; mode=display"&gt;8 = {4 \choose 2} + {2 \choose 1}&lt;/script&gt;&lt;p&gt;The r-combination of a given number &lt;script type="math/tex"&gt;b&lt;/script&gt; can be computed using the following
+greedy algorithm: take &lt;script type="math/tex"&gt;d_i&lt;/script&gt; maximal with &lt;script type="math/tex"&gt;{d_i \choose i} \leq b&lt;/script&gt;, then
+take &lt;script type="math/tex"&gt;d_{i-1}&lt;/script&gt; maximal with &lt;script type="math/tex"&gt;{d_{i-1} \choose i-1} \leq b - {d_i \choose i}&lt;/script&gt;,
+and so forth.&lt;/p&gt;
+
+&lt;p&gt;So far so good. Let’s do the magic. Suppose that we want to enumerate the
 combinations of 5-choose-2. That is, we want the following mapping.&lt;/p&gt;
 
 &lt;script type="math/tex; mode=display"&gt;
@@ -100,9 +103,9 @@ scratch.&lt;/p&gt;
 &lt;/li&gt;
   &lt;li&gt;Second, we set &lt;script type="math/tex"&gt;j&lt;/script&gt; to the dual index of &lt;script type="math/tex"&gt;i&lt;/script&gt; in &lt;script type="math/tex"&gt;{5 \choose 2}&lt;/script&gt; system:
 &lt;script type="math/tex"&gt;j = {5 \choose 2} - i - 1 = 6&lt;/script&gt;.&lt;/li&gt;
-  &lt;li&gt;Now let’s find the combinadic of &lt;script type="math/tex"&gt;j&lt;/script&gt;: &lt;script type="math/tex"&gt;6 = {4 \choose 2} + {0 \choose 1}&lt;/script&gt;,
-that is, the combinadic corresponding to &lt;script type="math/tex"&gt;j=6&lt;/script&gt; is &lt;script type="math/tex"&gt;[4, 0]&lt;/script&gt;.&lt;/li&gt;
-  &lt;li&gt;Next we subtract the found comdinadic from the mask &lt;script type="math/tex"&gt;[4, 4]&lt;/script&gt;, where 4’s
+  &lt;li&gt;Now let’s find the 2-combination of &lt;script type="math/tex"&gt;j&lt;/script&gt;: &lt;script type="math/tex"&gt;6 = {4 \choose 2} + {0 \choose 1}&lt;/script&gt;,
+that is, the 2-combination corresponding to &lt;script type="math/tex"&gt;j=6&lt;/script&gt; is &lt;script type="math/tex"&gt;[4, 0]&lt;/script&gt;.&lt;/li&gt;
+  &lt;li&gt;Next we subtract the found 2-combination from the mask &lt;script type="math/tex"&gt;[4, 4]&lt;/script&gt;, where 4’s
 comes from &lt;script type="math/tex"&gt;5-1&lt;/script&gt;: &lt;script type="math/tex"&gt;[4, 4] - [4, 0] = [0, 4]&lt;/script&gt;.&lt;/li&gt;
 &lt;/ol&gt;&lt;p&gt;Yay! 3rd combination of &lt;script type="math/tex"&gt;{5 \choose 2}&lt;/script&gt; system is &lt;script type="math/tex"&gt;[0, 4]&lt;/script&gt;! Hrm… Was that
 a coincidence? Let’s give it another try with 8th combination this time.&lt;/p&gt;
@@ -112,19 +115,19 @@ a coincidence? Let’s give it another try with 8th combination this time.&lt;/p
 &lt;/li&gt;
   &lt;li&gt;Second, we set &lt;script type="math/tex"&gt;j&lt;/script&gt; to the dual index of &lt;script type="math/tex"&gt;i&lt;/script&gt; in &lt;script type="math/tex"&gt;{5 \choose 2}&lt;/script&gt; system:
 &lt;script type="math/tex"&gt;j = {5 \choose 2} - i - 1 = 1&lt;/script&gt;.&lt;/li&gt;
-  &lt;li&gt;Now let’s find the combinadic of &lt;script type="math/tex"&gt;j&lt;/script&gt;: &lt;script type="math/tex"&gt;1 = {2 \choose 2} + {0 \choose 1}&lt;/script&gt;,
-that is, the combinadic corresponding to &lt;script type="math/tex"&gt;j=1&lt;/script&gt; is &lt;script type="math/tex"&gt;[2, 0]&lt;/script&gt;.&lt;/li&gt;
-  &lt;li&gt;Next we subtract the found comdinadic from the mask &lt;script type="math/tex"&gt;[4, 4]&lt;/script&gt;:
+  &lt;li&gt;Now let’s find the 2-combination of &lt;script type="math/tex"&gt;j&lt;/script&gt;: &lt;script type="math/tex"&gt;1 = {2 \choose 2} + {0 \choose 1}&lt;/script&gt;,
+that is, the 2-combination corresponding to &lt;script type="math/tex"&gt;j=1&lt;/script&gt; is &lt;script type="math/tex"&gt;[2, 0]&lt;/script&gt;.&lt;/li&gt;
+  &lt;li&gt;Next we subtract the found 2-combination from the mask &lt;script type="math/tex"&gt;[4, 4]&lt;/script&gt;:
 &lt;script type="math/tex"&gt;[4, 4] - [2, 0] = [2, 4]&lt;/script&gt;.&lt;/li&gt;
 &lt;/ol&gt;&lt;p&gt;8th combination turns out to be &lt;script type="math/tex"&gt;[2, 4]&lt;/script&gt;. Eureka!&lt;/p&gt;
 
 &lt;h1 id="conclusion"&gt;Conclusion&lt;/h1&gt;
 
-&lt;p&gt;We have shown that using combinadics one can compute the &lt;script type="math/tex"&gt;k&lt;/script&gt;‘th combination
-among the lexicographically ordered set of combinations of &lt;script type="math/tex"&gt;n&lt;/script&gt;-choose-&lt;script type="math/tex"&gt;r&lt;/script&gt;,
-where &lt;script type="math/tex"&gt;0 \leq k \lt {n \choose r}&lt;/script&gt;. Using this method we can partition the
-space of all combinations into multiple subsets and generate each of them
-individually. For this purpose, I put together a Java library:
+&lt;p&gt;We have shown that using &lt;script type="math/tex"&gt;r&lt;/script&gt;-combinations one can compute the &lt;script type="math/tex"&gt;k&lt;/script&gt;‘th
+combination among the lexicographically ordered set of combinations of
+&lt;script type="math/tex"&gt;n&lt;/script&gt;-choose-&lt;script type="math/tex"&gt;r&lt;/script&gt;, where &lt;script type="math/tex"&gt;0 \leq k \lt {n \choose r}&lt;/script&gt;. Using this method we
+can partition the space of all combinations into multiple subsets and generate
+each of them individually. For this purpose, I put together a Java library:
 &lt;a href="https://github.com/vy/combination"&gt;combination&lt;/a&gt;. Here is a sample snippet.&lt;/p&gt;
 
 &lt;pre&gt;&lt;code class="language-java"&gt;&lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kd"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;Main&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;

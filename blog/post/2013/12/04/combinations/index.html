@@ -106,20 +106,23 @@ compute the <script type="math/tex">{m+1}</script>‘th combination without havi
 system</a>, where people
 come up with a way to enumerate combinations. Long story short, combinatorial
 number system presents a mapping between natural numbers (taken to include 0)
-and the combinations. To begin with, we first need to talk about <em>combinadics</em>.</p>
-
-<p>In a combinatorial number system of degree <script type="math/tex">r</script>, each natural number
-<script type="math/tex">b\in\mathbb{N}</script> map to a one and only one <em>combinadic</em>
-<script type="math/tex">[d_1, d_2, \dots, d_k]</script> given in the following equation.</p>
+and the combinations. In a combinatorial number system of degree <script type="math/tex">r</script>, each
+natural number <script type="math/tex">b\in\mathbb{N}</script> map to a one and only one r-combination
+<script type="math/tex">[d_1, d_2, \dots, d_r]</script> with the following equality.</p>
 
 <script type="math/tex; mode=display">
 b = {d_1 \choose r} + {d_2 \choose r-1} + \dots + {d_r \choose 1},\\
 \textrm{ where } d_1 > d_2 > \dots > d_r.
-</script><p>For instance, let <script type="math/tex">b=8</script> and <script type="math/tex">r=2</script>. Here <script type="math/tex">b</script> corresponds to the combinadic
-<script type="math/tex">[4, 2]</script> in combinatorial number system of degree <script type="math/tex">r</script> with the following
-equality.</p>
+</script><p>For instance, let <script type="math/tex">b=8</script> and <script type="math/tex">r=2</script>. Here <script type="math/tex">b</script> corresponds to the
+2-combination <script type="math/tex">[4, 2]</script> in combinatorial number system of degree 2 with the
+following equality.</p>
 
-<script type="math/tex; mode=display">8 = {4 \choose 2} + {2 \choose 1}</script><p>So far so good. Let’s do the magic. Suppose that we want to enumerate the
+<script type="math/tex; mode=display">8 = {4 \choose 2} + {2 \choose 1}</script><p>The r-combination of a given number <script type="math/tex">b</script> can be computed using the following
+greedy algorithm: take <script type="math/tex">d_i</script> maximal with <script type="math/tex">{d_i \choose i} \leq b</script>, then
+take <script type="math/tex">d_{i-1}</script> maximal with <script type="math/tex">{d_{i-1} \choose i-1} \leq b - {d_i \choose i}</script>,
+and so forth.</p>
+
+<p>So far so good. Let’s do the magic. Suppose that we want to enumerate the
 combinations of 5-choose-2. That is, we want the following mapping.</p>
 
 <script type="math/tex; mode=display">
@@ -137,9 +140,9 @@ scratch.</p>
 </li>
   <li>Second, we set <script type="math/tex">j</script> to the dual index of <script type="math/tex">i</script> in <script type="math/tex">{5 \choose 2}</script> system:
 <script type="math/tex">j = {5 \choose 2} - i - 1 = 6</script>.</li>
-  <li>Now let’s find the combinadic of <script type="math/tex">j</script>: <script type="math/tex">6 = {4 \choose 2} + {0 \choose 1}</script>,
-that is, the combinadic corresponding to <script type="math/tex">j=6</script> is <script type="math/tex">[4, 0]</script>.</li>
-  <li>Next we subtract the found comdinadic from the mask <script type="math/tex">[4, 4]</script>, where 4’s
+  <li>Now let’s find the 2-combination of <script type="math/tex">j</script>: <script type="math/tex">6 = {4 \choose 2} + {0 \choose 1}</script>,
+that is, the 2-combination corresponding to <script type="math/tex">j=6</script> is <script type="math/tex">[4, 0]</script>.</li>
+  <li>Next we subtract the found 2-combination from the mask <script type="math/tex">[4, 4]</script>, where 4’s
 comes from <script type="math/tex">5-1</script>: <script type="math/tex">[4, 4] - [4, 0] = [0, 4]</script>.</li>
 </ol><p>Yay! 3rd combination of <script type="math/tex">{5 \choose 2}</script> system is <script type="math/tex">[0, 4]</script>! Hrm… Was that
 a coincidence? Let’s give it another try with 8th combination this time.</p>
@@ -149,19 +152,19 @@ a coincidence? Let’s give it another try with 8th combination this time.</p>
 </li>
   <li>Second, we set <script type="math/tex">j</script> to the dual index of <script type="math/tex">i</script> in <script type="math/tex">{5 \choose 2}</script> system:
 <script type="math/tex">j = {5 \choose 2} - i - 1 = 1</script>.</li>
-  <li>Now let’s find the combinadic of <script type="math/tex">j</script>: <script type="math/tex">1 = {2 \choose 2} + {0 \choose 1}</script>,
-that is, the combinadic corresponding to <script type="math/tex">j=1</script> is <script type="math/tex">[2, 0]</script>.</li>
-  <li>Next we subtract the found comdinadic from the mask <script type="math/tex">[4, 4]</script>:
+  <li>Now let’s find the 2-combination of <script type="math/tex">j</script>: <script type="math/tex">1 = {2 \choose 2} + {0 \choose 1}</script>,
+that is, the 2-combination corresponding to <script type="math/tex">j=1</script> is <script type="math/tex">[2, 0]</script>.</li>
+  <li>Next we subtract the found 2-combination from the mask <script type="math/tex">[4, 4]</script>:
 <script type="math/tex">[4, 4] - [2, 0] = [2, 4]</script>.</li>
 </ol><p>8th combination turns out to be <script type="math/tex">[2, 4]</script>. Eureka!</p>
 
 <h1 id="conclusion">Conclusion</h1>
 
-<p>We have shown that using combinadics one can compute the <script type="math/tex">k</script>‘th combination
-among the lexicographically ordered set of combinations of <script type="math/tex">n</script>-choose-<script type="math/tex">r</script>,
-where <script type="math/tex">0 \leq k \lt {n \choose r}</script>. Using this method we can partition the
-space of all combinations into multiple subsets and generate each of them
-individually. For this purpose, I put together a Java library:
+<p>We have shown that using <script type="math/tex">r</script>-combinations one can compute the <script type="math/tex">k</script>‘th
+combination among the lexicographically ordered set of combinations of
+<script type="math/tex">n</script>-choose-<script type="math/tex">r</script>, where <script type="math/tex">0 \leq k \lt {n \choose r}</script>. Using this method we
+can partition the space of all combinations into multiple subsets and generate
+each of them individually. For this purpose, I put together a Java library:
 <a href="https://github.com/vy/combination">combination</a>. Here is a sample snippet.</p>
 
 <pre><code class="language-java"><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Main</span> <span class="o">{</span>
