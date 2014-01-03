@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Sockets, TCP Keep Alive and TIME_WAIT</title>
+    <link rel="stylesheet" href="/css/bootstrap.css">
+    <link rel="stylesheet" href="/css/bootstrap-responsive.css">
+    <script src="/js/bootstrap.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="/css/common.css">
+    <meta name="generator" content="nanoc 3.6.4">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/post.css">
+    <script type="text/javascript">
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-40183531-1']);
+      _gaq.push(['_trackPageview']);
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="menu">
+      <div><a href="/">Home</a></div><div><a href="/about/">About</a></div><div><a href="/blog/">Blog</a></div><div><a href="/code/">Code</a></div><div><a href="/blog/feed/">Feed</a></div>
+    </div>
+    
+
+<div class="container">
+  <div class="row-fluid">
+    <div class="offset2 span8">
+      <div id="post" class="more-white-box rounded-corners">
+	<div class="head">
+	  <div class="title">Sockets, TCP Keep Alive and TIME_WAIT</div>
+	  <div class="subtitle">posted at
+	    January 3, 2014
+	    with tags <a href="/blog/tag/java">java</a>, <a href="/blog/tag/link">link</a>
+	  </div>
+	  <div class="share">
+	    <div class="addthis_toolbox addthis_default_style ">
+	      <a class="addthis_button_preferred_1"></a>
+	      <a class="addthis_button_preferred_2"></a>
+	      <a class="addthis_button_preferred_3"></a>
+	      <a class="addthis_button_preferred_4"></a>
+	      <a class="addthis_button_compact"></a>
+	    </div>
+	    <script type="text/javascript">var addthis_config = {"data_track_addressbar":false};</script>
+	    <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-5144adf75211a62b"></script>
+	  </div>
+	</div>
+	<div class="body">
+
+	  <p>Time to time I share some technical links on Twitter and let them get lost in the internet junk yard. I thought it might be a better idea to archive them on my blog in a more organized fashion. (I will group such posts under tag <a href="/blog/tag/link">link</a>.) This way they will at least be more accessible by myself. This post is my first effort towards this goal. (Sorry for the ugly Twitter embeddings. I find some 3rd party libraries to configure the display, but that stuff usually gets broken in the long run due to changes in the Twitter API.)</p>
+
+<p>Last month I have been bitten seriously by a software bug caused by <code>TIME_WAIT</code> sockets. Below is the list of links I found useful in the pursuit of trying to solve the problem.</p>
+
+<blockquote class="twitter-tweet" lang="en" data-conversation="none" data-cards="hidden">
+<p>Multi-platform <a href="https://twitter.com/search?q=%23TCP&amp;src=hash">#TCP</a> Keep Alive guide: <a href="http://t.co/uEukpMrCEV">http://t.co/uEukpMrCEV</a> <a href="https://twitter.com/search?q=%23bsd&amp;src=hash">#bsd</a> <a href="https://twitter.com/search?q=%23linux&amp;src=hash">#linux</a> <a href="https://twitter.com/search?q=%23solaris&amp;src=hash">#solaris</a> <a href="https://twitter.com/search?q=%23windows&amp;src=hash">#windows</a> <a href="https://twitter.com/search?q=%23osx&amp;src=hash">#osx</a></p>— Volkan Yazıcı (@yazicivo) <a href="https://twitter.com/yazicivo/statuses/413989234052067328">December 20, 2013</a>
+</blockquote>
+
+<blockquote class="twitter-tweet" lang="en" data-conversation="none" data-cards="hidden">
+<p>The ultimate guide to socket/bind/connect: <a href="http://t.co/7YjSiIfWnX">http://t.co/7YjSiIfWnX</a> <a href="https://twitter.com/search?q=%23bsd&amp;src=hash">#bsd</a> <a href="https://twitter.com/search?q=%23linux&amp;src=hash">#linux</a> <a href="https://twitter.com/search?q=%23unix&amp;src=hash">#unix</a> <a href="https://twitter.com/search?q=%23network&amp;src=hash">#network</a> <a href="https://twitter.com/search?q=%23programming&amp;src=hash">#programming</a></p>— Volkan Yazıcı (@yazicivo) <a href="https://twitter.com/yazicivo/statuses/413970759489294336">December 20, 2013</a>
+</blockquote>
+
+<blockquote class="twitter-tweet" lang="en">
+<p>Suffering from <a href="https://twitter.com/search?q=%23TIME_WAIT&amp;src=hash">#TIME_WAIT</a> <a href="https://twitter.com/search?q=%23sockets&amp;src=hash">#sockets</a> while trying to handle thousands of connections? Enabled tcp_tw_recycle? <a href="http://t.co/XGdPYNibGE">http://t.co/XGdPYNibGE</a> <a href="https://twitter.com/search?q=%23linux&amp;src=hash">#linux</a></p>— Volkan Yazıcı (@yazicivo) <a href="https://twitter.com/yazicivo/statuses/413967038147612672">December 20, 2013</a>
+</blockquote>
+
+	  <script type="text/javascript">
+	    $("#post table").attr("class", "table table-hover");
+	  </script>
+
+	  <div id="disqus_thread"></div>
+	  <script type="text/javascript">
+	  var disqus_shortname = 'vyazici';
+	  var disqus_identifier = '/blog/post/20140103-tcp-time-wait/';
+	  var disqus_title = 'Sockets, TCP Keep Alive and TIME_WAIT';
+	  (function() {
+	  	var dsq = document.createElement('script');
+	  	dsq.type = 'text/javascript';
+	  	dsq.async = true;
+	  	dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+	  	(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+	  })();
+	  </script>
+
+	</div>
+      </div>
+      <div id="bgauthor" class="narrow-font">
+	background image by
+	<a href="http://jenniferwetzel.com/">Jennifer Wetzel</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
+<script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
+<style type="text/css">.twitter-tweet { width: 100%; }</style>
+
+
+
+  </body>
+</html>
+
