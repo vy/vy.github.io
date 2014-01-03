@@ -71,4 +71,9 @@
 </script>
 <% end %>
 
+<% if @item[:modules] and @item[:modules].include?("twitter") %>
+<script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
+<style type="text/css">.twitter-tweet { width: 100%; }</style>
+<% end %>
+
 <% end %>
