@@ -120,7 +120,7 @@
 <span class="kd">public</span> <span class="kd">class</span> <span class="nc">SafeLazyInitialization</span> <span class="o">{</span>
     <span class="kd">private</span> <span class="kd">static</span> <span class="n">Resource</span> <span class="n">resource</span><span class="o">;</span>
 
-    <span class="kd">public</span> <span class="n">syncrhonized</span> <span class="kd">static</span> <span class="n">Resource</span> <span class="nf">getInstance</span><span class="o">()</span> <span class="o">{</span>
+    <span class="kd">public</span> <span class="kd">synchronized</span> <span class="kd">static</span> <span class="n">Resource</span> <span class="nf">getInstance</span><span class="o">()</span> <span class="o">{</span>
         <span class="k">if</span> <span class="o">(</span><span class="n">resource</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span>
             <span class="n">resource</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Resource</span><span class="o">();</span>
         <span class="k">return</span> <span class="n">resource</span><span class="o">;</span>
