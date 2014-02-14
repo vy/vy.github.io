@@ -2,13 +2,120 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <id>https://vy.github.io//</id>
   <title>Volkan Yazıcı's Soap Co.</title>
-  <updated>2014-01-03T19:19:00Z</updated>
+  <updated>2014-02-14T12:22:00Z</updated>
   <link rel="alternate" href="https://vy.github.io//"/>
   <link rel="self" href="https://vy.github.io//blog/feed/"/>
   <author>
     <name>Volkan Yazıcı</name>
     <uri>https://vy.github.io/</uri>
   </author>
+  <entry>
+    <id>tag:vy.github.io,2014-02-14://blog/post/2014/02/14/java-safe-publication/</id>
+    <title type="html">Safe Object Publication in Java</title>
+    <published>2014-02-14T12:22:00Z</published>
+    <updated>2014-02-14T12:22:00Z</updated>
+    <link rel="alternate" href="https://vy.github.io//blog/post/2014/02/14/java-safe-publication/"/>
+    <content type="html">&lt;p&gt;I have just finished reading &lt;a href="http://jcip.net/"&gt;Java Concurrency in Practice&lt;/a&gt; yesterday and would like to share some excerpts from the book on safe object publication in Java. Before stepping into the details, I would like to state that I found every single page of the book quite useful and found numerous places that I can enhance my existing code base during my daily coding routine. Thanks to &lt;a href="https://twitter.com/BrianGoetz"&gt;@BrianGoetz&lt;/a&gt; et al for such a comprehensive and practical guide.&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;[Presented excerpts are copied directly, sometimes with slight changes, from &lt;a href="http://jcip.net/"&gt;Java Concurrency in Practice&lt;/a&gt;.]&lt;/em&gt;&lt;/p&gt;
+
+&lt;h1 id="safe-construction-practices"&gt;Safe Construction Practices&lt;/h1&gt;
+
+&lt;p&gt;An object is in a predictable, consistent state only after its constructor returns, so publishing an object from within its constructor can publish an incompletely constructed object. This is true &lt;em&gt;even if the publication is the last statement in the constructor&lt;/em&gt;. If the &lt;code&gt;this&lt;/code&gt; reference escapes during construction, the object is considered &lt;em&gt;not properly constructed&lt;/em&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-java"&gt;&lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kd"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;ThisEscape&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+    &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="nf"&gt;ThisEscape&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;EventSource&lt;/span&gt; &lt;span class="n"&gt;source&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+        &lt;span class="n"&gt;source&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;registerListener&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;
+            &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nf"&gt;EventListener&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+                &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;onEvent&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;Event&lt;/span&gt; &lt;span class="n"&gt;event&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+                    &lt;span class="n"&gt;doSomething&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;event&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+                &lt;span class="o"&gt;}&lt;/span&gt;
+            &lt;span class="o"&gt;});&lt;/span&gt;
+    &lt;span class="o"&gt;}&lt;/span&gt;
+&lt;span class="o"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Here, when &lt;code&gt;ThisEscape&lt;/code&gt; publishes the &lt;code&gt;EventListener&lt;/code&gt;, it implicitly publishes the enclosing &lt;code&gt;ThisEscape&lt;/code&gt; instance as well, because inner class instances contain a hidden reference to the enclosing instance.&lt;/p&gt;
+
+&lt;p&gt;If you are tempted to register an event listener or start a thread from a constructor, you can avoid the improper construction by using a private constructor and a public factory method, as shown in &lt;code&gt;SafeListener&lt;/code&gt; below.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-java"&gt;&lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kd"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;SafeListener&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+    &lt;span class="kd"&gt;private&lt;/span&gt; &lt;span class="kd"&gt;final&lt;/span&gt; &lt;span class="n"&gt;EventListener&lt;/span&gt; &lt;span class="n"&gt;listener&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+
+    &lt;span class="kd"&gt;private&lt;/span&gt; &lt;span class="nf"&gt;SafeListener&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+        &lt;span class="n"&gt;listener&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="n"&gt;EventListener&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+            &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;onEvent&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;Event&lt;/span&gt; &lt;span class="n"&gt;event&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+                &lt;span class="n"&gt;doSomething&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;event&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+            &lt;span class="o"&gt;}&lt;/span&gt;
+        &lt;span class="o"&gt;}&lt;/span&gt;
+    &lt;span class="o"&gt;}&lt;/span&gt;
+
+    &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kd"&gt;static&lt;/span&gt; &lt;span class="n"&gt;SafeListener&lt;/span&gt; &lt;span class="nf"&gt;newInstance&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;EventSource&lt;/span&gt; &lt;span class="n"&gt;source&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+        &lt;span class="n"&gt;SafeListener&lt;/span&gt; &lt;span class="n"&gt;safe&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="n"&gt;SafeListener&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
+        &lt;span class="n"&gt;source&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;registerListener&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;safe&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;listener&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+        &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;safe&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+    &lt;span class="o"&gt;}&lt;/span&gt;
+&lt;span class="o"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h1 id="lazy-initialization"&gt;Lazy Initialization&lt;/h1&gt;
+
+&lt;p&gt;Unsafe publication can happen as a result of an incorrect lazy initialization as follows.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-java"&gt;&lt;span class="nd"&gt;@NotThreadSafe&lt;/span&gt;
+&lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kd"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;UnsafeLazyInitialization&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+    &lt;span class="kd"&gt;private&lt;/span&gt; &lt;span class="kd"&gt;static&lt;/span&gt; &lt;span class="n"&gt;Resource&lt;/span&gt; &lt;span class="n"&gt;resource&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+
+    &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kd"&gt;static&lt;/span&gt; &lt;span class="n"&gt;Resource&lt;/span&gt; &lt;span class="nf"&gt;getInstance&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+        &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;resource&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="kc"&gt;null&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
+            &lt;span class="n"&gt;resource&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="n"&gt;Resource&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
+        &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;resource&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+    &lt;span class="o"&gt;}&lt;/span&gt;
+&lt;span class="o"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Under certain circumstances, such as when all instances of the &lt;code&gt;Resource&lt;/code&gt; are identical, you might be willing to overlook these (along with the inefficiency of possibly creating the &lt;code&gt;Resource&lt;/code&gt; more than once). Unfortunately, even if these defects are overlooked, &lt;code&gt;UnsafeLazyInitialization&lt;/code&gt; is still not safe, because another thread could observe a reference to a partially constructed &lt;code&gt;Resource&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Suppose thread &lt;code&gt;A&lt;/code&gt; is the first to invoke &lt;code&gt;getInstance&lt;/code&gt;. It sees that &lt;code&gt;resource&lt;/code&gt; is &lt;code&gt;null&lt;/code&gt;, instantiates a new &lt;code&gt;Resource&lt;/code&gt;, and sets &lt;code&gt;resource&lt;/code&gt; to reference it. When thread &lt;code&gt;B&lt;/code&gt; later calls &lt;code&gt;getInstance&lt;/code&gt;, it might see that &lt;code&gt;resource&lt;/code&gt; already has a non-null value and just use the already constructed &lt;code&gt;Resource&lt;/code&gt;. This might look harmless at first, but &lt;em&gt;there is no happens-before ordering between the writing of &lt;code&gt;resource&lt;/code&gt; in &lt;code&gt;A&lt;/code&gt; and the reading of &lt;code&gt;resource&lt;/code&gt; in &lt;code&gt;B&lt;/code&gt;&lt;/em&gt;. A data race has been used to publish the object, and therefore &lt;code&gt;B&lt;/code&gt; is not guaranteed to see the correct state of the &lt;code&gt;Resource&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;Resource&lt;/code&gt; constructor changes the fields of the freshly allocated &lt;code&gt;Resource&lt;/code&gt; from their default values (written by the &lt;code&gt;Object&lt;/code&gt; constructor) to their initial values. Since neither thread used synchronization, &lt;code&gt;B&lt;/code&gt; could possible see &lt;code&gt;A&lt;/code&gt;’s actions in a different order than &lt;code&gt;A&lt;/code&gt; performed them. So even though &lt;code&gt;A&lt;/code&gt; initialized the &lt;code&gt;Resource&lt;/code&gt; before setting &lt;code&gt;resource&lt;/code&gt; to reference it, &lt;code&gt;B&lt;/code&gt; could see the write to &lt;code&gt;resource&lt;/code&gt; as occuring &lt;em&gt;before&lt;/em&gt; the writes to the fields of the &lt;code&gt;Resource&lt;/code&gt;. &lt;code&gt;B&lt;/code&gt; could thus see a partially constructed &lt;code&gt;Resource&lt;/code&gt; that may well be in an invalid state – and whose state may unexpectedly change later.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;UnsafeLazyInitialization&lt;/code&gt; can be fixed by making the &lt;code&gt;getResource&lt;/code&gt; method &lt;code&gt;synchronized&lt;/code&gt; as follows.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-java"&gt;&lt;span class="nd"&gt;@ThreadSafe&lt;/span&gt;
+&lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kd"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;SafeLazyInitialization&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+    &lt;span class="kd"&gt;private&lt;/span&gt; &lt;span class="kd"&gt;static&lt;/span&gt; &lt;span class="n"&gt;Resource&lt;/span&gt; &lt;span class="n"&gt;resource&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+
+    &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="n"&gt;syncrhonized&lt;/span&gt; &lt;span class="kd"&gt;static&lt;/span&gt; &lt;span class="n"&gt;Resource&lt;/span&gt; &lt;span class="nf"&gt;getInstance&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+        &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;resource&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="kc"&gt;null&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
+            &lt;span class="n"&gt;resource&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="n"&gt;Resource&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
+        &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;resource&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+    &lt;span class="o"&gt;}&lt;/span&gt;
+&lt;span class="o"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Because the code path through the &lt;code&gt;getInstance&lt;/code&gt; is fairly short (a test and a predicted branch), if &lt;code&gt;getInstance&lt;/code&gt; is not called frequently by many threads, there is a little enough contention for the &lt;code&gt;SafeLazyInitialization&lt;/code&gt; lock that this approach offers adequate performance.&lt;/p&gt;
+
+&lt;p&gt;The treatment of static fields with initializers (or fields whose value is initialized in a static initialization block [JPL 2.2.1 and 2.5.3]) is somewhat special and offers additional thread-safety guarantees. Static initializers are run by the JVM at class initialization time, after class loading but before the class is used by any thread. Because the JVM acquires a lock during initialization [JSL 12.4.2] and this lock is acquired by each thread at least once to ensure that the class has been loaded, memory writes made during static initialization are automatically visible to all threads. Thus statically initialized objects require no explicit synchronization either during construction or when being referenced. However, this applies only to the &lt;em&gt;as-constructed&lt;/em&gt; state – if the object is mutable, synchronization is still required by both readers and writers to make subsequent modifications visible to avoid data corruption.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-java"&gt;&lt;span class="nd"&gt;@ThreadSafe&lt;/span&gt;
+&lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kd"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;EagerInitialization&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+    &lt;span class="kd"&gt;private&lt;/span&gt; &lt;span class="kd"&gt;static&lt;/span&gt; &lt;span class="n"&gt;Resource&lt;/span&gt; &lt;span class="n"&gt;resource&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="n"&gt;Resource&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
+
+    &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kd"&gt;static&lt;/span&gt; &lt;span class="n"&gt;Resource&lt;/span&gt; &lt;span class="nf"&gt;getResource&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;resource&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
+&lt;span class="o"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Using eager initialization eliminates the synchronization cost incurred on each call to &lt;code&gt;getInstace&lt;/code&gt; in &lt;code&gt;SafeLazyInitialization&lt;/code&gt;. This technique can be combined with the JVM’s lazy class loading to create a lazy initialization technique that does not require synchronization on the common code path. The &lt;em&gt;lazy initialization holder class&lt;/em&gt; idiom [EJ Item 48] presented below uses a class whose only purpose is to initialize the &lt;code&gt;Resource&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-java"&gt;&lt;span class="nd"&gt;@ThreadSafe&lt;/span&gt;
+&lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kd"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;ResourceFactory&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+    &lt;span class="kd"&gt;private&lt;/span&gt; &lt;span class="kd"&gt;static&lt;/span&gt; &lt;span class="kd"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;ResourceHolder&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+        &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kd"&gt;static&lt;/span&gt; &lt;span class="n"&gt;Resource&lt;/span&gt; &lt;span class="n"&gt;resource&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="n"&gt;Resource&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
+    &lt;span class="o"&gt;}&lt;/span&gt;
+
+    &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kd"&gt;static&lt;/span&gt; &lt;span class="n"&gt;Resource&lt;/span&gt; &lt;span class="nf"&gt;getResource&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+        &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;ResourceHolder&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;resource&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+    &lt;span class="o"&gt;}&lt;/span&gt;
+&lt;span class="o"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Here the JVM defers initializing the &lt;code&gt;ResourceHolder&lt;/code&gt; class until it is actually used [JLS 12.4.1], and because the &lt;code&gt;Resource&lt;/code&gt; is initialized with a static initializer, no additional synchronization is needed. The first call to &lt;code&gt;getResource&lt;/code&gt; by any thread causes &lt;code&gt;ResourceHolder&lt;/code&gt; to be loaded and initialized, at which time the initialization of the &lt;code&gt;Resource&lt;/code&gt; happens through the static initializer.&lt;/p&gt;</content>
+  </entry>
   <entry>
     <id>tag:vy.github.io,2014-01-03://blog/post/2014/01/03/tcp-time-wait/</id>
     <title type="html">Sockets, TCP Keep Alive and TIME_WAIT</title>
@@ -665,66 +772,6 @@ In addition, while I have never been in need of one, I must admit that Floodligh
       &lt;td&gt;&lt;a href="25.jpg"&gt;&lt;img src="25-small.jpg" alt="25 March"&gt;&lt;/a&gt;&lt;/td&gt;
       &lt;td&gt;&lt;a href="26.jpg"&gt;&lt;img src="26-small.jpg" alt="26 March"&gt;&lt;/a&gt;&lt;/td&gt;
     &lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;p&gt;I hope others interested in the subject would find them useful as well.&lt;/p&gt;</content>
-  </entry>
-  <entry>
-    <id>tag:vy.github.io,2012-11-30://blog/post/2012/11/30/merging-two-binary-search-trees/</id>
-    <title type="html">Merging Two Binary Search Trees in O(logn) Space</title>
-    <published>2012-11-30T04:01:00Z</published>
-    <updated>2012-11-30T04:01:00Z</updated>
-    <link rel="alternate" href="https://vy.github.io//blog/post/2012/11/30/merging-two-binary-search-trees/"/>
-    <content type="html">&lt;p&gt;In a recent coding interview, I was asked to merge two &lt;a href="http://en.wikipedia.org/wiki/Binary_search_tree"&gt;Binary Search Tree&lt;/a&gt;s (BSTs) without modifying them. This was the first time I was exposed to this question and for an hour or so I tried to come up with a linear time algorithm of O(1) space complexity. The defeat was inevitable. (To tell the truth, if a hint would be given like O(m+n) storage is allowed, I could easily figure out the solution without breaking a sweat.) As usual, I could not sleep that night and scratched dozens of papers to come up with a better solution. But as night passed, I started to realize the fact that the space complexity is lower bounded by the tree height. This blog post is set to keep a cyber-record of this pursuit.&lt;/p&gt;
-
-&lt;h1 id="related-work"&gt;Related Work&lt;/h1&gt;
-
-&lt;p&gt;You can first start by checking the &lt;a href="https://www.google.com/search?q=merge+binary+search+tree"&gt;Google results&lt;/a&gt;. But, as usual, I am kind enough to provide you a tl;dr version: In order to merge two BSTs of size m and n nodes, there are a couple of common approaches of fixed O(m+n) processing time and space complexity, some of which are listed as follows.&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;Insert given BSTs into a newly created BST.&lt;/li&gt;
-  &lt;li&gt;Create an array of elements of the first BST in sorted order, and use this array to merge the results to a new BST while traversing the second BST.&lt;/li&gt;
-&lt;/ul&gt;&lt;p&gt;Further exposure to the higher doses of the problem is available through &lt;a href="http://stackoverflow.com/questions/1008513/how-to-merge-two-bsts-efficiently"&gt;this&lt;/a&gt; and &lt;a href="http://stackoverflow.com/questions/7540546/merging-2-binary-search-trees"&gt;this&lt;/a&gt; StackOverflow threads.&lt;/p&gt;
-
-&lt;h1 id="on-complexity"&gt;On Complexity&lt;/h1&gt;
-
-&lt;p&gt;You will definitely need an O(m+n) processing complexity to visit each node, that’s for sure. But what about O(m+n) space complexity? It means that you need to store one (or both) of the given trees in a vector in order to proceed with the merge. As it will turn out in the following paragraphs, actually space complexity is lower-bounded by the height of the tree, that is, O(h), where h=logn for a balanced tree.&lt;/p&gt;
-
-&lt;h1 id="the-trick"&gt;The Trick&lt;/h1&gt;
-
-&lt;p&gt;In its most basic form, we flatten both trees into two separate vectors. Next, we consume one element at a time from either of the trees with the smallest element. This scheme deserves a figure of its own.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src="mn-space.jpg" alt="Solution with O(m+n) space complexity."&gt;&lt;/p&gt;
-
-&lt;p&gt;It is certain that we effectively don’t need the whole elements of a tree packed into a single vector at once. At each step, what we ask for is the next smallest element. That is, we just need a &lt;em&gt;stream&lt;/em&gt; of nodes traversed in-order.&lt;/p&gt;
-
-&lt;p&gt;Let’s further investigate the possibility of implementing a stream of nodes. In order to consume the elements of a binary search tree in sorted order, we need to traverse the tree in left-center-right node order. Assume that we have below traversal function. (Yes, it is in C++ and I shamelessly used templates.)&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="language-c++"&gt;&lt;span class="k"&gt;template&lt;/span&gt; &lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="k"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;T&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;
-&lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="n"&gt;traverse&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;Node&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;T&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;*&lt;/span&gt; &lt;span class="n"&gt;root&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;queue&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;T&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&amp;amp;&lt;/span&gt; &lt;span class="n"&gt;items&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-  &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;root&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-    &lt;span class="n"&gt;traverse&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;root&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;left&lt;/span&gt;&lt;span class="p"&gt;());&lt;/span&gt;
-    &lt;span class="n"&gt;items&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;push&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;root&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;data&lt;/span&gt;&lt;span class="p"&gt;());&lt;/span&gt;
-    &lt;span class="n"&gt;traverse&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;root&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;right&lt;/span&gt;&lt;span class="p"&gt;());&lt;/span&gt;
-  &lt;span class="p"&gt;}&lt;/span&gt;
-&lt;span class="p"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;What if I can suspend the execution at any point in time while pushing the data to a queue? In that case, what would be the maximum possible height of a recursive &lt;code&gt;traverse()&lt;/code&gt; call stack? I know you like figures, so I took another photo of the board.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src="tree-height.jpg" alt="Relation with tree height."&gt;&lt;/p&gt;
-
-&lt;p&gt;That is, the maximum call stack depth of a &lt;code&gt;traverse()&lt;/code&gt; recursion is upper-bounded by the tree height. Coupled with the fact that successive &lt;code&gt;traverse()&lt;/code&gt; calls are sufficient to consume the nodes of a tree in sorted order, we should be able to stream the nodes of tree with at most O(logn) node pointers.&lt;/p&gt;
-
-&lt;h1 id="streaming-nodes"&gt;Streaming Nodes&lt;/h1&gt;
-
-&lt;p&gt;Since actual traverse call stack is bounded, we can emulate the recursive traverse using a stack of the nodes traversed so far from the root. The outline of the streaming algorithm is as follows.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src="algorithm.jpg" alt="Node streaming algorithm."&gt;&lt;/p&gt;
-
-&lt;h1 id="the-prestige"&gt;The Prestige&lt;/h1&gt;
-
-&lt;p&gt;Now we can stream a tree in sorted order using at most O(logn) storage. The rest is easy: Stream both trees and merge them while streaming.&lt;/p&gt;
-
-&lt;h1 id="the-code"&gt;The Code&lt;/h1&gt;
-
-&lt;p&gt;I implemented a streamer (&lt;code&gt;NodeStream&lt;/code&gt;), stream merger (&lt;code&gt;MergeNodeStream&lt;/code&gt;), and a vector merger (&lt;code&gt;MergeNodeVector&lt;/code&gt;) in C++ and Scala. Code is accessible through this &lt;a href="https://gist.github.com/4171977"&gt;Gist&lt;/a&gt;. You can also find implementations of the algorithm in &lt;a href="https://gist.github.com/8be224c9cfb423dcc0f3"&gt;C++ using Boost Coroutines&lt;/a&gt; and &lt;a href="https://gist.github.com/4181097"&gt;Haskell&lt;/a&gt; written by &lt;a href="http://www.blogger.com/profile/01427008889073096042"&gt;Remko&lt;/a&gt;.&lt;/p&gt;</content>
   </entry>
 </feed>
 

@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Safe Object Publication in Java</title>
+    <link rel="stylesheet" href="/css/bootstrap.css">
+    <link rel="stylesheet" href="/css/bootstrap-responsive.css">
+    <script src="/js/bootstrap.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="/css/common.css">
+    <meta name="generator" content="nanoc 3.6.4">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/post.css">
+    <script type="text/javascript">
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-40183531-1']);
+      _gaq.push(['_trackPageview']);
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="menu">
+      <div><a href="/">Home</a></div><div><a href="/about/">About</a></div><div><a href="/blog/">Blog</a></div><div><a href="/code/">Code</a></div><div><a href="/blog/feed/">Feed</a></div>
+    </div>
+    
+
+<div class="container">
+  <div class="row-fluid">
+    <div class="offset2 span8">
+      <div id="post" class="more-white-box rounded-corners">
+	<div class="head">
+	  <div class="title">Safe Object Publication in Java</div>
+	  <div class="subtitle">posted at
+	    February 14, 2014
+	    with tags <a href="/blog/tag/concurrency">concurrency</a>, <a href="/blog/tag/java">java</a>
+	  </div>
+	  <div class="share">
+	    <div class="addthis_toolbox addthis_default_style ">
+	      <a class="addthis_button_preferred_1"></a>
+	      <a class="addthis_button_preferred_2"></a>
+	      <a class="addthis_button_preferred_3"></a>
+	      <a class="addthis_button_preferred_4"></a>
+	      <a class="addthis_button_compact"></a>
+	    </div>
+	    <script type="text/javascript">var addthis_config = {"data_track_addressbar":false};</script>
+	    <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-5144adf75211a62b"></script>
+	  </div>
+	</div>
+	<div class="body">
+
+	  <p>I have just finished reading <a href="http://jcip.net/">Java Concurrency in Practice</a> yesterday and would like to share some excerpts from the book on safe object publication in Java. Before stepping into the details, I would like to state that I found every single page of the book quite useful and found numerous places that I can enhance my existing code base during my daily coding routine. Thanks to <a href="https://twitter.com/BrianGoetz">@BrianGoetz</a> et al for such a comprehensive and practical guide.</p>
+
+<p><em>[Presented excerpts are copied directly, sometimes with slight changes, from <a href="http://jcip.net/">Java Concurrency in Practice</a>.]</em></p>
+
+<h1 id="safe-construction-practices">Safe Construction Practices</h1>
+
+<p>An object is in a predictable, consistent state only after its constructor returns, so publishing an object from within its constructor can publish an incompletely constructed object. This is true <em>even if the publication is the last statement in the constructor</em>. If the <code>this</code> reference escapes during construction, the object is considered <em>not properly constructed</em>.</p>
+
+<pre><code class="language-java"><span class="kd">public</span> <span class="kd">class</span> <span class="nc">ThisEscape</span> <span class="o">{</span>
+    <span class="kd">public</span> <span class="nf">ThisEscape</span><span class="o">(</span><span class="n">EventSource</span> <span class="n">source</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">source</span><span class="o">.</span><span class="na">registerListener</span><span class="o">(</span>
+            <span class="k">new</span> <span class="nf">EventListener</span><span class="o">()</span> <span class="o">{</span>
+                <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onEvent</span><span class="o">(</span><span class="n">Event</span> <span class="n">event</span><span class="o">)</span> <span class="o">{</span>
+                    <span class="n">doSomething</span><span class="o">(</span><span class="n">event</span><span class="o">);</span>
+                <span class="o">}</span>
+            <span class="o">});</span>
+    <span class="o">}</span>
+<span class="o">}</span></code></pre>
+
+<p>Here, when <code>ThisEscape</code> publishes the <code>EventListener</code>, it implicitly publishes the enclosing <code>ThisEscape</code> instance as well, because inner class instances contain a hidden reference to the enclosing instance.</p>
+
+<p>If you are tempted to register an event listener or start a thread from a constructor, you can avoid the improper construction by using a private constructor and a public factory method, as shown in <code>SafeListener</code> below.</p>
+
+<pre><code class="language-java"><span class="kd">public</span> <span class="kd">class</span> <span class="nc">SafeListener</span> <span class="o">{</span>
+    <span class="kd">private</span> <span class="kd">final</span> <span class="n">EventListener</span> <span class="n">listener</span><span class="o">;</span>
+
+    <span class="kd">private</span> <span class="nf">SafeListener</span><span class="o">()</span> <span class="o">{</span>
+        <span class="n">listener</span> <span class="o">=</span> <span class="k">new</span> <span class="n">EventListener</span><span class="o">()</span> <span class="o">{</span>
+            <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onEvent</span><span class="o">(</span><span class="n">Event</span> <span class="n">event</span><span class="o">)</span> <span class="o">{</span>
+                <span class="n">doSomething</span><span class="o">(</span><span class="n">event</span><span class="o">);</span>
+            <span class="o">}</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="kd">static</span> <span class="n">SafeListener</span> <span class="nf">newInstance</span><span class="o">(</span><span class="n">EventSource</span> <span class="n">source</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">SafeListener</span> <span class="n">safe</span> <span class="o">=</span> <span class="k">new</span> <span class="n">SafeListener</span><span class="o">();</span>
+        <span class="n">source</span><span class="o">.</span><span class="na">registerListener</span><span class="o">(</span><span class="n">safe</span><span class="o">.</span><span class="na">listener</span><span class="o">);</span>
+        <span class="k">return</span> <span class="n">safe</span><span class="o">;</span>
+    <span class="o">}</span>
+<span class="o">}</span></code></pre>
+
+<h1 id="lazy-initialization">Lazy Initialization</h1>
+
+<p>Unsafe publication can happen as a result of an incorrect lazy initialization as follows.</p>
+
+<pre><code class="language-java"><span class="nd">@NotThreadSafe</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">UnsafeLazyInitialization</span> <span class="o">{</span>
+    <span class="kd">private</span> <span class="kd">static</span> <span class="n">Resource</span> <span class="n">resource</span><span class="o">;</span>
+
+    <span class="kd">public</span> <span class="kd">static</span> <span class="n">Resource</span> <span class="nf">getInstance</span><span class="o">()</span> <span class="o">{</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">resource</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span>
+            <span class="n">resource</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Resource</span><span class="o">();</span>
+        <span class="k">return</span> <span class="n">resource</span><span class="o">;</span>
+    <span class="o">}</span>
+<span class="o">}</span></code></pre>
+
+<p>Under certain circumstances, such as when all instances of the <code>Resource</code> are identical, you might be willing to overlook these (along with the inefficiency of possibly creating the <code>Resource</code> more than once). Unfortunately, even if these defects are overlooked, <code>UnsafeLazyInitialization</code> is still not safe, because another thread could observe a reference to a partially constructed <code>Resource</code>.</p>
+
+<p>Suppose thread <code>A</code> is the first to invoke <code>getInstance</code>. It sees that <code>resource</code> is <code>null</code>, instantiates a new <code>Resource</code>, and sets <code>resource</code> to reference it. When thread <code>B</code> later calls <code>getInstance</code>, it might see that <code>resource</code> already has a non-null value and just use the already constructed <code>Resource</code>. This might look harmless at first, but <em>there is no happens-before ordering between the writing of <code>resource</code> in <code>A</code> and the reading of <code>resource</code> in <code>B</code></em>. A data race has been used to publish the object, and therefore <code>B</code> is not guaranteed to see the correct state of the <code>Resource</code>.</p>
+
+<p>The <code>Resource</code> constructor changes the fields of the freshly allocated <code>Resource</code> from their default values (written by the <code>Object</code> constructor) to their initial values. Since neither thread used synchronization, <code>B</code> could possible see <code>A</code>’s actions in a different order than <code>A</code> performed them. So even though <code>A</code> initialized the <code>Resource</code> before setting <code>resource</code> to reference it, <code>B</code> could see the write to <code>resource</code> as occuring <em>before</em> the writes to the fields of the <code>Resource</code>. <code>B</code> could thus see a partially constructed <code>Resource</code> that may well be in an invalid state – and whose state may unexpectedly change later.</p>
+
+<p><code>UnsafeLazyInitialization</code> can be fixed by making the <code>getResource</code> method <code>synchronized</code> as follows.</p>
+
+<pre><code class="language-java"><span class="nd">@ThreadSafe</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">SafeLazyInitialization</span> <span class="o">{</span>
+    <span class="kd">private</span> <span class="kd">static</span> <span class="n">Resource</span> <span class="n">resource</span><span class="o">;</span>
+
+    <span class="kd">public</span> <span class="n">syncrhonized</span> <span class="kd">static</span> <span class="n">Resource</span> <span class="nf">getInstance</span><span class="o">()</span> <span class="o">{</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">resource</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span>
+            <span class="n">resource</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Resource</span><span class="o">();</span>
+        <span class="k">return</span> <span class="n">resource</span><span class="o">;</span>
+    <span class="o">}</span>
+<span class="o">}</span></code></pre>
+
+<p>Because the code path through the <code>getInstance</code> is fairly short (a test and a predicted branch), if <code>getInstance</code> is not called frequently by many threads, there is a little enough contention for the <code>SafeLazyInitialization</code> lock that this approach offers adequate performance.</p>
+
+<p>The treatment of static fields with initializers (or fields whose value is initialized in a static initialization block [JPL 2.2.1 and 2.5.3]) is somewhat special and offers additional thread-safety guarantees. Static initializers are run by the JVM at class initialization time, after class loading but before the class is used by any thread. Because the JVM acquires a lock during initialization [JSL 12.4.2] and this lock is acquired by each thread at least once to ensure that the class has been loaded, memory writes made during static initialization are automatically visible to all threads. Thus statically initialized objects require no explicit synchronization either during construction or when being referenced. However, this applies only to the <em>as-constructed</em> state – if the object is mutable, synchronization is still required by both readers and writers to make subsequent modifications visible to avoid data corruption.</p>
+
+<pre><code class="language-java"><span class="nd">@ThreadSafe</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">EagerInitialization</span> <span class="o">{</span>
+    <span class="kd">private</span> <span class="kd">static</span> <span class="n">Resource</span> <span class="n">resource</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Resource</span><span class="o">();</span>
+
+    <span class="kd">public</span> <span class="kd">static</span> <span class="n">Resource</span> <span class="nf">getResource</span><span class="o">()</span> <span class="o">{</span> <span class="k">return</span> <span class="n">resource</span><span class="o">;</span> <span class="o">}</span>
+<span class="o">}</span></code></pre>
+
+<p>Using eager initialization eliminates the synchronization cost incurred on each call to <code>getInstace</code> in <code>SafeLazyInitialization</code>. This technique can be combined with the JVM’s lazy class loading to create a lazy initialization technique that does not require synchronization on the common code path. The <em>lazy initialization holder class</em> idiom [EJ Item 48] presented below uses a class whose only purpose is to initialize the <code>Resource</code>.</p>
+
+<pre><code class="language-java"><span class="nd">@ThreadSafe</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">ResourceFactory</span> <span class="o">{</span>
+    <span class="kd">private</span> <span class="kd">static</span> <span class="kd">class</span> <span class="nc">ResourceHolder</span> <span class="o">{</span>
+        <span class="kd">public</span> <span class="kd">static</span> <span class="n">Resource</span> <span class="n">resource</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Resource</span><span class="o">();</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="kd">static</span> <span class="n">Resource</span> <span class="nf">getResource</span><span class="o">()</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="n">ResourceHolder</span><span class="o">.</span><span class="na">resource</span><span class="o">;</span>
+    <span class="o">}</span>
+<span class="o">}</span></code></pre>
+
+<p>Here the JVM defers initializing the <code>ResourceHolder</code> class until it is actually used [JLS 12.4.1], and because the <code>Resource</code> is initialized with a static initializer, no additional synchronization is needed. The first call to <code>getResource</code> by any thread causes <code>ResourceHolder</code> to be loaded and initialized, at which time the initialization of the <code>Resource</code> happens through the static initializer.</p>
+
+	  <script type="text/javascript">
+	    $("#post table").attr("class", "table table-hover");
+	  </script>
+
+	  <div id="disqus_thread"></div>
+	  <script type="text/javascript">
+	  var disqus_shortname = 'vyazici';
+	  var disqus_identifier = '/blog/post/20140214-java-safe-publication/';
+	  var disqus_title = 'Safe Object Publication in Java';
+	  (function() {
+	  	var dsq = document.createElement('script');
+	  	dsq.type = 'text/javascript';
+	  	dsq.async = true;
+	  	dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+	  	(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+	  })();
+	  </script>
+
+	</div>
+      </div>
+      <div id="bgauthor" class="narrow-font">
+	background image by
+	<a href="http://jenniferwetzel.com/">Jennifer Wetzel</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+  </body>
+</html>
+
