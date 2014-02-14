@@ -81,7 +81,7 @@ The `Resource` constructor changes the fields of the freshly allocated `Resource
     public class SafeLazyInitialization {
         private static Resource resource;
 
-        public syncrhonized static Resource getInstance() {
+        public synchronized static Resource getInstance() {
             if (resource == null)
                 resource = new Resource();
             return resource;
