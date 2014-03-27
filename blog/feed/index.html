@@ -447,7 +447,7 @@ the Wikipedia page.&lt;/p&gt;</content>
     <published>2013-07-31T17:11:00Z</published>
     <updated>2013-07-31T17:11:00Z</updated>
     <link rel="alternate" href="https://vy.github.io//blog/post/2013/07/31/openflow-controllers/"/>
-    <content type="html">&lt;p&gt;&lt;strong&gt;TL;DR&lt;/strong&gt; – Use Floodlight, keep an eye on OpenDaylight.&lt;/p&gt;
+    <content type="html">&lt;p&gt;&lt;strong&gt;TL;DR&lt;/strong&gt; – Use Floodlight (Pythonistas might want to give POX a try) and keep an eye on OpenDaylight.&lt;/p&gt;
 
 &lt;p&gt;There has always been a confusion on which controller to start with for newcomers in the OpenFlow ecosystem. Should one prefer the classic &lt;a href="http://www.nox-repo.org/"&gt;NOX&lt;/a&gt;? Or go with a more modern choice like &lt;a href="http://www.beaconcontroller.net/"&gt;Beacon&lt;/a&gt; or its successor &lt;a href="http://www.projectfloodlight.org/"&gt;Floodlight&lt;/a&gt;? What about &lt;a href="http://www.osrg.net/ryu/"&gt;Ryu&lt;/a&gt;, &lt;a href="http://trema.github.com/trema/"&gt;Trema&lt;/a&gt;, and a dozen of &lt;a href="http://yuba.stanford.edu/~casado/of-sw.html"&gt;other controllers&lt;/a&gt; in the wild? Ohh! I was just forgetting about &lt;a href="http://www.opendaylight.org/"&gt;OpenDaylight&lt;/a&gt;, which is backed by industry giants such as Cisco, Juniper, Brocade, IBM, etc. After all you just want to push a set of simple OpenFlow commands to the forwarding plane and observe the result. On the other hand, you are also concerned with the maturity of the environment that you will work with. Nobody wants to find himself scratching his head for a bug in the controller core. And I am pretty sure you will also question whether there is an ongoing &lt;em&gt;active development&lt;/em&gt; and supportive &lt;em&gt;community&lt;/em&gt; in the project or not. Lucky for you, I have volunteered to share my two cents on the issue. After two years of fighting in this mud up to my neck, I have something to say!&lt;/p&gt;
 
@@ -475,9 +475,9 @@ the Wikipedia page.&lt;/p&gt;</content>
 
 &lt;h1 id="pox"&gt;POX&lt;/h1&gt;
 
-&lt;p&gt;Hereby I confess that I have never programmed in &lt;a href="http://www.noxrepo.org/pox/about-pox/"&gt;POX&lt;/a&gt; before. I will present the following statements depending on my experiences with other controllers and POX activity I observed in the OpenFlow social media.&lt;/p&gt;
+&lt;p&gt;Hereby I confess that I have never programmed in &lt;a href="http://www.noxrepo.org/pox/about-pox/"&gt;POX&lt;/a&gt; before. I will present the following statements depending on (1) my experiences with other controllers and POX activity I observed in the OpenFlow social media and (2) the corrections from POX hacker Murphy McCauley.&lt;/p&gt;
 
-&lt;p&gt;POX &lt;a href="http://www.noxrepo.org/pox/about-pox/"&gt;calls&lt;/a&gt; itself as the younger sibling of NOX (WTF?). My personal belief is that POX is more or less motivated by the purpose of creating a developer-friendly OpenFlow controller successor to the NOX. Almost all OpenFlow newcomers are directed to either POX, or Floodlight. Hence, it is no surprise that it has a pretty active &lt;a href="http://www.mail-archive.com/pox-dev@lists.noxrepo.org/"&gt;mailing list&lt;/a&gt;. It is written in Python and provides a decent Python API for the Pythonistas out there. Due to Python being an interpreted language, POX really cuts down the time spent in develop-and-deploy cycle, particularly compared to C++ based NOX. Further, in addition to supporting the NOX GUI, POX also provides a web-based GUI.&lt;/p&gt;
+&lt;p&gt;POX &lt;a href="http://www.noxrepo.org/pox/about-pox/"&gt;calls&lt;/a&gt; itself as the younger sibling of NOX. (They are both managed/maintained by the same team/organization.) My personal belief is that POX is more or less motivated by the purpose of creating a developer-friendly OpenFlow controller successor to the NOX. Almost all OpenFlow newcomers are directed to either POX or Floodlight. Hence, it is no surprise that it has a pretty active &lt;a href="http://www.mail-archive.com/pox-dev@lists.noxrepo.org/"&gt;mailing list&lt;/a&gt;. POX provides a limited &lt;a href="https://openflow.stanford.edu/display/ONL/POX+Wiki#POXWiki-openflow.webservice"&gt;web API&lt;/a&gt; (via JSON-RPC) and a moderate sized collection of manuals on its &lt;a href="https://openflow.stanford.edu/display/ONL/POX+Wiki"&gt;wiki&lt;/a&gt;. It is written in Python and provides a decent Python API for the Pythonistas out there. Due to Python being an interpreted language, POX really cuts down the time spent in develop-and-deploy cycle, particularly compared to C++ based NOX. Further, in addition to supporting the NOX GUI, POX also provides a web-based GUI.&lt;/p&gt;
 
 &lt;p&gt;&lt;a href="http://www.noxrepo.org/2012/09/pox-web-interfaces/"&gt;&lt;img src="pox-gui.png" alt="POX GUI"&gt;&lt;/a&gt;&lt;/p&gt;
 
@@ -542,27 +542,27 @@ In addition, while I have never been in need of one, I must admit that Floodligh
 		&lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;Is actively developed?&lt;/td&gt;
-			&lt;td class="no"&gt;N&lt;/td&gt;
-			&lt;td class="yes"&gt;Y&lt;/td&gt;
-			&lt;td class="some"&gt;maintained&lt;/td&gt;
-			&lt;td class="yes"&gt;Y&lt;/td&gt;
-			&lt;td class="yes"&gt;Y&lt;/td&gt;
+			&lt;td&gt;N&lt;/td&gt;
+			&lt;td&gt;Y&lt;/td&gt;
+			&lt;td&gt;maintained&lt;/td&gt;
+			&lt;td&gt;Y&lt;/td&gt;
+			&lt;td&gt;Y&lt;/td&gt;
 		&lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;Has an active community?&lt;/td&gt;
-			&lt;td class="no"&gt;N&lt;/td&gt;
-			&lt;td class="yes"&gt;Y&lt;/td&gt;
-			&lt;td class="yes"&gt;Y&lt;/td&gt;
-			&lt;td class="yes"&gt;Y&lt;/td&gt;
-			&lt;td class="yes"&gt;Y&lt;/td&gt;
+			&lt;td&gt;N&lt;/td&gt;
+			&lt;td&gt;Y&lt;/td&gt;
+			&lt;td&gt;Y&lt;/td&gt;
+			&lt;td&gt;Y&lt;/td&gt;
+			&lt;td&gt;Y&lt;/td&gt;
 		&lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;Easy to install?&lt;/td&gt;
-			&lt;td class="no"&gt;N&lt;/td&gt;
-			&lt;td class="yes"&gt;Y&lt;/td&gt;
-			&lt;td class="yes"&gt;Y&lt;/td&gt;
-			&lt;td class="yes"&gt;Y&lt;/td&gt;
-			&lt;td class="yes"&gt;Y&lt;/td&gt;
+			&lt;td&gt;N&lt;/td&gt;
+			&lt;td&gt;Y&lt;/td&gt;
+			&lt;td&gt;Y&lt;/td&gt;
+			&lt;td&gt;Y&lt;/td&gt;
+			&lt;td&gt;Y&lt;/td&gt;
 		&lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;Easy to program?&lt;/td&gt;
@@ -575,7 +575,7 @@ In addition, while I have never been in need of one, I must admit that Floodligh
 &lt;tr&gt;
 &lt;td&gt;Is documented?&lt;/td&gt;
 			&lt;td&gt;N&lt;/td&gt;
-			&lt;td&gt;N&lt;/td&gt;
+			&lt;td&gt;Y&lt;/td&gt;
 			&lt;td&gt;Y&lt;/td&gt;
 			&lt;td&gt;Y&lt;/td&gt;
 			&lt;td&gt;some&lt;/td&gt;
@@ -583,7 +583,7 @@ In addition, while I have never been in need of one, I must admit that Floodligh
 &lt;tr&gt;
 &lt;td&gt;Provides a REST API?&lt;/td&gt;
 			&lt;td&gt;N&lt;/td&gt;
-			&lt;td&gt;N&lt;/td&gt;
+			&lt;td&gt;Y (limited)&lt;/td&gt;
 			&lt;td&gt;Y&lt;/td&gt;
 			&lt;td&gt;Y&lt;/td&gt;
 			&lt;td&gt;Y&lt;/td&gt;
@@ -615,7 +615,7 @@ In addition, while I have never been in need of one, I must admit that Floodligh
 &lt;tr&gt;
 &lt;td&gt;Supports topologies with loops?&lt;/td&gt;
 			&lt;td&gt;N&lt;/td&gt;
-			&lt;td&gt;N&lt;/td&gt;
+			&lt;td&gt;Y (via &lt;code&gt;spanning_tree&lt;/code&gt; component)&lt;/td&gt;
 			&lt;td&gt;N&lt;/td&gt;
 			&lt;td&gt;Y&lt;/td&gt;
 			&lt;td&gt;Y&lt;/td&gt;
@@ -653,17 +653,13 @@ In addition, while I have never been in need of one, I must admit that Floodligh
 			&lt;td&gt;Y&lt;/td&gt;
 		&lt;/tr&gt;
 &lt;/tbody&gt;
-&lt;/table&gt;&lt;style type="text/css"&gt;
-#features td.yes  { background-color: green; }
-#features td.some { background-color: yellow; }
-#features td.no   { background-color: red; }
-&lt;/style&gt;&lt;h1 id="conclusion"&gt;Conclusion&lt;/h1&gt;
+&lt;/table&gt;&lt;h1 id="conclusion"&gt;Conclusion&lt;/h1&gt;
 
-&lt;p&gt;To sum it all together, I find Floodlight the most viable controller in the ecosystem as of now. While other alternatives can be tailored to fit your needs, this or that way as your project nears to finalize, you start to look for stability and being bitten by some odd limitations of the controllers starts to be quite annoying. Considering the huge amount of time that you will devote for learning a controller, try to aim your shot to the best candidate as much as possible. And we will together see how far will OpenDaylight go in the future.&lt;/p&gt;
+&lt;p&gt;To sum it all together, I find Floodlight the most viable controller in the ecosystem as of now. That being said, after Murphy McCauley’s corrections, I also realized that POX has made a certain amount of progress on improving its documentation and components, hence can be a viable option for Pythonistas. While other alternatives can be tailored to fit your needs, this or that way as your project nears to finalize, you start to look for stability and being bitten by some odd limitations of the controllers starts to be quite annoying. Considering the huge amount of time that you will devote for learning a controller, try to aim your shot to the best candidate as much as possible. And we will together see how far will OpenDaylight go in the future.&lt;/p&gt;
 
 &lt;h1 id="acknowledgement"&gt;Acknowledgement&lt;/h1&gt;
 
-&lt;p&gt;I would like to thank &lt;a href="http://yuba.stanford.edu/~derickso/"&gt;David Erickson&lt;/a&gt; and &lt;a href="http://jasonparraga.com/"&gt;Jason Parraga&lt;/a&gt; for their corrections.&lt;/p&gt;</content>
+&lt;p&gt;I would like to thank &lt;a href="http://yuba.stanford.edu/~derickso/"&gt;David Erickson&lt;/a&gt;, &lt;a href="http://jasonparraga.com/"&gt;Jason Parraga&lt;/a&gt; and Murphy McCauley for their corrections.&lt;/p&gt;</content>
   </entry>
   <entry>
     <id>tag:vy.github.io,2013-04-19://blog/post/2013/04/19/benchmarking-mininet/</id>
