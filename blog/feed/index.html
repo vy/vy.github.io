@@ -2,13 +2,104 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <id>https://vy.github.io//</id>
   <title>Volkan Yazıcı's Soap Co.</title>
-  <updated>2014-02-14T12:22:00Z</updated>
+  <updated>2014-05-16T15:05:00Z</updated>
   <link rel="alternate" href="https://vy.github.io//"/>
   <link rel="self" href="https://vy.github.io//blog/feed/"/>
   <author>
     <name>Volkan Yazıcı</name>
     <uri>https://vy.github.io/</uri>
   </author>
+  <entry>
+    <id>tag:vy.github.io,2014-05-16://blog/post/2014/05/16/bandwidth-shaping/</id>
+    <title type="html">Bandwidth Shaping on Linux</title>
+    <published>2014-05-16T15:05:00Z</published>
+    <updated>2014-05-16T15:05:00Z</updated>
+    <link rel="alternate" href="https://vy.github.io//blog/post/2014/05/16/bandwidth-shaping/"/>
+    <content type="html">&lt;p&gt;Networking stack in Linux kernel by default ships an immense set of
+functionality that provide every hairy sort of tuning a network administrator
+can (and most of the time, cannot) imagine. But unfortunately it totally lacks a
+user-friendly interface for the average programmer, not to mention the regular
+desktop users.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href="http://xkcd.com/619/"&gt;&lt;img src="xkcd.png" alt="Supported Features"&gt;&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;Each time I need to come up with a &lt;a href="http://lartc.org/manpages/tc.txt"&gt;&lt;code&gt;tc&lt;/code&gt;&lt;/a&gt;
+one-liner for traffic shaping, I find myself reading &lt;a href="http://www.lartc.org/"&gt;Linux Advanced Routing &amp;amp;
+Traffic Control&lt;/a&gt; guide (aka. LARTC) all over again. No
+exceptions! (Luckily they keep it up to date with the recent kernel versions,
+which is something not expected in the GNU/Linux documentation ecosystem.) I
+must admit that, it has almost been 16 years since I last used Microsoft Windows
+on desktop, but I met with no alternative to the beloved
+&lt;a href="http://www.netlimiter.com/"&gt;NetLimiter&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href="http://www.netlimiter.com/"&gt;&lt;img src="netlimiter.png" alt="NetLimiter"&gt;&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;Fate knocked my door again and this time I am assigned with the task of
+providing access to an &lt;code&gt;iperf&lt;/code&gt; server with two different packet schedulings as
+follows.&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;In the first interface, I need to cut down the bandwidth to a certain threshold, e.g., 1Mbps.&lt;/li&gt;
+  &lt;li&gt;In the second one, I need to introduce some extra delay to each packet, e.g., 200ms.&lt;/li&gt;
+&lt;/ol&gt;&lt;p&gt;Luckily, &lt;code&gt;iperf&lt;/code&gt; was set to run over TCP and just playing with the egress
+packets did suffice.&lt;/p&gt;
+
+&lt;p&gt;I first picked the easiest task: adding latency. In this case,
+&lt;a href="http://www.linuxfoundation.org/collaborate/workgroups/networking/netem"&gt;&lt;code&gt;netem&lt;/code&gt;&lt;/a&gt;
+provides a decent collection of examples and I quickly came up with a working
+solution.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-bash"&gt;tc qdisc add dev eth0 root netem delay 200ms&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;For the next task, I skimmed through the &lt;a href="http://lartc.org/howto/lartc.qdisc.html"&gt;Queueing Disciplines for Bandwidth
+Management&lt;/a&gt; section in LARTC and
+figured out a solution.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-bash"&gt;tc qdisc add dev eth0 root tbf rate 1024kbit buffer 1600 limit 3000&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Is it just me or that has been fairly easy? Later it turned out that it was just
+the beginning. Here, the problem is that the above &lt;code&gt;tc&lt;/code&gt; one-liners take effect
+on &lt;em&gt;every&lt;/em&gt; packet transmitted through &lt;code&gt;eth0&lt;/code&gt;. So how one can shape just the
+&lt;code&gt;iperf&lt;/code&gt; traffic? After wasting my whole day on this, I came up with the
+following &lt;code&gt;tc&lt;/code&gt; kung-fu.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;tc qdisc add dev eth0 root handle 1: prio
+tc qdisc add dev eth0 parent 1:3 handle 30: netem delay 200ms
+tc filter add dev eth0 protocol ip parent 1:0 u32 match ip sport 34001 0xffff flowid 1:3
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That is, I set &lt;code&gt;iperf&lt;/code&gt; to run on port 34001 and instructed &lt;code&gt;tc&lt;/code&gt; rule to apply
+just for packets outgoing from &lt;code&gt;sport&lt;/code&gt; 34001.&lt;/p&gt;
+
+&lt;p&gt;All said and done, combining both rules (i.e., &lt;code&gt;netem&lt;/code&gt; and &lt;code&gt;tbf&lt;/code&gt;) was turned out
+to be a nightmare. I even put one of the test servers into an inaccessible state
+and needed walk down to the server room to fix the problem by hand. After hours
+and hours of try and failures, I finally managed to find a working solution:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-bash"&gt;tc qdisc add dev eth0 root handle 1: prio
+tc qdisc add dev eth0 parent 1:2 handle 20: tbf rate 1024kbit buffer 1600 limit 3000
+tc qdisc add dev eth0 parent 1:3 handle 30: netem delay 200ms
+tc filter add dev eth0 protocol ip parent 1: prio 2 route flowid 1:1
+tc filter add dev eth0 protocol ip parent 1: prio 1 u32 match ip sport 34002 0xffff flowid 1:2
+tc filter add dev eth0 protocol ip parent 1: prio 1 u32 match ip sport 34003 0xffff flowid 1:3&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;In this setting, I run two &lt;code&gt;iperf&lt;/code&gt; instances listening for incoming connections
+on ports 34002 and 34003. (First filter directs any unmatched packet to class
+&lt;code&gt;1:1&lt;/code&gt; created by &lt;code&gt;prio&lt;/code&gt; queue.)&lt;/p&gt;
+
+&lt;p&gt;I could have explained the above &lt;code&gt;tc&lt;/code&gt; snippets in detail and written a couple
+more that demonstrate simple use cases for the readers, but believe me, that
+would have no points at all. If you have a traffic shaping problem and stucked
+with &lt;code&gt;tc&lt;/code&gt;, you practically have two options: You either (try hard and) find
+somebody to do the work for you – which is the recommended approach, or start
+reading the &lt;a href="http://lartc.org/howto/lartc.qdisc.terminology.html"&gt;Terminology&lt;/a&gt;
+section and make your way through a working solution.&lt;/p&gt;
+
+&lt;p&gt;After all this fuss, everytime I read the very first sentence of the &lt;a href="http://lartc.org/howto/lartc.qdisc.html"&gt;Queueing
+Disciplines for Bandwidth Management&lt;/a&gt;
+chapter in LARTC, it makes me smile: &lt;strong&gt;Now, when I discovered this, it really
+blew me away.&lt;/strong&gt; So true!&lt;/p&gt;</content>
+  </entry>
   <entry>
     <id>tag:vy.github.io,2014-02-14://blog/post/2014/02/14/java-safe-publication/</id>
     <title type="html">Safe Object Publication in Java</title>
@@ -384,6 +475,32 @@ by James McCaffrey, which cleared out the things and made me start to understand
 the Wikipedia page.&lt;/p&gt;</content>
   </entry>
   <entry>
+    <id>tag:vy.github.io,2013-08-06://blog/post/2013/08/06/output-packet-from-input-port/</id>
+    <title type="html">How come a packet gets output from its input port?</title>
+    <published>2013-08-06T17:29:00Z</published>
+    <updated>2013-08-06T17:29:00Z</updated>
+    <link rel="alternate" href="https://vy.github.io//blog/post/2013/08/06/output-packet-from-input-port/"/>
+    <content type="html">&lt;p&gt;A couple of weeks ago I spotted a really suspicious flow in the logs that directly made me think of a bug at the controller. A packet was arriving to a port of a switch and was getting output from the very same port of the switch. This was kind of weird. If it is supposed to be transmitted back again, then why was it ended up here in the first hand? Was it because of a bug at the controller that first redirected the packet to the switch and then redirected it backwards to the previous switch? A logical fault at the controller was definitely the first suspect here. But later it turned out that this was not the case. The details are as follows.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src="topology.jpg" alt="SDN Topology"&gt;&lt;/p&gt;
+
+&lt;p&gt;Consider the above topology, where three switches &lt;code&gt;s1&lt;/code&gt;, &lt;code&gt;s2&lt;/code&gt;, &lt;code&gt;s3&lt;/code&gt; are connected linearly and all together managed by the controller &lt;code&gt;c1&lt;/code&gt;. In addition, &lt;code&gt;s1&lt;/code&gt; and &lt;code&gt;s2&lt;/code&gt; is connected to two hosts &lt;code&gt;h1&lt;/code&gt; and &lt;code&gt;h2&lt;/code&gt;, respectively. The controller, switches, hosts, their connections, and connection port numbers are given in the figure. The scenario generating the subtle gotcha is as follows.&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;
+&lt;code&gt;h2&lt;/code&gt; sends a packet destined to &lt;code&gt;h1&lt;/code&gt;, whose attachment point is not learnt yet by &lt;code&gt;c1&lt;/code&gt;.&lt;/li&gt;
+  &lt;li&gt;Hence, upon arrival of the packet from &lt;code&gt;s2&lt;/code&gt;, &lt;code&gt;c1&lt;/code&gt; commands &lt;code&gt;s2&lt;/code&gt; to flood the request.&lt;/li&gt;
+  &lt;li&gt;The flooded request goes to &lt;code&gt;s1&lt;/code&gt; and &lt;code&gt;s3&lt;/code&gt;.&lt;/li&gt;
+  &lt;li&gt;Upon arrival of the packet to &lt;code&gt;s1&lt;/code&gt;, &lt;code&gt;s1&lt;/code&gt; sends the packet to &lt;code&gt;c1&lt;/code&gt; again.&lt;/li&gt;
+  &lt;li&gt;Since &lt;code&gt;c1&lt;/code&gt; still does not know the attachment point of &lt;code&gt;h1&lt;/code&gt;, &lt;code&gt;c1&lt;/code&gt; commands &lt;code&gt;s1&lt;/code&gt; to flood the request for a second time.&lt;/li&gt;
+  &lt;li&gt;Flooded request from &lt;code&gt;s1&lt;/code&gt; reaches to &lt;code&gt;h1&lt;/code&gt; and &lt;code&gt;h1&lt;/code&gt; replies back.&lt;/li&gt;
+  &lt;li&gt;With &lt;code&gt;h1&lt;/code&gt;s response, &lt;code&gt;c1&lt;/code&gt; learns the attachment point of &lt;code&gt;h1&lt;/code&gt;.&lt;/li&gt;
+  &lt;li&gt;In the meantime, &lt;code&gt;s2&lt;/code&gt;s flood (see 3rd step) reaches to &lt;code&gt;s3&lt;/code&gt;
+&lt;/li&gt;
+  &lt;li&gt;Now &lt;code&gt;c1&lt;/code&gt; knows the attachment point of the &lt;code&gt;h1&lt;/code&gt;. Consequently, &lt;code&gt;c1&lt;/code&gt; figures out that the route to &lt;code&gt;h1&lt;/code&gt; goes through &lt;code&gt;s1&lt;/code&gt; and &lt;code&gt;s1&lt;/code&gt; is reachable by &lt;code&gt;p1&lt;/code&gt; of &lt;code&gt;s3&lt;/code&gt;. Hence, &lt;code&gt;c1&lt;/code&gt; commands &lt;code&gt;s3&lt;/code&gt; to output the packet from the very same input port of the packet.&lt;/li&gt;
+&lt;/ol&gt;&lt;p&gt;I do not have a single idea about the probability of such a subtle bug, but somehow it happened to exist in my logs, right at the lines I was just taking a glance and wasted my whole day. The saying was right, network is really unreliable. Gorgeous!&lt;/p&gt;</content>
+  </entry>
+  <entry>
     <id>tag:vy.github.io,2013-08-06://blog/post/2013/08/06/sdn-discovery/</id>
     <title type="html">Discovery in Software-Defined Networks</title>
     <published>2013-08-06T17:29:00Z</published>
@@ -414,32 +531,6 @@ the Wikipedia page.&lt;/p&gt;</content>
 &lt;p&gt;Considering the previously illustrated network topology, let’s assume that &lt;code&gt;h1&lt;/code&gt; pings &lt;code&gt;h2&lt;/code&gt;. When ping request reaches to &lt;code&gt;s1&lt;/code&gt;, since there were no previously installed rule(s) for the incoming flow, &lt;code&gt;s1&lt;/code&gt; will forward the first packet of the flow to the controller. This is the first time the controller observes a message originating from &lt;code&gt;h1&lt;/code&gt;. Hence, the controller discovers that &lt;code&gt;p3&lt;/code&gt; of &lt;code&gt;s1&lt;/code&gt; is an attachment point for &lt;code&gt;h1&lt;/code&gt;. But the controller still does not have any knowledge on the attachment points for the destination &lt;code&gt;h2&lt;/code&gt;. Thus, the controller tells &lt;code&gt;s1&lt;/code&gt; to flood the packet. Due to flooding, the ping request reaches to &lt;code&gt;s2&lt;/code&gt; and &lt;code&gt;s3&lt;/code&gt;. For simplicity, let’s assume that the flood first arrived to &lt;code&gt;s2&lt;/code&gt;. Since &lt;code&gt;s2&lt;/code&gt; does not have any corresponding rules for the flow, &lt;code&gt;s2&lt;/code&gt; forwards the packet to the controller. Controller still does not know the attachment point of &lt;code&gt;h2&lt;/code&gt; and hence commands to &lt;code&gt;s2&lt;/code&gt; to flood the packet again. After this second flood, the ping request reaches to &lt;code&gt;h2&lt;/code&gt; and &lt;code&gt;h2&lt;/code&gt; replies back. Upon &lt;code&gt;s2&lt;/code&gt; receiving &lt;code&gt;h2&lt;/code&gt;s reply from &lt;code&gt;p3&lt;/code&gt;, it forwards the reply to the controller. Now the controller discovers that &lt;code&gt;p3&lt;/code&gt; of &lt;code&gt;s2&lt;/code&gt; is an attachment point for &lt;code&gt;h2&lt;/code&gt;. Since controller has previously discovered &lt;code&gt;h1&lt;/code&gt;s attachment point, it knows that the reply needs to be routed from &lt;code&gt;p3&lt;/code&gt; to &lt;code&gt;p2&lt;/code&gt; of &lt;code&gt;s2&lt;/code&gt; and then from &lt;code&gt;p2&lt;/code&gt; to &lt;code&gt;p3&lt;/code&gt; of &lt;code&gt;s1&lt;/code&gt;. Consequently, controller installs the appropriate rules to the switches &lt;code&gt;s1&lt;/code&gt; and &lt;code&gt;s2&lt;/code&gt;, and finally commands &lt;code&gt;s2&lt;/code&gt; to send the ping reply from &lt;code&gt;p2&lt;/code&gt;.&lt;/p&gt;
 
 &lt;p&gt;Hosts &lt;code&gt;h1&lt;/code&gt;, &lt;code&gt;h2&lt;/code&gt; and &lt;code&gt;h3&lt;/code&gt; all have a single attachment point from the point of view of the controller. Say this time &lt;code&gt;h1&lt;/code&gt; pings &lt;code&gt;h4&lt;/code&gt;. Since the controller does not know the attachment point of &lt;code&gt;h4&lt;/code&gt;, it will repeatedly flood the request until it makes its way to &lt;code&gt;s4&lt;/code&gt; and then &lt;code&gt;h4&lt;/code&gt;. &lt;code&gt;h4&lt;/code&gt;s reply might reach to the controller network either from &lt;code&gt;p1&lt;/code&gt; of &lt;code&gt;s2&lt;/code&gt; or &lt;code&gt;p2&lt;/code&gt; of &lt;code&gt;s3&lt;/code&gt;. Further, each packet originating from &lt;code&gt;h4&lt;/code&gt; can be routed across different paths by &lt;code&gt;s4&lt;/code&gt; too. To handle such cases, controllers generally assign multiple attachment points for &lt;code&gt;h4&lt;/code&gt;.&lt;/p&gt;</content>
-  </entry>
-  <entry>
-    <id>tag:vy.github.io,2013-08-06://blog/post/2013/08/06/output-packet-from-input-port/</id>
-    <title type="html">How come a packet gets output from its input port?</title>
-    <published>2013-08-06T17:29:00Z</published>
-    <updated>2013-08-06T17:29:00Z</updated>
-    <link rel="alternate" href="https://vy.github.io//blog/post/2013/08/06/output-packet-from-input-port/"/>
-    <content type="html">&lt;p&gt;A couple of weeks ago I spotted a really suspicious flow in the logs that directly made me think of a bug at the controller. A packet was arriving to a port of a switch and was getting output from the very same port of the switch. This was kind of weird. If it is supposed to be transmitted back again, then why was it ended up here in the first hand? Was it because of a bug at the controller that first redirected the packet to the switch and then redirected it backwards to the previous switch? A logical fault at the controller was definitely the first suspect here. But later it turned out that this was not the case. The details are as follows.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src="topology.jpg" alt="SDN Topology"&gt;&lt;/p&gt;
-
-&lt;p&gt;Consider the above topology, where three switches &lt;code&gt;s1&lt;/code&gt;, &lt;code&gt;s2&lt;/code&gt;, &lt;code&gt;s3&lt;/code&gt; are connected linearly and all together managed by the controller &lt;code&gt;c1&lt;/code&gt;. In addition, &lt;code&gt;s1&lt;/code&gt; and &lt;code&gt;s2&lt;/code&gt; is connected to two hosts &lt;code&gt;h1&lt;/code&gt; and &lt;code&gt;h2&lt;/code&gt;, respectively. The controller, switches, hosts, their connections, and connection port numbers are given in the figure. The scenario generating the subtle gotcha is as follows.&lt;/p&gt;
-
-&lt;ol&gt;
-&lt;li&gt;
-&lt;code&gt;h2&lt;/code&gt; sends a packet destined to &lt;code&gt;h1&lt;/code&gt;, whose attachment point is not learnt yet by &lt;code&gt;c1&lt;/code&gt;.&lt;/li&gt;
-  &lt;li&gt;Hence, upon arrival of the packet from &lt;code&gt;s2&lt;/code&gt;, &lt;code&gt;c1&lt;/code&gt; commands &lt;code&gt;s2&lt;/code&gt; to flood the request.&lt;/li&gt;
-  &lt;li&gt;The flooded request goes to &lt;code&gt;s1&lt;/code&gt; and &lt;code&gt;s3&lt;/code&gt;.&lt;/li&gt;
-  &lt;li&gt;Upon arrival of the packet to &lt;code&gt;s1&lt;/code&gt;, &lt;code&gt;s1&lt;/code&gt; sends the packet to &lt;code&gt;c1&lt;/code&gt; again.&lt;/li&gt;
-  &lt;li&gt;Since &lt;code&gt;c1&lt;/code&gt; still does not know the attachment point of &lt;code&gt;h1&lt;/code&gt;, &lt;code&gt;c1&lt;/code&gt; commands &lt;code&gt;s1&lt;/code&gt; to flood the request for a second time.&lt;/li&gt;
-  &lt;li&gt;Flooded request from &lt;code&gt;s1&lt;/code&gt; reaches to &lt;code&gt;h1&lt;/code&gt; and &lt;code&gt;h1&lt;/code&gt; replies back.&lt;/li&gt;
-  &lt;li&gt;With &lt;code&gt;h1&lt;/code&gt;s response, &lt;code&gt;c1&lt;/code&gt; learns the attachment point of &lt;code&gt;h1&lt;/code&gt;.&lt;/li&gt;
-  &lt;li&gt;In the meantime, &lt;code&gt;s2&lt;/code&gt;s flood (see 3rd step) reaches to &lt;code&gt;s3&lt;/code&gt;
-&lt;/li&gt;
-  &lt;li&gt;Now &lt;code&gt;c1&lt;/code&gt; knows the attachment point of the &lt;code&gt;h1&lt;/code&gt;. Consequently, &lt;code&gt;c1&lt;/code&gt; figures out that the route to &lt;code&gt;h1&lt;/code&gt; goes through &lt;code&gt;s1&lt;/code&gt; and &lt;code&gt;s1&lt;/code&gt; is reachable by &lt;code&gt;p1&lt;/code&gt; of &lt;code&gt;s3&lt;/code&gt;. Hence, &lt;code&gt;c1&lt;/code&gt; commands &lt;code&gt;s3&lt;/code&gt; to output the packet from the very same input port of the packet.&lt;/li&gt;
-&lt;/ol&gt;&lt;p&gt;I do not have a single idea about the probability of such a subtle bug, but somehow it happened to exist in my logs, right at the lines I was just taking a glance and wasted my whole day. The saying was right, network is really unreliable. Gorgeous!&lt;/p&gt;</content>
   </entry>
   <entry>
     <id>tag:vy.github.io,2013-07-31://blog/post/2013/07/31/openflow-controllers/</id>
@@ -746,32 +837,6 @@ In addition, while I have never been in need of one, I must admit that Floodligh
 &lt;p&gt;The startling point was Blogspot, oh yeah. First I started to type HTML by hand. Then it led to me find a JavaScript library to syntax highlight the code I share. Finally, I found myself trying to escape HTML characters within the shared code snippets. At some point I decided to use &lt;a href="https://gist.github.com/"&gt;Gist&lt;/a&gt;s. Later a reader complaint pointed out that shared Gists were not properly displayed on mobile browsers.&lt;/p&gt;
 
 &lt;p&gt;After some research, I met with &lt;a href="http://nanoc.ws/"&gt;nanoc&lt;/a&gt;. A tiny static site generator written in Ruby. I have never used Ruby before but it didn’t take long for me to built this website in a couple of days. Thanks to the excellent documentation and the active community of nanoc. I might talk more about the obstacles that I experience during the transition, but to be honest none of the friction was due to the nanoc. (The words of &lt;a href="http://en.wikipedia.org/wiki/Bob_Ross"&gt;Bob Ross&lt;/a&gt; describes this best: &lt;em&gt;“We don’t make mistakes, just happy little accidents”&lt;/em&gt;.) Instead, I invite you to check &lt;a href="https://github.com/vy/vy.github.io/tree/source"&gt;the code&lt;/a&gt; by yourself. I hope it helps other nanoc users out there.&lt;/p&gt;</content>
-  </entry>
-  <entry>
-    <id>tag:vy.github.io,2013-03-02://blog/post/2013/03/02/vehbi-koc/</id>
-    <title type="html">Vehbi Koç and Influencing the Industrial Advancement of a Country</title>
-    <published>2013-03-02T02:17:00Z</published>
-    <updated>2013-03-02T02:17:00Z</updated>
-    <link rel="alternate" href="https://vy.github.io//blog/post/2013/03/02/vehbi-koc/"/>
-    <content type="html">&lt;p&gt;A couple of weeks ago, I heard one of our family relatives talking about the biography of &lt;a href="http://en.wikipedia.org/wiki/Vehbi_Ko%C3%A7"&gt;Vehbi Koç&lt;/a&gt;, who started business in a small storefront and raised his legacy to a multi-billion dollar enterprise in Turkey. I had long wanted to read his auto-biography &lt;a href="http://www.amazon.com/My-Life-Story-Autobiography-Businessman/dp/B000EOXQC6/ref=sr_1_1?s=books&amp;amp;ie=UTF8&amp;amp;qid=1362228542&amp;amp;sr=1-1"&gt;My Life Story: The Autobiography of a Turkish Businessman&lt;/a&gt;. But first, I wanted to learn about his life from an objective perspective. For that purpose, I started looking for a website to purchase the &lt;a href="http://www.dogankitap.com.tr/kitap/Vehbi+Ko%C3%A7-771"&gt;Özel Arşivinden Belgeler ve Anılarıyla Vehbi Koç&lt;/a&gt; &lt;em&gt;[Vehbi Koç with Documents From His Private Archive and Memories]&lt;/em&gt; by &lt;a href="http://www.candundar.com.tr"&gt;Can Dündar&lt;/a&gt;, who is a well-known Turkish journalist, columnist and documentarian. Unfortunately, the book was out of order in every bookstore and website I visited. Then I wrote an e-mail to Can Dündar and asked him if does he have any extra copies of the book that he could share with me. He kindly mailed me the books without requesting any fees. Here I would like to express my gratitude to him for his courtesy.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src="ozel-arsiv.png" alt="Özel Arşivinden Belgeler ve Anılarıyla Vehbi Koç"&gt;&lt;/p&gt;
-
-&lt;p&gt;Thanks to the long waiting hours in traffic while going to the work in İstanbul, I have managed reading the books in two weeks. (In the foreword, Can Dündar tells that this is a 3 books series and the last book is still under development.) Due to my previous experiences with other works of Can Dündar, it was no surprise that the work was well organized and composed of (mostly) private documents, writings, and mails stating the events and related developments in a cohesive and expressive manner. Besides the parts directly related with Vehbi Koç, the books shed significant light to the industrial, economical and political evolutions of Turkey at that time. Further, prior to reading the books, I did not know how Vehbi Koç was so influential on the development of Turkey in many aspects, some of which can be listed as introduction of new fundamental laws enabling the presence of holding and charity companies, first car industry, first local hotels in the line of Hilton, marvelous hospital, railway, industry constructions that are still standing up and are well respected in their fields today. In addition, the books mention about the struggles he had, the industrial and political obstacles that are put in front of him by other people, how he always managed to surmount by his honesty and hard working.&lt;/p&gt;
-
-&lt;p&gt;All in all, now I see Vehbi Koç as not just a business man, but a pioneer in the advancement of Turkey who contributed many artwork that are ground breaking and exposing new potentials in their fields, even now. While &lt;a href="http://en.wikipedia.org/wiki/Ko%C3%A7_Holding"&gt;Koç Holding A.Ş.&lt;/a&gt; is still one of the top industrial conglomerates in the world, his achievements were ahead of his time and something that, in addition to his own children, even I am proud of.&lt;/p&gt;
-
-&lt;hr&gt;&lt;p&gt;&lt;strong&gt;Edit:&lt;/strong&gt; Today, I had chance to finish reading &lt;a href="http://www.amazon.com/My-Life-Story-Autobiography-Businessman/dp/B000EOXQC6/ref=sr_1_1?s=books&amp;amp;ie=UTF8&amp;amp;qid=1362228542&amp;amp;sr=1-1"&gt;My Life Story: The Autobiography of a Turkish Businessman&lt;/a&gt; as well. Majority of the content is in line with what was presented in Can Dündar’s books.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src="hayat-hikayem.jpg" alt="Hayat Hikayem"&gt;&lt;/p&gt;
-
-&lt;p&gt;In the section, where Vehbi Koç mentions about his visit to Japan in 1970, I found a pointer to a journal article series (dating back to 24, 25, 26 March, 1970) that he shares his notes and comments about the visit. I found the articles quite important in terms of understanding the development history of Japan and its comparison with Turkey at that time. But more importantly, it gives hints about the way Vehbi Koç thinks while analyzing a whole new country with an extraordinary cultural, governmental, economical and industrial structure.&lt;/p&gt;
-
-&lt;table&gt;&lt;tbody&gt;&lt;tr&gt;
-&lt;td&gt;&lt;a href="24.jpg"&gt;&lt;img src="24-small.jpg" alt="24 March"&gt;&lt;/a&gt;&lt;/td&gt;
-      &lt;td&gt;&lt;a href="25.jpg"&gt;&lt;img src="25-small.jpg" alt="25 March"&gt;&lt;/a&gt;&lt;/td&gt;
-      &lt;td&gt;&lt;a href="26.jpg"&gt;&lt;img src="26-small.jpg" alt="26 March"&gt;&lt;/a&gt;&lt;/td&gt;
-    &lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;p&gt;I hope others interested in the subject would find them useful as well.&lt;/p&gt;</content>
   </entry>
 </feed>
 

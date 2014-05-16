@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Bandwidth Shaping on Linux</title>
+    <link rel="stylesheet" href="/css/bootstrap.css">
+    <link rel="stylesheet" href="/css/bootstrap-responsive.css">
+    <script src="/js/bootstrap.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="/css/common.css">
+    <meta name="generator" content="nanoc 3.6.4">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/post.css">
+    <script type="text/javascript">
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-40183531-1']);
+      _gaq.push(['_trackPageview']);
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="menu">
+      <div><a href="/">Home</a></div><div><a href="/about/">About</a></div><div><a href="/blog/">Blog</a></div><div><a href="/code/">Code</a></div><div><a href="/blog/feed/">Feed</a></div>
+    </div>
+    
+
+<div class="container">
+  <div class="row-fluid">
+    <div class="offset2 span8">
+      <div id="post" class="more-white-box rounded-corners">
+	<div class="head">
+	  <div class="title">Bandwidth Shaping on Linux</div>
+	  <div class="subtitle">posted at
+	    May 16, 2014
+	    with tags <a href="/blog/tag/linux">linux</a>, <a href="/blog/tag/networking">networking</a>
+	  </div>
+	  <div class="share">
+	    <div class="addthis_toolbox addthis_default_style ">
+	      <a class="addthis_button_preferred_1"></a>
+	      <a class="addthis_button_preferred_2"></a>
+	      <a class="addthis_button_preferred_3"></a>
+	      <a class="addthis_button_preferred_4"></a>
+	      <a class="addthis_button_compact"></a>
+	    </div>
+	    <script type="text/javascript">var addthis_config = {"data_track_addressbar":false};</script>
+	    <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-5144adf75211a62b"></script>
+	  </div>
+	</div>
+	<div class="body">
+
+	  <p>Networking stack in Linux kernel by default ships an immense set of
+functionality that provide every hairy sort of tuning a network administrator
+can (and most of the time, cannot) imagine. But unfortunately it totally lacks a
+user-friendly interface for the average programmer, not to mention the regular
+desktop users.</p>
+
+<p><a href="http://xkcd.com/619/"><img src="xkcd.png" alt="Supported Features"></a></p>
+
+<p>Each time I need to come up with a <a href="http://lartc.org/manpages/tc.txt"><code>tc</code></a>
+one-liner for traffic shaping, I find myself reading <a href="http://www.lartc.org/">Linux Advanced Routing &amp;
+Traffic Control</a> guide (aka. LARTC) all over again. No
+exceptions! (Luckily they keep it up to date with the recent kernel versions,
+which is something not expected in the GNU/Linux documentation ecosystem.) I
+must admit that, it has almost been 16 years since I last used Microsoft Windows
+on desktop, but I met with no alternative to the beloved
+<a href="http://www.netlimiter.com/">NetLimiter</a>.</p>
+
+<p><a href="http://www.netlimiter.com/"><img src="netlimiter.png" alt="NetLimiter"></a></p>
+
+<p>Fate knocked my door again and this time I am assigned with the task of
+providing access to an <code>iperf</code> server with two different packet schedulings as
+follows.</p>
+
+<ol>
+<li>In the first interface, I need to cut down the bandwidth to a certain threshold, e.g., 1Mbps.</li>
+  <li>In the second one, I need to introduce some extra delay to each packet, e.g., 200ms.</li>
+</ol><p>Luckily, <code>iperf</code> was set to run over TCP and just playing with the egress
+packets did suffice.</p>
+
+<p>I first picked the easiest task: adding latency. In this case,
+<a href="http://www.linuxfoundation.org/collaborate/workgroups/networking/netem"><code>netem</code></a>
+provides a decent collection of examples and I quickly came up with a working
+solution.</p>
+
+<pre><code class="language-bash">tc qdisc add dev eth0 root netem delay 200ms</code></pre>
+
+<p>For the next task, I skimmed through the <a href="http://lartc.org/howto/lartc.qdisc.html">Queueing Disciplines for Bandwidth
+Management</a> section in LARTC and
+figured out a solution.</p>
+
+<pre><code class="language-bash">tc qdisc add dev eth0 root tbf rate 1024kbit buffer 1600 limit 3000</code></pre>
+
+<p>Is it just me or that has been fairly easy? Later it turned out that it was just
+the beginning. Here, the problem is that the above <code>tc</code> one-liners take effect
+on <em>every</em> packet transmitted through <code>eth0</code>. So how one can shape just the
+<code>iperf</code> traffic? After wasting my whole day on this, I came up with the
+following <code>tc</code> kung-fu.</p>
+
+<pre><code>tc qdisc add dev eth0 root handle 1: prio
+tc qdisc add dev eth0 parent 1:3 handle 30: netem delay 200ms
+tc filter add dev eth0 protocol ip parent 1:0 u32 match ip sport 34001 0xffff flowid 1:3
+</code></pre>
+
+<p>That is, I set <code>iperf</code> to run on port 34001 and instructed <code>tc</code> rule to apply
+just for packets outgoing from <code>sport</code> 34001.</p>
+
+<p>All said and done, combining both rules (i.e., <code>netem</code> and <code>tbf</code>) was turned out
+to be a nightmare. I even put one of the test servers into an inaccessible state
+and needed walk down to the server room to fix the problem by hand. After hours
+and hours of try and failures, I finally managed to find a working solution:</p>
+
+<pre><code class="language-bash">tc qdisc add dev eth0 root handle 1: prio
+tc qdisc add dev eth0 parent 1:2 handle 20: tbf rate 1024kbit buffer 1600 limit 3000
+tc qdisc add dev eth0 parent 1:3 handle 30: netem delay 200ms
+tc filter add dev eth0 protocol ip parent 1: prio 2 route flowid 1:1
+tc filter add dev eth0 protocol ip parent 1: prio 1 u32 match ip sport 34002 0xffff flowid 1:2
+tc filter add dev eth0 protocol ip parent 1: prio 1 u32 match ip sport 34003 0xffff flowid 1:3</code></pre>
+
+<p>In this setting, I run two <code>iperf</code> instances listening for incoming connections
+on ports 34002 and 34003. (First filter directs any unmatched packet to class
+<code>1:1</code> created by <code>prio</code> queue.)</p>
+
+<p>I could have explained the above <code>tc</code> snippets in detail and written a couple
+more that demonstrate simple use cases for the readers, but believe me, that
+would have no points at all. If you have a traffic shaping problem and stucked
+with <code>tc</code>, you practically have two options: You either (try hard and) find
+somebody to do the work for you – which is the recommended approach, or start
+reading the <a href="http://lartc.org/howto/lartc.qdisc.terminology.html">Terminology</a>
+section and make your way through a working solution.</p>
+
+<p>After all this fuss, everytime I read the very first sentence of the <a href="http://lartc.org/howto/lartc.qdisc.html">Queueing
+Disciplines for Bandwidth Management</a>
+chapter in LARTC, it makes me smile: <strong>Now, when I discovered this, it really
+blew me away.</strong> So true!</p>
+
+	  <script type="text/javascript">
+	    $("#post table").attr("class", "table table-hover");
+	  </script>
+
+	  <div id="disqus_thread"></div>
+	  <script type="text/javascript">
+	  var disqus_shortname = 'vyazici';
+	  var disqus_identifier = '/blog/post/20140516-bandwidth-shaping/';
+	  var disqus_title = 'Bandwidth Shaping on Linux';
+	  (function() {
+	  	var dsq = document.createElement('script');
+	  	dsq.type = 'text/javascript';
+	  	dsq.async = true;
+	  	dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+	  	(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+	  })();
+	  </script>
+
+	</div>
+      </div>
+      <div id="bgauthor" class="narrow-font">
+	background image by
+	<a href="http://jenniferwetzel.com/">Jennifer Wetzel</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+  </body>
+</html>
+
