@@ -2,13 +2,228 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <id>https://vy.github.io//</id>
   <title>Volkan Yazıcı's Soap Co.</title>
-  <updated>2014-06-27T14:49:00Z</updated>
+  <updated>2014-08-07T07:28:00Z</updated>
   <link rel="alternate" href="https://vy.github.io//"/>
   <link rel="self" href="https://vy.github.io//blog/feed/"/>
   <author>
     <name>Volkan Yazıcı</name>
     <uri>https://vy.github.io/</uri>
   </author>
+  <entry>
+    <id>tag:vy.github.io,2014-08-07://blog/post/2014/08/07/testing-websockets-in-play/</id>
+    <title type="html">Testing WebSockets in Play Framework</title>
+    <published>2014-08-07T07:28:00Z</published>
+    <updated>2014-08-07T07:28:00Z</updated>
+    <link rel="alternate" href="https://vy.github.io//blog/post/2014/08/07/testing-websockets-in-play/"/>
+    <content type="html">&lt;p&gt;In a recent job interview, I was asked to implement a fully fledged (that is,
+including unit and integration tests) &lt;a href="http://en.wikipedia.org/wiki/Mancala"&gt;Lubang Menggali
+(Mancala)&lt;/a&gt; game, where multiple users are
+allowed to play in real-time. I went with &lt;a href="http://www.playframework.com/"&gt;Play
+Framework&lt;/a&gt; and used
+&lt;a href="http://en.wikipedia.org/wiki/WebSocket"&gt;WebSocket&lt;/a&gt;s to implement the real-time
+server-client communication. (You can find the complete sources
+&lt;a href="https://github.com/vy/lubang-menggali"&gt;here&lt;/a&gt;.) Play provides necessary leverage
+for the integration tests – start the server, connect two browsers to it, click
+on the buttons to make a move and check the board updates. However, the tricky
+bit was the implementation of unit tests for &lt;code&gt;WebSocket&lt;/code&gt; handlers.&lt;/p&gt;
+
+&lt;h1 id="preliminaries"&gt;Preliminaries&lt;/h1&gt;
+
+&lt;p&gt;A typical &lt;code&gt;WebSocket&lt;/code&gt; handler in Play has the following entry point for the
+request dispatcher.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-java"&gt;&lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kd"&gt;static&lt;/span&gt; &lt;span class="n"&gt;WebSocket&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;JsonNode&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="nf"&gt;join&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+    &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="n"&gt;WebSocket&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;JsonNode&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;()&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+        &lt;span class="nd"&gt;@Override&lt;/span&gt;
+        &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;onReady&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;In&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;JsonNode&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;in&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;Out&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;JsonNode&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;out&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+            &lt;span class="c1"&gt;// ...&lt;/span&gt;
+        &lt;span class="o"&gt;}&lt;/span&gt;
+    &lt;span class="o"&gt;}&lt;/span&gt;
+&lt;span class="o"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;When a request hits to &lt;code&gt;join()&lt;/code&gt;, the function returns a new &lt;code&gt;WebSocket&lt;/code&gt;
+instance, where &lt;code&gt;onReady()&lt;/code&gt; will be invoked upon connection establishment. After
+that, the book keeping of the input and output sockets are delegated to the
+programmer. Note that the client-server communication is performed in JSON
+messages in the above code snippet.&lt;/p&gt;
+
+&lt;h1 id="mocking"&gt;Mocking&lt;/h1&gt;
+
+&lt;p&gt;In order to mock a client-server &lt;code&gt;WebSocket&lt;/code&gt; communication, I need mock
+&lt;code&gt;WebSocket.In&lt;/code&gt; and &lt;code&gt;WebSocket.Out&lt;/code&gt; class implementations. For that purpose, I
+first tried googling alternatives and checked what other people have done
+previously, but did not find much material. Hence, I came up with the following
+&lt;code&gt;MockInputWebSocket&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-java"&gt;&lt;span class="nd"&gt;@ThreadSafe&lt;/span&gt;
+&lt;span class="kd"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;MockInputWebSocket&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+
+    &lt;span class="kd"&gt;protected&lt;/span&gt; &lt;span class="kd"&gt;final&lt;/span&gt; &lt;span class="n"&gt;List&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;F&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;Callback&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;JsonNode&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;messageListeners&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;
+            &lt;span class="n"&gt;Collections&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;synchronizedList&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="n"&gt;ArrayList&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;F&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;Callback&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;JsonNode&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;());&lt;/span&gt;
+
+    &lt;span class="kd"&gt;protected&lt;/span&gt; &lt;span class="kd"&gt;final&lt;/span&gt; &lt;span class="n"&gt;List&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;F&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;Callback0&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;closeListeners&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;
+            &lt;span class="n"&gt;Collections&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;synchronizedList&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="n"&gt;ArrayList&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;F&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;Callback0&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;());&lt;/span&gt;
+
+    &lt;span class="kd"&gt;protected&lt;/span&gt; &lt;span class="kd"&gt;final&lt;/span&gt; &lt;span class="n"&gt;WebSocket&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;In&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;JsonNode&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;inputSocket&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="n"&gt;WebSocket&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;In&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;JsonNode&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;()&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+
+        &lt;span class="nd"&gt;@Override&lt;/span&gt;
+        &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;onMessage&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;F&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;Callback&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;JsonNode&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;callback&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="n"&gt;messageListeners&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;add&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;callback&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
+
+        &lt;span class="nd"&gt;@Override&lt;/span&gt;
+        &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;onClose&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;F&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;Callback0&lt;/span&gt; &lt;span class="n"&gt;callback&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="n"&gt;closeListeners&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;add&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;callback&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
+
+    &lt;span class="o"&gt;};&lt;/span&gt;
+
+    &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;write&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;JsonNode&lt;/span&gt; &lt;span class="n"&gt;data&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="kd"&gt;throws&lt;/span&gt; &lt;span class="n"&gt;Throwable&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+        &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;F&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;Callback&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;JsonNode&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;listener&lt;/span&gt; &lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="n"&gt;messageListeners&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
+            &lt;span class="n"&gt;listener&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;invoke&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;data&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+    &lt;span class="o"&gt;}&lt;/span&gt;
+
+    &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;close&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="kd"&gt;throws&lt;/span&gt; &lt;span class="n"&gt;Throwable&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+        &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;F&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;Callback0&lt;/span&gt; &lt;span class="n"&gt;listener&lt;/span&gt; &lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="n"&gt;closeListeners&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
+            &lt;span class="n"&gt;listener&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;invoke&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
+    &lt;span class="o"&gt;}&lt;/span&gt;
+
+    &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="n"&gt;WebSocket&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;In&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;JsonNode&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="nf"&gt;getInputSocket&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;inputSocket&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
+
+&lt;span class="o"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Here, I first implement a &lt;code&gt;WebSocket.In&lt;/code&gt; object, where message and close event
+listeners can register themselves to &lt;code&gt;messageListeners&lt;/code&gt; and &lt;code&gt;closeListeners&lt;/code&gt;
+list, respectively. Next, in order to pass data to the socket listeners, I wrote
+my custom &lt;code&gt;write()&lt;/code&gt; and &lt;code&gt;close()&lt;/code&gt; methods.&lt;/p&gt;
+
+&lt;p&gt;I also implemented &lt;code&gt;MockOutputWebSocket&lt;/code&gt; similarly:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-java"&gt;&lt;span class="nd"&gt;@ThreadSafe&lt;/span&gt;
+&lt;span class="kd"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;MockOutputWebSocket&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+
+    &lt;span class="kd"&gt;private&lt;/span&gt; &lt;span class="kd"&gt;final&lt;/span&gt; &lt;span class="kd"&gt;static&lt;/span&gt; &lt;span class="n"&gt;ObjectMapper&lt;/span&gt; &lt;span class="n"&gt;objectMapper&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="n"&gt;ObjectMapper&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
+
+    &lt;span class="kd"&gt;protected&lt;/span&gt; &lt;span class="kd"&gt;final&lt;/span&gt; &lt;span class="n"&gt;BlockingQueue&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;JsonNode&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;messageQueue&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="n"&gt;LinkedBlockingQueue&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&amp;gt;();&lt;/span&gt;
+
+    &lt;span class="kd"&gt;protected&lt;/span&gt; &lt;span class="kd"&gt;final&lt;/span&gt; &lt;span class="n"&gt;WebSocket&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;Out&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;JsonNode&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;outputSocket&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="n"&gt;WebSocket&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;Out&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;JsonNode&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;()&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+
+        &lt;span class="nd"&gt;@Override&lt;/span&gt;
+        &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;write&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;JsonNode&lt;/span&gt; &lt;span class="n"&gt;frame&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="n"&gt;messageQueue&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;add&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;frame&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
+
+        &lt;span class="nd"&gt;@Override&lt;/span&gt;
+        &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;close&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+            &lt;span class="k"&gt;try&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="n"&gt;messageQueue&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;add&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;objectMapper&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;readTree&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="s"&gt;"{\"closed\": true}"&lt;/span&gt;&lt;span class="o"&gt;));&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
+            &lt;span class="c1"&gt;// This should not happen.&lt;/span&gt;
+            &lt;span class="k"&gt;catch&lt;/span&gt; &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;IOException&lt;/span&gt; &lt;span class="n"&gt;e&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="k"&gt;throw&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="n"&gt;RuntimeException&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;e&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
+        &lt;span class="o"&gt;}&lt;/span&gt;
+    &lt;span class="o"&gt;};&lt;/span&gt;
+
+    &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="n"&gt;BlockingQueue&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;JsonNode&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="nf"&gt;getMessageQueue&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;messageQueue&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
+
+    &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="n"&gt;WebSocket&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;Out&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;JsonNode&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="nf"&gt;getOutputSocket&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;outputSocket&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
+
+&lt;span class="o"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If we would forget about the custom close message hack (nasty!) in &lt;code&gt;close()&lt;/code&gt;
+method of the implemented &lt;code&gt;WebSocket.Out&lt;/code&gt; class, things are self-explanative
+here as well. That is, when we receive a new message, we push it to
+&lt;code&gt;messageQueue&lt;/code&gt;. The test user will be able to consume the messages written to
+the mock output socket by polling &lt;code&gt;JsonData&lt;/code&gt; from the &lt;code&gt;messageQueue&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Since I come this far, I also implemented an entire &lt;code&gt;WebSocket&lt;/code&gt; mock
+(&lt;code&gt;MockWebSocket&lt;/code&gt;) that employs the aforementioned &lt;code&gt;MockInputWebSocket&lt;/code&gt; and
+&lt;code&gt;MockOutputWebSocket&lt;/code&gt; as follows.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-java"&gt;&lt;span class="nd"&gt;@ThreadSafe&lt;/span&gt;
+&lt;span class="kd"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;MockWebSocket&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+
+    &lt;span class="kd"&gt;protected&lt;/span&gt; &lt;span class="kd"&gt;final&lt;/span&gt; &lt;span class="n"&gt;MockInputWebSocket&lt;/span&gt; &lt;span class="n"&gt;mockInput&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="n"&gt;MockInputWebSocket&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
+    &lt;span class="kd"&gt;protected&lt;/span&gt; &lt;span class="kd"&gt;final&lt;/span&gt; &lt;span class="n"&gt;MockOutputWebSocket&lt;/span&gt; &lt;span class="n"&gt;mockOutput&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="n"&gt;MockOutputWebSocket&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
+    &lt;span class="kd"&gt;protected&lt;/span&gt; &lt;span class="kd"&gt;final&lt;/span&gt; &lt;span class="n"&gt;WebSocket&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;JsonNode&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;socket&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+
+    &lt;span class="n"&gt;MockWebSocket&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;WebSocket&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;JsonNode&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;socket&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+        &lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;socket&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;socket&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+        &lt;span class="n"&gt;socket&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;onReady&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;mockInput&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;getInputSocket&lt;/span&gt;&lt;span class="o"&gt;(),&lt;/span&gt; &lt;span class="n"&gt;mockOutput&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;getOutputSocket&lt;/span&gt;&lt;span class="o"&gt;());&lt;/span&gt;
+    &lt;span class="o"&gt;}&lt;/span&gt;
+
+    &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="n"&gt;JsonNode&lt;/span&gt; &lt;span class="nf"&gt;read&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="kd"&gt;throws&lt;/span&gt; &lt;span class="n"&gt;InterruptedException&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+        &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;mockOutput&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;getMessageQueue&lt;/span&gt;&lt;span class="o"&gt;().&lt;/span&gt;&lt;span class="na"&gt;poll&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;TimeUnit&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;SECONDS&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+    &lt;span class="o"&gt;}&lt;/span&gt;
+
+    &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;write&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;JsonNode&lt;/span&gt; &lt;span class="n"&gt;data&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="kd"&gt;throws&lt;/span&gt; &lt;span class="n"&gt;Throwable&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="n"&gt;mockInput&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;write&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;data&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
+
+    &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;close&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="kd"&gt;throws&lt;/span&gt; &lt;span class="n"&gt;Throwable&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="n"&gt;mockInput&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;close&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
+
+&lt;span class="o"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;MockWebSocket&lt;/code&gt; provides the caller an interface such that the two-way
+&lt;code&gt;WebSocket&lt;/code&gt; communication can be intercepted through provided &lt;code&gt;read()&lt;/code&gt;,
+&lt;code&gt;write()&lt;/code&gt; and &lt;code&gt;close()&lt;/code&gt; methods – much like a regular network socket.&lt;/p&gt;
+
+&lt;h1 id="conclusion"&gt;Conclusion&lt;/h1&gt;
+
+&lt;p&gt;Remember that I used JSON as the messaging medium. For that purpose, I created a
+couple of event classes (e.g., &lt;code&gt;WaitingForOpponent&lt;/code&gt;, &lt;code&gt;ReadyToStart&lt;/code&gt;,
+&lt;code&gt;IllegalMove&lt;/code&gt;, etc.) and used &lt;a href="http://jackson.codehaus.org/"&gt;Jackson&lt;/a&gt; for
+POJO-JSON (de)serialization. Next, I integrated my brand new &lt;code&gt;MockWebSocket&lt;/code&gt;
+into the unit tests as follows.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-java"&gt;&lt;span class="kd"&gt;private&lt;/span&gt; &lt;span class="kd"&gt;static&lt;/span&gt; &lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;T&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;T&lt;/span&gt; &lt;span class="n"&gt;readPojo&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;MockWebSocket&lt;/span&gt; &lt;span class="n"&gt;socket&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;Class&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;T&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;clazz&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
+        &lt;span class="kd"&gt;throws&lt;/span&gt; &lt;span class="n"&gt;InterruptedException&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;JsonProcessingException&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+    &lt;span class="n"&gt;JsonNode&lt;/span&gt; &lt;span class="n"&gt;data&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;socket&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;read&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
+    &lt;span class="n"&gt;assertThat&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;data&lt;/span&gt;&lt;span class="o"&gt;).&lt;/span&gt;&lt;span class="na"&gt;isNotNull&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
+    &lt;span class="k"&gt;try&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;objectMapper&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;convertValue&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;data&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;clazz&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
+    &lt;span class="k"&gt;catch&lt;/span&gt; &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;IllegalArgumentException&lt;/span&gt; &lt;span class="n"&gt;iae&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+        &lt;span class="k"&gt;throw&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nf"&gt;IllegalArgumentException&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;
+                &lt;span class="s"&gt;"Invalid JSON: "&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="n"&gt;objectMapper&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;writeValueAsString&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;data&lt;/span&gt;&lt;span class="o"&gt;),&lt;/span&gt; &lt;span class="n"&gt;iae&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+    &lt;span class="o"&gt;}&lt;/span&gt;
+&lt;span class="o"&gt;}&lt;/span&gt;
+
+&lt;span class="kd"&gt;private&lt;/span&gt; &lt;span class="kd"&gt;static&lt;/span&gt; &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;writeMove&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;MockWebSocket&lt;/span&gt; &lt;span class="n"&gt;socket&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;Object&lt;/span&gt; &lt;span class="n"&gt;pit&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="kd"&gt;throws&lt;/span&gt; &lt;span class="n"&gt;Throwable&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+    &lt;span class="n"&gt;socket&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;write&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;objectMapper&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;valueToTree&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;pit&lt;/span&gt;&lt;span class="o"&gt;));&lt;/span&gt;
+&lt;span class="o"&gt;}&lt;/span&gt;
+
+&lt;span class="nd"&gt;@Test&lt;/span&gt;
+&lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;testJoin&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="kd"&gt;throws&lt;/span&gt; &lt;span class="n"&gt;Throwable&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+    &lt;span class="c1"&gt;// Introduce the first user and read the "WaitingForOpponent" message.&lt;/span&gt;
+    &lt;span class="n"&gt;MockWebSocket&lt;/span&gt; &lt;span class="n"&gt;fstSocket&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="n"&gt;MockWebSocket&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;Application&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;join&lt;/span&gt;&lt;span class="o"&gt;());&lt;/span&gt;
+    &lt;span class="n"&gt;WaitingForOpponent&lt;/span&gt; &lt;span class="n"&gt;fstWfo&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;readPojo&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;fstSocket&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;WaitingForOpponent&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;class&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+    &lt;span class="n"&gt;assertThat&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;Application&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;getPendingPlayers&lt;/span&gt;&lt;span class="o"&gt;().&lt;/span&gt;&lt;span class="na"&gt;size&lt;/span&gt;&lt;span class="o"&gt;()).&lt;/span&gt;&lt;span class="na"&gt;isEqualTo&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+    &lt;span class="n"&gt;assertThat&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;Application&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;getGames&lt;/span&gt;&lt;span class="o"&gt;().&lt;/span&gt;&lt;span class="na"&gt;size&lt;/span&gt;&lt;span class="o"&gt;()).&lt;/span&gt;&lt;span class="na"&gt;isEqualTo&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+
+    &lt;span class="c1"&gt;// Introduce the second user and read the."WaitingForOpponent" message.&lt;/span&gt;
+    &lt;span class="n"&gt;MockWebSocket&lt;/span&gt; &lt;span class="n"&gt;sndSocket&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="n"&gt;MockWebSocket&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;Application&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;join&lt;/span&gt;&lt;span class="o"&gt;());&lt;/span&gt;
+    &lt;span class="n"&gt;WaitingForOpponent&lt;/span&gt; &lt;span class="n"&gt;sndWfo&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;readPojo&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;sndSocket&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;WaitingForOpponent&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;class&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+    &lt;span class="n"&gt;assertThat&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;fstWfo&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;playerId&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;equals&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;sndWfo&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;playerId&lt;/span&gt;&lt;span class="o"&gt;)).&lt;/span&gt;&lt;span class="na"&gt;isFalse&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
+
+    &lt;span class="c1"&gt;// Validate "ReadyToStart" messages.&lt;/span&gt;
+    &lt;span class="n"&gt;ReadyToStart&lt;/span&gt; &lt;span class="n"&gt;fstRts&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;readPojo&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;fstSocket&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;ReadyToStart&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;class&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+    &lt;span class="n"&gt;ReadyToStart&lt;/span&gt; &lt;span class="n"&gt;sndRts&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;readPojo&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;sndSocket&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;ReadyToStart&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;class&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+    &lt;span class="n"&gt;assertThat&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;Application&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;getGames&lt;/span&gt;&lt;span class="o"&gt;().&lt;/span&gt;&lt;span class="na"&gt;size&lt;/span&gt;&lt;span class="o"&gt;()).&lt;/span&gt;&lt;span class="na"&gt;isEqualTo&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+    &lt;span class="n"&gt;assertThat&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;Application&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;getPendingPlayers&lt;/span&gt;&lt;span class="o"&gt;().&lt;/span&gt;&lt;span class="na"&gt;size&lt;/span&gt;&lt;span class="o"&gt;()).&lt;/span&gt;&lt;span class="na"&gt;isEqualTo&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+    &lt;span class="n"&gt;assertThat&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;fstRts&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;nextPlayerId&lt;/span&gt;&lt;span class="o"&gt;).&lt;/span&gt;&lt;span class="na"&gt;isEqualTo&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;sndRts&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;nextPlayerId&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+    &lt;span class="n"&gt;assertThat&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;fstRts&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;opponentId&lt;/span&gt;&lt;span class="o"&gt;).&lt;/span&gt;&lt;span class="na"&gt;isEqualTo&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;sndWfo&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;playerId&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+    &lt;span class="n"&gt;assertThat&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;sndRts&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;opponentId&lt;/span&gt;&lt;span class="o"&gt;).&lt;/span&gt;&lt;span class="na"&gt;isEqualTo&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;fstWfo&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;playerId&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+
+    &lt;span class="c1"&gt;// Let 2nd player make a move, while this is not his turn.&lt;/span&gt;
+    &lt;span class="n"&gt;writeMove&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;sndSocket&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+    &lt;span class="n"&gt;IllegalMove&lt;/span&gt; &lt;span class="n"&gt;im&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;readPojo&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;sndSocket&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;IllegalMove&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;class&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+    &lt;span class="n"&gt;assertThat&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;im&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;reason&lt;/span&gt;&lt;span class="o"&gt;).&lt;/span&gt;&lt;span class="na"&gt;isEqualTo&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="s"&gt;"It is opponent's turn."&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+
+    &lt;span class="c1"&gt;// Let 1st player make a move to an invalid pit index.&lt;/span&gt;
+    &lt;span class="n"&gt;writeMove&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;fstSocket&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="s"&gt;"n/a"&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+    &lt;span class="n"&gt;im&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;readPojo&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;fstSocket&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;IllegalMove&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;class&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+    &lt;span class="n"&gt;assertThat&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;im&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;reason&lt;/span&gt;&lt;span class="o"&gt;).&lt;/span&gt;&lt;span class="na"&gt;matches&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="s"&gt;"^Invalid pit index: .*"&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+
+    &lt;span class="c1"&gt;// Let 1st player make a move with a negative pit index.&lt;/span&gt;
+    &lt;span class="n"&gt;writeMove&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;fstSocket&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+    &lt;span class="n"&gt;im&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;readPojo&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;fstSocket&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;IllegalMove&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;class&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+    &lt;span class="n"&gt;assertThat&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;im&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;reason&lt;/span&gt;&lt;span class="o"&gt;).&lt;/span&gt;&lt;span class="na"&gt;matches&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="s"&gt;"^Invalid pit index: .*"&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+
+    &lt;span class="c1"&gt;// ...&lt;/span&gt;
+&lt;span class="o"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I suppose I have got a nearly 99% code coverage of the game engine by using the
+mock &lt;code&gt;WebSocket&lt;/code&gt;s. I hope this scheme would help others trying to do a similar
+testing stuff.&lt;/p&gt;</content>
+  </entry>
   <entry>
     <id>tag:vy.github.io,2014-06-27://blog/post/2014/06/27/parse-bitcoin-blockchain/</id>
     <title type="html">Parsing Bitcoin Blockchain Data in Java</title>
@@ -579,6 +794,32 @@ by James McCaffrey, which cleared out the things and made me start to understand
 the Wikipedia page.&lt;/p&gt;</content>
   </entry>
   <entry>
+    <id>tag:vy.github.io,2013-08-06://blog/post/2013/08/06/output-packet-from-input-port/</id>
+    <title type="html">How come a packet gets output from its input port?</title>
+    <published>2013-08-06T17:29:00Z</published>
+    <updated>2013-08-06T17:29:00Z</updated>
+    <link rel="alternate" href="https://vy.github.io//blog/post/2013/08/06/output-packet-from-input-port/"/>
+    <content type="html">&lt;p&gt;A couple of weeks ago I spotted a really suspicious flow in the logs that directly made me think of a bug at the controller. A packet was arriving to a port of a switch and was getting output from the very same port of the switch. This was kind of weird. If it is supposed to be transmitted back again, then why was it ended up here in the first hand? Was it because of a bug at the controller that first redirected the packet to the switch and then redirected it backwards to the previous switch? A logical fault at the controller was definitely the first suspect here. But later it turned out that this was not the case. The details are as follows.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src="topology.jpg" alt="SDN Topology"&gt;&lt;/p&gt;
+
+&lt;p&gt;Consider the above topology, where three switches &lt;code&gt;s1&lt;/code&gt;, &lt;code&gt;s2&lt;/code&gt;, &lt;code&gt;s3&lt;/code&gt; are connected linearly and all together managed by the controller &lt;code&gt;c1&lt;/code&gt;. In addition, &lt;code&gt;s1&lt;/code&gt; and &lt;code&gt;s2&lt;/code&gt; is connected to two hosts &lt;code&gt;h1&lt;/code&gt; and &lt;code&gt;h2&lt;/code&gt;, respectively. The controller, switches, hosts, their connections, and connection port numbers are given in the figure. The scenario generating the subtle gotcha is as follows.&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;
+&lt;code&gt;h2&lt;/code&gt; sends a packet destined to &lt;code&gt;h1&lt;/code&gt;, whose attachment point is not learnt yet by &lt;code&gt;c1&lt;/code&gt;.&lt;/li&gt;
+  &lt;li&gt;Hence, upon arrival of the packet from &lt;code&gt;s2&lt;/code&gt;, &lt;code&gt;c1&lt;/code&gt; commands &lt;code&gt;s2&lt;/code&gt; to flood the request.&lt;/li&gt;
+  &lt;li&gt;The flooded request goes to &lt;code&gt;s1&lt;/code&gt; and &lt;code&gt;s3&lt;/code&gt;.&lt;/li&gt;
+  &lt;li&gt;Upon arrival of the packet to &lt;code&gt;s1&lt;/code&gt;, &lt;code&gt;s1&lt;/code&gt; sends the packet to &lt;code&gt;c1&lt;/code&gt; again.&lt;/li&gt;
+  &lt;li&gt;Since &lt;code&gt;c1&lt;/code&gt; still does not know the attachment point of &lt;code&gt;h1&lt;/code&gt;, &lt;code&gt;c1&lt;/code&gt; commands &lt;code&gt;s1&lt;/code&gt; to flood the request for a second time.&lt;/li&gt;
+  &lt;li&gt;Flooded request from &lt;code&gt;s1&lt;/code&gt; reaches to &lt;code&gt;h1&lt;/code&gt; and &lt;code&gt;h1&lt;/code&gt; replies back.&lt;/li&gt;
+  &lt;li&gt;With &lt;code&gt;h1&lt;/code&gt;s response, &lt;code&gt;c1&lt;/code&gt; learns the attachment point of &lt;code&gt;h1&lt;/code&gt;.&lt;/li&gt;
+  &lt;li&gt;In the meantime, &lt;code&gt;s2&lt;/code&gt;s flood (see 3rd step) reaches to &lt;code&gt;s3&lt;/code&gt;
+&lt;/li&gt;
+  &lt;li&gt;Now &lt;code&gt;c1&lt;/code&gt; knows the attachment point of the &lt;code&gt;h1&lt;/code&gt;. Consequently, &lt;code&gt;c1&lt;/code&gt; figures out that the route to &lt;code&gt;h1&lt;/code&gt; goes through &lt;code&gt;s1&lt;/code&gt; and &lt;code&gt;s1&lt;/code&gt; is reachable by &lt;code&gt;p1&lt;/code&gt; of &lt;code&gt;s3&lt;/code&gt;. Hence, &lt;code&gt;c1&lt;/code&gt; commands &lt;code&gt;s3&lt;/code&gt; to output the packet from the very same input port of the packet.&lt;/li&gt;
+&lt;/ol&gt;&lt;p&gt;I do not have a single idea about the probability of such a subtle bug, but somehow it happened to exist in my logs, right at the lines I was just taking a glance and wasted my whole day. The saying was right, network is really unreliable. Gorgeous!&lt;/p&gt;</content>
+  </entry>
+  <entry>
     <id>tag:vy.github.io,2013-08-06://blog/post/2013/08/06/sdn-discovery/</id>
     <title type="html">Discovery in Software-Defined Networks</title>
     <published>2013-08-06T17:29:00Z</published>
@@ -609,32 +850,6 @@ the Wikipedia page.&lt;/p&gt;</content>
 &lt;p&gt;Considering the previously illustrated network topology, let’s assume that &lt;code&gt;h1&lt;/code&gt; pings &lt;code&gt;h2&lt;/code&gt;. When ping request reaches to &lt;code&gt;s1&lt;/code&gt;, since there were no previously installed rule(s) for the incoming flow, &lt;code&gt;s1&lt;/code&gt; will forward the first packet of the flow to the controller. This is the first time the controller observes a message originating from &lt;code&gt;h1&lt;/code&gt;. Hence, the controller discovers that &lt;code&gt;p3&lt;/code&gt; of &lt;code&gt;s1&lt;/code&gt; is an attachment point for &lt;code&gt;h1&lt;/code&gt;. But the controller still does not have any knowledge on the attachment points for the destination &lt;code&gt;h2&lt;/code&gt;. Thus, the controller tells &lt;code&gt;s1&lt;/code&gt; to flood the packet. Due to flooding, the ping request reaches to &lt;code&gt;s2&lt;/code&gt; and &lt;code&gt;s3&lt;/code&gt;. For simplicity, let’s assume that the flood first arrived to &lt;code&gt;s2&lt;/code&gt;. Since &lt;code&gt;s2&lt;/code&gt; does not have any corresponding rules for the flow, &lt;code&gt;s2&lt;/code&gt; forwards the packet to the controller. Controller still does not know the attachment point of &lt;code&gt;h2&lt;/code&gt; and hence commands to &lt;code&gt;s2&lt;/code&gt; to flood the packet again. After this second flood, the ping request reaches to &lt;code&gt;h2&lt;/code&gt; and &lt;code&gt;h2&lt;/code&gt; replies back. Upon &lt;code&gt;s2&lt;/code&gt; receiving &lt;code&gt;h2&lt;/code&gt;s reply from &lt;code&gt;p3&lt;/code&gt;, it forwards the reply to the controller. Now the controller discovers that &lt;code&gt;p3&lt;/code&gt; of &lt;code&gt;s2&lt;/code&gt; is an attachment point for &lt;code&gt;h2&lt;/code&gt;. Since controller has previously discovered &lt;code&gt;h1&lt;/code&gt;s attachment point, it knows that the reply needs to be routed from &lt;code&gt;p3&lt;/code&gt; to &lt;code&gt;p2&lt;/code&gt; of &lt;code&gt;s2&lt;/code&gt; and then from &lt;code&gt;p2&lt;/code&gt; to &lt;code&gt;p3&lt;/code&gt; of &lt;code&gt;s1&lt;/code&gt;. Consequently, controller installs the appropriate rules to the switches &lt;code&gt;s1&lt;/code&gt; and &lt;code&gt;s2&lt;/code&gt;, and finally commands &lt;code&gt;s2&lt;/code&gt; to send the ping reply from &lt;code&gt;p2&lt;/code&gt;.&lt;/p&gt;
 
 &lt;p&gt;Hosts &lt;code&gt;h1&lt;/code&gt;, &lt;code&gt;h2&lt;/code&gt; and &lt;code&gt;h3&lt;/code&gt; all have a single attachment point from the point of view of the controller. Say this time &lt;code&gt;h1&lt;/code&gt; pings &lt;code&gt;h4&lt;/code&gt;. Since the controller does not know the attachment point of &lt;code&gt;h4&lt;/code&gt;, it will repeatedly flood the request until it makes its way to &lt;code&gt;s4&lt;/code&gt; and then &lt;code&gt;h4&lt;/code&gt;. &lt;code&gt;h4&lt;/code&gt;s reply might reach to the controller network either from &lt;code&gt;p1&lt;/code&gt; of &lt;code&gt;s2&lt;/code&gt; or &lt;code&gt;p2&lt;/code&gt; of &lt;code&gt;s3&lt;/code&gt;. Further, each packet originating from &lt;code&gt;h4&lt;/code&gt; can be routed across different paths by &lt;code&gt;s4&lt;/code&gt; too. To handle such cases, controllers generally assign multiple attachment points for &lt;code&gt;h4&lt;/code&gt;.&lt;/p&gt;</content>
-  </entry>
-  <entry>
-    <id>tag:vy.github.io,2013-08-06://blog/post/2013/08/06/output-packet-from-input-port/</id>
-    <title type="html">How come a packet gets output from its input port?</title>
-    <published>2013-08-06T17:29:00Z</published>
-    <updated>2013-08-06T17:29:00Z</updated>
-    <link rel="alternate" href="https://vy.github.io//blog/post/2013/08/06/output-packet-from-input-port/"/>
-    <content type="html">&lt;p&gt;A couple of weeks ago I spotted a really suspicious flow in the logs that directly made me think of a bug at the controller. A packet was arriving to a port of a switch and was getting output from the very same port of the switch. This was kind of weird. If it is supposed to be transmitted back again, then why was it ended up here in the first hand? Was it because of a bug at the controller that first redirected the packet to the switch and then redirected it backwards to the previous switch? A logical fault at the controller was definitely the first suspect here. But later it turned out that this was not the case. The details are as follows.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src="topology.jpg" alt="SDN Topology"&gt;&lt;/p&gt;
-
-&lt;p&gt;Consider the above topology, where three switches &lt;code&gt;s1&lt;/code&gt;, &lt;code&gt;s2&lt;/code&gt;, &lt;code&gt;s3&lt;/code&gt; are connected linearly and all together managed by the controller &lt;code&gt;c1&lt;/code&gt;. In addition, &lt;code&gt;s1&lt;/code&gt; and &lt;code&gt;s2&lt;/code&gt; is connected to two hosts &lt;code&gt;h1&lt;/code&gt; and &lt;code&gt;h2&lt;/code&gt;, respectively. The controller, switches, hosts, their connections, and connection port numbers are given in the figure. The scenario generating the subtle gotcha is as follows.&lt;/p&gt;
-
-&lt;ol&gt;
-&lt;li&gt;
-&lt;code&gt;h2&lt;/code&gt; sends a packet destined to &lt;code&gt;h1&lt;/code&gt;, whose attachment point is not learnt yet by &lt;code&gt;c1&lt;/code&gt;.&lt;/li&gt;
-  &lt;li&gt;Hence, upon arrival of the packet from &lt;code&gt;s2&lt;/code&gt;, &lt;code&gt;c1&lt;/code&gt; commands &lt;code&gt;s2&lt;/code&gt; to flood the request.&lt;/li&gt;
-  &lt;li&gt;The flooded request goes to &lt;code&gt;s1&lt;/code&gt; and &lt;code&gt;s3&lt;/code&gt;.&lt;/li&gt;
-  &lt;li&gt;Upon arrival of the packet to &lt;code&gt;s1&lt;/code&gt;, &lt;code&gt;s1&lt;/code&gt; sends the packet to &lt;code&gt;c1&lt;/code&gt; again.&lt;/li&gt;
-  &lt;li&gt;Since &lt;code&gt;c1&lt;/code&gt; still does not know the attachment point of &lt;code&gt;h1&lt;/code&gt;, &lt;code&gt;c1&lt;/code&gt; commands &lt;code&gt;s1&lt;/code&gt; to flood the request for a second time.&lt;/li&gt;
-  &lt;li&gt;Flooded request from &lt;code&gt;s1&lt;/code&gt; reaches to &lt;code&gt;h1&lt;/code&gt; and &lt;code&gt;h1&lt;/code&gt; replies back.&lt;/li&gt;
-  &lt;li&gt;With &lt;code&gt;h1&lt;/code&gt;s response, &lt;code&gt;c1&lt;/code&gt; learns the attachment point of &lt;code&gt;h1&lt;/code&gt;.&lt;/li&gt;
-  &lt;li&gt;In the meantime, &lt;code&gt;s2&lt;/code&gt;s flood (see 3rd step) reaches to &lt;code&gt;s3&lt;/code&gt;
-&lt;/li&gt;
-  &lt;li&gt;Now &lt;code&gt;c1&lt;/code&gt; knows the attachment point of the &lt;code&gt;h1&lt;/code&gt;. Consequently, &lt;code&gt;c1&lt;/code&gt; figures out that the route to &lt;code&gt;h1&lt;/code&gt; goes through &lt;code&gt;s1&lt;/code&gt; and &lt;code&gt;s1&lt;/code&gt; is reachable by &lt;code&gt;p1&lt;/code&gt; of &lt;code&gt;s3&lt;/code&gt;. Hence, &lt;code&gt;c1&lt;/code&gt; commands &lt;code&gt;s3&lt;/code&gt; to output the packet from the very same input port of the packet.&lt;/li&gt;
-&lt;/ol&gt;&lt;p&gt;I do not have a single idea about the probability of such a subtle bug, but somehow it happened to exist in my logs, right at the lines I was just taking a glance and wasted my whole day. The saying was right, network is really unreliable. Gorgeous!&lt;/p&gt;</content>
   </entry>
   <entry>
     <id>tag:vy.github.io,2013-07-31://blog/post/2013/07/31/openflow-controllers/</id>
@@ -855,80 +1070,6 @@ In addition, while I have never been in need of one, I must admit that Floodligh
 &lt;h1 id="acknowledgement"&gt;Acknowledgement&lt;/h1&gt;
 
 &lt;p&gt;I would like to thank &lt;a href="http://yuba.stanford.edu/~derickso/"&gt;David Erickson&lt;/a&gt;, &lt;a href="http://jasonparraga.com/"&gt;Jason Parraga&lt;/a&gt; and Murphy McCauley for their corrections.&lt;/p&gt;</content>
-  </entry>
-  <entry>
-    <id>tag:vy.github.io,2013-04-19://blog/post/2013/04/19/benchmarking-mininet/</id>
-    <title type="html">Benchmarking Mininet</title>
-    <published>2013-04-19T08:37:00Z</published>
-    <updated>2013-04-19T08:37:00Z</updated>
-    <link rel="alternate" href="https://vy.github.io//blog/post/2013/04/19/benchmarking-mininet/"/>
-    <content type="html">&lt;p&gt;In the realm of software-defined networking, unless you own a data center as a play ground and have some serious amount of cash to spread over the technicians to program this infrastructure for you, you will inevitably meet with the mighty &lt;a href="https://github.com/mininet/mininet"&gt;mininet&lt;/a&gt;. mininet is a rapid prototyping tool for emulating software-defined networks. At its core, it uses process-based virtualization and network namespace tricks in Linux kernel to create a virtual network composed of controllers, hosts and switches.&lt;/p&gt;
-
-&lt;p&gt;Recently for an experimental testbed, I needed to figure out how far can we go with mininet. That is, what is the maximum possible size of a virtual network that I can create using mininet and how long would it take to create it?&lt;/p&gt;
-
-&lt;p&gt;Before going into the details with the benchmark, first, let me share with you the server and software specifications of the deployment environment that mininet will be running.&lt;/p&gt;
-
-&lt;table&gt;&lt;tbody&gt;
-&lt;tr&gt;
-&lt;td&gt;Server&lt;/td&gt;
-      &lt;td&gt;&lt;a href="http://www-03.ibm.com/systems/x/hardware/rack/x3650m3/"&gt;IBM System x3650 M3&lt;/a&gt;&lt;/td&gt;
-    &lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;Memory&lt;/td&gt;
-      &lt;td&gt;28 GB (4+3*8)&lt;/td&gt;
-    &lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;CPU&lt;/td&gt;
-      &lt;td&gt;6-core 2.40GHz Intel Xeon E5645 CPU&lt;/td&gt;
-    &lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;OS&lt;/td&gt;
-      &lt;td&gt;Ubuntu 12.10 x86-64&lt;/td&gt;
-    &lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;Kernel&lt;/td&gt;
-      &lt;td&gt;3.5.0-26-generic&lt;/td&gt;
-    &lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;mininet&lt;/td&gt;
-      &lt;td&gt;2.0.0d2&lt;/td&gt;
-    &lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;a href="http://www.openvswitch.org/"&gt;Open vSwitch&lt;/a&gt;&lt;/td&gt;
-      &lt;td&gt;1.4.3&lt;/td&gt;
-    &lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;a href="http://www.openflow.org/wp/downloads/"&gt;OpenFlow Reference Implementation&lt;/a&gt;&lt;/td&gt;
-      &lt;td&gt;1.0.0&lt;/td&gt;
-    &lt;/tr&gt;
-&lt;/tbody&gt;&lt;/table&gt;&lt;p&gt;In order to benchmark mininet, I used a simple bash function as follows.&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="language-bash"&gt;&lt;span class="k"&gt;for &lt;/span&gt;n in 1 &lt;span class="sb"&gt;`&lt;/span&gt;seq 32 32 1024&lt;span class="sb"&gt;`&lt;/span&gt;; &lt;span class="k"&gt;do&lt;/span&gt;
-&lt;span class="k"&gt;    &lt;/span&gt;&lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="s2"&gt;"n: $n"&lt;/span&gt;
-    &lt;span class="nb"&gt;echo&lt;/span&gt; -e &lt;span class="s2"&gt;"h1 free -m | grep ^Mem | awk '{print \"mem: \" \$3}'\nexit"&lt;/span&gt; | &lt;span class="se"&gt;\&lt;/span&gt;
-        mn --topo&lt;span class="o"&gt;=&lt;/span&gt;linear,&lt;span class="nv"&gt;$n&lt;/span&gt; 2&amp;gt;&amp;amp;1 | &lt;span class="se"&gt;\&lt;/span&gt;
-        grep -E &lt;span class="s2"&gt;"^(mem:|completed in)"&lt;/span&gt;
-&lt;span class="k"&gt;done&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;For varying sizes of &lt;code&gt;n&lt;/code&gt;, this command lets mininet to&lt;/p&gt;
-
-&lt;ol&gt;
-&lt;li&gt;create a virtual network composed of &lt;code&gt;n&lt;/code&gt; serially connected switches,&lt;/li&gt;
-  &lt;li&gt;where a single host is attached to each switch and&lt;/li&gt;
-  &lt;li&gt;the switches are connected to a central controller.&lt;/li&gt;
-&lt;/ol&gt;&lt;p&gt;Put another way, created network will have &lt;code&gt;2n+1&lt;/code&gt; nodes (a central controller, &lt;code&gt;n&lt;/code&gt; switches, &lt;code&gt;n&lt;/code&gt; hosts) and &lt;code&gt;3n-1&lt;/code&gt; links.&lt;/p&gt;
-
-&lt;p&gt;Deployed script measures two things: 1) the memory usage of the server right after starting the mininet, and 2) the time it takes to start and shutdown the mininet. Results are as follows. (See &lt;a href="mininet-ovs.dat"&gt;mininet-ovs.dat&lt;/a&gt; and &lt;a href="mininet-ref.dat"&gt;mininet-ref.dat&lt;/a&gt; for raw results generated using Open vSwitch and OpenFlow reference implementation, respectively. Employed Gnuplot script &lt;a href="plot.gnu"&gt;plot.gnu&lt;/a&gt; is also shared.)&lt;/p&gt;
-
-&lt;p&gt;&lt;img src="time.jpg" alt="Timings"&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;img src="memory.jpg" alt="Memory Usage"&gt;&lt;/p&gt;
-
-&lt;p&gt;Timing numbers point out that as the number of switches increase, initialization of the whole network exposes a significant runtime overhead, regardless of the switch implementation that is used. That being said, OpenFlow reference implementation consumes a much less amount of memory compared to the Open vSwitch. On the other hand, this advantage of it should be taken with a grain of salt, because Open vSwitch is known to perform much better and supports many standards that are missing in the reference implementation. (For instance, I was once bitten by OpenFlow forwarding LLDP packets across switches, where it shouldn’t.)&lt;/p&gt;
-
-&lt;p&gt;To sum it up, while mininet is an awesome tool to compose and emulate software-defined networks, it has its own limitations on the size of the network. These basic benchmarks should hopefully give you an idea about mininet’s runtime and memory characteristics proportional with the number of switches.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Note:&lt;/strong&gt; Thanks Bob Lantz for &lt;a href="https://mailman.stanford.edu/pipermail/openflow-discuss/2013-April/004477.html"&gt;his suggestion&lt;/a&gt; on using the switch distributed with the &lt;a href="http://www.openflow.org/wp/downloads/"&gt;OpenFlow reference implementation&lt;/a&gt;.&lt;/p&gt;</content>
   </entry>
 </feed>
 
