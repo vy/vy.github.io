@@ -43,7 +43,8 @@ body {
     font-size: 10pt;
     line-height: 20px;
     font-family: serif;
-    font-style: oblique; }
+    font-style: oblique;
+    margin-bottom: 7px; }
   #post .gist pre {
     font-size: 8pt; }
 
