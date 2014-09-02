@@ -65,15 +65,23 @@
   </div>
 </div>
 
-<% if @item[:modules] and @item[:modules].include?("mathjax") %>
+<% if @item[:modules] %>
+
+<% if @item[:modules].include?("mathjax") %>
 <script type="text/javascript"
   src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
 </script>
 <% end %>
 
-<% if @item[:modules] and @item[:modules].include?("twitter") %>
+<% if @item[:modules].include?("canvasjs") %>
+<script type="text/javascript" src="/js/canvasjs.js"></script>
+<% end %>
+
+<% if @item[:modules].include?("twitter") %>
 <script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
 <style type="text/css">.twitter-tweet { width: 100%; }</style>
+<% end %>
+
 <% end %>
 
 <% end %>
