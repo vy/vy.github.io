@@ -40,7 +40,10 @@ body {
     white-space: pre;
     line-height: 105%; }
   #post blockquote p {
-    font-size: 9pt; }
+    font-size: 10pt;
+    line-height: 20px;
+    font-family: serif;
+    font-style: oblique; }
   #post .gist pre {
     font-size: 8pt; }
 

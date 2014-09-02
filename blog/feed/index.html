@@ -10,6 +10,384 @@
     <uri>https://vy.github.io/</uri>
   </author>
   <entry>
+    <id>tag:vy.github.io,2014-08-07://blog/post/2014/09/01/java-fiber-test/</id>
+    <title type="html">Testing Fiber Implementations in JVM</title>
+    <published>2014-08-07T07:28:00Z</published>
+    <updated>2014-08-07T07:28:00Z</updated>
+    <link rel="alternate" href="https://vy.github.io//blog/post/2014/09/01/java-fiber-test/"/>
+    <content type="html">&lt;p&gt;I have always been interested in concurrent programming through the use of
+threads. This inclination did not originate from a need to exploit the
+parallelism at the hardware level for performance reasons, but rather due to the
+fact that I believe it establishes a model of reasoning about your code that
+provides a more convenient and natural way for encapsulating concurrency in the
+overall program flow. I cannot express the relief I felt when I first ported an
+asynchronous piece of networking code to
+&lt;a href="http://en.wikipedia.org/wiki/POSIX_Threads"&gt;PThreads&lt;/a&gt;. But my joy did not last
+long – context switching, memory, cache miss costs and more importantly the
+physical constraints that bounds the number of threads were waiting for me at
+the end of the tunnel. Lucky for me, it did not take much time to figure out the
+notion of &lt;a href="http://en.wikipedia.org/wiki/Light-weight_process"&gt;Light-weight
+processes&lt;/a&gt;, which later
+introduced me to &lt;a href="http://dunkels.com/adam/pt/"&gt;Protothreads&lt;/a&gt;. That being said, I
+should have admit that I fell back to my single-threaded asynchronous event loop
+many times rather than a Protothreads flavored PThreads spaghetti. I suppose
+every programmer had once dreamed about having light-weight threads that maps to
+a multitude of physical CPU cores via some sort of mechanism in the background,
+many similar efforts in the literature (&lt;a href="http://swtch.com/plan9port/man/man3/rfork.html"&gt;Plan9
+rfork&lt;/a&gt;, &lt;a href="http://www.princeton.edu/~unix/Solaris/troubleshoot/process.html"&gt;Solaris
+LWP&lt;/a&gt;, &lt;a href="http://www.daemon-systems.org/man/_lwp_create.2.html"&gt;NetBSD
+lwp_create&lt;/a&gt;) backs this
+claim, I suppose.&lt;/p&gt;
+
+&lt;h1 id="threads-coroutines-and-fibers"&gt;Threads, Coroutines, and Fibers&lt;/h1&gt;
+
+&lt;p&gt;The heart of the problem lies in the question of mapping &lt;script type="math/tex"&gt;m&lt;/script&gt; light-weight
+threads to &lt;script type="math/tex"&gt;n&lt;/script&gt; physical processor cores (&lt;script type="math/tex"&gt;m \gg n&lt;/script&gt;) given that the operating
+system has no prior knowledge on what is going on at the application level. As
+an inevitable consequence of this problem, developers come up with the idea of
+providing application level constructs to hint the underlying process scheduling
+mechanism about the concurrency operating at the application level. Among many
+other attempts, &lt;a href="http://en.wikipedia.org/wiki/Coroutine"&gt;coroutines&lt;/a&gt; and
+&lt;a href="http://en.wikipedia.org/wiki/Fiber_(computer_science)"&gt;fibers&lt;/a&gt; are the two
+well-known examples emanated from this research. Quoting from
+&lt;a href="http://en.wikipedia.org/wiki/Fiber_(computer_science)"&gt;Wikipedia&lt;/a&gt;,&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;Fibers describe essentially the same concept as coroutines. The distinction,
+if there is any, is that coroutines are a language-level construct, a form of
+control flow, while fibers are a systems-level construct, viewed as threads
+that happen not to run concurrently. Priority is contentious; fibers may be
+viewed as an implementation of coroutines, or as a substrate on which to
+implement coroutines.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;If I would try to restate the given description from a more naive perspective
+targeting the Java Virtual Machine, &lt;em&gt;coroutines are language-level constructs to
+form a way of cooperative execution of multiple tasks, whereas fibers are
+light-weight threads scheduled preemptively by the virtual machine&lt;/em&gt;. There is &lt;a href="http://stackoverflow.com/questions/2846428/available-coroutine-libraries-in-java"&gt;a
+set of coroutine
+implementations&lt;/a&gt;
+available for JVM, but in this post I will try to stick with two particular
+fiber implementations: &lt;a href="http://akka.io/"&gt;Akka&lt;/a&gt; from
+&lt;a href="http://typesafe.com/"&gt;Typesafe&lt;/a&gt; and
+&lt;a href="http://docs.paralleluniverse.co/quasar/"&gt;Quasar&lt;/a&gt; from &lt;a href="http://paralleluniverse.co/"&gt;Parallel
+Universe&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h1 id="akka-and-quasar"&gt;Akka and Quasar&lt;/h1&gt;
+
+&lt;p&gt;Last year I had a plenty amount of time to play around with
+&lt;a href="http://akka.io/"&gt;Akka&lt;/a&gt; during the &lt;a href="https://www.coursera.org/course/reactive"&gt;The Principles of Reactive
+Programming&lt;/a&gt; course. Claiming that
+Akka is just a toolkit to realize fibers on the JVM would be a fairly incomplete
+definition – it is totally much more than that. Designed for resiliency from
+top to ground, a gigantic toolbox of common messaging pattern shortcuts,
+adaptive load balancing, routing, partitioning, and configuration-driven
+remoting, etc. just to name a few. Additionally, one should note that it is
+battle-tested with real-world work loads by means of both as a standalone
+application and a compound to the &lt;a href="https://typesafe.com/platform"&gt;Typesafe
+Platform&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;On the other hand, &lt;a href="http://docs.paralleluniverse.co/quasar/"&gt;Quasar&lt;/a&gt; is a
+relatively new player in this league. That being said, it is implemented as a
+compact library with – in my opinion – a relatively sufficient set of
+features. Though it has a lot to go to catch Akka in terms of out of the box
+features. In addition, while Akka just provides
+&lt;a href="http://en.wikipedia.org/wiki/Actor_model"&gt;actor&lt;/a&gt; abstractions at the
+programming language level, Quasar ships both actors and fibers. (Actually,
+Quasar actors are built on top of fibers.)&lt;/p&gt;
+
+&lt;h1 id="the-benchmark"&gt;The Benchmark&lt;/h1&gt;
+
+&lt;p&gt;In order to have an idea on how two implementations compare to each other in
+terms of performance, I put together a small benchmark suite
+(&lt;a href="https://github.com/vy/fiber-test/"&gt;fiber-test&lt;/a&gt;) that employs both Akka (2.3.5)
+and Quasar (0.6.0) for the well-known
+&lt;a href="http://www.sics.se/~joe/ericsson/du98024.html"&gt;thread-ring&lt;/a&gt; problem. (&lt;script type="math/tex"&gt;n&lt;/script&gt;
+threads are spawned and connected as a ring structure. Through this ring a
+message – an integer comprising 4 bytes – is circulated involving &lt;script type="math/tex"&gt;m&lt;/script&gt;
+message passings.) In addition, I included a version of the benchmark that uses
+Java Threads to establish a base line.&lt;/p&gt;
+
+&lt;p&gt;In &lt;a href="https://github.com/vy/fiber-test/"&gt;fiber-test&lt;/a&gt;, you will observe that
+&lt;a href="https://github.com/vy/fiber-test/blob/master/benchmark.sh"&gt;benchmark.sh&lt;/a&gt;
+employs &lt;a href="http://linux.die.net/man/1/taskset"&gt;taskset&lt;/a&gt; to bond the JVM to a given
+set of CPUs on the system. However, for small number (1-2) of CPUs, Quasar
+freezes randomly and Java Threads become totally unresponsive. Hence, I get rid
+off of the &lt;code&gt;taskset&lt;/code&gt; for the figures presented here.&lt;/p&gt;
+
+&lt;p&gt;Tests are deployed on a Ubuntu GNU/Linux 14.04 (LTS) system running on a 6
+physical core Intel(R) Xeon(R) E5645 2.40GHz processor, where 64-bit Java
+HotSpot VM (build 1.8.0_20-ea-b05) is used.
+&lt;a href="http://openjdk.java.net/projects/code-tools/jmh/"&gt;JMH&lt;/a&gt; is set to run 5+5 warmup
+and regular iterations using 3 JVM forks. There are 503 threads in each
+benchmark and 1e7 message passings. Results are in milliseconds per benchmark.&lt;/p&gt;
+
+&lt;table id="results"&gt;
+&lt;thead&gt;&lt;tr&gt;
+&lt;th&gt;Fiber Impl.&lt;/th&gt;
+			&lt;th&gt;Min.&lt;/th&gt;
+			&lt;th colspan="2"&gt;Avg.&lt;/th&gt;
+			&lt;th&gt;Max.&lt;/th&gt;
+			&lt;th&gt;Stddev.&lt;/th&gt;
+			&lt;th colspan="3"&gt;Confidence Interval&lt;/th&gt;
+		&lt;/tr&gt;&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;Quasar Fibers&lt;/td&gt;
+			&lt;td&gt;695.613&lt;/td&gt;
+			&lt;td&gt;29x&lt;/td&gt;
+			&lt;td&gt;721.457&lt;/td&gt;
+			&lt;td&gt;758.231&lt;/td&gt;
+			&lt;td&gt;20.796&lt;/td&gt;
+			&lt;td&gt;99.9%&lt;/td&gt;
+			&lt;td&gt;699.226&lt;/td&gt;
+			&lt;td&gt;743.689&lt;/td&gt;
+		&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Akka Actors&lt;/td&gt;
+			&lt;td&gt;856.807&lt;/td&gt;
+			&lt;td&gt;23x&lt;/td&gt;
+			&lt;td&gt;911.295&lt;/td&gt;
+			&lt;td&gt;963.403&lt;/td&gt;
+			&lt;td&gt;34.345&lt;/td&gt;
+			&lt;td&gt;99.9%&lt;/td&gt;
+			&lt;td&gt;874.578&lt;/td&gt;
+			&lt;td&gt;948.012&lt;/td&gt;
+		&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Quasar Actors&lt;/td&gt;
+			&lt;td&gt;1553.224&lt;/td&gt;
+			&lt;td&gt;13x&lt;/td&gt;
+			&lt;td&gt;1606.718&lt;/td&gt;
+			&lt;td&gt;1660.329&lt;/td&gt;
+			&lt;td&gt;35.756&lt;/td&gt;
+			&lt;td&gt;99.9%&lt;/td&gt;
+			&lt;td&gt;1568.492&lt;/td&gt;
+			&lt;td&gt;1644.943&lt;/td&gt;
+		&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Java Threads&lt;/td&gt;
+			&lt;td&gt;15730.028&lt;/td&gt;
+			&lt;td&gt;1x&lt;/td&gt;
+			&lt;td&gt;20709.233&lt;/td&gt;
+			&lt;td&gt;33084.117&lt;/td&gt;
+			&lt;td&gt;4338.423&lt;/td&gt;
+			&lt;td&gt;99.9%&lt;/td&gt;
+			&lt;td&gt;16071.196&lt;/td&gt;
+			&lt;td&gt;25347.270&lt;/td&gt;
+		&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;&lt;style type="text/css"&gt;
+table#results tbody tr td { text-align: right; }
+table#results thead tr th { text-align: center; }
+table#results td { padding: 1px; }
+&lt;/style&gt;&lt;div id="chartContainer" style="margin: 0 auto; height: 100px; width: 75%"&gt;&lt;/div&gt;
+&lt;script type="text/javascript"&gt;
+$(document).ready(function() {
+	var chart = new CanvasJS.Chart("chartContainer", {
+			backgroundColor: "transparent",
+			creditText: null,
+			axisX: {
+				interval: 1,
+				gridThickness: 0,
+				labelFontSize: 10,
+				labelFontStyle: "normal",
+				labelFontWeight: "normal",
+				labelFontFamily: "'Arial', sans"
+			},
+			axisY2: {
+				labelFontSize: 10,
+				labelFontStyle: "normal",
+				labelFontWeight: "normal",
+				labelFontFamily: "'Arial', sans",
+				interlacedColor: "rgba(1,77,101,.2)",
+				gridColor: "rgba(1,77,101,.1)"
+			},
+			data: [{
+				type: "bar",
+                name: "companies",
+				axisYType: "secondary",
+				color: "#014D65",
+				dataPoints: [
+					{y: 20709.233, label: "Java Threads"},
+					{y: 1606.718, label: "Quasar Actors"},
+					{y: 911.295, label: "Akka Actors"},
+					{y: 721.457, label: "Quasar Fibers"}
+				]
+			}]
+		});
+	chart.render();
+});
+&lt;/script&gt;&lt;p&gt;Results point out that even in the worst case (which corresponds to Quasar
+Actors in the figures) fiber implementation on the average performs 13 times
+better compared to native Java threads. In addition, Akka Actors and Quasar
+Fibers improve this level up to 23x and 29x, respectively. All that being said
+and done, I could not reason about the performance difference between Quasar
+Fibers and Actors, given that actors are implemented using fibers in Quasar. In
+order to further investigate the problem, I profiled the benchmarks using
+&lt;code&gt;-agentlib:hprof=cpu=samples,interval=20,depth=3&lt;/code&gt;. (See
+&lt;a href="http://docs.oracle.com/javase/7/docs/technotes/samples/hprof.html"&gt;HPROF&lt;/a&gt;
+documentation for further information on the parameters.)&lt;/p&gt;
+
+&lt;table id="hprof"&gt;
+&lt;thead&gt;&lt;tr&gt;
+&lt;th&gt;rank&lt;/th&gt;
+			&lt;th&gt;self&lt;/th&gt;
+			&lt;th&gt;accum&lt;/th&gt;
+			&lt;th&gt;count&lt;/th&gt;
+			&lt;th&gt;trace&lt;/th&gt;
+			&lt;th&gt;method&lt;/th&gt;
+		&lt;/tr&gt;&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;&lt;th colspan="6"&gt;Quasar Fibers&lt;/th&gt;&lt;/tr&gt;
+&lt;tr class="highlight"&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;47,55%&lt;/td&gt;
+&lt;td&gt;47,55%&lt;/td&gt;
+&lt;td&gt;67286&lt;/td&gt;
+&lt;td&gt;300366&lt;/td&gt;
+&lt;td&gt;co.paralleluniverse.fibers.Fiber.run1&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;47,48%&lt;/td&gt;
+&lt;td&gt;95,04%&lt;/td&gt;
+&lt;td&gt;67186&lt;/td&gt;
+&lt;td&gt;300364&lt;/td&gt;
+&lt;td&gt;com.github.vy.fibertest.QuasarFiberRingBenchmark$InternalFiber.run&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;3&lt;/td&gt;
+&lt;td&gt;3,37%&lt;/td&gt;
+&lt;td&gt;98,40%&lt;/td&gt;
+&lt;td&gt;4765&lt;/td&gt;
+&lt;td&gt;300372&lt;/td&gt;
+&lt;td&gt;com.github.vy.fibertest.QuasarFiberRingBenchmark$InternalFiber.run&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;&lt;th colspan="6"&gt;Quasar Actors&lt;/th&gt;&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;22,17%&lt;/td&gt;
+&lt;td&gt;22,17%&lt;/td&gt;
+&lt;td&gt;77787&lt;/td&gt;
+&lt;td&gt;300526&lt;/td&gt;
+&lt;td&gt;co.paralleluniverse.fibers.Fiber.park1&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;18,53%&lt;/td&gt;
+&lt;td&gt;40,69%&lt;/td&gt;
+&lt;td&gt;65011&lt;/td&gt;
+&lt;td&gt;300508&lt;/td&gt;
+&lt;td&gt;co.paralleluniverse.fibers.Fiber.run&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class="highlight"&gt;
+&lt;td&gt;3&lt;/td&gt;
+&lt;td&gt;18,32%&lt;/td&gt;
+&lt;td&gt;59,01%&lt;/td&gt;
+&lt;td&gt;64292&lt;/td&gt;
+&lt;td&gt;300527&lt;/td&gt;
+&lt;td&gt;co.paralleluniverse.strands.channels.SingleConsumerQueueChannel.receive&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;4&lt;/td&gt;
+&lt;td&gt;18,27%&lt;/td&gt;
+&lt;td&gt;77,28%&lt;/td&gt;
+&lt;td&gt;64114&lt;/td&gt;
+&lt;td&gt;300517&lt;/td&gt;
+&lt;td&gt;com.github.vy.fibertest.QuasarActorRingBenchmark$InternalActor.doRun&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;5&lt;/td&gt;
+&lt;td&gt;17,39%&lt;/td&gt;
+&lt;td&gt;94,67%&lt;/td&gt;
+&lt;td&gt;61009&lt;/td&gt;
+&lt;td&gt;300528&lt;/td&gt;
+&lt;td&gt;co.paralleluniverse.actors.ActorRunner.run&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;&lt;th colspan="6"&gt;Akka Actors&lt;/th&gt;&lt;/tr&gt;
+&lt;tr class="highlight"&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;64,09%&lt;/td&gt;
+&lt;td&gt;64,09%&lt;/td&gt;
+&lt;td&gt;5158&lt;/td&gt;
+&lt;td&gt;300307&lt;/td&gt;
+&lt;td&gt;scala.concurrent.forkjoin.ForkJoinPool.runWorker&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;12,51%&lt;/td&gt;
+&lt;td&gt;76,60%&lt;/td&gt;
+&lt;td&gt;1007&lt;/td&gt;
+&lt;td&gt;300298&lt;/td&gt;
+&lt;td&gt;sun.misc.Unsafe.park&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;3&lt;/td&gt;
+&lt;td&gt;10,69%&lt;/td&gt;
+&lt;td&gt;87,29%&lt;/td&gt;
+&lt;td&gt;860&lt;/td&gt;
+&lt;td&gt;300309&lt;/td&gt;
+&lt;td&gt;sun.misc.Unsafe.unpark&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;4&lt;/td&gt;
+&lt;td&gt;2,65%&lt;/td&gt;
+&lt;td&gt;89,94%&lt;/td&gt;
+&lt;td&gt;213&lt;/td&gt;
+&lt;td&gt;300300&lt;/td&gt;
+&lt;td&gt;scala.concurrent.forkjoin.ForkJoinPool.scan&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;5&lt;/td&gt;
+&lt;td&gt;1,12%&lt;/td&gt;
+&lt;td&gt;91,05%&lt;/td&gt;
+&lt;td&gt;90&lt;/td&gt;
+&lt;td&gt;300316&lt;/td&gt;
+&lt;td&gt;akka.dispatch.Dispatcher.dispatch&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;&lt;th colspan="6"&gt;Java Threads&lt;/th&gt;&lt;/tr&gt;
+&lt;tr class="highlight"&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;94,33%&lt;/td&gt;
+&lt;td&gt;94,33%&lt;/td&gt;
+&lt;td&gt;10373&lt;/td&gt;
+&lt;td&gt;300057&lt;/td&gt;
+&lt;td&gt;sun.misc.Unsafe.unpark&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;5,59%&lt;/td&gt;
+&lt;td&gt;99,93%&lt;/td&gt;
+&lt;td&gt;615&lt;/td&gt;
+&lt;td&gt;300058&lt;/td&gt;
+&lt;td&gt;sun.misc.Unsafe.park&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;&lt;style type="text/css"&gt;
+table#hprof tr.highlight td { color: red; }
+table#hprof td { padding: 1px; }
+&lt;/style&gt;&lt;p&gt;As anticipated, Java Threads were bitten by &lt;code&gt;park&lt;/code&gt;/&lt;code&gt;unpark&lt;/code&gt; methods in
+&lt;code&gt;sun.misc.Unsafe&lt;/code&gt;. Whereas, Akka Actors and Quasar Fibers perform some sort of
+interleaving between routines to avoid these calls and that totally rocks.
+Unfortunately, it turns out that the channel mechanisms (e.g.,
+&lt;code&gt;co.paralleluniverse.strands.channels.SingleConsumerQueueChannel&lt;/code&gt;) in Quasar
+Actors somehow trigger the Quasar core to employ &lt;code&gt;park&lt;/code&gt; calls in between the
+message receivers and that predominantly consumes the majority of the fiber
+runtime.&lt;/p&gt;
+
+&lt;h1 id="the-conclusion"&gt;The Conclusion&lt;/h1&gt;
+
+&lt;p&gt;Observing that fiber implementations perform superior compared to standard Java
+Threads is nothing new. However, seeing Quasar Fibers showing up impressive
+performance is not something I was expecting, considering that the project is in
+its very early stages. That being said, it appears that channels in Quasar
+Actors have a certain room for improvement and might borrow some ideas from its
+Akka counterpart. In the overall, both fiber implementations show stable and
+noteworthy performance figures and stand as a perfect standard Java Thread
+replacement for a considerable amount of use cases.&lt;/p&gt;</content>
+  </entry>
+  <entry>
     <id>tag:vy.github.io,2014-08-07://blog/post/2014/08/07/testing-websockets-in-play/</id>
     <title type="html">Testing WebSockets in Play Framework</title>
     <published>2014-08-07T07:28:00Z</published>
@@ -794,32 +1172,6 @@ by James McCaffrey, which cleared out the things and made me start to understand
 the Wikipedia page.&lt;/p&gt;</content>
   </entry>
   <entry>
-    <id>tag:vy.github.io,2013-08-06://blog/post/2013/08/06/output-packet-from-input-port/</id>
-    <title type="html">How come a packet gets output from its input port?</title>
-    <published>2013-08-06T17:29:00Z</published>
-    <updated>2013-08-06T17:29:00Z</updated>
-    <link rel="alternate" href="https://vy.github.io//blog/post/2013/08/06/output-packet-from-input-port/"/>
-    <content type="html">&lt;p&gt;A couple of weeks ago I spotted a really suspicious flow in the logs that directly made me think of a bug at the controller. A packet was arriving to a port of a switch and was getting output from the very same port of the switch. This was kind of weird. If it is supposed to be transmitted back again, then why was it ended up here in the first hand? Was it because of a bug at the controller that first redirected the packet to the switch and then redirected it backwards to the previous switch? A logical fault at the controller was definitely the first suspect here. But later it turned out that this was not the case. The details are as follows.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src="topology.jpg" alt="SDN Topology"&gt;&lt;/p&gt;
-
-&lt;p&gt;Consider the above topology, where three switches &lt;code&gt;s1&lt;/code&gt;, &lt;code&gt;s2&lt;/code&gt;, &lt;code&gt;s3&lt;/code&gt; are connected linearly and all together managed by the controller &lt;code&gt;c1&lt;/code&gt;. In addition, &lt;code&gt;s1&lt;/code&gt; and &lt;code&gt;s2&lt;/code&gt; is connected to two hosts &lt;code&gt;h1&lt;/code&gt; and &lt;code&gt;h2&lt;/code&gt;, respectively. The controller, switches, hosts, their connections, and connection port numbers are given in the figure. The scenario generating the subtle gotcha is as follows.&lt;/p&gt;
-
-&lt;ol&gt;
-&lt;li&gt;
-&lt;code&gt;h2&lt;/code&gt; sends a packet destined to &lt;code&gt;h1&lt;/code&gt;, whose attachment point is not learnt yet by &lt;code&gt;c1&lt;/code&gt;.&lt;/li&gt;
-  &lt;li&gt;Hence, upon arrival of the packet from &lt;code&gt;s2&lt;/code&gt;, &lt;code&gt;c1&lt;/code&gt; commands &lt;code&gt;s2&lt;/code&gt; to flood the request.&lt;/li&gt;
-  &lt;li&gt;The flooded request goes to &lt;code&gt;s1&lt;/code&gt; and &lt;code&gt;s3&lt;/code&gt;.&lt;/li&gt;
-  &lt;li&gt;Upon arrival of the packet to &lt;code&gt;s1&lt;/code&gt;, &lt;code&gt;s1&lt;/code&gt; sends the packet to &lt;code&gt;c1&lt;/code&gt; again.&lt;/li&gt;
-  &lt;li&gt;Since &lt;code&gt;c1&lt;/code&gt; still does not know the attachment point of &lt;code&gt;h1&lt;/code&gt;, &lt;code&gt;c1&lt;/code&gt; commands &lt;code&gt;s1&lt;/code&gt; to flood the request for a second time.&lt;/li&gt;
-  &lt;li&gt;Flooded request from &lt;code&gt;s1&lt;/code&gt; reaches to &lt;code&gt;h1&lt;/code&gt; and &lt;code&gt;h1&lt;/code&gt; replies back.&lt;/li&gt;
-  &lt;li&gt;With &lt;code&gt;h1&lt;/code&gt;s response, &lt;code&gt;c1&lt;/code&gt; learns the attachment point of &lt;code&gt;h1&lt;/code&gt;.&lt;/li&gt;
-  &lt;li&gt;In the meantime, &lt;code&gt;s2&lt;/code&gt;s flood (see 3rd step) reaches to &lt;code&gt;s3&lt;/code&gt;
-&lt;/li&gt;
-  &lt;li&gt;Now &lt;code&gt;c1&lt;/code&gt; knows the attachment point of the &lt;code&gt;h1&lt;/code&gt;. Consequently, &lt;code&gt;c1&lt;/code&gt; figures out that the route to &lt;code&gt;h1&lt;/code&gt; goes through &lt;code&gt;s1&lt;/code&gt; and &lt;code&gt;s1&lt;/code&gt; is reachable by &lt;code&gt;p1&lt;/code&gt; of &lt;code&gt;s3&lt;/code&gt;. Hence, &lt;code&gt;c1&lt;/code&gt; commands &lt;code&gt;s3&lt;/code&gt; to output the packet from the very same input port of the packet.&lt;/li&gt;
-&lt;/ol&gt;&lt;p&gt;I do not have a single idea about the probability of such a subtle bug, but somehow it happened to exist in my logs, right at the lines I was just taking a glance and wasted my whole day. The saying was right, network is really unreliable. Gorgeous!&lt;/p&gt;</content>
-  </entry>
-  <entry>
     <id>tag:vy.github.io,2013-08-06://blog/post/2013/08/06/sdn-discovery/</id>
     <title type="html">Discovery in Software-Defined Networks</title>
     <published>2013-08-06T17:29:00Z</published>
@@ -852,224 +1204,30 @@ the Wikipedia page.&lt;/p&gt;</content>
 &lt;p&gt;Hosts &lt;code&gt;h1&lt;/code&gt;, &lt;code&gt;h2&lt;/code&gt; and &lt;code&gt;h3&lt;/code&gt; all have a single attachment point from the point of view of the controller. Say this time &lt;code&gt;h1&lt;/code&gt; pings &lt;code&gt;h4&lt;/code&gt;. Since the controller does not know the attachment point of &lt;code&gt;h4&lt;/code&gt;, it will repeatedly flood the request until it makes its way to &lt;code&gt;s4&lt;/code&gt; and then &lt;code&gt;h4&lt;/code&gt;. &lt;code&gt;h4&lt;/code&gt;s reply might reach to the controller network either from &lt;code&gt;p1&lt;/code&gt; of &lt;code&gt;s2&lt;/code&gt; or &lt;code&gt;p2&lt;/code&gt; of &lt;code&gt;s3&lt;/code&gt;. Further, each packet originating from &lt;code&gt;h4&lt;/code&gt; can be routed across different paths by &lt;code&gt;s4&lt;/code&gt; too. To handle such cases, controllers generally assign multiple attachment points for &lt;code&gt;h4&lt;/code&gt;.&lt;/p&gt;</content>
   </entry>
   <entry>
-    <id>tag:vy.github.io,2013-07-31://blog/post/2013/07/31/openflow-controllers/</id>
-    <title type="html">On the OpenFlow Controllers</title>
-    <published>2013-07-31T17:11:00Z</published>
-    <updated>2013-07-31T17:11:00Z</updated>
-    <link rel="alternate" href="https://vy.github.io//blog/post/2013/07/31/openflow-controllers/"/>
-    <content type="html">&lt;p&gt;&lt;strong&gt;TL;DR&lt;/strong&gt; – Use Floodlight (Pythonistas might want to give POX a try) and keep an eye on OpenDaylight.&lt;/p&gt;
+    <id>tag:vy.github.io,2013-08-06://blog/post/2013/08/06/output-packet-from-input-port/</id>
+    <title type="html">How come a packet gets output from its input port?</title>
+    <published>2013-08-06T17:29:00Z</published>
+    <updated>2013-08-06T17:29:00Z</updated>
+    <link rel="alternate" href="https://vy.github.io//blog/post/2013/08/06/output-packet-from-input-port/"/>
+    <content type="html">&lt;p&gt;A couple of weeks ago I spotted a really suspicious flow in the logs that directly made me think of a bug at the controller. A packet was arriving to a port of a switch and was getting output from the very same port of the switch. This was kind of weird. If it is supposed to be transmitted back again, then why was it ended up here in the first hand? Was it because of a bug at the controller that first redirected the packet to the switch and then redirected it backwards to the previous switch? A logical fault at the controller was definitely the first suspect here. But later it turned out that this was not the case. The details are as follows.&lt;/p&gt;
 
-&lt;p&gt;There has always been a confusion on which controller to start with for newcomers in the OpenFlow ecosystem. Should one prefer the classic &lt;a href="http://www.nox-repo.org/"&gt;NOX&lt;/a&gt;? Or go with a more modern choice like &lt;a href="http://www.beaconcontroller.net/"&gt;Beacon&lt;/a&gt; or its successor &lt;a href="http://www.projectfloodlight.org/"&gt;Floodlight&lt;/a&gt;? What about &lt;a href="http://www.osrg.net/ryu/"&gt;Ryu&lt;/a&gt;, &lt;a href="http://trema.github.com/trema/"&gt;Trema&lt;/a&gt;, and a dozen of &lt;a href="http://yuba.stanford.edu/~casado/of-sw.html"&gt;other controllers&lt;/a&gt; in the wild? Ohh! I was just forgetting about &lt;a href="http://www.opendaylight.org/"&gt;OpenDaylight&lt;/a&gt;, which is backed by industry giants such as Cisco, Juniper, Brocade, IBM, etc. After all you just want to push a set of simple OpenFlow commands to the forwarding plane and observe the result. On the other hand, you are also concerned with the maturity of the environment that you will work with. Nobody wants to find himself scratching his head for a bug in the controller core. And I am pretty sure you will also question whether there is an ongoing &lt;em&gt;active development&lt;/em&gt; and supportive &lt;em&gt;community&lt;/em&gt; in the project or not. Lucky for you, I have volunteered to share my two cents on the issue. After two years of fighting in this mud up to my neck, I have something to say!&lt;/p&gt;
+&lt;p&gt;&lt;img src="topology.jpg" alt="SDN Topology"&gt;&lt;/p&gt;
 
-&lt;p&gt;Let’s get this straight first: This survey investigates the existing free and open-source OpenFlow controllers in the wild from the point of view of a developer. I assume that what you look for is&lt;/p&gt;
+&lt;p&gt;Consider the above topology, where three switches &lt;code&gt;s1&lt;/code&gt;, &lt;code&gt;s2&lt;/code&gt;, &lt;code&gt;s3&lt;/code&gt; are connected linearly and all together managed by the controller &lt;code&gt;c1&lt;/code&gt;. In addition, &lt;code&gt;s1&lt;/code&gt; and &lt;code&gt;s2&lt;/code&gt; is connected to two hosts &lt;code&gt;h1&lt;/code&gt; and &lt;code&gt;h2&lt;/code&gt;, respectively. The controller, switches, hosts, their connections, and connection port numbers are given in the figure. The scenario generating the subtle gotcha is as follows.&lt;/p&gt;
 
-&lt;ul&gt;
-&lt;li&gt;clean code base (not a slick GUI or ground-breaking performance),&lt;/li&gt;
-  &lt;li&gt;versatile core (not ad-hoc solutions like STP to common problems),&lt;/li&gt;
-  &lt;li&gt;decent set of built-in components (e.g., device/switch query interface, access to topology, links and routing),&lt;/li&gt;
-  &lt;li&gt;quick deployment cycle (i.e., it should take a few minutes to compile your changes and fire up the controller),&lt;/li&gt;
-  &lt;li&gt;active development (i.e., presence of developers constantly contributing to the code base),&lt;/li&gt;
-  &lt;li&gt;supportive community (e.g., once I had a reply to one of my &lt;a href="https://groups.google.com/d/msg/rrd4j-discuss/kXSJJibegSs/IKTbs8LEPC0J"&gt;questions&lt;/a&gt; in RRD4J mailing lists after 9 months), and&lt;/li&gt;
-  &lt;li&gt;some documentation (not just a API reference).&lt;/li&gt;
-&lt;/ul&gt;&lt;h1 id="nox"&gt;NOX&lt;/h1&gt;
-
-&lt;p&gt;It all began with &lt;a href="http://www.nox-repo.org/"&gt;NOX&lt;/a&gt;. While some might argue, NOX is the very first OpenFlow controller that attracted a whole lot of researchers around itself and achieved to have a wide acceptance. A majority of the primary Software-Defined Networking (SDN) and OpenFlow papers and applications are implemented on top of NOX. Even Google used NOX to build (prototype?) its own distributed OpenFlow controller, called &lt;a href="http://yuba.stanford.edu/~casado/onix-osdi.pdf"&gt;ONIX&lt;/a&gt;. That being said, all that fuss was left in 2010. From then on the NOX mailing-lists are almost abandoned and no major changes that I know of is introduced to the code base.&lt;/p&gt;
-
-&lt;p&gt;&lt;a href="http://dir.gmane.org/gmane.network.nox.devel"&gt;&lt;img src="nox-dev-ml-activity.png" alt="nox-dev Mail List Activity"&gt;&lt;/a&gt;&lt;/p&gt;
-
-&lt;p&gt;NOX is written in C++ and does not have a reputation for providing a developer-friendly environment. While rumors have that it ships a Python API, almost all the development is getting performed in C++. Another missing feature that I get shocked when I unfortunately figured out after days of debugging is that it does not support topologies with loops. (As a solution one can enable &lt;a href="https://en.wikipedia.org/wiki/Spanning_Tree_Protocol"&gt;STP&lt;/a&gt;, but this approach contradicts with the essence of SDN. In addition, you are always free to implement your own routing module or modify the built-in one to overcome this shortcoming.) In terms of &lt;a href="http://www.noxrepo.org/nox/documentation/"&gt;documentation&lt;/a&gt;, it is safe to say that there is almost no documentation. NOX is also shipped with a Python+QT based &lt;a href="https://github.com/noxrepo/nox-classic/wiki/NOX-GUI"&gt;GUI&lt;/a&gt;. (One should note that a decent user interface is maybe the first feature that newcomers look in a controller. While your mileage might vary, I had never been in need of a GUI and a majority of the time you make your way out with Wireshark traces and controller logs, trust me.)&lt;/p&gt;
-
-&lt;p&gt;&lt;a href="https://github.com/noxrepo/nox-classic/wiki/NOX-GUI"&gt;&lt;img src="nox-gui.png" alt="NOX GUI"&gt;&lt;/a&gt;&lt;/p&gt;
-
-&lt;p&gt;To sum up, NOX had its rise-and-fall. Personally, I would not recommend it to anybody for production and/or development purposes, especially considering the other decent alternatives in the market.&lt;/p&gt;
-
-&lt;h1 id="pox"&gt;POX&lt;/h1&gt;
-
-&lt;p&gt;Hereby I confess that I have never programmed in &lt;a href="http://www.noxrepo.org/pox/about-pox/"&gt;POX&lt;/a&gt; before. I will present the following statements depending on (1) my experiences with other controllers and POX activity I observed in the OpenFlow social media and (2) the corrections from POX hacker Murphy McCauley.&lt;/p&gt;
-
-&lt;p&gt;POX &lt;a href="http://www.noxrepo.org/pox/about-pox/"&gt;calls&lt;/a&gt; itself as the younger sibling of NOX. (They are both managed/maintained by the same team/organization.) My personal belief is that POX is more or less motivated by the purpose of creating a developer-friendly OpenFlow controller successor to the NOX. Almost all OpenFlow newcomers are directed to either POX or Floodlight. Hence, it is no surprise that it has a pretty active &lt;a href="http://www.mail-archive.com/pox-dev@lists.noxrepo.org/"&gt;mailing list&lt;/a&gt;. POX provides a limited &lt;a href="https://openflow.stanford.edu/display/ONL/POX+Wiki#POXWiki-openflow.webservice"&gt;web API&lt;/a&gt; (via JSON-RPC) and a moderate sized collection of manuals on its &lt;a href="https://openflow.stanford.edu/display/ONL/POX+Wiki"&gt;wiki&lt;/a&gt;. It is written in Python and provides a decent Python API for the Pythonistas out there. Due to Python being an interpreted language, POX really cuts down the time spent in develop-and-deploy cycle, particularly compared to C++ based NOX. Further, in addition to supporting the NOX GUI, POX also provides a web-based GUI.&lt;/p&gt;
-
-&lt;p&gt;&lt;a href="http://www.noxrepo.org/2012/09/pox-web-interfaces/"&gt;&lt;img src="pox-gui.png" alt="POX GUI"&gt;&lt;/a&gt;&lt;/p&gt;
-
-&lt;p&gt;If Python is your main language of choice, then you are safe to experiment with POX. If you care about maturity and want to deploy your system in production, or the programming language does not matter much for you (that is, either you are a total programming newbie or have the same knowledge level on both Python and Java) I recommend you to evaluate the Java alternatives.&lt;/p&gt;
-
-&lt;h1 id="beacon"&gt;Beacon&lt;/h1&gt;
-
-&lt;p&gt;When I first started controller programming with NOX, there was no documentation, no consistency in the code base, nothing was compiling or working without manual intervention. Despite the fact that I have some significant experience with C/C++ and Linux, I could not understand what the controller was &lt;em&gt;actually&lt;/em&gt; doing behind. Even making the routing module work was a quite &lt;a href="http://comments.gmane.org/gmane.network.nox.devel/2856"&gt;painful experience&lt;/a&gt;. Then came &lt;a href="http://www.beaconcontroller.net/"&gt;Beacon&lt;/a&gt;. You clone the repository, import the project into Eclipse, and hit the run button. It was all that simple. You have just changed something in the code? Hit the run again and here you go. It even has a getting started tutorial and video on its website and it was working. (It is very rare to see working tutorials in the research world.) Further, it has a &lt;a href="https://openflow.stanford.edu/forums/forum/4-beacon-general/"&gt;forum&lt;/a&gt;, where &lt;a href="http://yuba.stanford.edu/~derickso/"&gt;David Erickson&lt;/a&gt;, the author of Beacon, himself replies you back promptly. What could a developer want more? But that was not all there. The code was written in a very a simple and expressive style. You just look at the names of the classes, modules, functions and you get the whole picture. You don’t need to be a programming prodigy just to push a simple flow. So you need to get the network topology? See &lt;code&gt;topology&lt;/code&gt; module, checked. You need the attachment point of a device, see &lt;code&gt;devicemanager&lt;/code&gt;, checked. You need to observe link states, see &lt;code&gt;linkdiscovery&lt;/code&gt;, checked. You need a hub, see &lt;code&gt;hub&lt;/code&gt;. You need a learning switch, see &lt;code&gt;learningswitch&lt;/code&gt;. You need the shortest path between two switches, see &lt;code&gt;routing&lt;/code&gt;. It was all falling into place. Finally, there was a controller where you can focus on programming, instead of wasting your time on compilation and library issues. I do not even mention about what a relief it felt was to program in an IDE, instead of using a text editor to modify a gigantic code base you have zero knowledge of. Ahh… And it was the first controller that ships with a built-in web user-interface. (The UI was so superior to the alternatives that I think it is still the best out there – I did not had a chance to test the web UI of OpenDaylight.)&lt;/p&gt;
-
-&lt;p&gt;In my humble opinion, &lt;em&gt;David Erickson is the programmer who founded the fundamental software design patterns that are necessary for an SDN controller&lt;/em&gt;. His design choices affected all the other controller software out there in the wild written after Beacon and they all used more or less the same patterns. Some might argue that those patterns were obvious and the market would eventually converge to them at some point. But looking back at the controllers before Beacon, it was really a huge step forward and David Erickson is the name behind this leap.&lt;/p&gt;
-
-&lt;p&gt;Being written in Java was a game changing feature for Beacon. On the other hand, Beacon is so tightly bound to Eclipse such that even it does support Maven, I had never managed to make it work with IntelliJ IDEA or compile manually with Maven. In addition, Eclipse toolbox helps you to export the controller as a single executable binary, but (due to a bug in Eclipse launcher) it requires GTK libraries to run, which is non-sense for a console application. (For instance, the launcher tries to pop up a GTK warning window for a missing &lt;code&gt;JAVA_CONSOLE&lt;/code&gt; environment variable, but since you are in console, you just see a lousy stack trace of the failed GTK call.) Further, OSGi had its own hard to debug, subtle sensitivities and steep learning curve. (That being said, OSGi helps you to restart the bundles individually, which once I used to provide fault-tolerance in a distributed controller I implemented.) Beacon also could not handle topologies with loops or devices with multiple attachment points, that is, a device reachable by multiple switch ports. And it is disappointing to say that it didn’t have a feature update since years.&lt;/p&gt;
-
-&lt;p&gt;To sum up, Beacon provides a compact and expressive code base and works flawlessly. That being said, Eclipse and OSGi dependency really kills me and supporting only star topologies (that is, topologies without loops) is very constraining. If you are about to give Beacon a try, I would recommend you to evaluate Floodlight instead.&lt;/p&gt;
-
-&lt;h1 id="floodlight"&gt;Floodlight&lt;/h1&gt;
-
-&lt;p&gt;When I first heard of &lt;a href="http://bigswitch.com/"&gt;BigSwitch Networks&lt;/a&gt; announce their fork of Beacon, called &lt;a href="http://www.projectfloodlight.org/"&gt;Floodlight&lt;/a&gt;, I checked out the repository, casted an eye on it for 10 minutes, and concluded that it is almost the same code base. Months passed by, I had been bitten many times by gotchas found in Beacon (e.g., topologies with loops, devices appearing in multiple attachment points, etc.) and decided to give Floodlight another try. Good lord! In months Floodlight became the most prolific and feature rich F/OSS controller upto its time. Besides supporting topologies with loops, non-OpenFlow domains, and multiple device attachment points, it even introduced lots of other features that I had never imagined of for a software-defined network. Further, it is built with Apache Ant (Yay! Now I can use IntelliJ IDEA!) that lets you easily export JARs and replaces OSGi with a custom, Java-based, simple module loading system. While these two features would not mean much to Beacon foreigners, this was really something. (The custom module system does provide no &lt;code&gt;stop&lt;/code&gt;, &lt;code&gt;restart&lt;/code&gt; and &lt;code&gt;reload&lt;/code&gt; capabilities, but if they were so inevitable for you, you can easily tailor the existing system to fit your needs.) Floodlight has unquestionably the most active and responsive community among the F/OSS OpenFlow softwares. A majority of the Floodlight developers working in BigSwitch Networks directly participate in the mailing-lists. You can find yourself discussing an issue with the actual developer(s) of a particular module. I have never witnessed neither an unanswered question, nor an unresolved problem. It was truly a supportive and active community. Floodlight exposes almost all of its functionality through a REST API and there exists many handy utilities for common tasks such as static routes and end-to-end route (circuit) pushes. Floodlight has a web-based UI (contributed by &lt;a href="http://felter.org/wesley/"&gt;Wes Felter&lt;/a&gt;) and a Java-based GUI, called &lt;a href="http://openflow.marist.edu/avior.html"&gt;Avior&lt;/a&gt;, contributed by &lt;a href="http://jasonparraga.com/"&gt;Jason Parraga&lt;/a&gt;. One of its kind, Floodlight can also be run as network backend for OpenStack using a Quantum plug-in. Finally, it is the most &lt;a href="http://docs.projectfloodlight.org/display/floodlightcontroller/Floodlight+Documentation"&gt;documented&lt;/a&gt; controller project out there in the ecosystem.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src="fl-ui.jpg" alt="Floodlight Web-based UI"&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;img src="avior.png" alt="Avior"&gt;&lt;/p&gt;
-
-&lt;p&gt;When I look back at the Beacon code base, it was written in a succint and expressive style, which makes it easy to grasp the logic at a single glance. This compactness also comes from the fact that Beacon does not provide as much feature as Floodlight does. On the other hand, Floodlight has so many enhancements and compatibility layers for different kind of hardware and corner cases that the code base is, to put it mildly, polluted and a couple of its components needs a rewrite from scratch. But these are generally concerns from a software architectural point of view and probably does not bother 90% of its users.
-In addition, while I have never been in need of one, I must admit that Floodlight web-based UI has some serious bugs and neither web-based UI, nor Java-based UI is officially supported by the BigSwitch Networks.&lt;/p&gt;
-
-&lt;p&gt;All in all, Floodlight is the most mature OpenFlow F/OSS controller in the market that I know of and my concerns about the code base will probably never be a problem for a majority of its users. It just runs out of the box, has a smooth work flow, supportive community, and works without a glitch for almost all real-world cases. Floodlight is the controller that I would recommend to anybody who wants to write custom control plane applications.&lt;/p&gt;
-
-&lt;h1 id="opendaylight"&gt;OpenDaylight&lt;/h1&gt;
-
-&lt;p&gt;&lt;a href="http://www.opendaylight.org/"&gt;OpenDaylight&lt;/a&gt; is an industry-supported Linux Foundation project. While I have never used it in practice, in my observations throughout the code, I found its code base clearer compared to Floodlight (that is, more idiomatic class hierarchy and naming conventions, consistent coding style, less &lt;code&gt;if (isWorking() == true) ...&lt;/code&gt; stuff) and more or less provides a similar feature set (that is, a majority of the modules are in common) – there are even some OpenDaylight features that are not present in Floodlight (for instance, support for multiple islands with loops).  At the beginning stages of the project, board members favored the controller code contributed by Cisco to the Floodlight-based contribution of BigSwitch Networks, which consequently followed by &lt;a href="http://www.bigswitch.com/blog/2013/06/05/big-switch-steps-down-from-opendaylight-platinum-status"&gt;BigSwitch Networks stepping down from the platinium status&lt;/a&gt;. When you look at the mailing list activity, you can also easily observe the domination of Cisco developers. Further, OpenDaylight follows a controller model that, in addition to OpenFlow, alternative south-bound protocols can be introduced. This facet significantly differs OpenDaylight from the other controllers and lets you use switches employing non-OpenFlow proprietary control protocols. Much can be said about OpenDaylight, but in my humble opinion it is still in the early development stages. That being said, developers should certainly keep an eye on it.&lt;/p&gt;
-
-&lt;h1 id="feature-matrix"&gt;Feature Matrix&lt;/h1&gt;
-
-&lt;p&gt;Before concluding the post, here I present a feature matrix for the controllers discussed.&lt;/p&gt;
-
-&lt;table&gt;
-&lt;thead&gt;&lt;tr&gt;
-&lt;th&gt;Feature&lt;/th&gt;
-			&lt;th&gt;NOX&lt;/th&gt;
-			&lt;th&gt;POX&lt;/th&gt;
-			&lt;th&gt;Beacon&lt;/th&gt;
-			&lt;th&gt;Floodlight&lt;/th&gt;
-			&lt;th&gt;OpenDaylight&lt;/th&gt;
-		&lt;/tr&gt;&lt;/thead&gt;
-&lt;tbody&gt;
-&lt;tr&gt;
-&lt;td&gt;Language(s) the controller is written in&lt;/td&gt;
-			&lt;td&gt;C++&lt;/td&gt;
-			&lt;td&gt;Python&lt;/td&gt;
-			&lt;td&gt;Java&lt;/td&gt;
-			&lt;td&gt;Java&lt;/td&gt;
-			&lt;td&gt;Java&lt;/td&gt;
-		&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;Language(s) supported by the controller&lt;/td&gt;
-			&lt;td&gt;C, C++, Python&lt;/td&gt;
-			&lt;td&gt;Python&lt;/td&gt;
-			&lt;td&gt;Java&lt;/td&gt;
-			&lt;td&gt;Java, Python&lt;/td&gt;
-			&lt;td&gt;Java&lt;/td&gt;
-		&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;Is actively developed?&lt;/td&gt;
-			&lt;td&gt;N&lt;/td&gt;
-			&lt;td&gt;Y&lt;/td&gt;
-			&lt;td&gt;maintained&lt;/td&gt;
-			&lt;td&gt;Y&lt;/td&gt;
-			&lt;td&gt;Y&lt;/td&gt;
-		&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;Has an active community?&lt;/td&gt;
-			&lt;td&gt;N&lt;/td&gt;
-			&lt;td&gt;Y&lt;/td&gt;
-			&lt;td&gt;Y&lt;/td&gt;
-			&lt;td&gt;Y&lt;/td&gt;
-			&lt;td&gt;Y&lt;/td&gt;
-		&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;Easy to install?&lt;/td&gt;
-			&lt;td&gt;N&lt;/td&gt;
-			&lt;td&gt;Y&lt;/td&gt;
-			&lt;td&gt;Y&lt;/td&gt;
-			&lt;td&gt;Y&lt;/td&gt;
-			&lt;td&gt;Y&lt;/td&gt;
-		&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;Easy to program?&lt;/td&gt;
-			&lt;td&gt;N&lt;/td&gt;
-			&lt;td&gt;Y&lt;/td&gt;
-			&lt;td&gt;Y&lt;/td&gt;
-			&lt;td&gt;Y&lt;/td&gt;
-			&lt;td&gt;Y&lt;/td&gt;
-		&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;Is documented?&lt;/td&gt;
-			&lt;td&gt;N&lt;/td&gt;
-			&lt;td&gt;Y&lt;/td&gt;
-			&lt;td&gt;Y&lt;/td&gt;
-			&lt;td&gt;Y&lt;/td&gt;
-			&lt;td&gt;some&lt;/td&gt;
-		&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;Provides a REST API?&lt;/td&gt;
-			&lt;td&gt;N&lt;/td&gt;
-			&lt;td&gt;Y (limited)&lt;/td&gt;
-			&lt;td&gt;Y&lt;/td&gt;
-			&lt;td&gt;Y&lt;/td&gt;
-			&lt;td&gt;Y&lt;/td&gt;
-		&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;Have utility functions?&lt;/td&gt;
-			&lt;td&gt;N&lt;/td&gt;
-			&lt;td&gt;N&lt;/td&gt;
-			&lt;td&gt;N&lt;/td&gt;
-			&lt;td&gt;Y&lt;/td&gt;
-			&lt;td&gt;N&lt;/td&gt;
-		&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;Has a UI?&lt;/td&gt;
-			&lt;td&gt;Python+QT4&lt;/td&gt;
-			&lt;td&gt;Python+QT4, Web&lt;/td&gt;
-			&lt;td&gt;Web&lt;/td&gt;
-			&lt;td&gt;Java, Web&lt;/td&gt;
-			&lt;td&gt;Web&lt;/td&gt;
-		&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;Supports hosts with multiple attachment points?&lt;/td&gt;
-			&lt;td&gt;N&lt;/td&gt;
-			&lt;td&gt;N&lt;/td&gt;
-			&lt;td&gt;N&lt;/td&gt;
-			&lt;td&gt;Y&lt;/td&gt;
-			&lt;td&gt;Y&lt;/td&gt;
-		&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;Supports topologies with loops?&lt;/td&gt;
-			&lt;td&gt;N&lt;/td&gt;
-			&lt;td&gt;Y (via &lt;code&gt;spanning_tree&lt;/code&gt; component)&lt;/td&gt;
-			&lt;td&gt;N&lt;/td&gt;
-			&lt;td&gt;Y&lt;/td&gt;
-			&lt;td&gt;Y&lt;/td&gt;
-		&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;Supports non-OF island connections?&lt;/td&gt;
-			&lt;td&gt;N&lt;/td&gt;
-			&lt;td&gt;N&lt;/td&gt;
-			&lt;td&gt;N&lt;/td&gt;
-			&lt;td&gt;Y&lt;/td&gt;
-			&lt;td&gt;Y&lt;/td&gt;
-		&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;Supports OF island connections with loops?&lt;/td&gt;
-			&lt;td&gt;N&lt;/td&gt;
-			&lt;td&gt;N&lt;/td&gt;
-			&lt;td&gt;N&lt;/td&gt;
-			&lt;td&gt;N&lt;/td&gt;
-			&lt;td&gt;Y&lt;/td&gt;
-		&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;Provides an abstraction layer above south-bound protocols?&lt;/td&gt;
-			&lt;td&gt;N&lt;/td&gt;
-			&lt;td&gt;N&lt;/td&gt;
-			&lt;td&gt;N&lt;/td&gt;
-			&lt;td&gt;N&lt;/td&gt;
-			&lt;td&gt;Y&lt;/td&gt;
-		&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;Supports OpenStack Quantum?&lt;/td&gt;
-			&lt;td&gt;N&lt;/td&gt;
-			&lt;td&gt;N&lt;/td&gt;
-			&lt;td&gt;N&lt;/td&gt;
-			&lt;td&gt;Y&lt;/td&gt;
-			&lt;td&gt;Y&lt;/td&gt;
-		&lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;&lt;h1 id="conclusion"&gt;Conclusion&lt;/h1&gt;
-
-&lt;p&gt;To sum it all together, I find Floodlight the most viable controller in the ecosystem as of now. That being said, after Murphy McCauley’s corrections, I also realized that POX has made a certain amount of progress on improving its documentation and components, hence can be a viable option for Pythonistas. While other alternatives can be tailored to fit your needs, this or that way as your project nears to finalize, you start to look for stability and being bitten by some odd limitations of the controllers starts to be quite annoying. Considering the huge amount of time that you will devote for learning a controller, try to aim your shot to the best candidate as much as possible. And we will together see how far will OpenDaylight go in the future.&lt;/p&gt;
-
-&lt;h1 id="acknowledgement"&gt;Acknowledgement&lt;/h1&gt;
-
-&lt;p&gt;I would like to thank &lt;a href="http://yuba.stanford.edu/~derickso/"&gt;David Erickson&lt;/a&gt;, &lt;a href="http://jasonparraga.com/"&gt;Jason Parraga&lt;/a&gt; and Murphy McCauley for their corrections.&lt;/p&gt;</content>
+&lt;ol&gt;
+&lt;li&gt;
+&lt;code&gt;h2&lt;/code&gt; sends a packet destined to &lt;code&gt;h1&lt;/code&gt;, whose attachment point is not learnt yet by &lt;code&gt;c1&lt;/code&gt;.&lt;/li&gt;
+  &lt;li&gt;Hence, upon arrival of the packet from &lt;code&gt;s2&lt;/code&gt;, &lt;code&gt;c1&lt;/code&gt; commands &lt;code&gt;s2&lt;/code&gt; to flood the request.&lt;/li&gt;
+  &lt;li&gt;The flooded request goes to &lt;code&gt;s1&lt;/code&gt; and &lt;code&gt;s3&lt;/code&gt;.&lt;/li&gt;
+  &lt;li&gt;Upon arrival of the packet to &lt;code&gt;s1&lt;/code&gt;, &lt;code&gt;s1&lt;/code&gt; sends the packet to &lt;code&gt;c1&lt;/code&gt; again.&lt;/li&gt;
+  &lt;li&gt;Since &lt;code&gt;c1&lt;/code&gt; still does not know the attachment point of &lt;code&gt;h1&lt;/code&gt;, &lt;code&gt;c1&lt;/code&gt; commands &lt;code&gt;s1&lt;/code&gt; to flood the request for a second time.&lt;/li&gt;
+  &lt;li&gt;Flooded request from &lt;code&gt;s1&lt;/code&gt; reaches to &lt;code&gt;h1&lt;/code&gt; and &lt;code&gt;h1&lt;/code&gt; replies back.&lt;/li&gt;
+  &lt;li&gt;With &lt;code&gt;h1&lt;/code&gt;s response, &lt;code&gt;c1&lt;/code&gt; learns the attachment point of &lt;code&gt;h1&lt;/code&gt;.&lt;/li&gt;
+  &lt;li&gt;In the meantime, &lt;code&gt;s2&lt;/code&gt;s flood (see 3rd step) reaches to &lt;code&gt;s3&lt;/code&gt;
+&lt;/li&gt;
+  &lt;li&gt;Now &lt;code&gt;c1&lt;/code&gt; knows the attachment point of the &lt;code&gt;h1&lt;/code&gt;. Consequently, &lt;code&gt;c1&lt;/code&gt; figures out that the route to &lt;code&gt;h1&lt;/code&gt; goes through &lt;code&gt;s1&lt;/code&gt; and &lt;code&gt;s1&lt;/code&gt; is reachable by &lt;code&gt;p1&lt;/code&gt; of &lt;code&gt;s3&lt;/code&gt;. Hence, &lt;code&gt;c1&lt;/code&gt; commands &lt;code&gt;s3&lt;/code&gt; to output the packet from the very same input port of the packet.&lt;/li&gt;
+&lt;/ol&gt;&lt;p&gt;I do not have a single idea about the probability of such a subtle bug, but somehow it happened to exist in my logs, right at the lines I was just taking a glance and wasted my whole day. The saying was right, network is really unreliable. Gorgeous!&lt;/p&gt;</content>
   </entry>
 </feed>
 
