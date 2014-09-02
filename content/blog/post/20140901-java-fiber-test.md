@@ -90,7 +90,37 @@ features. Though it has a lot to go to catch Akka in terms of out of the box
 features. In addition, while Akka just provides
 [actor](http://en.wikipedia.org/wiki/Actor_model) abstractions at the
 programming language level, Quasar ships both actors and fibers. (Actually,
-Quasar actors are built on top of fibers.)
+Quasar actors are built on top of fibers.) Quoting from Quasar core developer
+Ron Pressler's
+[post](https://groups.google.com/d/msg/quasar-pulsar-user/NrYOyUTqdcg/MFPl6S0USigJ):
+
+> Quasar and Akka provide completely different abstractions. Quasar provides
+> fibers while Akka provides an asynchronous-programming framework based on
+> callbacks. Both libraries then implement actors using their respective
+> abstractions. [...] fibers are lightweight threads, which
+> means that their most important property -- even before being light-weight --
+> is being threads. The thread abstraction is a series of sequential
+> computations with the ability to block -- on IO or synchronization. Callbacks,
+> on the other hand, are a completely different abstraction. Akka’s callbacks
+> (and therefore actors), are not allowed to block, and therefore do not provide
+> a thread abstraction; hence they’re not fibers.
+>
+> Quasar’s main design goal was the desire to make the simple, familiar,
+> threading abstraction (i.e., synchronous, blocking code) cheap, as kernel
+> threads are expensive, and blocking a kernel thread carries a lot of overhead.
+> Quasar is used to run servlets that serve hundreds of thousands of concurrent
+> requests -- instead of mere thousands -- all without changing your existing
+> Java code. We want developers get the full performance benefits of
+> asynchronous code -- which Akka also offers -- while keeping their APIs and
+> synchronous programming model -- which Akka certainly doesn’t. Quasar makes
+> threading cheap, while Akka abandons the thread abstraction altogether. In
+> that respect, Quasar is a lot more similar to Erlang and Go (which, of course,
+> provided the inspiration to Quasar), which also use the thread abstraction but
+> provide a lightweight thread implementation.
+>
+> Akka’s design goals are different, and we think Quasar is far simpler to use
+> than Akka, requires less mental overhead and far-less re-engineering, while at
+> the same time being more feature-rich.
 
 The Benchmark
 =============
