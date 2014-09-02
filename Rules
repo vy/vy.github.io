@@ -20,7 +20,6 @@ preprocess do
 end
 
 compile %r{^/(js|css)} do
-  filter :erb
   filter :sass if item[:extension] == "sass"
 end
 
