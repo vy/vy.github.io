@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Wildcards in Java Generics</title>
+    <link rel="stylesheet" href="/css/bootstrap.css">
+    <link rel="stylesheet" href="/css/bootstrap-responsive.css">
+    <script src="/js/bootstrap.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="/css/common.css">
+    <meta name="generator" content="nanoc 3.6.4">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/post.css">
+    <script type="text/javascript">
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-40183531-1']);
+      _gaq.push(['_trackPageview']);
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="menu">
+      <div><a href="/">Home</a></div><div><a href="/about/">About</a></div><div><a href="/blog/">Blog</a></div><div><a href="/code/">Code</a></div><div><a href="/blog/feed/">Feed</a></div>
+    </div>
+    
+
+<div class="container">
+  <div class="row-fluid">
+    <div class="offset2 span8">
+      <div id="post" class="more-white-box rounded-corners">
+	<div class="head">
+	  <div class="title">Wildcards in Java Generics</div>
+	  <div class="subtitle">posted at
+	    September 8, 2014
+	    with tags <a href="/blog/tag/java">java</a>
+	  </div>
+	  <div class="share">
+	    <div class="addthis_toolbox addthis_default_style ">
+	      <a class="addthis_button_preferred_1"></a>
+	      <a class="addthis_button_preferred_2"></a>
+	      <a class="addthis_button_preferred_3"></a>
+	      <a class="addthis_button_preferred_4"></a>
+	      <a class="addthis_button_compact"></a>
+	    </div>
+	    <script type="text/javascript">var addthis_config = {"data_track_addressbar":false};</script>
+	    <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-5144adf75211a62b"></script>
+	  </div>
+	</div>
+	<div class="body">
+
+	  <p>I always had a hard time with understanding wildcarded generics in Java, as in
+<code>&lt;? extends A&gt;</code> or <code>&lt;? super A&gt;</code>. While <a href="http://docs.oracle.com/javase/tutorial/extra/generics/morefun.html">More Fun with
+Wildcards</a>
+is a good place for start, you come to a <em>TL;DR</em> point after some time. Lucky
+for me, Heikki (fizzie) Kallasjoki provided me a succinct and complete code
+snippet that summarizes the entire issue on <a href="http://freenode.net/">freenode</a>
+<code>##java</code> channel.</p>
+
+<p>First, let’s assume we have to classes <code>A</code> and <code>B</code> as follows.</p>
+
+<pre><code class="language-java"><span class="kd">class</span> <span class="nc">A</span> <span class="o">{}</span>
+
+<span class="kd">class</span> <span class="nc">B</span> <span class="kd">extends</span> <span class="n">A</span> <span class="o">{}</span></code></pre>
+
+<p>And here is the code snippet that summarizes the entire issue with wildcarded
+generics in Java.</p>
+
+<pre><code class="language-java"><span class="kd">static</span> <span class="kt">void</span> <span class="nf">f</span><span class="o">(</span><span class="n">List</span><span class="o">&lt;?</span> <span class="kd">extends</span> <span class="n">A</span><span class="o">&gt;</span> <span class="n">l</span><span class="o">)</span> <span class="o">{</span>
+    <span class="n">A</span> <span class="n">a</span> <span class="o">=</span> <span class="n">l</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="mi">0</span><span class="o">);</span> <span class="cm">/* okay */</span>
+    <span class="n">l</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="k">new</span> <span class="n">A</span><span class="o">());</span> <span class="cm">/* not okay, l can be of type List&lt;B&gt; */</span>
+<span class="o">}</span>
+
+<span class="kd">static</span> <span class="kt">void</span> <span class="nf">g</span><span class="o">(</span><span class="n">List</span><span class="o">&lt;</span><span class="n">A</span><span class="o">&gt;</span> <span class="n">l</span><span class="o">)</span> <span class="o">{</span>
+    <span class="n">A</span> <span class="n">a</span> <span class="o">=</span> <span class="n">l</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="mi">0</span><span class="o">);</span> <span class="cm">/* okay */</span>
+    <span class="n">l</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="k">new</span> <span class="n">A</span><span class="o">());</span> <span class="cm">/* okay */</span>
+<span class="o">}</span>
+
+<span class="kd">static</span> <span class="kt">void</span> <span class="nf">h</span><span class="o">(</span><span class="n">List</span><span class="o">&lt;?</span> <span class="kd">super</span> <span class="n">A</span><span class="o">&gt;</span> <span class="n">l</span><span class="o">)</span> <span class="o">{</span>
+    <span class="n">A</span> <span class="n">a</span> <span class="o">=</span> <span class="n">l</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="mi">0</span><span class="o">);</span> <span class="cm">/* not okay, l can be of type List&lt;Object&gt; */</span>
+    <span class="n">l</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="k">new</span> <span class="n">A</span><span class="o">());</span> <span class="cm">/* okay */</span>
+<span class="o">}</span>
+
+<span class="kd">static</span> <span class="o">{</span>
+    <span class="n">List</span><span class="o">&lt;</span><span class="n">B</span><span class="o">&gt;</span> <span class="n">l</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ArrayList</span><span class="o">&lt;&gt;();</span>
+    <span class="n">f</span><span class="o">(</span><span class="n">l</span><span class="o">);</span>           <span class="cm">/* okay */</span>
+    <span class="n">g</span><span class="o">(</span><span class="n">l</span><span class="o">);</span>           <span class="cm">/* not okay, List&lt;B&gt; is not of type List&lt;A&gt; */</span>
+    <span class="n">h</span><span class="o">(</span><span class="n">l</span><span class="o">);</span>           <span class="cm">/* not okay, List&lt;B&gt; is not of type List&lt;? super A&gt; */</span>
+
+    <span class="n">List</span><span class="o">&lt;</span><span class="n">Object</span><span class="o">&gt;</span> <span class="n">l2</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ArrayList</span><span class="o">&lt;&gt;();</span>
+    <span class="n">f</span><span class="o">(</span><span class="n">l2</span><span class="o">);</span>          <span class="cm">/* not okay, List&lt;Object&gt; is not of type List&lt;? extends A&gt; */</span>
+    <span class="n">g</span><span class="o">(</span><span class="n">l2</span><span class="o">);</span>          <span class="cm">/* not okay, List&lt;Object&gt; is not of type List&lt;A&gt; */</span>
+    <span class="n">h</span><span class="o">(</span><span class="n">l2</span><span class="o">);</span>          <span class="cm">/* okay */</span>
+<span class="o">}</span></code></pre>
+
+<p>Hope that helps.</p>
+
+	  <script type="text/javascript">
+	    $("#post table").attr("class", "table table-hover");
+	  </script>
+
+	  <div id="disqus_thread"></div>
+	  <script type="text/javascript">
+	  var disqus_shortname = 'vyazici';
+	  var disqus_identifier = '/blog/post/20140908-wildcards-in-java-generics/';
+	  var disqus_title = 'Wildcards in Java Generics';
+	  (function() {
+	  	var dsq = document.createElement('script');
+	  	dsq.type = 'text/javascript';
+	  	dsq.async = true;
+	  	dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+	  	(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+	  })();
+	  </script>
+
+	</div>
+      </div>
+      <div id="bgauthor" class="narrow-font">
+	background image by
+	<a href="http://jenniferwetzel.com/">Jennifer Wetzel</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
+  </body>
+</html>
+

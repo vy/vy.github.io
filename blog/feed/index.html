@@ -2,13 +2,65 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <id>https://vy.github.io//</id>
   <title>Volkan Yazıcı's Soap Co.</title>
-  <updated>2014-08-07T07:28:00Z</updated>
+  <updated>2014-09-08T14:42:00Z</updated>
   <link rel="alternate" href="https://vy.github.io//"/>
   <link rel="self" href="https://vy.github.io//blog/feed/"/>
   <author>
     <name>Volkan Yazıcı</name>
     <uri>https://vy.github.io/</uri>
   </author>
+  <entry>
+    <id>tag:vy.github.io,2014-09-08://blog/post/2014/09/08/wildcards-in-java-generics/</id>
+    <title type="html">Wildcards in Java Generics</title>
+    <published>2014-09-08T14:42:00Z</published>
+    <updated>2014-09-08T14:42:00Z</updated>
+    <link rel="alternate" href="https://vy.github.io//blog/post/2014/09/08/wildcards-in-java-generics/"/>
+    <content type="html">&lt;p&gt;I always had a hard time with understanding wildcarded generics in Java, as in
+&lt;code&gt;&amp;lt;? extends A&amp;gt;&lt;/code&gt; or &lt;code&gt;&amp;lt;? super A&amp;gt;&lt;/code&gt;. While &lt;a href="http://docs.oracle.com/javase/tutorial/extra/generics/morefun.html"&gt;More Fun with
+Wildcards&lt;/a&gt;
+is a good place for start, you come to a &lt;em&gt;TL;DR&lt;/em&gt; point after some time. Lucky
+for me, Heikki (fizzie) Kallasjoki provided me a succinct and complete code
+snippet that summarizes the entire issue on &lt;a href="http://freenode.net/"&gt;freenode&lt;/a&gt;
+&lt;code&gt;##java&lt;/code&gt; channel.&lt;/p&gt;
+
+&lt;p&gt;First, let’s assume we have to classes &lt;code&gt;A&lt;/code&gt; and &lt;code&gt;B&lt;/code&gt; as follows.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-java"&gt;&lt;span class="kd"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;A&lt;/span&gt; &lt;span class="o"&gt;{}&lt;/span&gt;
+
+&lt;span class="kd"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;B&lt;/span&gt; &lt;span class="kd"&gt;extends&lt;/span&gt; &lt;span class="n"&gt;A&lt;/span&gt; &lt;span class="o"&gt;{}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And here is the code snippet that summarizes the entire issue with wildcarded
+generics in Java.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-java"&gt;&lt;span class="kd"&gt;static&lt;/span&gt; &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;f&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;List&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;?&lt;/span&gt; &lt;span class="kd"&gt;extends&lt;/span&gt; &lt;span class="n"&gt;A&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;l&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+    &lt;span class="n"&gt;A&lt;/span&gt; &lt;span class="n"&gt;a&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;l&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;get&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt; &lt;span class="cm"&gt;/* okay */&lt;/span&gt;
+    &lt;span class="n"&gt;l&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;add&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="n"&gt;A&lt;/span&gt;&lt;span class="o"&gt;());&lt;/span&gt; &lt;span class="cm"&gt;/* not okay, l can be of type List&amp;lt;B&amp;gt; */&lt;/span&gt;
+&lt;span class="o"&gt;}&lt;/span&gt;
+
+&lt;span class="kd"&gt;static&lt;/span&gt; &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;g&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;List&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;A&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;l&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+    &lt;span class="n"&gt;A&lt;/span&gt; &lt;span class="n"&gt;a&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;l&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;get&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt; &lt;span class="cm"&gt;/* okay */&lt;/span&gt;
+    &lt;span class="n"&gt;l&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;add&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="n"&gt;A&lt;/span&gt;&lt;span class="o"&gt;());&lt;/span&gt; &lt;span class="cm"&gt;/* okay */&lt;/span&gt;
+&lt;span class="o"&gt;}&lt;/span&gt;
+
+&lt;span class="kd"&gt;static&lt;/span&gt; &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;h&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;List&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;?&lt;/span&gt; &lt;span class="kd"&gt;super&lt;/span&gt; &lt;span class="n"&gt;A&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;l&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+    &lt;span class="n"&gt;A&lt;/span&gt; &lt;span class="n"&gt;a&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;l&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;get&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt; &lt;span class="cm"&gt;/* not okay, l can be of type List&amp;lt;Object&amp;gt; */&lt;/span&gt;
+    &lt;span class="n"&gt;l&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;add&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="n"&gt;A&lt;/span&gt;&lt;span class="o"&gt;());&lt;/span&gt; &lt;span class="cm"&gt;/* okay */&lt;/span&gt;
+&lt;span class="o"&gt;}&lt;/span&gt;
+
+&lt;span class="kd"&gt;static&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+    &lt;span class="n"&gt;List&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;B&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;l&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="n"&gt;ArrayList&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&amp;gt;();&lt;/span&gt;
+    &lt;span class="n"&gt;f&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;l&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;           &lt;span class="cm"&gt;/* okay */&lt;/span&gt;
+    &lt;span class="n"&gt;g&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;l&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;           &lt;span class="cm"&gt;/* not okay, List&amp;lt;B&amp;gt; is not of type List&amp;lt;A&amp;gt; */&lt;/span&gt;
+    &lt;span class="n"&gt;h&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;l&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;           &lt;span class="cm"&gt;/* not okay, List&amp;lt;B&amp;gt; is not of type List&amp;lt;? super A&amp;gt; */&lt;/span&gt;
+
+    &lt;span class="n"&gt;List&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;Object&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;l2&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="n"&gt;ArrayList&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&amp;gt;();&lt;/span&gt;
+    &lt;span class="n"&gt;f&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;l2&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;          &lt;span class="cm"&gt;/* not okay, List&amp;lt;Object&amp;gt; is not of type List&amp;lt;? extends A&amp;gt; */&lt;/span&gt;
+    &lt;span class="n"&gt;g&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;l2&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;          &lt;span class="cm"&gt;/* not okay, List&amp;lt;Object&amp;gt; is not of type List&amp;lt;A&amp;gt; */&lt;/span&gt;
+    &lt;span class="n"&gt;h&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;l2&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;          &lt;span class="cm"&gt;/* okay */&lt;/span&gt;
+&lt;span class="o"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Hope that helps.&lt;/p&gt;</content>
+  </entry>
   <entry>
     <id>tag:vy.github.io,2014-08-07://blog/post/2014/09/01/java-fiber-test/</id>
     <title type="html">Testing Fiber Implementations in JVM</title>
@@ -1202,38 +1254,6 @@ beginning it did not make much sense. Later I found the enlightening 2004 post
 Combination&lt;/a&gt;
 by James McCaffrey, which cleared out the things and made me start to understand
 the Wikipedia page.&lt;/p&gt;</content>
-  </entry>
-  <entry>
-    <id>tag:vy.github.io,2013-08-06://blog/post/2013/08/06/sdn-discovery/</id>
-    <title type="html">Discovery in Software-Defined Networks</title>
-    <published>2013-08-06T17:29:00Z</published>
-    <updated>2013-08-06T17:29:00Z</updated>
-    <link rel="alternate" href="https://vy.github.io//blog/post/2013/08/06/sdn-discovery/"/>
-    <content type="html">&lt;p&gt;&lt;em&gt;Discovery&lt;/em&gt; can mean a couple of things in a software-defined network including, but is not limited to, the discovery of the 1) switches, 2) links, and 3) hosts. In this blog post I will briefly describe the basics of the underlying plumbing for these three &lt;em&gt;discovery&lt;/em&gt; tasks. Note that I will assume that the OpenFlow is employed as the south-bound protocol.&lt;/p&gt;
-
-&lt;h1 id="discovery-of-the-switches"&gt;Discovery of the Switches&lt;/h1&gt;
-
-&lt;p&gt;So how does a controller get to know the switches in its control domain and their features? A switch is initially configured with a &lt;em&gt;master&lt;/em&gt; controller IP address and a set of &lt;em&gt;slave&lt;/em&gt; controller IP addresses. While the most recent OpenFlow specifications allow a switch to simultaneously connect to multiple controllers, for simplicity, in this post I will assume that a switch first tries to connect to the master controller and if the connection fails, picks one of the slave controllers – that is, a switch is connected to a single controller at a time.&lt;/p&gt;
-
-&lt;p&gt;When the switch establishes a (TCP) connection to a controller, controller sends a &lt;em&gt;feature request&lt;/em&gt; message to the switch and waits for a reply. When the reply reaches to the controller, controller gets informed about the features provided by the switch, for instance, the datapath ID (i.e., DPID), list of ports, etc.&lt;/p&gt;
-
-&lt;h1 id="discovery-of-the-links"&gt;Discovery of the Links&lt;/h1&gt;
-
-&lt;p&gt;When a switch connects to a controller, controller periodically (e.g., every 5 seconds) commands the switch to flood LLDP (Link Layer Discovery Protocol) and BDDP (Broadcast Domain Discovery Protocol) packets through all of its ports. A discovery protocol packet typically contains the DPID of the sender along with the port of the switch that the message originates from. The reserved set of destination MAC addresses and &lt;code&gt;ethertype&lt;/code&gt;s used by the discovery protocol packets lets the controller to differentiate them with the other data packets. LLDP is used to discover direct links between switches and BDDP is used to discover the switches in the same broadcast domain. LLDP and BDDP differ from each other by the &lt;code&gt;ethertype&lt;/code&gt;s they use.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src="network.jpg" alt="SDN Topology"&gt;&lt;/p&gt;
-
-&lt;p&gt;Consider the above network topology, where &lt;code&gt;s1&lt;/code&gt;, &lt;code&gt;s2&lt;/code&gt;, and &lt;code&gt;s3&lt;/code&gt; are connected to a controller and &lt;code&gt;s4&lt;/code&gt; is a non-OpenFlow switch. Further, each switch is connected to a host. Note that the port numbers are denoted by the numbers at the endpoints of the links. After controller connections to &lt;code&gt;s1&lt;/code&gt;, &lt;code&gt;s2&lt;/code&gt;, &lt;code&gt;s3&lt;/code&gt; get established, the controller commands all three switches to flood LLDP packets. Consequently, LLDP packet sent by &lt;code&gt;p1&lt;/code&gt; of &lt;code&gt;s1&lt;/code&gt; (i.e., 1st port of the 1st switch) reaches to &lt;code&gt;p1&lt;/code&gt; of &lt;code&gt;s3&lt;/code&gt; and &lt;code&gt;s3&lt;/code&gt; forwards this packet to the controller. Since the LLDP packet sent by &lt;code&gt;s1&lt;/code&gt; is actuated by the controller itself, upon receiving the LLDP packet from &lt;code&gt;s3&lt;/code&gt;, controller discovers that there is a link from &lt;code&gt;p1&lt;/code&gt; of &lt;code&gt;s1&lt;/code&gt; to &lt;code&gt;p1&lt;/code&gt; of &lt;code&gt;s3&lt;/code&gt;. Likewise, the LLDP packet sent by &lt;code&gt;p2&lt;/code&gt; of &lt;code&gt;s2&lt;/code&gt; reaches to &lt;code&gt;p2&lt;/code&gt; of &lt;code&gt;s1&lt;/code&gt; and the controller learns that there is a link from &lt;code&gt;s1&lt;/code&gt; to &lt;code&gt;s2&lt;/code&gt; as well, and so on. Proceeding in this way the controller eventually figures out all the &lt;em&gt;direct&lt;/em&gt; links in the topology – we will come to the case for &lt;code&gt;s4&lt;/code&gt;. Note that upon receiving an LLDP packet, controller does not forward these packets any further, LLDP packets just acknowledge the controller about the direct links between the switches.&lt;/p&gt;
-
-&lt;p&gt;Since &lt;code&gt;s4&lt;/code&gt; is a non-OpenFlow switch, it does not flood any LLDP packets and even if it would do so, since &lt;code&gt;s4&lt;/code&gt; is not known by the controller, the LLDP packets originate from &lt;code&gt;s4&lt;/code&gt; to the OpenFlow controler’s domain will not mean anything to the controller. On the other hand topology tells us that &lt;code&gt;p1&lt;/code&gt; of &lt;code&gt;s2&lt;/code&gt; is reachable by &lt;code&gt;p2&lt;/code&gt; of &lt;code&gt;s3&lt;/code&gt;, in other words, they are in the same &lt;em&gt;broadcast domain&lt;/em&gt;, but they do not have a direct link between each other. In this case, LLDP and BDDP packets flooded by &lt;code&gt;s2&lt;/code&gt; and &lt;code&gt;s3&lt;/code&gt; reaches to the non-OpenFlow switch &lt;code&gt;s4&lt;/code&gt;. Since LLDP packets are used for direct link discoveries LLDPs get dropped immediatly at the &lt;code&gt;s4&lt;/code&gt;. However, BDDP packets are broadcasted by non-OpenFlow switches and they make their way to &lt;code&gt;s2&lt;/code&gt; and &lt;code&gt;s3&lt;/code&gt;. By this way the controller discovers that there is an indirect connection between &lt;code&gt;p1&lt;/code&gt; of &lt;code&gt;s2&lt;/code&gt; and &lt;code&gt;p2&lt;/code&gt; of &lt;code&gt;s3&lt;/code&gt; and these switches are in the same broadcast domain.&lt;/p&gt;
-
-&lt;h1 id="discovery-of-the-hosts"&gt;Discovery of the Hosts&lt;/h1&gt;
-
-&lt;p&gt;Using a combination of LLDP and BDDP packets, controller discovers the direct and indirect connections between the switches. Further, controller also keeps an eye on the liveliness of the connections regularly with periodical checks. Equipped with the knowledge of the network topology, controller can determine the shortest path from a source switch port to a destination switch port. But how does it discover the hosts? That is, how does the controller discover the &lt;em&gt;attachment point(s)&lt;/em&gt; of a host?&lt;/p&gt;
-
-&lt;p&gt;Considering the previously illustrated network topology, let’s assume that &lt;code&gt;h1&lt;/code&gt; pings &lt;code&gt;h2&lt;/code&gt;. When ping request reaches to &lt;code&gt;s1&lt;/code&gt;, since there were no previously installed rule(s) for the incoming flow, &lt;code&gt;s1&lt;/code&gt; will forward the first packet of the flow to the controller. This is the first time the controller observes a message originating from &lt;code&gt;h1&lt;/code&gt;. Hence, the controller discovers that &lt;code&gt;p3&lt;/code&gt; of &lt;code&gt;s1&lt;/code&gt; is an attachment point for &lt;code&gt;h1&lt;/code&gt;. But the controller still does not have any knowledge on the attachment points for the destination &lt;code&gt;h2&lt;/code&gt;. Thus, the controller tells &lt;code&gt;s1&lt;/code&gt; to flood the packet. Due to flooding, the ping request reaches to &lt;code&gt;s2&lt;/code&gt; and &lt;code&gt;s3&lt;/code&gt;. For simplicity, let’s assume that the flood first arrived to &lt;code&gt;s2&lt;/code&gt;. Since &lt;code&gt;s2&lt;/code&gt; does not have any corresponding rules for the flow, &lt;code&gt;s2&lt;/code&gt; forwards the packet to the controller. Controller still does not know the attachment point of &lt;code&gt;h2&lt;/code&gt; and hence commands to &lt;code&gt;s2&lt;/code&gt; to flood the packet again. After this second flood, the ping request reaches to &lt;code&gt;h2&lt;/code&gt; and &lt;code&gt;h2&lt;/code&gt; replies back. Upon &lt;code&gt;s2&lt;/code&gt; receiving &lt;code&gt;h2&lt;/code&gt;s reply from &lt;code&gt;p3&lt;/code&gt;, it forwards the reply to the controller. Now the controller discovers that &lt;code&gt;p3&lt;/code&gt; of &lt;code&gt;s2&lt;/code&gt; is an attachment point for &lt;code&gt;h2&lt;/code&gt;. Since controller has previously discovered &lt;code&gt;h1&lt;/code&gt;s attachment point, it knows that the reply needs to be routed from &lt;code&gt;p3&lt;/code&gt; to &lt;code&gt;p2&lt;/code&gt; of &lt;code&gt;s2&lt;/code&gt; and then from &lt;code&gt;p2&lt;/code&gt; to &lt;code&gt;p3&lt;/code&gt; of &lt;code&gt;s1&lt;/code&gt;. Consequently, controller installs the appropriate rules to the switches &lt;code&gt;s1&lt;/code&gt; and &lt;code&gt;s2&lt;/code&gt;, and finally commands &lt;code&gt;s2&lt;/code&gt; to send the ping reply from &lt;code&gt;p2&lt;/code&gt;.&lt;/p&gt;
-
-&lt;p&gt;Hosts &lt;code&gt;h1&lt;/code&gt;, &lt;code&gt;h2&lt;/code&gt; and &lt;code&gt;h3&lt;/code&gt; all have a single attachment point from the point of view of the controller. Say this time &lt;code&gt;h1&lt;/code&gt; pings &lt;code&gt;h4&lt;/code&gt;. Since the controller does not know the attachment point of &lt;code&gt;h4&lt;/code&gt;, it will repeatedly flood the request until it makes its way to &lt;code&gt;s4&lt;/code&gt; and then &lt;code&gt;h4&lt;/code&gt;. &lt;code&gt;h4&lt;/code&gt;s reply might reach to the controller network either from &lt;code&gt;p1&lt;/code&gt; of &lt;code&gt;s2&lt;/code&gt; or &lt;code&gt;p2&lt;/code&gt; of &lt;code&gt;s3&lt;/code&gt;. Further, each packet originating from &lt;code&gt;h4&lt;/code&gt; can be routed across different paths by &lt;code&gt;s4&lt;/code&gt; too. To handle such cases, controllers generally assign multiple attachment points for &lt;code&gt;h4&lt;/code&gt;.&lt;/p&gt;</content>
   </entry>
   <entry>
     <id>tag:vy.github.io,2013-08-06://blog/post/2013/08/06/output-packet-from-input-port/</id>
