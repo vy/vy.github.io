@@ -7,7 +7,7 @@ tags:
   - java
 ---
 
-I have just finished reading [Java Concurrency in Practice](http://jcip.net/) yesterday and would like to share some excerpts from the book on safe object publication in Java. Before stepping into the details, I would like to state that I found every single page of the book quite useful and found numerous places that I can enhance my existing code base during my daily coding routine. Thanks to [@BrianGoetz](https://twitter.com/BrianGoetz) et al for such a comprehensive and practical guide.
+I have just finished reading [Java Concurrency in Practice](http://jcip.net/) yesterday and would like to share some excerpts from the book on safe object publication in Java. Before stepping into the details, I would like to state that I found every single page of the book quite useful and found numerous places that I can enhance my existing code base during my daily coding routine. Thanks to [@BrianGoetz](https://twitter.com/BrianGoetz) et al for such a comprehensive and practical guide. (For those who want to go further up to its extremes, I strongly recommend you to check [Aleksey Shipilёv](http://shipilev.net/)'s [Safe Publication and Safe Initialization in Java](http://shipilev.net/blog/2014/safe-public-construction/) article -- a must read on the subject.)
 
 *[Presented excerpts are copied directly, sometimes with slight changes, from [Java Concurrency in Practice](http://jcip.net/).]*
 
