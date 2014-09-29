@@ -14,7 +14,7 @@ for me, Heikki (fizzie) Kallasjoki provided me a succinct and complete code
 snippet that summarizes the entire issue on [freenode](http://freenode.net/)
 `##java` channel.
 
-First, let's assume we have to classes `A` and `B` as follows.
+First, let's assume we have two classes `A` and `B` as follows.
 
     #!java
     class A {}
