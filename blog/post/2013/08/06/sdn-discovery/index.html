@@ -8,7 +8,7 @@
     <script src="/js/bootstrap.js"></script>
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
     <link rel="stylesheet" href="/css/common.css">
-    <meta name="generator" content="nanoc 3.6.4">
+    <meta name="generator" content="nanoc 3.7.4">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/css/post.css">
     <script type="text/javascript">
@@ -52,7 +52,8 @@
 	</div>
 	<div class="body">
 
-	  <p><em>Discovery</em> can mean a couple of things in a software-defined network including, but is not limited to, the discovery of the 1) switches, 2) links, and 3) hosts. In this blog post I will briefly describe the basics of the underlying plumbing for these three <em>discovery</em> tasks. Note that I will assume that the OpenFlow is employed as the south-bound protocol.</p>
+	  
+<p><em>Discovery</em> can mean a couple of things in a software-defined network including, but is not limited to, the discovery of the 1) switches, 2) links, and 3) hosts. In this blog post I will briefly describe the basics of the underlying plumbing for these three <em>discovery</em> tasks. Note that I will assume that the OpenFlow is employed as the south-bound protocol.</p>
 
 <h1 id="discovery-of-the-switches">Discovery of the Switches</h1>
 
@@ -77,6 +78,7 @@
 <p>Considering the previously illustrated network topology, let’s assume that <code>h1</code> pings <code>h2</code>. When ping request reaches to <code>s1</code>, since there were no previously installed rule(s) for the incoming flow, <code>s1</code> will forward the first packet of the flow to the controller. This is the first time the controller observes a message originating from <code>h1</code>. Hence, the controller discovers that <code>p3</code> of <code>s1</code> is an attachment point for <code>h1</code>. But the controller still does not have any knowledge on the attachment points for the destination <code>h2</code>. Thus, the controller tells <code>s1</code> to flood the packet. Due to flooding, the ping request reaches to <code>s2</code> and <code>s3</code>. For simplicity, let’s assume that the flood first arrived to <code>s2</code>. Since <code>s2</code> does not have any corresponding rules for the flow, <code>s2</code> forwards the packet to the controller. Controller still does not know the attachment point of <code>h2</code> and hence commands to <code>s2</code> to flood the packet again. After this second flood, the ping request reaches to <code>h2</code> and <code>h2</code> replies back. Upon <code>s2</code> receiving <code>h2</code>s reply from <code>p3</code>, it forwards the reply to the controller. Now the controller discovers that <code>p3</code> of <code>s2</code> is an attachment point for <code>h2</code>. Since controller has previously discovered <code>h1</code>s attachment point, it knows that the reply needs to be routed from <code>p3</code> to <code>p2</code> of <code>s2</code> and then from <code>p2</code> to <code>p3</code> of <code>s1</code>. Consequently, controller installs the appropriate rules to the switches <code>s1</code> and <code>s2</code>, and finally commands <code>s2</code> to send the ping reply from <code>p2</code>.</p>
 
 <p>Hosts <code>h1</code>, <code>h2</code> and <code>h3</code> all have a single attachment point from the point of view of the controller. Say this time <code>h1</code> pings <code>h4</code>. Since the controller does not know the attachment point of <code>h4</code>, it will repeatedly flood the request until it makes its way to <code>s4</code> and then <code>h4</code>. <code>h4</code>s reply might reach to the controller network either from <code>p1</code> of <code>s2</code> or <code>p2</code> of <code>s3</code>. Further, each packet originating from <code>h4</code> can be routed across different paths by <code>s4</code> too. To handle such cases, controllers generally assign multiple attachment points for <code>h4</code>.</p>
+
 
 	  <script type="text/javascript">
 	    $("#post table").attr("class", "table table-hover");

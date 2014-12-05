@@ -8,7 +8,7 @@
     <script src="/js/bootstrap.js"></script>
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
     <link rel="stylesheet" href="/css/common.css">
-    <meta name="generator" content="nanoc 3.6.4">
+    <meta name="generator" content="nanoc 3.7.4">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/css/post.css">
     <script type="text/javascript">
@@ -52,16 +52,19 @@
 	</div>
 	<div class="body">
 
-	  <p>In a recent coding interview, I was asked to merge two <a href="http://en.wikipedia.org/wiki/Binary_search_tree">Binary Search Tree</a>s (BSTs) without modifying them. This was the first time I was exposed to this question and for an hour or so I tried to come up with a linear time algorithm of O(1) space complexity. The defeat was inevitable. (To tell the truth, if a hint would be given like O(m+n) storage is allowed, I could easily figure out the solution without breaking a sweat.) As usual, I could not sleep that night and scratched dozens of papers to come up with a better solution. But as night passed, I started to realize the fact that the space complexity is lower bounded by the tree height. This blog post is set to keep a cyber-record of this pursuit.</p>
+	  
+<p>In a recent coding interview, I was asked to merge two <a href="http://en.wikipedia.org/wiki/Binary_search_tree">Binary Search Tree</a>s (BSTs) without modifying them. This was the first time I was exposed to this question and for an hour or so I tried to come up with a linear time algorithm of O(1) space complexity. The defeat was inevitable. (To tell the truth, if a hint would be given like O(m+n) storage is allowed, I could easily figure out the solution without breaking a sweat.) As usual, I could not sleep that night and scratched dozens of papers to come up with a better solution. But as night passed, I started to realize the fact that the space complexity is lower bounded by the tree height. This blog post is set to keep a cyber-record of this pursuit.</p>
 
 <h1 id="related-work">Related Work</h1>
 
 <p>You can first start by checking the <a href="https://www.google.com/search?q=merge+binary+search+tree">Google results</a>. But, as usual, I am kind enough to provide you a tl;dr version: In order to merge two BSTs of size m and n nodes, there are a couple of common approaches of fixed O(m+n) processing time and space complexity, some of which are listed as follows.</p>
 
 <ul>
-<li>Insert given BSTs into a newly created BST.</li>
+  <li>Insert given BSTs into a newly created BST.</li>
   <li>Create an array of elements of the first BST in sorted order, and use this array to merge the results to a new BST while traversing the second BST.</li>
-</ul><p>Further exposure to the higher doses of the problem is available through <a href="http://stackoverflow.com/questions/1008513/how-to-merge-two-bsts-efficiently">this</a> and <a href="http://stackoverflow.com/questions/7540546/merging-2-binary-search-trees">this</a> StackOverflow threads.</p>
+</ul>
+
+<p>Further exposure to the higher doses of the problem is available through <a href="http://stackoverflow.com/questions/1008513/how-to-merge-two-bsts-efficiently">this</a> and <a href="http://stackoverflow.com/questions/7540546/merging-2-binary-search-trees">this</a> StackOverflow threads.</p>
 
 <h1 id="on-complexity">On Complexity</h1>
 
@@ -105,6 +108,7 @@
 <h1 id="the-code">The Code</h1>
 
 <p>I implemented a streamer (<code>NodeStream</code>), stream merger (<code>MergeNodeStream</code>), and a vector merger (<code>MergeNodeVector</code>) in C++ and Scala. Code is accessible through this <a href="https://gist.github.com/4171977">Gist</a>. You can also find implementations of the algorithm in <a href="https://gist.github.com/8be224c9cfb423dcc0f3">C++ using Boost Coroutines</a> and <a href="https://gist.github.com/4181097">Haskell</a> written by <a href="http://www.blogger.com/profile/01427008889073096042">Remko</a>.</p>
+
 
 	  <script type="text/javascript">
 	    $("#post table").attr("class", "table table-hover");

@@ -8,7 +8,7 @@
     <script src="/js/bootstrap.js"></script>
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
     <link rel="stylesheet" href="/css/common.css">
-    <meta name="generator" content="nanoc 3.6.4">
+    <meta name="generator" content="nanoc 3.7.4">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/css/post.css">
     <script type="text/javascript">
@@ -52,69 +52,77 @@
 	</div>
 	<div class="body">
 
-	  <p><a href="http://www.jgroups.org/javadoc/org/jgroups/blocks/ReplicatedHashMap.html"><code>ReplicatedHashMap</code></a> of <a href="http://www.jgroups.org/">JGroups</a> provides a distributed <a href="http://docs.oracle.com/javase/6/docs/api/java/util/concurrent/ConcurrentHashMap.html"><code>ConcurrentHashMap</code></a> implementation. In its simplest form, it propagates every local change to all other instances in the cluster and you get your replicated-HashMap between available cluster members.</p>
+	  
+<p><a href="http://www.jgroups.org/javadoc/org/jgroups/blocks/ReplicatedHashMap.html"><code>ReplicatedHashMap</code></a> of <a href="http://www.jgroups.org/">JGroups</a> provides a distributed <a href="http://docs.oracle.com/javase/6/docs/api/java/util/concurrent/ConcurrentHashMap.html"><code>ConcurrentHashMap</code></a> implementation. In its simplest form, it propagates every local change to all other instances in the cluster and you get your replicated-HashMap between available cluster members.</p>
 
 <p>In a cluster environment, new node arrivals are highly anticipated, but <code>ReplicatedHashMap</code> doesn’t really keep up with the late joiners. See below execution flow for a late joiner scenario.</p>
 
 <table>
-<thead><tr>
-<th style="text-align: center">Time</th>
+  <thead>
+    <tr>
+      <th style="text-align: center">Time</th>
       <th>Node A</th>
       <th>Node B</th>
-    </tr></thead>
-<tbody>
-<tr>
-<td style="text-align: center">1</td>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: center">1</td>
       <td>join</td>
       <td> </td>
     </tr>
-<tr>
-<td style="text-align: center">2</td>
+    <tr>
+      <td style="text-align: center">2</td>
       <td>send 1</td>
       <td> </td>
     </tr>
-<tr>
-<td style="text-align: center">3</td>
+    <tr>
+      <td style="text-align: center">3</td>
       <td>recv 1</td>
       <td> </td>
     </tr>
-<tr>
-<td style="text-align: center">4</td>
+    <tr>
+      <td style="text-align: center">4</td>
       <td>observe {1}</td>
       <td> </td>
     </tr>
-<tr>
-<td style="text-align: center">5</td>
+    <tr>
+      <td style="text-align: center">5</td>
       <td> </td>
       <td>join</td>
     </tr>
-<tr>
-<td style="text-align: center">6</td>
+    <tr>
+      <td style="text-align: center">6</td>
       <td> </td>
       <td>observe {}</td>
     </tr>
-<tr>
-<td style="text-align: center">7</td>
+    <tr>
+      <td style="text-align: center">7</td>
       <td> </td>
       <td>send 2</td>
     </tr>
-<tr>
-<td style="text-align: center">8</td>
+    <tr>
+      <td style="text-align: center">8</td>
       <td>recv 2</td>
       <td>recv 2</td>
     </tr>
-<tr>
-<td style="text-align: center">9</td>
+    <tr>
+      <td style="text-align: center">9</td>
       <td>observe {1,2}</td>
       <td>observe {2}</td>
     </tr>
-</tbody>
-</table><p>In the above figure, nodes are out of sync at time steps 6 and 9. To avoid such cases, we need to force <code>ReplicatedHashMap</code> for a sync during initialization. For this purpose, quoting with Bela Ban’s (author of JGroups) words,</p>
+  </tbody>
+</table>
+
+<p>In the above figure, nodes are out of sync at time steps 6 and 9. To avoid such cases, we need to force <code>ReplicatedHashMap</code> for a sync during initialization. For this purpose, quoting with Bela Ban’s (author of JGroups) words,</p>
 
 <ol>
-<li>Move <code>JChannel.connect()</code> after the creation of <code>ReplicatedHashMap</code>,</li>
+  <li>Move <code>JChannel.connect()</code> after the creation of <code>ReplicatedHashMap</code>,</li>
   <li>I also suggest to call <code>ReplicatedHashmap.start()</code>, or else there won’t be any state transfer.</li>
-</ol><p>See <a href="http://comments.gmane.org/gmane.comp.java.javagroups.general/7665">ReplicatedHashMap Updates for Late Joiners</a> post in the mailing-list for the related discussion.</p>
+</ol>
+
+<p>See <a href="http://comments.gmane.org/gmane.comp.java.javagroups.general/7665">ReplicatedHashMap Updates for Late Joiners</a> post in the mailing-list for the related discussion.</p>
+
 
 	  <script type="text/javascript">
 	    $("#post table").attr("class", "table table-hover");

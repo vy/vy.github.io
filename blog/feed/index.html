@@ -15,7 +15,8 @@
     <published>2014-09-08T14:42:00Z</published>
     <updated>2014-09-08T14:42:00Z</updated>
     <link rel="alternate" href="https://vy.github.io//blog/post/2014/09/08/wildcards-in-java-generics/"/>
-    <content type="html">&lt;p&gt;I always had a hard time with understanding wildcarded generics in Java, as in
+    <content type="html">
+&lt;p&gt;I always had a hard time with understanding wildcarded generics in Java, as in
 &lt;code&gt;&amp;lt;? extends A&amp;gt;&lt;/code&gt; or &lt;code&gt;&amp;lt;? super A&amp;gt;&lt;/code&gt;. While &lt;a href="http://docs.oracle.com/javase/tutorial/extra/generics/morefun.html"&gt;More Fun with
 Wildcards&lt;/a&gt;
 is a good place for start, you come to a &lt;em&gt;TL;DR&lt;/em&gt; point after some time. Lucky
@@ -34,17 +35,17 @@ generics in Java.&lt;/p&gt;
 
 &lt;pre&gt;&lt;code class="language-java"&gt;&lt;span class="kd"&gt;static&lt;/span&gt; &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;f&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;List&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;?&lt;/span&gt; &lt;span class="kd"&gt;extends&lt;/span&gt; &lt;span class="n"&gt;A&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;l&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
     &lt;span class="n"&gt;A&lt;/span&gt; &lt;span class="n"&gt;a&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;l&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;get&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt; &lt;span class="cm"&gt;/* okay */&lt;/span&gt;
-    &lt;span class="n"&gt;l&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;add&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="n"&gt;A&lt;/span&gt;&lt;span class="o"&gt;());&lt;/span&gt; &lt;span class="cm"&gt;/* not okay, l can be of type List&amp;lt;B&amp;gt; */&lt;/span&gt;
+    &lt;span class="n"&gt;l&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;add&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nf"&gt;A&lt;/span&gt;&lt;span class="o"&gt;());&lt;/span&gt; &lt;span class="cm"&gt;/* not okay, l can be of type List&amp;lt;B&amp;gt; */&lt;/span&gt;
 &lt;span class="o"&gt;}&lt;/span&gt;
 
 &lt;span class="kd"&gt;static&lt;/span&gt; &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;g&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;List&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;A&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;l&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
     &lt;span class="n"&gt;A&lt;/span&gt; &lt;span class="n"&gt;a&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;l&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;get&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt; &lt;span class="cm"&gt;/* okay */&lt;/span&gt;
-    &lt;span class="n"&gt;l&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;add&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="n"&gt;A&lt;/span&gt;&lt;span class="o"&gt;());&lt;/span&gt; &lt;span class="cm"&gt;/* okay */&lt;/span&gt;
+    &lt;span class="n"&gt;l&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;add&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nf"&gt;A&lt;/span&gt;&lt;span class="o"&gt;());&lt;/span&gt; &lt;span class="cm"&gt;/* okay */&lt;/span&gt;
 &lt;span class="o"&gt;}&lt;/span&gt;
 
 &lt;span class="kd"&gt;static&lt;/span&gt; &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;h&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;List&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;?&lt;/span&gt; &lt;span class="kd"&gt;super&lt;/span&gt; &lt;span class="n"&gt;A&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;l&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
     &lt;span class="n"&gt;A&lt;/span&gt; &lt;span class="n"&gt;a&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;l&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;get&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt; &lt;span class="cm"&gt;/* not okay, l can be of type List&amp;lt;Object&amp;gt; */&lt;/span&gt;
-    &lt;span class="n"&gt;l&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;add&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="n"&gt;A&lt;/span&gt;&lt;span class="o"&gt;());&lt;/span&gt; &lt;span class="cm"&gt;/* okay */&lt;/span&gt;
+    &lt;span class="n"&gt;l&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;add&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nf"&gt;A&lt;/span&gt;&lt;span class="o"&gt;());&lt;/span&gt; &lt;span class="cm"&gt;/* okay */&lt;/span&gt;
 &lt;span class="o"&gt;}&lt;/span&gt;
 
 &lt;span class="kd"&gt;static&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
@@ -59,7 +60,8 @@ generics in Java.&lt;/p&gt;
     &lt;span class="n"&gt;h&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;l2&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;          &lt;span class="cm"&gt;/* okay */&lt;/span&gt;
 &lt;span class="o"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
 
-&lt;p&gt;Hope that helps.&lt;/p&gt;</content>
+&lt;p&gt;Hope that helps.&lt;/p&gt;
+</content>
   </entry>
   <entry>
     <id>tag:vy.github.io,2014-08-07://blog/post/2014/09/01/java-fiber-test/</id>
@@ -67,7 +69,8 @@ generics in Java.&lt;/p&gt;
     <published>2014-08-07T07:28:00Z</published>
     <updated>2014-08-07T07:28:00Z</updated>
     <link rel="alternate" href="https://vy.github.io//blog/post/2014/09/01/java-fiber-test/"/>
-    <content type="html">&lt;p&gt;I have always been interested in concurrent programming through the use of
+    <content type="html">
+&lt;p&gt;I have always been interested in concurrent programming through the use of
 threads. This inclination did not originate from a need to exploit the
 parallelism at the hardware level for performance reasons, but rather due to the
 fact that I believe it establishes a model of reasoning about your code that
@@ -207,17 +210,19 @@ and regular iterations using 3 JVM forks. There are 503 threads in each
 benchmark and 1e7 message passings. Results are in milliseconds per benchmark.&lt;/p&gt;
 
 &lt;table id="results"&gt;
-&lt;thead&gt;&lt;tr&gt;
-&lt;th&gt;Fiber Impl.&lt;/th&gt;
+	&lt;thead&gt;
+		&lt;tr&gt;
+			&lt;th&gt;Fiber Impl.&lt;/th&gt;
 			&lt;th&gt;Min.&lt;/th&gt;
 			&lt;th colspan="2"&gt;Avg.&lt;/th&gt;
 			&lt;th&gt;Max.&lt;/th&gt;
 			&lt;th&gt;Stddev.&lt;/th&gt;
 			&lt;th colspan="3"&gt;Confidence Interval&lt;/th&gt;
-		&lt;/tr&gt;&lt;/thead&gt;
-&lt;tbody&gt;
-&lt;tr&gt;
-&lt;td&gt;Quasar Fibers&lt;/td&gt;
+		&lt;/tr&gt;
+	&lt;/thead&gt;
+	&lt;tbody&gt;
+		&lt;tr&gt;
+			&lt;td&gt;Quasar Fibers&lt;/td&gt;
 			&lt;td&gt;695.613&lt;/td&gt;
 			&lt;td&gt;29x&lt;/td&gt;
 			&lt;td&gt;721.457&lt;/td&gt;
@@ -227,8 +232,8 @@ benchmark and 1e7 message passings. Results are in milliseconds per benchmark.&l
 			&lt;td&gt;699.226&lt;/td&gt;
 			&lt;td&gt;743.689&lt;/td&gt;
 		&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;Akka Actors&lt;/td&gt;
+		&lt;tr&gt;
+			&lt;td&gt;Akka Actors&lt;/td&gt;
 			&lt;td&gt;856.807&lt;/td&gt;
 			&lt;td&gt;23x&lt;/td&gt;
 			&lt;td&gt;911.295&lt;/td&gt;
@@ -238,8 +243,8 @@ benchmark and 1e7 message passings. Results are in milliseconds per benchmark.&l
 			&lt;td&gt;874.578&lt;/td&gt;
 			&lt;td&gt;948.012&lt;/td&gt;
 		&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;Quasar Actors&lt;/td&gt;
+		&lt;tr&gt;
+			&lt;td&gt;Quasar Actors&lt;/td&gt;
 			&lt;td&gt;1553.224&lt;/td&gt;
 			&lt;td&gt;13x&lt;/td&gt;
 			&lt;td&gt;1606.718&lt;/td&gt;
@@ -249,8 +254,8 @@ benchmark and 1e7 message passings. Results are in milliseconds per benchmark.&l
 			&lt;td&gt;1568.492&lt;/td&gt;
 			&lt;td&gt;1644.943&lt;/td&gt;
 		&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;Java Threads&lt;/td&gt;
+		&lt;tr&gt;
+			&lt;td&gt;Java Threads&lt;/td&gt;
 			&lt;td&gt;15730.028&lt;/td&gt;
 			&lt;td&gt;1x&lt;/td&gt;
 			&lt;td&gt;20709.233&lt;/td&gt;
@@ -260,12 +265,15 @@ benchmark and 1e7 message passings. Results are in milliseconds per benchmark.&l
 			&lt;td&gt;16071.196&lt;/td&gt;
 			&lt;td&gt;25347.270&lt;/td&gt;
 		&lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;&lt;style type="text/css"&gt;
+	&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;style type="text/css"&gt;
 table#results tbody tr td { text-align: right; }
 table#results thead tr th { text-align: center; }
 table#results td { padding: 1px; }
-&lt;/style&gt;&lt;div id="chartContainer" style="margin: 0 auto; height: 100px; width: 75%"&gt;&lt;/div&gt;
+&lt;/style&gt;
+
+&lt;div id="chartContainer" style="margin: 0 auto; height: 100px; width: 75%"&gt;&lt;/div&gt;
 &lt;script type="text/javascript"&gt;
 $(document).ready(function() {
 	var chart = new CanvasJS.Chart("chartContainer", {
@@ -302,7 +310,9 @@ $(document).ready(function() {
 		});
 	chart.render();
 });
-&lt;/script&gt;&lt;p&gt;Results point out that even in the worst case (which corresponds to Quasar
+&lt;/script&gt;
+
+&lt;p&gt;Results point out that even in the worst case (which corresponds to Quasar
 Actors in the figures) fiber implementation on the average performs 13 times
 better compared to native Java threads. In addition, Akka Actors and Quasar
 Fibers improve this level up to 23x and 29x, respectively. All that being said
@@ -314,17 +324,19 @@ order to further investigate the problem, I profiled the benchmarks using
 documentation for further information on the parameters.)&lt;/p&gt;
 
 &lt;table id="hprof"&gt;
-&lt;thead&gt;&lt;tr&gt;
-&lt;th&gt;rank&lt;/th&gt;
+	&lt;thead&gt;
+		&lt;tr&gt;
+			&lt;th&gt;rank&lt;/th&gt;
 			&lt;th&gt;self&lt;/th&gt;
 			&lt;th&gt;accum&lt;/th&gt;
 			&lt;th&gt;count&lt;/th&gt;
 			&lt;th&gt;trace&lt;/th&gt;
 			&lt;th&gt;method&lt;/th&gt;
-		&lt;/tr&gt;&lt;/thead&gt;
-&lt;tbody&gt;
-&lt;tr&gt;&lt;th colspan="6"&gt;Quasar Fibers&lt;/th&gt;&lt;/tr&gt;
-&lt;tr class="highlight"&gt;
+		&lt;/tr&gt;
+	&lt;/thead&gt;
+	&lt;tbody&gt;
+		&lt;tr&gt;&lt;th colspan="6"&gt;Quasar Fibers&lt;/th&gt;&lt;/tr&gt;
+		&lt;tr class="highlight"&gt;
 &lt;td&gt;1&lt;/td&gt;
 &lt;td&gt;47,55%&lt;/td&gt;
 &lt;td&gt;47,55%&lt;/td&gt;
@@ -332,7 +344,7 @@ documentation for further information on the parameters.)&lt;/p&gt;
 &lt;td&gt;300366&lt;/td&gt;
 &lt;td&gt;co.paralleluniverse.fibers.Fiber.run1&lt;/td&gt;
 &lt;/tr&gt;
-&lt;tr&gt;
+		&lt;tr&gt;
 &lt;td&gt;2&lt;/td&gt;
 &lt;td&gt;47,48%&lt;/td&gt;
 &lt;td&gt;95,04%&lt;/td&gt;
@@ -340,7 +352,7 @@ documentation for further information on the parameters.)&lt;/p&gt;
 &lt;td&gt;300364&lt;/td&gt;
 &lt;td&gt;com.github.vy.fibertest.QuasarFiberRingBenchmark$InternalFiber.run&lt;/td&gt;
 &lt;/tr&gt;
-&lt;tr&gt;
+		&lt;tr&gt;
 &lt;td&gt;3&lt;/td&gt;
 &lt;td&gt;3,37%&lt;/td&gt;
 &lt;td&gt;98,40%&lt;/td&gt;
@@ -348,8 +360,8 @@ documentation for further information on the parameters.)&lt;/p&gt;
 &lt;td&gt;300372&lt;/td&gt;
 &lt;td&gt;com.github.vy.fibertest.QuasarFiberRingBenchmark$InternalFiber.run&lt;/td&gt;
 &lt;/tr&gt;
-&lt;tr&gt;&lt;th colspan="6"&gt;Quasar Actors&lt;/th&gt;&lt;/tr&gt;
-&lt;tr&gt;
+		&lt;tr&gt;&lt;th colspan="6"&gt;Quasar Actors&lt;/th&gt;&lt;/tr&gt;
+		&lt;tr&gt;
 &lt;td&gt;1&lt;/td&gt;
 &lt;td&gt;22,17%&lt;/td&gt;
 &lt;td&gt;22,17%&lt;/td&gt;
@@ -357,7 +369,7 @@ documentation for further information on the parameters.)&lt;/p&gt;
 &lt;td&gt;300526&lt;/td&gt;
 &lt;td&gt;co.paralleluniverse.fibers.Fiber.park1&lt;/td&gt;
 &lt;/tr&gt;
-&lt;tr&gt;
+		&lt;tr&gt;
 &lt;td&gt;2&lt;/td&gt;
 &lt;td&gt;18,53%&lt;/td&gt;
 &lt;td&gt;40,69%&lt;/td&gt;
@@ -365,7 +377,7 @@ documentation for further information on the parameters.)&lt;/p&gt;
 &lt;td&gt;300508&lt;/td&gt;
 &lt;td&gt;co.paralleluniverse.fibers.Fiber.run&lt;/td&gt;
 &lt;/tr&gt;
-&lt;tr class="highlight"&gt;
+		&lt;tr class="highlight"&gt;
 &lt;td&gt;3&lt;/td&gt;
 &lt;td&gt;18,32%&lt;/td&gt;
 &lt;td&gt;59,01%&lt;/td&gt;
@@ -373,7 +385,7 @@ documentation for further information on the parameters.)&lt;/p&gt;
 &lt;td&gt;300527&lt;/td&gt;
 &lt;td&gt;co.paralleluniverse.strands.channels.SingleConsumerQueueChannel.receive&lt;/td&gt;
 &lt;/tr&gt;
-&lt;tr&gt;
+		&lt;tr&gt;
 &lt;td&gt;4&lt;/td&gt;
 &lt;td&gt;18,27%&lt;/td&gt;
 &lt;td&gt;77,28%&lt;/td&gt;
@@ -381,7 +393,7 @@ documentation for further information on the parameters.)&lt;/p&gt;
 &lt;td&gt;300517&lt;/td&gt;
 &lt;td&gt;com.github.vy.fibertest.QuasarActorRingBenchmark$InternalActor.doRun&lt;/td&gt;
 &lt;/tr&gt;
-&lt;tr&gt;
+		&lt;tr&gt;
 &lt;td&gt;5&lt;/td&gt;
 &lt;td&gt;17,39%&lt;/td&gt;
 &lt;td&gt;94,67%&lt;/td&gt;
@@ -389,8 +401,8 @@ documentation for further information on the parameters.)&lt;/p&gt;
 &lt;td&gt;300528&lt;/td&gt;
 &lt;td&gt;co.paralleluniverse.actors.ActorRunner.run&lt;/td&gt;
 &lt;/tr&gt;
-&lt;tr&gt;&lt;th colspan="6"&gt;Akka Actors&lt;/th&gt;&lt;/tr&gt;
-&lt;tr class="highlight"&gt;
+		&lt;tr&gt;&lt;th colspan="6"&gt;Akka Actors&lt;/th&gt;&lt;/tr&gt;
+		&lt;tr class="highlight"&gt;
 &lt;td&gt;1&lt;/td&gt;
 &lt;td&gt;64,09%&lt;/td&gt;
 &lt;td&gt;64,09%&lt;/td&gt;
@@ -398,7 +410,7 @@ documentation for further information on the parameters.)&lt;/p&gt;
 &lt;td&gt;300307&lt;/td&gt;
 &lt;td&gt;scala.concurrent.forkjoin.ForkJoinPool.runWorker&lt;/td&gt;
 &lt;/tr&gt;
-&lt;tr&gt;
+		&lt;tr&gt;
 &lt;td&gt;2&lt;/td&gt;
 &lt;td&gt;12,51%&lt;/td&gt;
 &lt;td&gt;76,60%&lt;/td&gt;
@@ -406,7 +418,7 @@ documentation for further information on the parameters.)&lt;/p&gt;
 &lt;td&gt;300298&lt;/td&gt;
 &lt;td&gt;sun.misc.Unsafe.park&lt;/td&gt;
 &lt;/tr&gt;
-&lt;tr&gt;
+		&lt;tr&gt;
 &lt;td&gt;3&lt;/td&gt;
 &lt;td&gt;10,69%&lt;/td&gt;
 &lt;td&gt;87,29%&lt;/td&gt;
@@ -414,7 +426,7 @@ documentation for further information on the parameters.)&lt;/p&gt;
 &lt;td&gt;300309&lt;/td&gt;
 &lt;td&gt;sun.misc.Unsafe.unpark&lt;/td&gt;
 &lt;/tr&gt;
-&lt;tr&gt;
+		&lt;tr&gt;
 &lt;td&gt;4&lt;/td&gt;
 &lt;td&gt;2,65%&lt;/td&gt;
 &lt;td&gt;89,94%&lt;/td&gt;
@@ -422,7 +434,7 @@ documentation for further information on the parameters.)&lt;/p&gt;
 &lt;td&gt;300300&lt;/td&gt;
 &lt;td&gt;scala.concurrent.forkjoin.ForkJoinPool.scan&lt;/td&gt;
 &lt;/tr&gt;
-&lt;tr&gt;
+		&lt;tr&gt;
 &lt;td&gt;5&lt;/td&gt;
 &lt;td&gt;1,12%&lt;/td&gt;
 &lt;td&gt;91,05%&lt;/td&gt;
@@ -430,8 +442,8 @@ documentation for further information on the parameters.)&lt;/p&gt;
 &lt;td&gt;300316&lt;/td&gt;
 &lt;td&gt;akka.dispatch.Dispatcher.dispatch&lt;/td&gt;
 &lt;/tr&gt;
-&lt;tr&gt;&lt;th colspan="6"&gt;Java Threads&lt;/th&gt;&lt;/tr&gt;
-&lt;tr class="highlight"&gt;
+		&lt;tr&gt;&lt;th colspan="6"&gt;Java Threads&lt;/th&gt;&lt;/tr&gt;
+		&lt;tr class="highlight"&gt;
 &lt;td&gt;1&lt;/td&gt;
 &lt;td&gt;94,33%&lt;/td&gt;
 &lt;td&gt;94,33%&lt;/td&gt;
@@ -439,7 +451,7 @@ documentation for further information on the parameters.)&lt;/p&gt;
 &lt;td&gt;300057&lt;/td&gt;
 &lt;td&gt;sun.misc.Unsafe.unpark&lt;/td&gt;
 &lt;/tr&gt;
-&lt;tr&gt;
+		&lt;tr&gt;
 &lt;td&gt;2&lt;/td&gt;
 &lt;td&gt;5,59%&lt;/td&gt;
 &lt;td&gt;99,93%&lt;/td&gt;
@@ -447,11 +459,14 @@ documentation for further information on the parameters.)&lt;/p&gt;
 &lt;td&gt;300058&lt;/td&gt;
 &lt;td&gt;sun.misc.Unsafe.park&lt;/td&gt;
 &lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;&lt;style type="text/css"&gt;
+	&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;style type="text/css"&gt;
 table#hprof tr.highlight td { color: red; }
 table#hprof td { padding: 1px; }
-&lt;/style&gt;&lt;p&gt;As anticipated, Java Threads were bitten by &lt;code&gt;park&lt;/code&gt;/&lt;code&gt;unpark&lt;/code&gt; methods in
+&lt;/style&gt;
+
+&lt;p&gt;As anticipated, Java Threads were bitten by &lt;code&gt;park&lt;/code&gt;/&lt;code&gt;unpark&lt;/code&gt; methods in
 &lt;code&gt;sun.misc.Unsafe&lt;/code&gt;. Whereas, Akka Actors and Quasar Fibers perform some sort of
 interleaving between routines to avoid these calls and that totally rocks.
 Unfortunately, it turns out that the channel mechanisms (e.g.,
@@ -469,7 +484,8 @@ its very early stages. That being said, it appears that channels in Quasar
 Actors have a certain room for improvement and might borrow some ideas from its
 Akka counterpart. In the overall, both fiber implementations show stable and
 noteworthy performance figures and stand as a perfect standard Java Thread
-replacement for a considerable amount of use cases.&lt;/p&gt;</content>
+replacement for a considerable amount of use cases.&lt;/p&gt;
+</content>
   </entry>
   <entry>
     <id>tag:vy.github.io,2014-08-07://blog/post/2014/08/07/testing-websockets-in-play/</id>
@@ -477,7 +493,8 @@ replacement for a considerable amount of use cases.&lt;/p&gt;</content>
     <published>2014-08-07T07:28:00Z</published>
     <updated>2014-08-07T07:28:00Z</updated>
     <link rel="alternate" href="https://vy.github.io//blog/post/2014/08/07/testing-websockets-in-play/"/>
-    <content type="html">&lt;p&gt;In a recent job interview, I was asked to implement a fully fledged (that is,
+    <content type="html">
+&lt;p&gt;In a recent job interview, I was asked to implement a fully fledged (that is,
 including unit and integration tests) &lt;a href="http://en.wikipedia.org/wiki/Mancala"&gt;Lubang Menggali
 (Mancala)&lt;/a&gt; game, where multiple users are
 allowed to play in real-time. I went with &lt;a href="http://www.playframework.com/"&gt;Play
@@ -560,7 +577,7 @@ my custom &lt;code&gt;write()&lt;/code&gt; and &lt;code&gt;close()&lt;/code&gt; 
 &lt;pre&gt;&lt;code class="language-java"&gt;&lt;span class="nd"&gt;@ThreadSafe&lt;/span&gt;
 &lt;span class="kd"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;MockOutputWebSocket&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
 
-    &lt;span class="kd"&gt;private&lt;/span&gt; &lt;span class="kd"&gt;final&lt;/span&gt; &lt;span class="kd"&gt;static&lt;/span&gt; &lt;span class="n"&gt;ObjectMapper&lt;/span&gt; &lt;span class="n"&gt;objectMapper&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="n"&gt;ObjectMapper&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
+    &lt;span class="kd"&gt;private&lt;/span&gt; &lt;span class="kd"&gt;final&lt;/span&gt; &lt;span class="kd"&gt;static&lt;/span&gt; &lt;span class="n"&gt;ObjectMapper&lt;/span&gt; &lt;span class="n"&gt;objectMapper&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nf"&gt;ObjectMapper&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
 
     &lt;span class="kd"&gt;protected&lt;/span&gt; &lt;span class="kd"&gt;final&lt;/span&gt; &lt;span class="n"&gt;BlockingQueue&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;JsonNode&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;messageQueue&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="n"&gt;LinkedBlockingQueue&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&amp;gt;();&lt;/span&gt;
 
@@ -573,7 +590,7 @@ my custom &lt;code&gt;write()&lt;/code&gt; and &lt;code&gt;close()&lt;/code&gt; 
         &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;close&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
             &lt;span class="k"&gt;try&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="n"&gt;messageQueue&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;add&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;objectMapper&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;readTree&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="s"&gt;"{\"closed\": true}"&lt;/span&gt;&lt;span class="o"&gt;));&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
             &lt;span class="c1"&gt;// This should not happen.&lt;/span&gt;
-            &lt;span class="k"&gt;catch&lt;/span&gt; &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;IOException&lt;/span&gt; &lt;span class="n"&gt;e&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="k"&gt;throw&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="n"&gt;RuntimeException&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;e&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
+            &lt;span class="k"&gt;catch&lt;/span&gt; &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;IOException&lt;/span&gt; &lt;span class="n"&gt;e&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="k"&gt;throw&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nf"&gt;RuntimeException&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;e&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
         &lt;span class="o"&gt;}&lt;/span&gt;
     &lt;span class="o"&gt;};&lt;/span&gt;
 
@@ -596,8 +613,8 @@ the mock output socket by polling &lt;code&gt;JsonData&lt;/code&gt; from the &lt
 &lt;pre&gt;&lt;code class="language-java"&gt;&lt;span class="nd"&gt;@ThreadSafe&lt;/span&gt;
 &lt;span class="kd"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;MockWebSocket&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
 
-    &lt;span class="kd"&gt;protected&lt;/span&gt; &lt;span class="kd"&gt;final&lt;/span&gt; &lt;span class="n"&gt;MockInputWebSocket&lt;/span&gt; &lt;span class="n"&gt;mockInput&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="n"&gt;MockInputWebSocket&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
-    &lt;span class="kd"&gt;protected&lt;/span&gt; &lt;span class="kd"&gt;final&lt;/span&gt; &lt;span class="n"&gt;MockOutputWebSocket&lt;/span&gt; &lt;span class="n"&gt;mockOutput&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="n"&gt;MockOutputWebSocket&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
+    &lt;span class="kd"&gt;protected&lt;/span&gt; &lt;span class="kd"&gt;final&lt;/span&gt; &lt;span class="n"&gt;MockInputWebSocket&lt;/span&gt; &lt;span class="n"&gt;mockInput&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nf"&gt;MockInputWebSocket&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
+    &lt;span class="kd"&gt;protected&lt;/span&gt; &lt;span class="kd"&gt;final&lt;/span&gt; &lt;span class="n"&gt;MockOutputWebSocket&lt;/span&gt; &lt;span class="n"&gt;mockOutput&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nf"&gt;MockOutputWebSocket&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
     &lt;span class="kd"&gt;protected&lt;/span&gt; &lt;span class="kd"&gt;final&lt;/span&gt; &lt;span class="n"&gt;WebSocket&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;JsonNode&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;socket&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
 
     &lt;span class="n"&gt;MockWebSocket&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;WebSocket&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;JsonNode&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;socket&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
@@ -627,7 +644,7 @@ couple of event classes (e.g., &lt;code&gt;WaitingForOpponent&lt;/code&gt;, &lt;
 POJO-JSON (de)serialization. Next, I integrated my brand new &lt;code&gt;MockWebSocket&lt;/code&gt;
 into the unit tests as follows.&lt;/p&gt;
 
-&lt;pre&gt;&lt;code class="language-java"&gt;&lt;span class="kd"&gt;private&lt;/span&gt; &lt;span class="kd"&gt;static&lt;/span&gt; &lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;T&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;T&lt;/span&gt; &lt;span class="n"&gt;readPojo&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;MockWebSocket&lt;/span&gt; &lt;span class="n"&gt;socket&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;Class&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;T&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;clazz&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
+&lt;pre&gt;&lt;code class="language-java"&gt;&lt;span class="kd"&gt;private&lt;/span&gt; &lt;span class="kd"&gt;static&lt;/span&gt; &lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;T&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;T&lt;/span&gt; &lt;span class="nf"&gt;readPojo&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;MockWebSocket&lt;/span&gt; &lt;span class="n"&gt;socket&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;Class&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;T&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;clazz&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
         &lt;span class="kd"&gt;throws&lt;/span&gt; &lt;span class="n"&gt;InterruptedException&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;JsonProcessingException&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
     &lt;span class="n"&gt;JsonNode&lt;/span&gt; &lt;span class="n"&gt;data&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;socket&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;read&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
     &lt;span class="n"&gt;assertThat&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;data&lt;/span&gt;&lt;span class="o"&gt;).&lt;/span&gt;&lt;span class="na"&gt;isNotNull&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
@@ -645,13 +662,13 @@ into the unit tests as follows.&lt;/p&gt;
 &lt;span class="nd"&gt;@Test&lt;/span&gt;
 &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;testJoin&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="kd"&gt;throws&lt;/span&gt; &lt;span class="n"&gt;Throwable&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
     &lt;span class="c1"&gt;// Introduce the first user and read the "WaitingForOpponent" message.&lt;/span&gt;
-    &lt;span class="n"&gt;MockWebSocket&lt;/span&gt; &lt;span class="n"&gt;fstSocket&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="n"&gt;MockWebSocket&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;Application&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;join&lt;/span&gt;&lt;span class="o"&gt;());&lt;/span&gt;
+    &lt;span class="n"&gt;MockWebSocket&lt;/span&gt; &lt;span class="n"&gt;fstSocket&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nf"&gt;MockWebSocket&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;Application&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;join&lt;/span&gt;&lt;span class="o"&gt;());&lt;/span&gt;
     &lt;span class="n"&gt;WaitingForOpponent&lt;/span&gt; &lt;span class="n"&gt;fstWfo&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;readPojo&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;fstSocket&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;WaitingForOpponent&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;class&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
     &lt;span class="n"&gt;assertThat&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;Application&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;getPendingPlayers&lt;/span&gt;&lt;span class="o"&gt;().&lt;/span&gt;&lt;span class="na"&gt;size&lt;/span&gt;&lt;span class="o"&gt;()).&lt;/span&gt;&lt;span class="na"&gt;isEqualTo&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
     &lt;span class="n"&gt;assertThat&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;Application&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;getGames&lt;/span&gt;&lt;span class="o"&gt;().&lt;/span&gt;&lt;span class="na"&gt;size&lt;/span&gt;&lt;span class="o"&gt;()).&lt;/span&gt;&lt;span class="na"&gt;isEqualTo&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
 
     &lt;span class="c1"&gt;// Introduce the second user and read the."WaitingForOpponent" message.&lt;/span&gt;
-    &lt;span class="n"&gt;MockWebSocket&lt;/span&gt; &lt;span class="n"&gt;sndSocket&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="n"&gt;MockWebSocket&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;Application&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;join&lt;/span&gt;&lt;span class="o"&gt;());&lt;/span&gt;
+    &lt;span class="n"&gt;MockWebSocket&lt;/span&gt; &lt;span class="n"&gt;sndSocket&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nf"&gt;MockWebSocket&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;Application&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;join&lt;/span&gt;&lt;span class="o"&gt;());&lt;/span&gt;
     &lt;span class="n"&gt;WaitingForOpponent&lt;/span&gt; &lt;span class="n"&gt;sndWfo&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;readPojo&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;sndSocket&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;WaitingForOpponent&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;class&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
     &lt;span class="n"&gt;assertThat&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;fstWfo&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;playerId&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;equals&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;sndWfo&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;playerId&lt;/span&gt;&lt;span class="o"&gt;)).&lt;/span&gt;&lt;span class="na"&gt;isFalse&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
 
@@ -684,7 +701,8 @@ into the unit tests as follows.&lt;/p&gt;
 
 &lt;p&gt;I suppose I have got a nearly 99% code coverage of the game engine by using the
 mock &lt;code&gt;WebSocket&lt;/code&gt;s. I hope this scheme would help others trying to do a similar
-testing stuff.&lt;/p&gt;</content>
+testing stuff.&lt;/p&gt;
+</content>
   </entry>
   <entry>
     <id>tag:vy.github.io,2014-06-27://blog/post/2014/06/27/parse-bitcoin-blockchain/</id>
@@ -692,7 +710,8 @@ testing stuff.&lt;/p&gt;</content>
     <published>2014-06-27T14:49:00Z</published>
     <updated>2014-06-27T14:49:00Z</updated>
     <link rel="alternate" href="https://vy.github.io//blog/post/2014/06/27/parse-bitcoin-blockchain/"/>
-    <content type="html">&lt;p&gt;Last week I spent some time on collecting certain statistics (e.g., average
+    <content type="html">
+&lt;p&gt;Last week I spent some time on collecting certain statistics (e.g., average
 number of performed transactions and created blocks per month) over a vast
 (~20GB) Bitcoin blockchain dataset. The hardest part for me was to pick the
 right tool to parse the raw blockchain data. First, I hit the Google with
@@ -728,13 +747,15 @@ the bitcoinj Maven dependency in my &lt;code&gt;pom.xml&lt;/code&gt; as follows:
 &lt;p&gt;Next, I downloaded a couple of raw blockchain data for test purposes:&lt;/p&gt;
 
 &lt;ul&gt;
-&lt;li&gt;
+  &lt;li&gt;
 &lt;a href="https://code.google.com/p/blockchain/source/browse/trunk/blk00000.dat"&gt;Sample data composed of 5000 blocks&lt;/a&gt; (128 MB)&lt;/li&gt;
   &lt;li&gt;
 &lt;a href="https://bitfetch.com/static/bootstrap.7z"&gt;From the genesis block through height 295,000&lt;/a&gt; (4.7 GB)&lt;/li&gt;
   &lt;li&gt;
 &lt;a href="https://bitcoin.org/bin/blockchain/bootstrap.dat.torrent"&gt;From the genesis block through a recent height&lt;/a&gt; (~17 GB as of this post)&lt;/li&gt;
-&lt;/ul&gt;&lt;p&gt;Here comes the simplest part: the Java code. Below, I calculate the average
+&lt;/ul&gt;
+
+&lt;p&gt;Here comes the simplest part: the Java code. Below, I calculate the average
 number of transactions per block per month.&lt;/p&gt;
 
 &lt;pre&gt;&lt;code class="language-java"&gt;&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;com.google.bitcoin.core.Block&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
@@ -751,10 +772,10 @@ number of transactions per block per month.&lt;/p&gt;
 &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;java.util.Map&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
 
 &lt;span class="c1"&gt;// Arm the blockchain file loader.&lt;/span&gt;
-&lt;span class="n"&gt;NetworkParameters&lt;/span&gt; &lt;span class="n"&gt;np&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="n"&gt;MainNetParams&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
+&lt;span class="n"&gt;NetworkParameters&lt;/span&gt; &lt;span class="n"&gt;np&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nf"&gt;MainNetParams&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
 &lt;span class="n"&gt;List&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;File&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;blockChainFiles&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="n"&gt;ArrayList&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&amp;gt;();&lt;/span&gt;
-&lt;span class="n"&gt;blockChainFiles&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;add&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="n"&gt;File&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="s"&gt;"/tmp/bootstrap.dat"&lt;/span&gt;&lt;span class="o"&gt;));&lt;/span&gt;
-&lt;span class="n"&gt;BlockFileLoader&lt;/span&gt; &lt;span class="n"&gt;bfl&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="n"&gt;BlockFileLoader&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;np&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;blockChainFiles&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+&lt;span class="n"&gt;blockChainFiles&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;add&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nf"&gt;File&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="s"&gt;"/tmp/bootstrap.dat"&lt;/span&gt;&lt;span class="o"&gt;));&lt;/span&gt;
+&lt;span class="n"&gt;BlockFileLoader&lt;/span&gt; &lt;span class="n"&gt;bfl&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nf"&gt;BlockFileLoader&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;np&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;blockChainFiles&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
 
 &lt;span class="c1"&gt;// Data structures to keep the statistics.&lt;/span&gt;
 &lt;span class="n"&gt;Map&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;String&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;Integer&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;monthlyTxCount&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="n"&gt;HashMap&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&amp;gt;();&lt;/span&gt;
@@ -764,7 +785,7 @@ number of transactions per block per month.&lt;/p&gt;
 &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;Block&lt;/span&gt; &lt;span class="n"&gt;block&lt;/span&gt; &lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="n"&gt;bfl&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
 
     &lt;span class="c1"&gt;// Extract the month keyword.&lt;/span&gt;
-    &lt;span class="n"&gt;String&lt;/span&gt; &lt;span class="n"&gt;month&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="n"&gt;SimpleDateFormat&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="s"&gt;"yyyy-MM"&lt;/span&gt;&lt;span class="o"&gt;).&lt;/span&gt;&lt;span class="na"&gt;format&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;block&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;getTime&lt;/span&gt;&lt;span class="o"&gt;());&lt;/span&gt;
+    &lt;span class="n"&gt;String&lt;/span&gt; &lt;span class="n"&gt;month&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nf"&gt;SimpleDateFormat&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="s"&gt;"yyyy-MM"&lt;/span&gt;&lt;span class="o"&gt;).&lt;/span&gt;&lt;span class="na"&gt;format&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;block&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;getTime&lt;/span&gt;&lt;span class="o"&gt;());&lt;/span&gt;
 
     &lt;span class="c1"&gt;// Make sure there exists an entry for the extracted month.&lt;/span&gt;
     &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="o"&gt;(!&lt;/span&gt;&lt;span class="n"&gt;monthlyBlockCount&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;containsKey&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;month&lt;/span&gt;&lt;span class="o"&gt;))&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
@@ -788,7 +809,8 @@ number of transactions per block per month.&lt;/p&gt;
 interface, you ought to take your time and spend a couple of hours on other
 tools first. (About the performance, for the sample blockchain dataset of size
 4.7 GB, above code snippet completes in less than 2 minutes on my 2.4 GHz
-GNU/Linux notebook without any JVM flags. Pretty zippy!)&lt;/p&gt;</content>
+GNU/Linux notebook without any JVM flags. Pretty zippy!)&lt;/p&gt;
+</content>
   </entry>
   <entry>
     <id>tag:vy.github.io,2014-05-16://blog/post/2014/05/16/bandwidth-shaping/</id>
@@ -796,7 +818,8 @@ GNU/Linux notebook without any JVM flags. Pretty zippy!)&lt;/p&gt;</content>
     <published>2014-05-16T15:05:00Z</published>
     <updated>2014-05-16T15:05:00Z</updated>
     <link rel="alternate" href="https://vy.github.io//blog/post/2014/05/16/bandwidth-shaping/"/>
-    <content type="html">&lt;p&gt;Networking stack in Linux kernel by default ships an immense set of
+    <content type="html">
+&lt;p&gt;Networking stack in Linux kernel by default ships an immense set of
 functionality that provide every hairy sort of tuning a network administrator
 can (and most of the time, cannot) imagine. But unfortunately it totally lacks a
 user-friendly interface for the average programmer, not to mention the regular
@@ -820,9 +843,11 @@ providing access to an &lt;code&gt;iperf&lt;/code&gt; server with two different 
 follows.&lt;/p&gt;
 
 &lt;ol&gt;
-&lt;li&gt;In the first interface, I need to cut down the bandwidth to a certain threshold, e.g., 1Mbps.&lt;/li&gt;
+  &lt;li&gt;In the first interface, I need to cut down the bandwidth to a certain threshold, e.g., 1Mbps.&lt;/li&gt;
   &lt;li&gt;In the second one, I need to introduce some extra delay to each packet, e.g., 200ms.&lt;/li&gt;
-&lt;/ol&gt;&lt;p&gt;Luckily, &lt;code&gt;iperf&lt;/code&gt; was set to run over TCP and just playing with the egress
+&lt;/ol&gt;
+
+&lt;p&gt;Luckily, &lt;code&gt;iperf&lt;/code&gt; was set to run over TCP and just playing with the egress
 packets did suffice.&lt;/p&gt;
 
 &lt;p&gt;I first picked the easiest task: adding latency. In this case,
@@ -836,7 +861,7 @@ solution.&lt;/p&gt;
 Management&lt;/a&gt; section in LARTC and
 figured out a solution.&lt;/p&gt;
 
-&lt;pre&gt;&lt;code class="language-bash"&gt;tc qdisc add dev eth0 root tbf rate 1024kbit buffer 1600 limit 3000&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code class="language-bash"&gt;tc qdisc add dev eth0 root tbf rate 1024kbit buffer &lt;span class="m"&gt;1600&lt;/span&gt; limit 3000&lt;/code&gt;&lt;/pre&gt;
 
 &lt;p&gt;Is it just me or that has been fairly easy? Later it turned out that it was just
 the beginning. Here, the problem is that the above &lt;code&gt;tc&lt;/code&gt; one-liners take effect
@@ -858,11 +883,11 @@ and needed walk down to the server room to fix the problem by hand. After hours
 and hours of try and failures, I finally managed to find a working solution:&lt;/p&gt;
 
 &lt;pre&gt;&lt;code class="language-bash"&gt;tc qdisc add dev eth0 root handle 1: prio
-tc qdisc add dev eth0 parent 1:2 handle 20: tbf rate 1024kbit buffer 1600 limit 3000
+tc qdisc add dev eth0 parent 1:2 handle 20: tbf rate 1024kbit buffer &lt;span class="m"&gt;1600&lt;/span&gt; limit 3000
 tc qdisc add dev eth0 parent 1:3 handle 30: netem delay 200ms
-tc filter add dev eth0 protocol ip parent 1: prio 2 route flowid 1:1
-tc filter add dev eth0 protocol ip parent 1: prio 1 u32 match ip sport 34002 0xffff flowid 1:2
-tc filter add dev eth0 protocol ip parent 1: prio 1 u32 match ip sport 34003 0xffff flowid 1:3&lt;/code&gt;&lt;/pre&gt;
+tc filter add dev eth0 protocol ip parent 1: prio &lt;span class="m"&gt;2&lt;/span&gt; route flowid 1:1
+tc filter add dev eth0 protocol ip parent 1: prio &lt;span class="m"&gt;1&lt;/span&gt; u32 match ip sport &lt;span class="m"&gt;34002&lt;/span&gt; 0xffff flowid 1:2
+tc filter add dev eth0 protocol ip parent 1: prio &lt;span class="m"&gt;1&lt;/span&gt; u32 match ip sport &lt;span class="m"&gt;34003&lt;/span&gt; 0xffff flowid 1:3&lt;/code&gt;&lt;/pre&gt;
 
 &lt;p&gt;In this setting, I run two &lt;code&gt;iperf&lt;/code&gt; instances listening for incoming connections
 on ports 34002 and 34003. (First filter directs any unmatched packet to class
@@ -879,15 +904,17 @@ section and make your way through a working solution.&lt;/p&gt;
 &lt;p&gt;After all this fuss, everytime I read the very first sentence of the &lt;a href="http://lartc.org/howto/lartc.qdisc.html"&gt;Queueing
 Disciplines for Bandwidth Management&lt;/a&gt;
 chapter in LARTC, it makes me smile: &lt;strong&gt;Now, when I discovered this, it really
-blew me away.&lt;/strong&gt; So true!&lt;/p&gt;</content>
+blew me away.&lt;/strong&gt; So true!&lt;/p&gt;
+</content>
   </entry>
   <entry>
     <id>tag:vy.github.io,2014-02-14://blog/post/2014/02/14/java-safe-publication/</id>
     <title type="html">Safe Object Publication in Java</title>
-    <published>2014-02-14T12:22:00Z</published>
-    <updated>2014-02-14T12:22:00Z</updated>
+    <published>2014-02-14T13:22:00Z</published>
+    <updated>2014-02-14T13:22:00Z</updated>
     <link rel="alternate" href="https://vy.github.io//blog/post/2014/02/14/java-safe-publication/"/>
-    <content type="html">&lt;p&gt;I have just finished reading &lt;a href="http://jcip.net/"&gt;Java Concurrency in Practice&lt;/a&gt; yesterday and would like to share some excerpts from the book on safe object publication in Java. Before stepping into the details, I would like to state that I found every single page of the book quite useful and found numerous places that I can enhance my existing code base during my daily coding routine. Thanks to &lt;a href="https://twitter.com/BrianGoetz"&gt;@BrianGoetz&lt;/a&gt; et al for such a comprehensive and practical guide. (For those who want to go further up to its extremes, I strongly recommend you to check &lt;a href="http://shipilev.net/"&gt;Aleksey Shipilёv&lt;/a&gt;’s &lt;a href="http://shipilev.net/blog/2014/safe-public-construction/"&gt;Safe Publication and Safe Initialization in Java&lt;/a&gt; article – a must read on the subject.)&lt;/p&gt;
+    <content type="html">
+&lt;p&gt;I have just finished reading &lt;a href="http://jcip.net/"&gt;Java Concurrency in Practice&lt;/a&gt; yesterday and would like to share some excerpts from the book on safe object publication in Java. Before stepping into the details, I would like to state that I found every single page of the book quite useful and found numerous places that I can enhance my existing code base during my daily coding routine. Thanks to &lt;a href="https://twitter.com/BrianGoetz"&gt;@BrianGoetz&lt;/a&gt; et al for such a comprehensive and practical guide. (For those who want to go further up to its extremes, I strongly recommend you to check &lt;a href="http://shipilev.net/"&gt;Aleksey Shipilёv&lt;/a&gt;’s &lt;a href="http://shipilev.net/blog/2014/safe-public-construction/"&gt;Safe Publication and Safe Initialization in Java&lt;/a&gt; article – a must read on the subject.)&lt;/p&gt;
 
 &lt;p&gt;&lt;em&gt;[Presented excerpts are copied directly, sometimes with slight changes, from &lt;a href="http://jcip.net/"&gt;Java Concurrency in Practice&lt;/a&gt;.]&lt;/em&gt;&lt;/p&gt;
 
@@ -914,7 +941,7 @@ blew me away.&lt;/strong&gt; So true!&lt;/p&gt;</content>
     &lt;span class="kd"&gt;private&lt;/span&gt; &lt;span class="kd"&gt;final&lt;/span&gt; &lt;span class="n"&gt;EventListener&lt;/span&gt; &lt;span class="n"&gt;listener&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
 
     &lt;span class="kd"&gt;private&lt;/span&gt; &lt;span class="nf"&gt;SafeListener&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
-        &lt;span class="n"&gt;listener&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="n"&gt;EventListener&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+        &lt;span class="n"&gt;listener&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nf"&gt;EventListener&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
             &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;onEvent&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;Event&lt;/span&gt; &lt;span class="n"&gt;event&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
                 &lt;span class="n"&gt;doSomething&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;event&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
             &lt;span class="o"&gt;}&lt;/span&gt;
@@ -922,7 +949,7 @@ blew me away.&lt;/strong&gt; So true!&lt;/p&gt;</content>
     &lt;span class="o"&gt;}&lt;/span&gt;
 
     &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kd"&gt;static&lt;/span&gt; &lt;span class="n"&gt;SafeListener&lt;/span&gt; &lt;span class="nf"&gt;newInstance&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;EventSource&lt;/span&gt; &lt;span class="n"&gt;source&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
-        &lt;span class="n"&gt;SafeListener&lt;/span&gt; &lt;span class="n"&gt;safe&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="n"&gt;SafeListener&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
+        &lt;span class="n"&gt;SafeListener&lt;/span&gt; &lt;span class="n"&gt;safe&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nf"&gt;SafeListener&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
         &lt;span class="n"&gt;source&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;registerListener&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;safe&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;listener&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
         &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;safe&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
     &lt;span class="o"&gt;}&lt;/span&gt;
@@ -938,7 +965,7 @@ blew me away.&lt;/strong&gt; So true!&lt;/p&gt;</content>
 
     &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kd"&gt;static&lt;/span&gt; &lt;span class="n"&gt;Resource&lt;/span&gt; &lt;span class="nf"&gt;getInstance&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
         &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;resource&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="kc"&gt;null&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
-            &lt;span class="n"&gt;resource&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="n"&gt;Resource&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
+            &lt;span class="n"&gt;resource&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nf"&gt;Resource&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
         &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;resource&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
     &lt;span class="o"&gt;}&lt;/span&gt;
 &lt;span class="o"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
@@ -957,7 +984,7 @@ blew me away.&lt;/strong&gt; So true!&lt;/p&gt;</content>
 
     &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kd"&gt;synchronized&lt;/span&gt; &lt;span class="kd"&gt;static&lt;/span&gt; &lt;span class="n"&gt;Resource&lt;/span&gt; &lt;span class="nf"&gt;getInstance&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
         &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;resource&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="kc"&gt;null&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
-            &lt;span class="n"&gt;resource&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="n"&gt;Resource&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
+            &lt;span class="n"&gt;resource&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nf"&gt;Resource&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
         &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;resource&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
     &lt;span class="o"&gt;}&lt;/span&gt;
 &lt;span class="o"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
@@ -968,7 +995,7 @@ blew me away.&lt;/strong&gt; So true!&lt;/p&gt;</content>
 
 &lt;pre&gt;&lt;code class="language-java"&gt;&lt;span class="nd"&gt;@ThreadSafe&lt;/span&gt;
 &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kd"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;EagerInitialization&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
-    &lt;span class="kd"&gt;private&lt;/span&gt; &lt;span class="kd"&gt;static&lt;/span&gt; &lt;span class="n"&gt;Resource&lt;/span&gt; &lt;span class="n"&gt;resource&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="n"&gt;Resource&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
+    &lt;span class="kd"&gt;private&lt;/span&gt; &lt;span class="kd"&gt;static&lt;/span&gt; &lt;span class="n"&gt;Resource&lt;/span&gt; &lt;span class="n"&gt;resource&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nf"&gt;Resource&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
 
     &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kd"&gt;static&lt;/span&gt; &lt;span class="n"&gt;Resource&lt;/span&gt; &lt;span class="nf"&gt;getResource&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;resource&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
 &lt;span class="o"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
@@ -978,7 +1005,7 @@ blew me away.&lt;/strong&gt; So true!&lt;/p&gt;</content>
 &lt;pre&gt;&lt;code class="language-java"&gt;&lt;span class="nd"&gt;@ThreadSafe&lt;/span&gt;
 &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kd"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;ResourceFactory&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
     &lt;span class="kd"&gt;private&lt;/span&gt; &lt;span class="kd"&gt;static&lt;/span&gt; &lt;span class="kd"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;ResourceHolder&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
-        &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kd"&gt;static&lt;/span&gt; &lt;span class="n"&gt;Resource&lt;/span&gt; &lt;span class="n"&gt;resource&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="n"&gt;Resource&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
+        &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kd"&gt;static&lt;/span&gt; &lt;span class="n"&gt;Resource&lt;/span&gt; &lt;span class="n"&gt;resource&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nf"&gt;Resource&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
     &lt;span class="o"&gt;}&lt;/span&gt;
 
     &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kd"&gt;static&lt;/span&gt; &lt;span class="n"&gt;Resource&lt;/span&gt; &lt;span class="nf"&gt;getResource&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
@@ -986,15 +1013,17 @@ blew me away.&lt;/strong&gt; So true!&lt;/p&gt;</content>
     &lt;span class="o"&gt;}&lt;/span&gt;
 &lt;span class="o"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
 
-&lt;p&gt;Here the JVM defers initializing the &lt;code&gt;ResourceHolder&lt;/code&gt; class until it is actually used [JLS 12.4.1], and because the &lt;code&gt;Resource&lt;/code&gt; is initialized with a static initializer, no additional synchronization is needed. The first call to &lt;code&gt;getResource&lt;/code&gt; by any thread causes &lt;code&gt;ResourceHolder&lt;/code&gt; to be loaded and initialized, at which time the initialization of the &lt;code&gt;Resource&lt;/code&gt; happens through the static initializer.&lt;/p&gt;</content>
+&lt;p&gt;Here the JVM defers initializing the &lt;code&gt;ResourceHolder&lt;/code&gt; class until it is actually used [JLS 12.4.1], and because the &lt;code&gt;Resource&lt;/code&gt; is initialized with a static initializer, no additional synchronization is needed. The first call to &lt;code&gt;getResource&lt;/code&gt; by any thread causes &lt;code&gt;ResourceHolder&lt;/code&gt; to be loaded and initialized, at which time the initialization of the &lt;code&gt;Resource&lt;/code&gt; happens through the static initializer.&lt;/p&gt;
+</content>
   </entry>
   <entry>
     <id>tag:vy.github.io,2014-01-03://blog/post/2014/01/03/tcp-time-wait/</id>
     <title type="html">Sockets, TCP Keep Alive and TIME_WAIT</title>
-    <published>2014-01-03T19:19:00Z</published>
-    <updated>2014-01-03T19:19:00Z</updated>
+    <published>2014-01-03T20:19:00Z</published>
+    <updated>2014-01-03T20:19:00Z</updated>
     <link rel="alternate" href="https://vy.github.io//blog/post/2014/01/03/tcp-time-wait/"/>
-    <content type="html">&lt;p&gt;Time to time I share some technical links on Twitter and let them get lost in the internet junk yard. I thought it might be a better idea to archive them on my blog in a more organized fashion. (I will group such posts under tag &lt;a href="/blog/tag/link"&gt;link&lt;/a&gt;.) This way they will at least be more accessible by myself. This post is my first effort towards this goal. (Sorry for the ugly Twitter embeddings. I find some 3rd party libraries to configure the display, but that stuff usually gets broken in the long run due to changes in the Twitter API.)&lt;/p&gt;
+    <content type="html">
+&lt;p&gt;Time to time I share some technical links on Twitter and let them get lost in the internet junk yard. I thought it might be a better idea to archive them on my blog in a more organized fashion. (I will group such posts under tag &lt;a href="/blog/tag/link"&gt;link&lt;/a&gt;.) This way they will at least be more accessible by myself. This post is my first effort towards this goal. (Sorry for the ugly Twitter embeddings. I find some 3rd party libraries to configure the display, but that stuff usually gets broken in the long run due to changes in the Twitter API.)&lt;/p&gt;
 
 &lt;p&gt;Last month I have been bitten seriously by a software bug caused by &lt;code&gt;TIME_WAIT&lt;/code&gt; sockets. Below is the list of links I found useful in the pursuit of trying to solve the problem.&lt;/p&gt;
 
@@ -1016,15 +1045,17 @@ blew me away.&lt;/strong&gt; So true!&lt;/p&gt;</content>
 
 &lt;blockquote class="twitter-tweet" lang="en"&gt;
 &lt;p&gt;RT &lt;a href="https://twitter.com/EmreSevinc"&gt;@EmreSevinc&lt;/a&gt;: Coping with the TCP TIME-WAIT state on busy Linux servers &lt;a href="http://t.co/juPGPxaRad"&gt;http://t.co/juPGPxaRad&lt;/a&gt;&lt;/p&gt;— Volkan Yazıcı (@yazicivo) &lt;a href="https://twitter.com/yazicivo/statuses/438630417722540032"&gt;February 26, 2014&lt;/a&gt;
-&lt;/blockquote&gt;</content>
+&lt;/blockquote&gt;
+</content>
   </entry>
   <entry>
     <id>tag:vy.github.io,2014-01-03://blog/post/2014/01/03/safe-math-ops/</id>
     <title type="html">Detecting Overflows in Java Arithmetic Operators</title>
-    <published>2014-01-03T18:13:00Z</published>
-    <updated>2014-01-03T18:13:00Z</updated>
+    <published>2014-01-03T19:13:00Z</published>
+    <updated>2014-01-03T19:13:00Z</updated>
     <link rel="alternate" href="https://vy.github.io//blog/post/2014/01/03/safe-math-ops/"/>
-    <content type="html">&lt;p&gt;A couple of months ago I came across &lt;a href="https://www.securecoding.cert.org/confluence/display/java/The+CERT+Oracle+Secure+Coding+Standard+for+Java"&gt;The CERT Oracle Secure Coding Standard for Java&lt;/a&gt;. It is suprising how come I did not find this fascinating resource before. I first skimmed through the chapters and figured out that the recommended conventions are so practical that I can even directly use some of them in my existing code base. Right at that time I was working on a routing engine, which performs some arithmetic operators over link costs. It was a good place to apply the conventions metioned in the chapter &lt;a href="https://www.securecoding.cert.org/confluence/display/java/NUM00-J.+Detect+or+prevent+integer+overflow"&gt;NUM00-J. Detect or prevent integer overflow&lt;/a&gt;. Hence, I directly copied safe versions of arithmetic operators into my &lt;code&gt;util&lt;/code&gt; package. (Everybody does have a &lt;code&gt;util&lt;/code&gt;, right?)&lt;/p&gt;
+    <content type="html">
+&lt;p&gt;A couple of months ago I came across &lt;a href="https://www.securecoding.cert.org/confluence/display/java/The+CERT+Oracle+Secure+Coding+Standard+for+Java"&gt;The CERT Oracle Secure Coding Standard for Java&lt;/a&gt;. It is suprising how come I did not find this fascinating resource before. I first skimmed through the chapters and figured out that the recommended conventions are so practical that I can even directly use some of them in my existing code base. Right at that time I was working on a routing engine, which performs some arithmetic operators over link costs. It was a good place to apply the conventions metioned in the chapter &lt;a href="https://www.securecoding.cert.org/confluence/display/java/NUM00-J.+Detect+or+prevent+integer+overflow"&gt;NUM00-J. Detect or prevent integer overflow&lt;/a&gt;. Hence, I directly copied safe versions of arithmetic operators into my &lt;code&gt;util&lt;/code&gt; package. (Everybody does have a &lt;code&gt;util&lt;/code&gt;, right?)&lt;/p&gt;
 
 &lt;pre&gt;&lt;code class="language-java"&gt;&lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kd"&gt;static&lt;/span&gt; &lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="nf"&gt;safeAdd&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="n"&gt;l&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="n"&gt;r&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="kd"&gt;throws&lt;/span&gt; &lt;span class="n"&gt;OverflowException&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
     &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;r&lt;/span&gt; &lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;
@@ -1047,24 +1078,30 @@ blew me away.&lt;/strong&gt; So true!&lt;/p&gt;</content>
     &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;l&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="n"&gt;r&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
 &lt;span class="o"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
 
-&lt;p&gt;To my suprise, I observed integer overflow error messages in the server logs today. Yay! Further examination of the problem revealed that I cause an integer overflow while taking the square of link costs for a particular routing algorithm. Some might argue about the overhead of replacing operators with methods, but let’s think about this: How would I ever figure this problem out if I would not be using these safe arithmetic operators. No need to mention about the problem’s consequences.&lt;/p&gt;</content>
+&lt;p&gt;To my suprise, I observed integer overflow error messages in the server logs today. Yay! Further examination of the problem revealed that I cause an integer overflow while taking the square of link costs for a particular routing algorithm. Some might argue about the overhead of replacing operators with methods, but let’s think about this: How would I ever figure this problem out if I would not be using these safe arithmetic operators. No need to mention about the problem’s consequences.&lt;/p&gt;
+</content>
   </entry>
   <entry>
     <id>tag:vy.github.io,2013-12-04://blog/post/2013/12/04/combinations/</id>
     <title type="html">Key to Parallel Combinations: Enumeration</title>
-    <published>2013-12-04T16:44:00Z</published>
-    <updated>2013-12-04T16:44:00Z</updated>
+    <published>2013-12-04T17:44:00Z</published>
+    <updated>2013-12-04T17:44:00Z</updated>
     <link rel="alternate" href="https://vy.github.io//blog/post/2013/12/04/combinations/"/>
-    <content type="html">&lt;p&gt;Combinations have many use cases in the daily life of a programmer: for
+    <content type="html">
+&lt;p&gt;Combinations have many use cases in the daily life of a programmer: for
 testing a given function, for generating the all possible input sets of a
 particular problem instance, etc. Writing them down in lexicographic order is
 something we all do time to time. For instance, 2-combination of a set
 &lt;script type="math/tex"&gt;(0, 1, 2, 3)&lt;/script&gt; can simply be written as follows.&lt;/p&gt;
 
-&lt;script type="math/tex; mode=display"&gt;{(0, 1), (0, 2), (0, 3), (1, 2), (1, 3), (2, 3)}&lt;/script&gt;&lt;p&gt;We also have a shortcut to get the total number of combinations for a particular
+&lt;script type="math/tex; mode=display"&gt;{(0, 1), (0, 2), (0, 3), (1, 2), (1, 3), (2, 3)}&lt;/script&gt;
+
+&lt;p&gt;We also have a shortcut to get the total number of combinations for a particular
 instance. That is,&lt;/p&gt;
 
-&lt;script type="math/tex; mode=display"&gt;{n \choose r} = \frac{n(n-1)\ldots(n-r+1)}{r(r-1)\dots1}=\frac{n!}{r!(n-r)!},&lt;/script&gt;&lt;p&gt;which applies to our above example 4-choose-2 as follows:
+&lt;script type="math/tex; mode=display"&gt;{n \choose r} = \frac{n(n-1)\ldots(n-r+1)}{r(r-1)\dots1}=\frac{n!}{r!(n-r)!},&lt;/script&gt;
+
+&lt;p&gt;which applies to our above example 4-choose-2 as follows:
 &lt;script type="math/tex"&gt;{4 \choose 2} = \frac{4 \times 3}{2} = 6&lt;/script&gt;.&lt;/p&gt;
 
 &lt;p&gt;You might also have noticed the pattern we used to generate the combinations in
@@ -1097,7 +1134,9 @@ all possible combinations set &lt;script type="math/tex"&gt;\{c_1, c_2, \dots\}&
 &lt;script type="math/tex; mode=display"&gt;
 \{c_1, \dots, c_m\} \textrm{ and } \{c_{m+1}, \dots, c_l\}, \\
 \textrm{where } l = {n \choose r} \textrm{ and } m = \lfloor ^l/_2 \rfloor.
-&lt;/script&gt;&lt;p&gt;Going from &lt;script type="math/tex"&gt;c_1&lt;/script&gt; to &lt;script type="math/tex"&gt;c_m&lt;/script&gt; is trivial, we can keep a counter for the
+&lt;/script&gt;
+
+&lt;p&gt;Going from &lt;script type="math/tex"&gt;c_1&lt;/script&gt; to &lt;script type="math/tex"&gt;c_m&lt;/script&gt; is trivial, we can keep a counter for the
 generated combinations up to &lt;script type="math/tex"&gt;m&lt;/script&gt;. But what about &lt;script type="math/tex"&gt;c_{m+1}&lt;/script&gt;? How can we
 compute the &lt;script type="math/tex"&gt;{m+1}&lt;/script&gt;‘th combination without having a prior information about
 &lt;script type="math/tex"&gt;m&lt;/script&gt;‘th one. In other words, can we calculate &lt;script type="math/tex"&gt;c_{m+1}&lt;/script&gt;, given just &lt;script type="math/tex"&gt;n&lt;/script&gt; and
@@ -1116,11 +1155,15 @@ natural number &lt;script type="math/tex"&gt;b\in\mathbb{N}&lt;/script&gt; map t
 &lt;script type="math/tex; mode=display"&gt;
 b = {d_1 \choose r} + {d_2 \choose r-1} + \dots + {d_r \choose 1},\\
 \textrm{ where } d_1 &gt; d_2 &gt; \dots &gt; d_r.
-&lt;/script&gt;&lt;p&gt;For instance, let &lt;script type="math/tex"&gt;b=8&lt;/script&gt; and &lt;script type="math/tex"&gt;r=2&lt;/script&gt;. Here &lt;script type="math/tex"&gt;b&lt;/script&gt; corresponds to the
+&lt;/script&gt;
+
+&lt;p&gt;For instance, let &lt;script type="math/tex"&gt;b=8&lt;/script&gt; and &lt;script type="math/tex"&gt;r=2&lt;/script&gt;. Here &lt;script type="math/tex"&gt;b&lt;/script&gt; corresponds to the
 2-combination &lt;script type="math/tex"&gt;[4, 2]&lt;/script&gt; in combinatorial number system of degree 2 with the
 following equality.&lt;/p&gt;
 
-&lt;script type="math/tex; mode=display"&gt;8 = {4 \choose 2} + {2 \choose 1}&lt;/script&gt;&lt;p&gt;The r-combination of a given number &lt;script type="math/tex"&gt;b&lt;/script&gt; can be computed using the following
+&lt;script type="math/tex; mode=display"&gt;8 = {4 \choose 2} + {2 \choose 1}&lt;/script&gt;
+
+&lt;p&gt;The r-combination of a given number &lt;script type="math/tex"&gt;b&lt;/script&gt; can be computed using the following
 greedy algorithm: take &lt;script type="math/tex"&gt;d_i&lt;/script&gt; maximal with &lt;script type="math/tex"&gt;{d_i \choose i} \leq b&lt;/script&gt;, then
 take &lt;script type="math/tex"&gt;d_{i-1}&lt;/script&gt; maximal with &lt;script type="math/tex"&gt;{d_{i-1} \choose i-1} \leq b - {d_i \choose i}&lt;/script&gt;,
 and so forth.&lt;/p&gt;
@@ -1134,12 +1177,14 @@ combinations of 5-choose-2. That is, we want the following mapping.&lt;/p&gt;
 2 \rightarrow [0, 3] \quad 7 \rightarrow [2, 3] \\
 3 \rightarrow [0, 4] \quad 8 \rightarrow [2, 4] \\
 4 \rightarrow [1, 2] \quad 9 \rightarrow [3, 4]
-&lt;/script&gt;&lt;p&gt;We know that &lt;script type="math/tex"&gt;{5 \choose 2} = 10&lt;/script&gt;, hence we have 10 combinations enumerated
+&lt;/script&gt;
+
+&lt;p&gt;We know that &lt;script type="math/tex"&gt;{5 \choose 2} = 10&lt;/script&gt;, hence we have 10 combinations enumerated
 from 0 to 9. Let’s try to find the 3rd combination in this sequence from
 scratch.&lt;/p&gt;
 
 &lt;ol&gt;
-&lt;li&gt;First, we set &lt;script type="math/tex"&gt;i&lt;/script&gt; to the index of the combination we are interested in: &lt;script type="math/tex"&gt;i=3&lt;/script&gt;
+  &lt;li&gt;First, we set &lt;script type="math/tex"&gt;i&lt;/script&gt; to the index of the combination we are interested in: &lt;script type="math/tex"&gt;i=3&lt;/script&gt;
 &lt;/li&gt;
   &lt;li&gt;Second, we set &lt;script type="math/tex"&gt;j&lt;/script&gt; to the dual index of &lt;script type="math/tex"&gt;i&lt;/script&gt; in &lt;script type="math/tex"&gt;{5 \choose 2}&lt;/script&gt; system:
 &lt;script type="math/tex"&gt;j = {5 \choose 2} - i - 1 = 6&lt;/script&gt;.&lt;/li&gt;
@@ -1147,11 +1192,13 @@ scratch.&lt;/p&gt;
 that is, the 2-combination corresponding to &lt;script type="math/tex"&gt;j=6&lt;/script&gt; is &lt;script type="math/tex"&gt;[4, 0]&lt;/script&gt;.&lt;/li&gt;
   &lt;li&gt;Next we subtract the found 2-combination from the mask &lt;script type="math/tex"&gt;[4, 4]&lt;/script&gt;, where 4’s
 comes from &lt;script type="math/tex"&gt;5-1&lt;/script&gt;: &lt;script type="math/tex"&gt;[4, 4] - [4, 0] = [0, 4]&lt;/script&gt;.&lt;/li&gt;
-&lt;/ol&gt;&lt;p&gt;Yay! 3rd combination of &lt;script type="math/tex"&gt;{5 \choose 2}&lt;/script&gt; system is &lt;script type="math/tex"&gt;[0, 4]&lt;/script&gt;! Hrm… Was that
+&lt;/ol&gt;
+
+&lt;p&gt;Yay! 3rd combination of &lt;script type="math/tex"&gt;{5 \choose 2}&lt;/script&gt; system is &lt;script type="math/tex"&gt;[0, 4]&lt;/script&gt;! Hrm… Was that
 a coincidence? Let’s give it another try with 8th combination this time.&lt;/p&gt;
 
 &lt;ol&gt;
-&lt;li&gt;First, we set &lt;script type="math/tex"&gt;i&lt;/script&gt; to the index of the combination we are interested in: &lt;script type="math/tex"&gt;i=8&lt;/script&gt;
+  &lt;li&gt;First, we set &lt;script type="math/tex"&gt;i&lt;/script&gt; to the index of the combination we are interested in: &lt;script type="math/tex"&gt;i=8&lt;/script&gt;
 &lt;/li&gt;
   &lt;li&gt;Second, we set &lt;script type="math/tex"&gt;j&lt;/script&gt; to the dual index of &lt;script type="math/tex"&gt;i&lt;/script&gt; in &lt;script type="math/tex"&gt;{5 \choose 2}&lt;/script&gt; system:
 &lt;script type="math/tex"&gt;j = {5 \choose 2} - i - 1 = 1&lt;/script&gt;.&lt;/li&gt;
@@ -1159,7 +1206,9 @@ a coincidence? Let’s give it another try with 8th combination this time.&lt;/p
 that is, the 2-combination corresponding to &lt;script type="math/tex"&gt;j=1&lt;/script&gt; is &lt;script type="math/tex"&gt;[2, 0]&lt;/script&gt;.&lt;/li&gt;
   &lt;li&gt;Next we subtract the found 2-combination from the mask &lt;script type="math/tex"&gt;[4, 4]&lt;/script&gt;:
 &lt;script type="math/tex"&gt;[4, 4] - [2, 0] = [2, 4]&lt;/script&gt;.&lt;/li&gt;
-&lt;/ol&gt;&lt;p&gt;8th combination turns out to be &lt;script type="math/tex"&gt;[2, 4]&lt;/script&gt;. Eureka!&lt;/p&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;8th combination turns out to be &lt;script type="math/tex"&gt;[2, 4]&lt;/script&gt;. Eureka!&lt;/p&gt;
 
 &lt;h1 id="conclusion"&gt;Conclusion&lt;/h1&gt;
 
@@ -1173,7 +1222,7 @@ each of them individually. For this purpose, I put together a Java library:
 &lt;pre&gt;&lt;code class="language-java"&gt;&lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kd"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;Main&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
 
     &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kd"&gt;static&lt;/span&gt; &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;main&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;String&lt;/span&gt;&lt;span class="o"&gt;[]&lt;/span&gt; &lt;span class="n"&gt;args&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
-        &lt;span class="n"&gt;Combination&lt;/span&gt; &lt;span class="n"&gt;c52&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="n"&gt;Combination&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;5&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+        &lt;span class="n"&gt;Combination&lt;/span&gt; &lt;span class="n"&gt;c52&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nf"&gt;Combination&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;5&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
         &lt;span class="kt"&gt;long&lt;/span&gt; &lt;span class="n"&gt;l&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;c52&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;size&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
         &lt;span class="n"&gt;println&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="s"&gt;"size(c52): %d"&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;l&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
         &lt;span class="n"&gt;println&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="s"&gt;"c52"&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;CombinationIterator&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="n"&gt;c52&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;iterator&lt;/span&gt;&lt;span class="o"&gt;());&lt;/span&gt;
@@ -1193,8 +1242,8 @@ each of them individually. For this purpose, I put together a Java library:
 &lt;span class="cm"&gt;         */&lt;/span&gt;
 
         &lt;span class="kt"&gt;long&lt;/span&gt; &lt;span class="n"&gt;m&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;l&lt;/span&gt; &lt;span class="o"&gt;/&lt;/span&gt; &lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
-        &lt;span class="n"&gt;CombinationIterator&lt;/span&gt; &lt;span class="n"&gt;c52_lhs&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="n"&gt;CombinationIterator&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;5&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;m&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
-        &lt;span class="n"&gt;CombinationIterator&lt;/span&gt; &lt;span class="n"&gt;c52_rhs&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="n"&gt;CombinationIterator&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;5&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;m&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+        &lt;span class="n"&gt;CombinationIterator&lt;/span&gt; &lt;span class="n"&gt;c52_lhs&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nf"&gt;CombinationIterator&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;5&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;m&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+        &lt;span class="n"&gt;CombinationIterator&lt;/span&gt; &lt;span class="n"&gt;c52_rhs&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nf"&gt;CombinationIterator&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;5&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;m&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
 
         &lt;span class="n"&gt;println&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="s"&gt;"c52_lhs"&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;c52_lhs&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
         &lt;span class="cm"&gt;/*&lt;/span&gt;
@@ -1253,33 +1302,42 @@ beginning it did not make much sense. Later I found the enlightening 2004 post
 &lt;a href="http://msdn.microsoft.com/en-us/library/aa289166%28VS.71%29.aspx"&gt;Generating the mth Lexicographical Element of a Mathematical
 Combination&lt;/a&gt;
 by James McCaffrey, which cleared out the things and made me start to understand
-the Wikipedia page.&lt;/p&gt;</content>
+the Wikipedia page.&lt;/p&gt;
+</content>
   </entry>
   <entry>
-    <id>tag:vy.github.io,2013-08-06://blog/post/2013/08/06/output-packet-from-input-port/</id>
-    <title type="html">How come a packet gets output from its input port?</title>
+    <id>tag:vy.github.io,2013-08-06://blog/post/2013/08/06/sdn-discovery/</id>
+    <title type="html">Discovery in Software-Defined Networks</title>
     <published>2013-08-06T17:29:00Z</published>
     <updated>2013-08-06T17:29:00Z</updated>
-    <link rel="alternate" href="https://vy.github.io//blog/post/2013/08/06/output-packet-from-input-port/"/>
-    <content type="html">&lt;p&gt;A couple of weeks ago I spotted a really suspicious flow in the logs that directly made me think of a bug at the controller. A packet was arriving to a port of a switch and was getting output from the very same port of the switch. This was kind of weird. If it is supposed to be transmitted back again, then why was it ended up here in the first hand? Was it because of a bug at the controller that first redirected the packet to the switch and then redirected it backwards to the previous switch? A logical fault at the controller was definitely the first suspect here. But later it turned out that this was not the case. The details are as follows.&lt;/p&gt;
+    <link rel="alternate" href="https://vy.github.io//blog/post/2013/08/06/sdn-discovery/"/>
+    <content type="html">
+&lt;p&gt;&lt;em&gt;Discovery&lt;/em&gt; can mean a couple of things in a software-defined network including, but is not limited to, the discovery of the 1) switches, 2) links, and 3) hosts. In this blog post I will briefly describe the basics of the underlying plumbing for these three &lt;em&gt;discovery&lt;/em&gt; tasks. Note that I will assume that the OpenFlow is employed as the south-bound protocol.&lt;/p&gt;
 
-&lt;p&gt;&lt;img src="topology.jpg" alt="SDN Topology"&gt;&lt;/p&gt;
+&lt;h1 id="discovery-of-the-switches"&gt;Discovery of the Switches&lt;/h1&gt;
 
-&lt;p&gt;Consider the above topology, where three switches &lt;code&gt;s1&lt;/code&gt;, &lt;code&gt;s2&lt;/code&gt;, &lt;code&gt;s3&lt;/code&gt; are connected linearly and all together managed by the controller &lt;code&gt;c1&lt;/code&gt;. In addition, &lt;code&gt;s1&lt;/code&gt; and &lt;code&gt;s2&lt;/code&gt; is connected to two hosts &lt;code&gt;h1&lt;/code&gt; and &lt;code&gt;h2&lt;/code&gt;, respectively. The controller, switches, hosts, their connections, and connection port numbers are given in the figure. The scenario generating the subtle gotcha is as follows.&lt;/p&gt;
+&lt;p&gt;So how does a controller get to know the switches in its control domain and their features? A switch is initially configured with a &lt;em&gt;master&lt;/em&gt; controller IP address and a set of &lt;em&gt;slave&lt;/em&gt; controller IP addresses. While the most recent OpenFlow specifications allow a switch to simultaneously connect to multiple controllers, for simplicity, in this post I will assume that a switch first tries to connect to the master controller and if the connection fails, picks one of the slave controllers – that is, a switch is connected to a single controller at a time.&lt;/p&gt;
 
-&lt;ol&gt;
-&lt;li&gt;
-&lt;code&gt;h2&lt;/code&gt; sends a packet destined to &lt;code&gt;h1&lt;/code&gt;, whose attachment point is not learnt yet by &lt;code&gt;c1&lt;/code&gt;.&lt;/li&gt;
-  &lt;li&gt;Hence, upon arrival of the packet from &lt;code&gt;s2&lt;/code&gt;, &lt;code&gt;c1&lt;/code&gt; commands &lt;code&gt;s2&lt;/code&gt; to flood the request.&lt;/li&gt;
-  &lt;li&gt;The flooded request goes to &lt;code&gt;s1&lt;/code&gt; and &lt;code&gt;s3&lt;/code&gt;.&lt;/li&gt;
-  &lt;li&gt;Upon arrival of the packet to &lt;code&gt;s1&lt;/code&gt;, &lt;code&gt;s1&lt;/code&gt; sends the packet to &lt;code&gt;c1&lt;/code&gt; again.&lt;/li&gt;
-  &lt;li&gt;Since &lt;code&gt;c1&lt;/code&gt; still does not know the attachment point of &lt;code&gt;h1&lt;/code&gt;, &lt;code&gt;c1&lt;/code&gt; commands &lt;code&gt;s1&lt;/code&gt; to flood the request for a second time.&lt;/li&gt;
-  &lt;li&gt;Flooded request from &lt;code&gt;s1&lt;/code&gt; reaches to &lt;code&gt;h1&lt;/code&gt; and &lt;code&gt;h1&lt;/code&gt; replies back.&lt;/li&gt;
-  &lt;li&gt;With &lt;code&gt;h1&lt;/code&gt;s response, &lt;code&gt;c1&lt;/code&gt; learns the attachment point of &lt;code&gt;h1&lt;/code&gt;.&lt;/li&gt;
-  &lt;li&gt;In the meantime, &lt;code&gt;s2&lt;/code&gt;s flood (see 3rd step) reaches to &lt;code&gt;s3&lt;/code&gt;
-&lt;/li&gt;
-  &lt;li&gt;Now &lt;code&gt;c1&lt;/code&gt; knows the attachment point of the &lt;code&gt;h1&lt;/code&gt;. Consequently, &lt;code&gt;c1&lt;/code&gt; figures out that the route to &lt;code&gt;h1&lt;/code&gt; goes through &lt;code&gt;s1&lt;/code&gt; and &lt;code&gt;s1&lt;/code&gt; is reachable by &lt;code&gt;p1&lt;/code&gt; of &lt;code&gt;s3&lt;/code&gt;. Hence, &lt;code&gt;c1&lt;/code&gt; commands &lt;code&gt;s3&lt;/code&gt; to output the packet from the very same input port of the packet.&lt;/li&gt;
-&lt;/ol&gt;&lt;p&gt;I do not have a single idea about the probability of such a subtle bug, but somehow it happened to exist in my logs, right at the lines I was just taking a glance and wasted my whole day. The saying was right, network is really unreliable. Gorgeous!&lt;/p&gt;</content>
+&lt;p&gt;When the switch establishes a (TCP) connection to a controller, controller sends a &lt;em&gt;feature request&lt;/em&gt; message to the switch and waits for a reply. When the reply reaches to the controller, controller gets informed about the features provided by the switch, for instance, the datapath ID (i.e., DPID), list of ports, etc.&lt;/p&gt;
+
+&lt;h1 id="discovery-of-the-links"&gt;Discovery of the Links&lt;/h1&gt;
+
+&lt;p&gt;When a switch connects to a controller, controller periodically (e.g., every 5 seconds) commands the switch to flood LLDP (Link Layer Discovery Protocol) and BDDP (Broadcast Domain Discovery Protocol) packets through all of its ports. A discovery protocol packet typically contains the DPID of the sender along with the port of the switch that the message originates from. The reserved set of destination MAC addresses and &lt;code&gt;ethertype&lt;/code&gt;s used by the discovery protocol packets lets the controller to differentiate them with the other data packets. LLDP is used to discover direct links between switches and BDDP is used to discover the switches in the same broadcast domain. LLDP and BDDP differ from each other by the &lt;code&gt;ethertype&lt;/code&gt;s they use.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src="network.jpg" alt="SDN Topology"&gt;&lt;/p&gt;
+
+&lt;p&gt;Consider the above network topology, where &lt;code&gt;s1&lt;/code&gt;, &lt;code&gt;s2&lt;/code&gt;, and &lt;code&gt;s3&lt;/code&gt; are connected to a controller and &lt;code&gt;s4&lt;/code&gt; is a non-OpenFlow switch. Further, each switch is connected to a host. Note that the port numbers are denoted by the numbers at the endpoints of the links. After controller connections to &lt;code&gt;s1&lt;/code&gt;, &lt;code&gt;s2&lt;/code&gt;, &lt;code&gt;s3&lt;/code&gt; get established, the controller commands all three switches to flood LLDP packets. Consequently, LLDP packet sent by &lt;code&gt;p1&lt;/code&gt; of &lt;code&gt;s1&lt;/code&gt; (i.e., 1st port of the 1st switch) reaches to &lt;code&gt;p1&lt;/code&gt; of &lt;code&gt;s3&lt;/code&gt; and &lt;code&gt;s3&lt;/code&gt; forwards this packet to the controller. Since the LLDP packet sent by &lt;code&gt;s1&lt;/code&gt; is actuated by the controller itself, upon receiving the LLDP packet from &lt;code&gt;s3&lt;/code&gt;, controller discovers that there is a link from &lt;code&gt;p1&lt;/code&gt; of &lt;code&gt;s1&lt;/code&gt; to &lt;code&gt;p1&lt;/code&gt; of &lt;code&gt;s3&lt;/code&gt;. Likewise, the LLDP packet sent by &lt;code&gt;p2&lt;/code&gt; of &lt;code&gt;s2&lt;/code&gt; reaches to &lt;code&gt;p2&lt;/code&gt; of &lt;code&gt;s1&lt;/code&gt; and the controller learns that there is a link from &lt;code&gt;s1&lt;/code&gt; to &lt;code&gt;s2&lt;/code&gt; as well, and so on. Proceeding in this way the controller eventually figures out all the &lt;em&gt;direct&lt;/em&gt; links in the topology – we will come to the case for &lt;code&gt;s4&lt;/code&gt;. Note that upon receiving an LLDP packet, controller does not forward these packets any further, LLDP packets just acknowledge the controller about the direct links between the switches.&lt;/p&gt;
+
+&lt;p&gt;Since &lt;code&gt;s4&lt;/code&gt; is a non-OpenFlow switch, it does not flood any LLDP packets and even if it would do so, since &lt;code&gt;s4&lt;/code&gt; is not known by the controller, the LLDP packets originate from &lt;code&gt;s4&lt;/code&gt; to the OpenFlow controler’s domain will not mean anything to the controller. On the other hand topology tells us that &lt;code&gt;p1&lt;/code&gt; of &lt;code&gt;s2&lt;/code&gt; is reachable by &lt;code&gt;p2&lt;/code&gt; of &lt;code&gt;s3&lt;/code&gt;, in other words, they are in the same &lt;em&gt;broadcast domain&lt;/em&gt;, but they do not have a direct link between each other. In this case, LLDP and BDDP packets flooded by &lt;code&gt;s2&lt;/code&gt; and &lt;code&gt;s3&lt;/code&gt; reaches to the non-OpenFlow switch &lt;code&gt;s4&lt;/code&gt;. Since LLDP packets are used for direct link discoveries LLDPs get dropped immediatly at the &lt;code&gt;s4&lt;/code&gt;. However, BDDP packets are broadcasted by non-OpenFlow switches and they make their way to &lt;code&gt;s2&lt;/code&gt; and &lt;code&gt;s3&lt;/code&gt;. By this way the controller discovers that there is an indirect connection between &lt;code&gt;p1&lt;/code&gt; of &lt;code&gt;s2&lt;/code&gt; and &lt;code&gt;p2&lt;/code&gt; of &lt;code&gt;s3&lt;/code&gt; and these switches are in the same broadcast domain.&lt;/p&gt;
+
+&lt;h1 id="discovery-of-the-hosts"&gt;Discovery of the Hosts&lt;/h1&gt;
+
+&lt;p&gt;Using a combination of LLDP and BDDP packets, controller discovers the direct and indirect connections between the switches. Further, controller also keeps an eye on the liveliness of the connections regularly with periodical checks. Equipped with the knowledge of the network topology, controller can determine the shortest path from a source switch port to a destination switch port. But how does it discover the hosts? That is, how does the controller discover the &lt;em&gt;attachment point(s)&lt;/em&gt; of a host?&lt;/p&gt;
+
+&lt;p&gt;Considering the previously illustrated network topology, let’s assume that &lt;code&gt;h1&lt;/code&gt; pings &lt;code&gt;h2&lt;/code&gt;. When ping request reaches to &lt;code&gt;s1&lt;/code&gt;, since there were no previously installed rule(s) for the incoming flow, &lt;code&gt;s1&lt;/code&gt; will forward the first packet of the flow to the controller. This is the first time the controller observes a message originating from &lt;code&gt;h1&lt;/code&gt;. Hence, the controller discovers that &lt;code&gt;p3&lt;/code&gt; of &lt;code&gt;s1&lt;/code&gt; is an attachment point for &lt;code&gt;h1&lt;/code&gt;. But the controller still does not have any knowledge on the attachment points for the destination &lt;code&gt;h2&lt;/code&gt;. Thus, the controller tells &lt;code&gt;s1&lt;/code&gt; to flood the packet. Due to flooding, the ping request reaches to &lt;code&gt;s2&lt;/code&gt; and &lt;code&gt;s3&lt;/code&gt;. For simplicity, let’s assume that the flood first arrived to &lt;code&gt;s2&lt;/code&gt;. Since &lt;code&gt;s2&lt;/code&gt; does not have any corresponding rules for the flow, &lt;code&gt;s2&lt;/code&gt; forwards the packet to the controller. Controller still does not know the attachment point of &lt;code&gt;h2&lt;/code&gt; and hence commands to &lt;code&gt;s2&lt;/code&gt; to flood the packet again. After this second flood, the ping request reaches to &lt;code&gt;h2&lt;/code&gt; and &lt;code&gt;h2&lt;/code&gt; replies back. Upon &lt;code&gt;s2&lt;/code&gt; receiving &lt;code&gt;h2&lt;/code&gt;s reply from &lt;code&gt;p3&lt;/code&gt;, it forwards the reply to the controller. Now the controller discovers that &lt;code&gt;p3&lt;/code&gt; of &lt;code&gt;s2&lt;/code&gt; is an attachment point for &lt;code&gt;h2&lt;/code&gt;. Since controller has previously discovered &lt;code&gt;h1&lt;/code&gt;s attachment point, it knows that the reply needs to be routed from &lt;code&gt;p3&lt;/code&gt; to &lt;code&gt;p2&lt;/code&gt; of &lt;code&gt;s2&lt;/code&gt; and then from &lt;code&gt;p2&lt;/code&gt; to &lt;code&gt;p3&lt;/code&gt; of &lt;code&gt;s1&lt;/code&gt;. Consequently, controller installs the appropriate rules to the switches &lt;code&gt;s1&lt;/code&gt; and &lt;code&gt;s2&lt;/code&gt;, and finally commands &lt;code&gt;s2&lt;/code&gt; to send the ping reply from &lt;code&gt;p2&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Hosts &lt;code&gt;h1&lt;/code&gt;, &lt;code&gt;h2&lt;/code&gt; and &lt;code&gt;h3&lt;/code&gt; all have a single attachment point from the point of view of the controller. Say this time &lt;code&gt;h1&lt;/code&gt; pings &lt;code&gt;h4&lt;/code&gt;. Since the controller does not know the attachment point of &lt;code&gt;h4&lt;/code&gt;, it will repeatedly flood the request until it makes its way to &lt;code&gt;s4&lt;/code&gt; and then &lt;code&gt;h4&lt;/code&gt;. &lt;code&gt;h4&lt;/code&gt;s reply might reach to the controller network either from &lt;code&gt;p1&lt;/code&gt; of &lt;code&gt;s2&lt;/code&gt; or &lt;code&gt;p2&lt;/code&gt; of &lt;code&gt;s3&lt;/code&gt;. Further, each packet originating from &lt;code&gt;h4&lt;/code&gt; can be routed across different paths by &lt;code&gt;s4&lt;/code&gt; too. To handle such cases, controllers generally assign multiple attachment points for &lt;code&gt;h4&lt;/code&gt;.&lt;/p&gt;
+</content>
   </entry>
 </feed>
 

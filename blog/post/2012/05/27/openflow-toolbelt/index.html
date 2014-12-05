@@ -8,7 +8,7 @@
     <script src="/js/bootstrap.js"></script>
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
     <link rel="stylesheet" href="/css/common.css">
-    <meta name="generator" content="nanoc 3.6.4">
+    <meta name="generator" content="nanoc 3.7.4">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/css/post.css">
     <script type="text/javascript">
@@ -52,7 +52,8 @@
 	</div>
 	<div class="body">
 
-	  <p>In the lab, I quite often find my self installing <a href="http://www.openvswitch.org/">Open vSwitch</a> instances, configuring network parameters for certain functionality and probing network interfaces to check connectivity, again and again. You know, the daily routines in an <a href="http://www.openflow.org/">OpenFlow</a> research laboratory. To ease the workflow, I put together a small <em>toolbelt</em>.</p>
+	  
+<p>In the lab, I quite often find my self installing <a href="http://www.openvswitch.org/">Open vSwitch</a> instances, configuring network parameters for certain functionality and probing network interfaces to check connectivity, again and again. You know, the daily routines in an <a href="http://www.openflow.org/">OpenFlow</a> research laboratory. To ease the workflow, I put together a small <em>toolbelt</em>.</p>
 
 <pre><code class="language-bash"><span class="nv">$ </span>of-toolbelt.sh
 Usage: of-toolbelt.sh &lt;ACTION&gt;
@@ -88,7 +89,7 @@ Actions: ofctl
 <span class="nv">$ </span>of-toolbelt.sh vswitchd
 <span class="nv">$ </span>of-toolbelt.sh ethtool_help
 ethtool eth0
-ethtool -s eth0 speed 10 duplex full autoneg off
+ethtool -s eth0 speed <span class="m">10</span> duplex full autoneg off
 ethtool -s eth0 autoneg on
 ethtool -s eth0 autoneg on adver 0x001    <span class="c"># 10 Half</span>
                                  0x002    <span class="c"># 10 Full</span>
@@ -99,12 +100,14 @@ ethtool -s eth0 autoneg on adver 0x001    <span class="c"># 10 Half</span>
                                  0x8000   <span class="c"># 2500 Full(not supported by IEEE standards)</span>
                                  0x1000   <span class="c"># 10000 Full</span>
                                  0x03F    <span class="c"># Auto</span>
-<span class="nv">$ </span>sudo ethtool -s eth0 speed 10 duplex half autoneg off
+<span class="nv">$ </span>sudo ethtool -s eth0 speed <span class="m">10</span> duplex half autoneg off
 <span class="nv">$ </span>of-toolbelt.sh vsctl add-port br0 eth0</code></pre>
 
 <p>You can find the sources in the following gist. Feel free to use it for your own purpose. (<em>Free</em> as in <em>free beer</em>.) No need to say but here it goes: Comments/Contributions are highly welcome.</p>
 
 <script src="https://gist.github.com/2814489.js?file=of-toolbelt.sh"></script>
+
+
 
 	  <script type="text/javascript">
 	    $("#post table").attr("class", "table table-hover");

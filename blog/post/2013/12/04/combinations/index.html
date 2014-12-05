@@ -8,7 +8,7 @@
     <script src="/js/bootstrap.js"></script>
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
     <link rel="stylesheet" href="/css/common.css">
-    <meta name="generator" content="nanoc 3.6.4">
+    <meta name="generator" content="nanoc 3.7.4">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/css/post.css">
     <script type="text/javascript">
@@ -52,16 +52,21 @@
 	</div>
 	<div class="body">
 
-	  <p>Combinations have many use cases in the daily life of a programmer: for
+	  
+<p>Combinations have many use cases in the daily life of a programmer: for
 testing a given function, for generating the all possible input sets of a
 particular problem instance, etc. Writing them down in lexicographic order is
 something we all do time to time. For instance, 2-combination of a set
 <script type="math/tex">(0, 1, 2, 3)</script> can simply be written as follows.</p>
 
-<script type="math/tex; mode=display">{(0, 1), (0, 2), (0, 3), (1, 2), (1, 3), (2, 3)}</script><p>We also have a shortcut to get the total number of combinations for a particular
+<script type="math/tex; mode=display">{(0, 1), (0, 2), (0, 3), (1, 2), (1, 3), (2, 3)}</script>
+
+<p>We also have a shortcut to get the total number of combinations for a particular
 instance. That is,</p>
 
-<script type="math/tex; mode=display">{n \choose r} = \frac{n(n-1)\ldots(n-r+1)}{r(r-1)\dots1}=\frac{n!}{r!(n-r)!},</script><p>which applies to our above example 4-choose-2 as follows:
+<script type="math/tex; mode=display">{n \choose r} = \frac{n(n-1)\ldots(n-r+1)}{r(r-1)\dots1}=\frac{n!}{r!(n-r)!},</script>
+
+<p>which applies to our above example 4-choose-2 as follows:
 <script type="math/tex">{4 \choose 2} = \frac{4 \times 3}{2} = 6</script>.</p>
 
 <p>You might also have noticed the pattern we used to generate the combinations in
@@ -94,7 +99,9 @@ all possible combinations set <script type="math/tex">\{c_1, c_2, \dots\}</scrip
 <script type="math/tex; mode=display">
 \{c_1, \dots, c_m\} \textrm{ and } \{c_{m+1}, \dots, c_l\}, \\
 \textrm{where } l = {n \choose r} \textrm{ and } m = \lfloor ^l/_2 \rfloor.
-</script><p>Going from <script type="math/tex">c_1</script> to <script type="math/tex">c_m</script> is trivial, we can keep a counter for the
+</script>
+
+<p>Going from <script type="math/tex">c_1</script> to <script type="math/tex">c_m</script> is trivial, we can keep a counter for the
 generated combinations up to <script type="math/tex">m</script>. But what about <script type="math/tex">c_{m+1}</script>? How can we
 compute the <script type="math/tex">{m+1}</script>‘th combination without having a prior information about
 <script type="math/tex">m</script>‘th one. In other words, can we calculate <script type="math/tex">c_{m+1}</script>, given just <script type="math/tex">n</script> and
@@ -113,11 +120,15 @@ natural number <script type="math/tex">b\in\mathbb{N}</script> map to a one and 
 <script type="math/tex; mode=display">
 b = {d_1 \choose r} + {d_2 \choose r-1} + \dots + {d_r \choose 1},\\
 \textrm{ where } d_1 > d_2 > \dots > d_r.
-</script><p>For instance, let <script type="math/tex">b=8</script> and <script type="math/tex">r=2</script>. Here <script type="math/tex">b</script> corresponds to the
+</script>
+
+<p>For instance, let <script type="math/tex">b=8</script> and <script type="math/tex">r=2</script>. Here <script type="math/tex">b</script> corresponds to the
 2-combination <script type="math/tex">[4, 2]</script> in combinatorial number system of degree 2 with the
 following equality.</p>
 
-<script type="math/tex; mode=display">8 = {4 \choose 2} + {2 \choose 1}</script><p>The r-combination of a given number <script type="math/tex">b</script> can be computed using the following
+<script type="math/tex; mode=display">8 = {4 \choose 2} + {2 \choose 1}</script>
+
+<p>The r-combination of a given number <script type="math/tex">b</script> can be computed using the following
 greedy algorithm: take <script type="math/tex">d_i</script> maximal with <script type="math/tex">{d_i \choose i} \leq b</script>, then
 take <script type="math/tex">d_{i-1}</script> maximal with <script type="math/tex">{d_{i-1} \choose i-1} \leq b - {d_i \choose i}</script>,
 and so forth.</p>
@@ -131,12 +142,14 @@ combinations of 5-choose-2. That is, we want the following mapping.</p>
 2 \rightarrow [0, 3] \quad 7 \rightarrow [2, 3] \\
 3 \rightarrow [0, 4] \quad 8 \rightarrow [2, 4] \\
 4 \rightarrow [1, 2] \quad 9 \rightarrow [3, 4]
-</script><p>We know that <script type="math/tex">{5 \choose 2} = 10</script>, hence we have 10 combinations enumerated
+</script>
+
+<p>We know that <script type="math/tex">{5 \choose 2} = 10</script>, hence we have 10 combinations enumerated
 from 0 to 9. Let’s try to find the 3rd combination in this sequence from
 scratch.</p>
 
 <ol>
-<li>First, we set <script type="math/tex">i</script> to the index of the combination we are interested in: <script type="math/tex">i=3</script>
+  <li>First, we set <script type="math/tex">i</script> to the index of the combination we are interested in: <script type="math/tex">i=3</script>
 </li>
   <li>Second, we set <script type="math/tex">j</script> to the dual index of <script type="math/tex">i</script> in <script type="math/tex">{5 \choose 2}</script> system:
 <script type="math/tex">j = {5 \choose 2} - i - 1 = 6</script>.</li>
@@ -144,11 +157,13 @@ scratch.</p>
 that is, the 2-combination corresponding to <script type="math/tex">j=6</script> is <script type="math/tex">[4, 0]</script>.</li>
   <li>Next we subtract the found 2-combination from the mask <script type="math/tex">[4, 4]</script>, where 4’s
 comes from <script type="math/tex">5-1</script>: <script type="math/tex">[4, 4] - [4, 0] = [0, 4]</script>.</li>
-</ol><p>Yay! 3rd combination of <script type="math/tex">{5 \choose 2}</script> system is <script type="math/tex">[0, 4]</script>! Hrm… Was that
+</ol>
+
+<p>Yay! 3rd combination of <script type="math/tex">{5 \choose 2}</script> system is <script type="math/tex">[0, 4]</script>! Hrm… Was that
 a coincidence? Let’s give it another try with 8th combination this time.</p>
 
 <ol>
-<li>First, we set <script type="math/tex">i</script> to the index of the combination we are interested in: <script type="math/tex">i=8</script>
+  <li>First, we set <script type="math/tex">i</script> to the index of the combination we are interested in: <script type="math/tex">i=8</script>
 </li>
   <li>Second, we set <script type="math/tex">j</script> to the dual index of <script type="math/tex">i</script> in <script type="math/tex">{5 \choose 2}</script> system:
 <script type="math/tex">j = {5 \choose 2} - i - 1 = 1</script>.</li>
@@ -156,7 +171,9 @@ a coincidence? Let’s give it another try with 8th combination this time.</p>
 that is, the 2-combination corresponding to <script type="math/tex">j=1</script> is <script type="math/tex">[2, 0]</script>.</li>
   <li>Next we subtract the found 2-combination from the mask <script type="math/tex">[4, 4]</script>:
 <script type="math/tex">[4, 4] - [2, 0] = [2, 4]</script>.</li>
-</ol><p>8th combination turns out to be <script type="math/tex">[2, 4]</script>. Eureka!</p>
+</ol>
+
+<p>8th combination turns out to be <script type="math/tex">[2, 4]</script>. Eureka!</p>
 
 <h1 id="conclusion">Conclusion</h1>
 
@@ -170,7 +187,7 @@ each of them individually. For this purpose, I put together a Java library:
 <pre><code class="language-java"><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Main</span> <span class="o">{</span>
 
     <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="n">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="o">{</span>
-        <span class="n">Combination</span> <span class="n">c52</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Combination</span><span class="o">(</span><span class="mi">5</span><span class="o">,</span> <span class="mi">2</span><span class="o">);</span>
+        <span class="n">Combination</span> <span class="n">c52</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">Combination</span><span class="o">(</span><span class="mi">5</span><span class="o">,</span> <span class="mi">2</span><span class="o">);</span>
         <span class="kt">long</span> <span class="n">l</span> <span class="o">=</span> <span class="n">c52</span><span class="o">.</span><span class="na">size</span><span class="o">();</span>
         <span class="n">println</span><span class="o">(</span><span class="s">"size(c52): %d"</span><span class="o">,</span> <span class="n">l</span><span class="o">);</span>
         <span class="n">println</span><span class="o">(</span><span class="s">"c52"</span><span class="o">,</span> <span class="o">(</span><span class="n">CombinationIterator</span><span class="o">)</span> <span class="n">c52</span><span class="o">.</span><span class="na">iterator</span><span class="o">());</span>
@@ -190,8 +207,8 @@ each of them individually. For this purpose, I put together a Java library:
 <span class="cm">         */</span>
 
         <span class="kt">long</span> <span class="n">m</span> <span class="o">=</span> <span class="n">l</span> <span class="o">/</span> <span class="mi">2</span><span class="o">;</span>
-        <span class="n">CombinationIterator</span> <span class="n">c52_lhs</span> <span class="o">=</span> <span class="k">new</span> <span class="n">CombinationIterator</span><span class="o">(</span><span class="mi">5</span><span class="o">,</span> <span class="mi">2</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="n">m</span><span class="o">);</span>
-        <span class="n">CombinationIterator</span> <span class="n">c52_rhs</span> <span class="o">=</span> <span class="k">new</span> <span class="n">CombinationIterator</span><span class="o">(</span><span class="mi">5</span><span class="o">,</span> <span class="mi">2</span><span class="o">,</span> <span class="n">m</span> <span class="o">+</span> <span class="mi">1</span><span class="o">);</span>
+        <span class="n">CombinationIterator</span> <span class="n">c52_lhs</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">CombinationIterator</span><span class="o">(</span><span class="mi">5</span><span class="o">,</span> <span class="mi">2</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="n">m</span><span class="o">);</span>
+        <span class="n">CombinationIterator</span> <span class="n">c52_rhs</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">CombinationIterator</span><span class="o">(</span><span class="mi">5</span><span class="o">,</span> <span class="mi">2</span><span class="o">,</span> <span class="n">m</span> <span class="o">+</span> <span class="mi">1</span><span class="o">);</span>
 
         <span class="n">println</span><span class="o">(</span><span class="s">"c52_lhs"</span><span class="o">,</span> <span class="n">c52_lhs</span><span class="o">);</span>
         <span class="cm">/*</span>
@@ -251,6 +268,7 @@ beginning it did not make much sense. Later I found the enlightening 2004 post
 Combination</a>
 by James McCaffrey, which cleared out the things and made me start to understand
 the Wikipedia page.</p>
+
 
 	  <script type="text/javascript">
 	    $("#post table").attr("class", "table table-hover");

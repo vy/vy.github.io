@@ -8,7 +8,7 @@
     <script src="/js/bootstrap.js"></script>
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
     <link rel="stylesheet" href="/css/common.css">
-    <meta name="generator" content="nanoc 3.6.4">
+    <meta name="generator" content="nanoc 3.7.4">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/css/post.css">
     <script type="text/javascript">
@@ -52,7 +52,8 @@
 	</div>
 	<div class="body">
 
-	  <p><a href="http://www.playframework.org/">Play</a> has a really neat module, called <a href="http://www.playframework.org/documentation/1.0/secure">Secure</a>, to ease the authentication mechanics in a web application. Unfortunately, nowadays none of us would really be willing to fill yet another registration form, that is where <a href="http://developers.facebook.com/docs/reference/plugins/login/">Facebook Login</a> (and similars) comes into play. The problem is, Facebook Login is not something trivial, and integrating it into Secure poses another challange. In this post, I will try to walk you through a Play web application with Secure module enabled and wrapped around Facebook Login. We will use <a href="http://www.playframework.org/documentation/api/1.2.4/play%2Flibs%2FOAuth2.html">OAuth2</a> provided by Play to get an access token from Facebook, and later issue queries using <a href="http://restfb.com/">RestFB</a>.</p>
+	  
+<p><a href="http://www.playframework.org/">Play</a> has a really neat module, called <a href="http://www.playframework.org/documentation/1.0/secure">Secure</a>, to ease the authentication mechanics in a web application. Unfortunately, nowadays none of us would really be willing to fill yet another registration form, that is where <a href="http://developers.facebook.com/docs/reference/plugins/login/">Facebook Login</a> (and similars) comes into play. The problem is, Facebook Login is not something trivial, and integrating it into Secure poses another challange. In this post, I will try to walk you through a Play web application with Secure module enabled and wrapped around Facebook Login. We will use <a href="http://www.playframework.org/documentation/api/1.2.4/play%2Flibs%2FOAuth2.html">OAuth2</a> provided by Play to get an access token from Facebook, and later issue queries using <a href="http://restfb.com/">RestFB</a>.</p>
 
 <p>Let’s start with creating the project directory.</p>
 
@@ -123,11 +124,11 @@ play secure:ov --layout</code></pre>
 <span class="nt">   </span><span class="na">type=</span><span class="s">"text/javascript"</span>
    <span class="na">src=</span><span class="s">"http://connect.facebook.net/en_US/all.js"</span><span class="nt">&gt;</span>
 <span class="nt">&lt;/script&gt;</span>
-<span class="nt">&lt;fb:login</span><span class="na">-button</span> <span class="na">perms=</span><span class="s">"publish_stream"</span><span class="nt">&gt;</span>
+<span class="nt">&lt;fb:login-button</span> <span class="na">perms=</span><span class="s">"publish_stream"</span><span class="nt">&gt;</span>
     <span class="nt">&lt;a</span> <span class="na">href=</span><span class="s">"@{Security.auth()}"</span> <span class="na">class=</span><span class="s">"fb_button fb_button_medium"</span><span class="nt">&gt;</span>
         <span class="nt">&lt;span</span> <span class="na">class=</span><span class="s">"fb_button_text"</span><span class="nt">&gt;</span>Log In<span class="nt">&lt;/span&gt;</span>
     <span class="nt">&lt;/a&gt;</span>
-<span class="err">&lt;</span>/fb:login-button&gt;</code></pre>
+<span class="nt">&lt;/fb:login-button&gt;</span></code></pre>
 
 <p>Click to <em>Login</em> link and go to <code>http://vy.net/secure/login</code>.</p>
 
@@ -159,7 +160,7 @@ play secure:ov --layout</code></pre>
 <p>Now here comes the trick, the <code>Security</code> controller. Let’s first write the code: Here goes <code>app/controllers/Security.java</code>.</p>
 
 <pre><code class="language-java"><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Security</span> <span class="kd">extends</span> <span class="n">Secure</span><span class="o">.</span><span class="na">Security</span> <span class="o">{</span>
-    <span class="kd">static</span> <span class="n">OAuth2</span> <span class="n">FBOAuth</span> <span class="o">=</span> <span class="k">new</span> <span class="n">OAuth2</span><span class="o">(</span>
+    <span class="kd">static</span> <span class="n">OAuth2</span> <span class="n">FBOAuth</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">OAuth2</span><span class="o">(</span>
             <span class="s">"https://graph.facebook.com/oauth/authorize"</span><span class="o">,</span>
             <span class="s">"https://graph.facebook.com/oauth/access_token"</span><span class="o">,</span>
             <span class="s">"17014613976****"</span><span class="o">,</span>  <span class="c1">// App ID/API Key</span>
@@ -169,7 +170,7 @@ play secure:ov --layout</code></pre>
     <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">onAuth</span><span class="o">()</span> <span class="o">{</span>
         <span class="k">if</span> <span class="o">(</span><span class="n">OAuth2</span><span class="o">.</span><span class="na">isCodeResponse</span><span class="o">())</span> <span class="o">{</span>
             <span class="n">OAuth2</span><span class="o">.</span><span class="na">Response</span> <span class="n">response</span> <span class="o">=</span> <span class="n">FBOAuth</span><span class="o">.</span><span class="na">retrieveAccessToken</span><span class="o">(</span><span class="n">onAuthURL</span><span class="o">());</span>
-            <span class="n">FacebookClient</span> <span class="n">fbClient</span> <span class="o">=</span> <span class="k">new</span> <span class="n">DefaultFacebookClient</span><span class="o">(</span><span class="n">response</span><span class="o">.</span><span class="na">accessToken</span><span class="o">);</span>
+            <span class="n">FacebookClient</span> <span class="n">fbClient</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">DefaultFacebookClient</span><span class="o">(</span><span class="n">response</span><span class="o">.</span><span class="na">accessToken</span><span class="o">);</span>
             <span class="n">User</span> <span class="n">fbUser</span> <span class="o">=</span> <span class="n">fbClient</span><span class="o">.</span><span class="na">fetchObject</span><span class="o">(</span><span class="s">"me"</span><span class="o">,</span> <span class="n">com</span><span class="o">.</span><span class="na">restfb</span><span class="o">.</span><span class="na">types</span><span class="o">.</span><span class="na">User</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
             <span class="n">models</span><span class="o">.</span><span class="na">User</span> <span class="n">user</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="na">User</span><span class="o">.</span><span class="na">getById</span><span class="o">(</span><span class="n">fbUser</span><span class="o">.</span><span class="na">getId</span><span class="o">());</span>
             <span class="k">if</span> <span class="o">(</span><span class="n">user</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span>
@@ -222,6 +223,7 @@ play secure:ov --layout</code></pre>
 <p>Now you can just use <code>@With(Secure.class)</code> annotations to define access control for your controllers. (As a next step, you might want to create a <code>Users</code> CRUD controller with access control.)</p>
 
 <p><strong>Edit:</strong> Don’t forget to checkout the <a href="http://github.com/vy/play-facebook">play-facebook</a>, which is ready to go Play Framework application with Facebook Login integration. It follows the mechanics described in here and provides an archetype to bootstrap custom applications.</p>
+
 
 	  <script type="text/javascript">
 	    $("#post table").attr("class", "table table-hover");

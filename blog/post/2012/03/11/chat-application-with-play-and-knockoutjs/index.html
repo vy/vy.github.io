@@ -8,7 +8,7 @@
     <script src="/js/bootstrap.js"></script>
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
     <link rel="stylesheet" href="/css/common.css">
-    <meta name="generator" content="nanoc 3.6.4">
+    <meta name="generator" content="nanoc 3.7.4">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/css/post.css">
     <script type="text/javascript">
@@ -52,7 +52,8 @@
 	</div>
 	<div class="body">
 
-	  <p>For a geography based social web application, I chose to work on a <a href="http://en.wikipedia.org/wiki/Single-page_application">Single Page Application</a> template. For this purpose, I needed a Javascript framework to do the necessary plumbing for synchronizing server side and client side model objects. It took my nearly 3-4 weeks to finish the implementation. I was very happy with its final state and was excited to use it in the rest of the project. Next morning, I met with <a href="http://documentcloud.github.com/backbone/">BackboneJS</a> with a suggestion from a friend of mine. Damn! My implementation was so close to BackboneJS that almost every function name was identical. Anyway, I couldn’t know if I should cry or laugh. Following that path, it didn’t take long for me to discover <a href="http://knockoutjs.com/">KnockoutJS</a>. I found it astonishingly beautiful and directly dived into the depths of the tutorial and spent that half day to read-and-evaluate  the exercises. Since the best way to learn something is to use it, in this blog post I will try to walk you through a chat application using <a href="http://playframework.org/">Play Framework</a> and KnockoutJS.</p>
+	  
+<p>For a geography based social web application, I chose to work on a <a href="http://en.wikipedia.org/wiki/Single-page_application">Single Page Application</a> template. For this purpose, I needed a Javascript framework to do the necessary plumbing for synchronizing server side and client side model objects. It took my nearly 3-4 weeks to finish the implementation. I was very happy with its final state and was excited to use it in the rest of the project. Next morning, I met with <a href="http://documentcloud.github.com/backbone/">BackboneJS</a> with a suggestion from a friend of mine. Damn! My implementation was so close to BackboneJS that almost every function name was identical. Anyway, I couldn’t know if I should cry or laugh. Following that path, it didn’t take long for me to discover <a href="http://knockoutjs.com/">KnockoutJS</a>. I found it astonishingly beautiful and directly dived into the depths of the tutorial and spent that half day to read-and-evaluate  the exercises. Since the best way to learn something is to use it, in this blog post I will try to walk you through a chat application using <a href="http://playframework.org/">Play Framework</a> and KnockoutJS.</p>
 
 <p>In order to save some effort, I’ll use the Facebook Login mechanics described in my <a href="/blog/post/2012/02/20/facebook-login-and-secure-module/">Facebook Login and Secure Module Integration in Play</a> post. Since I put together the necessary pieces into a GitHub project (<a href="http://github.com/vy/play-facebook">play-facebook</a>), I will bootstrap directly from there.</p>
 
@@ -94,7 +95,7 @@ play run</code></pre>
         <span class="o">}</span>
  
         <span class="kd">public</span> <span class="nf">Event</span><span class="o">(</span><span class="n">User</span> <span class="n">user</span><span class="o">,</span> <span class="n">Type</span> <span class="n">type</span><span class="o">)</span> <span class="o">{</span>
-            <span class="k">this</span><span class="o">.</span><span class="na">date</span> <span class="o">=</span> <span class="n">dateFormat</span><span class="o">.</span><span class="na">format</span><span class="o">(</span><span class="k">new</span> <span class="n">Date</span><span class="o">());</span>
+            <span class="k">this</span><span class="o">.</span><span class="na">date</span> <span class="o">=</span> <span class="n">dateFormat</span><span class="o">.</span><span class="na">format</span><span class="o">(</span><span class="k">new</span> <span class="nf">Date</span><span class="o">());</span>
             <span class="k">this</span><span class="o">.</span><span class="na">user</span> <span class="o">=</span> <span class="n">user</span><span class="o">.</span><span class="na">name</span><span class="o">;</span>
             <span class="k">this</span><span class="o">.</span><span class="na">type</span> <span class="o">=</span> <span class="n">type</span><span class="o">;</span>
         <span class="o">}</span>
@@ -123,7 +124,7 @@ play run</code></pre>
  
     <span class="kd">public</span> <span class="kd">static</span> <span class="n">Room</span> <span class="nf">getInstance</span><span class="o">()</span> <span class="o">{</span>
         <span class="k">if</span> <span class="o">(</span><span class="n">instance</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span>
-            <span class="n">instance</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Room</span><span class="o">();</span>
+            <span class="n">instance</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">Room</span><span class="o">();</span>
         <span class="k">return</span> <span class="n">instance</span><span class="o">;</span>
     <span class="o">}</span>
 <span class="o">}</span></code></pre>
@@ -131,13 +132,15 @@ play run</code></pre>
 <p>Below is the list of major components provided by the <code>Room</code> model.</p>
 
 <ul>
-<li>
+  <li>
 <code>eventStream</code>, which is of type <code>ArchivedEventStream&lt;Event&gt;</code>, is the stream of messages that are published in the room. We bound the size of the stream window with <code>EVENT_STREAM_SIZE</code>.</li>
   <li>
 <code>nextMessages</code>, returns the list of messages that are published since the time pointed by passed index number, <code>lastReceived</code>. The main crux here is that, we return a <code>Promise</code>, which is actually a tiny magic provided by <code>ArchivedEventStream</code>. Hence, web server can process these requests asynchronously without blocking the whole thread. And this results in a huge increase in the number of simultaneous requests that we can handle.</li>
   <li>
 <code>Event</code> is the base type that is fed to <code>eventStream</code>. We represent each user action (join, leave, message) by corresponding subclasses of <code>Event</code>, that is, <code>JoinEvent</code>, <code>LeaveEvent</code>, and <code>MessageEvent</code>. As a side note, these classes will be serialized to their JSON counterparts while getting transferred to the client side. Hence, try to keep them as compact as possible.</li>
-</ul><p>Since we have a <code>Room</code>, now we will implement our <code>Chat</code> controller.</p>
+</ul>
+
+<p>Since we have a <code>Room</code>, now we will implement our <code>Chat</code> controller.</p>
 
 <pre><code class="language-java"><span class="nd">@With</span><span class="o">(</span><span class="n">Secure</span><span class="o">.</span><span class="na">class</span><span class="o">)</span>
 <span class="kd">public</span> <span class="kd">class</span> <span class="nc">Chat</span> <span class="kd">extends</span> <span class="n">Controller</span> <span class="o">{</span>
@@ -172,7 +175,8 @@ play run</code></pre>
 
 <p>See the <code>@With(Secure.class)</code> annotation? Yes, only signed in Facebook users are allowed. Per see, <code>index()</code>, <code>join()</code>, <code>leave()</code>, <code>say()</code> methods are clear. The significant bit here is the <code>waitMessages</code> method. Each client will make long <a href="http://en.wikipedia.org/wiki/XMLHttpRequest">XHR</a> polls to the server and wait for incoming messages. And <code>waitMessages</code> will render necessary number of messages from <code>Room</code> event stream in JSON. Since <code>Room.nextMessages()</code> returns a <code>Promise</code>, <code>waitMessages</code> will work in an asynchronous (non-blocking) manner.</p>
 
-<p><img src="1.jpg" alt="Facebook Login Entrance"><img src="2.jpg" alt="Facebook Login Success"></p>
+<p><img src="1.jpg" alt="Facebook Login Entrance">
+<img src="2.jpg" alt="Facebook Login Success"></p>
 
 <p>Let’s modify <code>app/views/Application/index.html</code> as follows to provide a link to the chat room for the signed in users.</p>
 
@@ -317,7 +321,7 @@ wget http://github.com/downloads/SteveSanderson/knockout/knockout-2.0.0.js -O kn
 <p>Let me introduce you to KnockoutJS with a very simple snippet from the above mess.</p>
 
 <ol>
-<li>There is a javascript object, called <code>RoomModel</code>, and it has a boolean field called <code>isJoined</code>.</li>
+  <li>There is a javascript object, called <code>RoomModel</code>, and it has a boolean field called <code>isJoined</code>.</li>
   <li>There is a submit button to send messages to the room and we want the button to be enabled and disabled appropriately according to the <code>RoomModel.isJoined</code> flag.</li>
   <li>
     <p>We instantiate <code>RoomModel</code> as an observable using KnockoutJS.</p>
@@ -333,18 +337,22 @@ wget http://github.com/downloads/SteveSanderson/knockout/knockout-2.0.0.js -O kn
  self.isJoined = ko.observable(false);</p>
   </li>
   <li>Add <code>data-bind="enable: isJoined"</code> attribute to the button.</li>
-</ol><p>After three easy settings, we have the send button auto-magically binded to the <code>isJoined</code> flag. When there occurs a change on the <code>isJoined</code> variable, change will be propagated to the all dependent objects.</p>
+</ol>
+
+<p>After three easy settings, we have the send button auto-magically binded to the <code>isJoined</code> flag. When there occurs a change on the <code>isJoined</code> variable, change will be propagated to the all dependent objects.</p>
 
 <p>Another good thing about KnockoutJS observables is that the change propagation channel is bidrectional. That is, when an observable variable changes, this change gets propagated to the rest of the binded elements. Moreover, a change on the binded elements are also gets reflected to the variables as well. Let’s see this in action.</p>
 
 <ol>
-<li>There is an observable text field called <code>messageText</code>.</li>
+  <li>There is an observable text field called <code>messageText</code>.</li>
   <li>Message input box is binded to this observable through <code>data-bind="enable: isJoined, value: messageText"</code> attribute.</li>
-</ol><p>Here, <code>messageText</code> variable and the value of the input box are bidirectionally synchronized by KnockoutJS observables.
+</ol>
+
+<p>Here, <code>messageText</code> variable and the value of the input box are bidirectionally synchronized by KnockoutJS observables.
 Another cool KnockoutJS feature is its <code>foreach</code> looping functionality over observable arrays. We see on in action while printing out the incoming messages. That is,</p>
 
 <ol>
-<li>
+  <li>
     <p>Messages are stored in an observable array via</p>
 
     <p>#!javascript
@@ -361,7 +369,10 @@ Another cool KnockoutJS feature is its <code>foreach</code> looping functionalit
   <li>
     <p>Inside the loop body, current array element is accessed as is. (Remember the list of JSON-inified <code>Room.Event</code> subclasses?)</p>
   </li>
-</ol><p>There are other cool KnockoutJS tricks that are available in the above chat room sources (e.g., <code>if: type == 'MESSAGE'</code>, <code>css: { you: user == '${username}'</code>, etc.), but explaining all of them is out of the scope of my agenda, at least not in this blog post. I strongly advise you to take a look at the KnockoutJS <a href="http://learn.knockoutjs.com/">tutorials</a> and <a href="documentation">documentation</a>.</p>
+</ol>
+
+<p>There are other cool KnockoutJS tricks that are available in the above chat room sources (e.g., <code>if: type == 'MESSAGE'</code>, <code>css: { you: user == '${username}'</code>, etc.), but explaining all of them is out of the scope of my agenda, at least not in this blog post. I strongly advise you to take a look at the KnockoutJS <a href="http://learn.knockoutjs.com/">tutorials</a> and <a href="documentation">documentation</a>.</p>
+
 
 	  <script type="text/javascript">
 	    $("#post table").attr("class", "table table-hover");

@@ -15,7 +15,7 @@ body {
     border-bottom: 1px dotted;
     margin-top: 0; }
   #code .box {
-    background-color: rgba(0, 0, 0, 0.1);
+    background-color: rgba(239, 239, 239, 0.1);
     padding: 4px;
     margin-bottom: 10px;
     margin-right: 10px;
@@ -23,4 +23,4 @@ body {
     display: inline-block;
     width: 150px; }
     #code .box .highlight {
-      background-color: white; }
+      background-color: #fff; }

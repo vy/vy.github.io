@@ -70,21 +70,21 @@ code {
     color: #a40000;
     border: 1px solid #ef2929; }
   code .g {
-    color: black; }
+    color: #000000; }
   code .k {
     color: #204a87;
     font-weight: bold; }
   code .l {
-    color: black; }
+    color: #000000; }
   code .n {
-    color: black; }
+    color: #000000; }
   code .o {
     color: #ce5c00;
     font-weight: bold; }
   code .x {
-    color: black; }
+    color: #000000; }
   code .p {
-    color: black;
+    color: #000000;
     font-weight: bold; }
   code .cm {
     color: #8f5902;
@@ -101,25 +101,25 @@ code {
   code .gd {
     color: #a40000; }
   code .ge {
-    color: black;
+    color: #000000;
     font-style: italic; }
   code .gr {
     color: #ef2929; }
   code .gh {
-    color: navy;
+    color: #000080;
     font-weight: bold; }
   code .gi {
-    color: #00a000; }
+    color: #00A000; }
   code .go {
-    color: black;
+    color: #000000;
     font-style: italic; }
   code .gp {
     color: #8f5902; }
   code .gs {
-    color: black;
+    color: #000000;
     font-weight: bold; }
   code .gu {
-    color: purple;
+    color: #800080;
     font-weight: bold; }
   code .gt {
     color: #a40000;
@@ -143,7 +143,7 @@ code {
     color: #204a87;
     font-weight: bold; }
   code .ld {
-    color: black; }
+    color: #000000; }
   code .m {
     color: #0000cf;
     font-weight: bold; }
@@ -154,9 +154,9 @@ code {
   code .nb {
     color: #204a87; }
   code .nc {
-    color: black; }
+    color: #000000; }
   code .no {
-    color: black; }
+    color: #000000; }
   code .nd {
     color: #5c35cc;
     font-weight: bold; }
@@ -166,20 +166,20 @@ code {
     color: #cc0000;
     font-weight: bold; }
   code .nf {
-    color: black; }
+    color: #000000; }
   code .nl {
     color: #f57900; }
   code .nn {
-    color: black; }
+    color: #000000; }
   code .nx {
-    color: black; }
+    color: #000000; }
   code .py {
-    color: black; }
+    color: #000000; }
   code .nt {
     color: #204a87;
     font-weight: bold; }
   code .nv {
-    color: black; }
+    color: #000000; }
   code .ow {
     color: #204a87;
     font-weight: bold; }
@@ -224,11 +224,11 @@ code {
   code .bp {
     color: #3465a4; }
   code .vc {
-    color: black; }
+    color: #000000; }
   code .vg {
-    color: black; }
+    color: #000000; }
   code .vi {
-    color: black; }
+    color: #000000; }
   code .il {
     color: #0000cf;
     font-weight: bold; }

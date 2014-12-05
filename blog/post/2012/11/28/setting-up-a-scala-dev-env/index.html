@@ -8,7 +8,7 @@
     <script src="/js/bootstrap.js"></script>
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
     <link rel="stylesheet" href="/css/common.css">
-    <meta name="generator" content="nanoc 3.6.4">
+    <meta name="generator" content="nanoc 3.7.4">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/css/post.css">
     <script type="text/javascript">
@@ -52,7 +52,8 @@
 	</div>
 	<div class="body">
 
-	  <p>Resisting against the <a href="https://class.coursera.org/progfun-2012-001/">Functional Programming Principles in Scala</a> buzz was meaningless. After all, this or that way I know I would be repeating those steps on my own regardless of the presence of such a lecture. To warm up, I looked around for an appropriate development environment for Scala. The last time (~2 years ago) I repeated this same step ended up with a desperate search. Fortunately, reading dozens of blog posts, forum/mailing-list threads, GitHub README’s, repeating try-and-fail procedures leaded me to a working setup. To mitigate the friction at least to an extent for new comers, I put up this blog post to make a list of steps in order to setup a working Scala development environment on top of <a href="http://www.jetbrains.com/idea">IntelliJ IDEA</a> with <a href="http://www.scala-sbt.org/">SBT</a> integration.</p>
+	  
+<p>Resisting against the <a href="https://class.coursera.org/progfun-2012-001/">Functional Programming Principles in Scala</a> buzz was meaningless. After all, this or that way I know I would be repeating those steps on my own regardless of the presence of such a lecture. To warm up, I looked around for an appropriate development environment for Scala. The last time (~2 years ago) I repeated this same step ended up with a desperate search. Fortunately, reading dozens of blog posts, forum/mailing-list threads, GitHub README’s, repeating try-and-fail procedures leaded me to a working setup. To mitigate the friction at least to an extent for new comers, I put up this blog post to make a list of steps in order to setup a working Scala development environment on top of <a href="http://www.jetbrains.com/idea">IntelliJ IDEA</a> with <a href="http://www.scala-sbt.org/">SBT</a> integration.</p>
 
 <h1 id="is-there-a-scala-plugin-available-for-idea">Is there a Scala plugin available for IDEA?</h1>
 
@@ -75,22 +76,26 @@
 <p>At its core, SBT uses <a href="http://ant.apache.org/ivy/">Apache Ivy</a>, which has its own nasty ways of dealing with downloaded JARs under <code>~/.ivy2</code>. Instead of manually defining IDEA module dependencies for each JAR a project uses, lucky for us, there exists an SBT plugin for this purpose: <a href="https://github.com/mpeltonen/sbt-idea">sbt-idea</a>. Basically, sbt-idea enhances SBT with a new task, called <em>gen-idea</em>, which creates IDEA project files with necessary module dependencies induced by SBT. That is,</p>
 
 <ol>
-<li>Add your dependencies to your SBT configuration,</li>
+  <li>Add your dependencies to your SBT configuration,</li>
   <li>Call <code>sbt update</code> to download/update project dependencies,</li>
   <li>Call <code>sbt gen-idea</code> to create IDEA project files,</li>
   <li>Open created project from IDEA.</li>
-</ol><h1 id="what-are-the-idea-modules-created-by-sbt-idea">What are the IDEA modules created by sbt-idea?</h1>
+</ol>
+
+<h1 id="what-are-the-idea-modules-created-by-sbt-idea">What are the IDEA modules created by sbt-idea?</h1>
 
 <p>In addition to below directories, SBT dependencies are added to the IDEA module configuration.</p>
 
 <ul>
-<li>
+  <li>
 <strong>Source Folders:</strong> <code>src/main/{scala,java,resources}</code>
 </li>
   <li>
 <strong>Test Source Folders:</strong> <code>src/test/{scala,java,resources}</code>
 </li>
-</ul><h1 id="what-about-testing">What about testing?</h1>
+</ul>
+
+<h1 id="what-about-testing">What about testing?</h1>
 
 <p>SBT supports a couple of testing frameworks, e.g., <a href="http://etorreborre.github.com/specs2/">specs2</a>, <a href="http://code.google.com/p/scalacheck/">ScalaCheck</a>, and
 <a href="http://www.artima.com/scalatest/">ScalaTest</a>. See <a href="http://www.scala-sbt.org/release/docs/Detailed-Topics/Testing.html">Testing</a> section of the SBT documentation for a detailed discussion.</p>
@@ -132,15 +137,15 @@ target/
 <pre><code class="language-bash"><span class="nv">$ </span>sbt
 <span class="o">[</span>info<span class="o">]</span> Loading project definition from /home/vy/scala/ScalaHelloWorld/project
 <span class="o">[</span>info<span class="o">]</span> Updating <span class="o">{</span>file:/home/vy/scala/ScalaHelloWorld/project/<span class="o">}</span>default-70d248...
-<span class="o">[</span>info<span class="o">]</span> Resolving org.scala-sbt#precompiled-2_10_0-m7;0.12.1 ...
+<span class="o">[</span>info<span class="o">]</span> Resolving org.scala-sbt#precompiled-2_10_0-m7<span class="p">;</span>0.12.1 ...
 <span class="o">[</span>info<span class="o">]</span> Done updating.
 <span class="o">[</span>info<span class="o">]</span> Set current project to ScalaHelloWorld <span class="o">(</span>in build file:/home/vy/scala/ScalaHelloWorld/<span class="o">)</span>
 &gt; gen-idea
 <span class="o">[</span>info<span class="o">]</span> Trying to create an Idea module ScalaHelloWorld
 <span class="o">[</span>info<span class="o">]</span> Updating <span class="o">{</span>file:/home/vy/scala/ScalaHelloWorld/<span class="o">}</span>default-3005c4...
-<span class="o">[</span>info<span class="o">]</span> Resolving org.scalatest#scalatest_2.9.2;1.8 ...
+<span class="o">[</span>info<span class="o">]</span> Resolving org.scalatest#scalatest_2.9.2<span class="p">;</span>1.8 ...
 <span class="o">[</span>info<span class="o">]</span> Done updating.
-<span class="o">[</span>info<span class="o">]</span> Resolving org.scalatest#scalatest_2.9.2;1.8 ...
+<span class="o">[</span>info<span class="o">]</span> Resolving org.scalatest#scalatest_2.9.2<span class="p">;</span>1.8 ...
 <span class="o">[</span>info<span class="o">]</span> Excluding folder target
 <span class="o">[</span>info<span class="o">]</span> Created /home/vy/scala/ScalaHelloWorld/.idea/IdeaProject.iml
 <span class="o">[</span>info<span class="o">]</span> Created /home/vy/scala/ScalaHelloWorld/.idea
@@ -179,6 +184,7 @@ target/
 <span class="o">}</span></code></pre>
 
 <p>Enjoy the rest by either creating your own IDEA run configurations, or manually running tasks within the SBT console. (As a final note, while creating IDEA run configurations, you can use SBT <em>Before Launch</em> task provided by IDEA SBT plugin.)</p>
+
 
 	  <script type="text/javascript">
 	    $("#post table").attr("class", "table table-hover");

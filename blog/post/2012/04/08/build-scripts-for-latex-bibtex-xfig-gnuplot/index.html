@@ -8,7 +8,7 @@
     <script src="/js/bootstrap.js"></script>
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
     <link rel="stylesheet" href="/css/common.css">
-    <meta name="generator" content="nanoc 3.6.4">
+    <meta name="generator" content="nanoc 3.7.4">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/css/post.css">
     <script type="text/javascript">
@@ -52,12 +52,13 @@
 	</div>
 	<div class="body">
 
-	  <p>Over the past 8 years, I needed to compile LaTeX documents for this or that reason. As time passed, I enhanced them with BibTeX, XFig, and Gnuplot. Further, I generally needed to produce PDF files validated by <a href="http://www.pdf-express.org/">IEEE PDF eXpress</a>. Here, I share some scripts I developed during the road to ease the pain.</p>
+	  
+<p>Over the past 8 years, I needed to compile LaTeX documents for this or that reason. As time passed, I enhanced them with BibTeX, XFig, and Gnuplot. Further, I generally needed to produce PDF files validated by <a href="http://www.pdf-express.org/">IEEE PDF eXpress</a>. Here, I share some scripts I developed during the road to ease the pain.</p>
 
 <p>First, note that there is a certain directory structure I stick to.</p>
 
 <ul>
-<li>
+  <li>
 <code>/</code> – LaTeX (.tex) and BibTeX (<code>.bib</code>) files are placed here.</li>
   <li>
 <code>/constants.tex</code> – LaTeX file for constants (variables, definitions, commands, etc.) shared between LaTeX and XFig files.</li>
@@ -68,7 +69,9 @@
   <li><code>/figs/fig2eps.sh</code></li>
   <li>
 <code>/figs/make.sh</code> – Compiles the XFig and Gnuplot into EPS format.</li>
-</ul><p>Below is the entry point, <code>/make.sh</code>. (Make sure you have <code>latex</code>, <code>bibtex</code>, <code>dvips</code>, and <code>pspdf</code> commands available.)</p>
+</ul>
+
+<p>Below is the entry point, <code>/make.sh</code>. (Make sure you have <code>latex</code>, <code>bibtex</code>, <code>dvips</code>, and <code>pspdf</code> commands available.)</p>
 
 <pre><code class="language-bash"><span class="c">#!/bin/bash</span>
 
@@ -77,7 +80,7 @@ usage<span class="o">()</span> <span class="o">{</span>
     <span class="nb">exit </span>1
 <span class="o">}</span>
 
-<span class="o">[</span> <span class="nv">$# </span>-ne 2 <span class="o">]</span> <span class="o">&amp;&amp;</span> usage
+<span class="o">[</span> <span class="nv">$# </span>-ne <span class="m">2</span> <span class="o">]</span> <span class="o">&amp;&amp;</span> usage
 <span class="nv">BASENAME</span><span class="o">=</span><span class="nv">$1</span>
 <span class="nv">ACTION</span><span class="o">=</span><span class="nv">$2</span>
 
@@ -117,10 +120,10 @@ make_clean<span class="o">()</span> <span class="o">{</span>
 <span class="o">}</span>
 
 <span class="k">case</span> <span class="nv">$ACTION</span> in
-    latex<span class="o">)</span> make_latex <span class="nv">$BASENAME</span>;;
-    bibtex<span class="o">)</span> make_bibtex <span class="nv">$BASENAME</span>;;
-    clean<span class="o">)</span> make_clean <span class="nv">$BASENAME</span>;;
-    *<span class="o">)</span> usage;;
+    latex<span class="o">)</span> make_latex <span class="nv">$BASENAME</span><span class="p">;;</span>
+    bibtex<span class="o">)</span> make_bibtex <span class="nv">$BASENAME</span><span class="p">;;</span>
+    clean<span class="o">)</span> make_clean <span class="nv">$BASENAME</span><span class="p">;;</span>
+    *<span class="o">)</span> usage<span class="p">;;</span>
 <span class="k">esac</span></code></pre>
 
 <p>In <code>/make.sh</code>, I follow LaTeX-&gt;DVI-&gt;PostScript-&gt;PDF path. The main reason for the preference of this path over LaTeX-&gt;PDF is to properly process scalable EPS figures produced by XFig. (Personally, I hate to see broken figures in published articles.)</p>
@@ -133,17 +136,17 @@ make_clean<span class="o">()</span> <span class="o">{</span>
 <span class="nb">set</span> -x
 
 get_modify_time<span class="o">()</span> <span class="o">{</span>
-    <span class="k">if</span> <span class="o">[</span> -e <span class="s2">"$1"</span> <span class="o">]</span>; <span class="k">then</span>
-<span class="k">	</span><span class="nv">DT</span><span class="o">=</span><span class="k">$(</span>stat <span class="s2">"$1"</span> | grep ^Modify: | sed <span class="s1">'s/^Modify: //g'</span><span class="k">)</span>
+    <span class="k">if</span> <span class="o">[</span> -e <span class="s2">"$1"</span> <span class="o">]</span><span class="p">;</span> <span class="k">then</span>
+	<span class="nv">DT</span><span class="o">=</span><span class="k">$(</span>stat <span class="s2">"$1"</span> <span class="p">|</span> grep ^Modify: <span class="p">|</span> sed <span class="s1">'s/^Modify: //g'</span><span class="k">)</span>
 	date -d <span class="s2">"$DT"</span> +%s
     <span class="k">else</span>
-<span class="k">	</span><span class="nb">echo </span>0
+	<span class="nb">echo </span>0
     <span class="k">fi</span>
 <span class="o">}</span>
 
-find -name <span class="s2">"*.fig"</span> | <span class="se">\</span>
-<span class="k">while </span><span class="nb">read </span>FIG; <span class="k">do</span>
-<span class="k">    </span><span class="nv">BAS</span><span class="o">=</span><span class="k">$(</span>basename <span class="s2">"$FIG"</span> | sed <span class="s1">'s/\.fig$//g'</span><span class="k">)</span>
+find -name <span class="s2">"*.fig"</span> <span class="p">|</span> <span class="se">\</span>
+<span class="k">while</span> <span class="nb">read </span>FIG<span class="p">;</span> <span class="k">do</span>
+    <span class="nv">BAS</span><span class="o">=</span><span class="k">$(</span>basename <span class="s2">"$FIG"</span> <span class="p">|</span> sed <span class="s1">'s/\.fig$//g'</span><span class="k">)</span>
     <span class="nv">BAK</span><span class="o">=</span><span class="s2">"$BAS.fig.bak"</span>
     <span class="nv">EPS</span><span class="o">=</span><span class="s2">"$BAS.eps"</span>
 
@@ -156,16 +159,16 @@ find -name <span class="s2">"*.fig"</span> | <span class="se">\</span>
     rm -f <span class="s2">"$BAK"</span>
 <span class="k">done</span>
 
-find -name <span class="s2">"*.gnu"</span> | <span class="se">\</span>
-<span class="k">while </span><span class="nb">read </span>GNU; <span class="k">do</span>
-<span class="k">    </span><span class="nv">BAS</span><span class="o">=</span><span class="k">$(</span>basename <span class="s2">"$GNU"</span> | sed <span class="s1">'s/\.gnu$//g'</span><span class="k">)</span>
+find -name <span class="s2">"*.gnu"</span> <span class="p">|</span> <span class="se">\</span>
+<span class="k">while</span> <span class="nb">read </span>GNU<span class="p">;</span> <span class="k">do</span>
+    <span class="nv">BAS</span><span class="o">=</span><span class="k">$(</span>basename <span class="s2">"$GNU"</span> <span class="p">|</span> sed <span class="s1">'s/\.gnu$//g'</span><span class="k">)</span>
     <span class="nv">EPS</span><span class="o">=</span><span class="s2">"$BAS.eps"</span>
 
     <span class="c"># See if EPS needs to be updated.</span>
     <span class="nv">T_GNU</span><span class="o">=</span><span class="k">$(</span>get_modify_time <span class="s2">"$GNU"</span><span class="k">)</span>
     <span class="nv">T_EPS</span><span class="o">=</span><span class="k">$(</span>get_modify_time <span class="s2">"$EPS"</span><span class="k">)</span>
-    <span class="k">if</span> <span class="o">[</span> <span class="nv">$T_GNU</span> -gt <span class="nv">$T_EPS</span> <span class="o">]</span>; <span class="k">then</span>
-<span class="k">	</span>gnuplot <span class="nv">$GNU</span>
+    <span class="k">if</span> <span class="o">[</span> <span class="nv">$T_GNU</span> -gt <span class="nv">$T_EPS</span> <span class="o">]</span><span class="p">;</span> <span class="k">then</span>
+	gnuplot <span class="nv">$GNU</span>
     <span class="k">fi</span>
 <span class="k">done</span>
 
@@ -179,8 +182,8 @@ find -name <span class="s2">"*.gnu"</span> | <span class="se">\</span>
 
 <span class="nb">set</span> -x
 
-<span class="k">if</span> <span class="o">[</span> <span class="k">${#</span><span class="p">@</span><span class="k">}</span> -ne 1 <span class="o">]</span>; <span class="k">then</span>
-<span class="k">    </span><span class="nb">echo</span> <span class="s2">"Usage: $0 &lt;BASENAME&gt;"</span>
+<span class="k">if</span> <span class="o">[</span> <span class="k">${#</span><span class="p">@</span><span class="k">}</span> -ne <span class="m">1</span> <span class="o">]</span><span class="p">;</span> <span class="k">then</span>
+    <span class="nb">echo</span> <span class="s2">"Usage: $0 &lt;BASENAME&gt;"</span>
     <span class="nb">exit </span>1
 <span class="k">fi</span>
 
@@ -225,6 +228,7 @@ rm -f <span class="se">\</span>
 <p>and you are ready to go.</p>
 
 <p>Scripts need a little bit more cleaning and they are probably not the most correct ones. Anyway, they served well until now, and I hope they would for you as well.</p>
+
 
 	  <script type="text/javascript">
 	    $("#post table").attr("class", "table table-hover");

@@ -8,7 +8,7 @@
     <script src="/js/bootstrap.js"></script>
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
     <link rel="stylesheet" href="/css/common.css">
-    <meta name="generator" content="nanoc 3.6.4">
+    <meta name="generator" content="nanoc 3.7.4">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/css/post.css">
     <script type="text/javascript">
@@ -52,7 +52,8 @@
 	</div>
 	<div class="body">
 
-	  <p>I have always been interested in concurrent programming through the use of
+	  
+<p>I have always been interested in concurrent programming through the use of
 threads. This inclination did not originate from a need to exploit the
 parallelism at the hardware level for performance reasons, but rather due to the
 fact that I believe it establishes a model of reasoning about your code that
@@ -192,17 +193,19 @@ and regular iterations using 3 JVM forks. There are 503 threads in each
 benchmark and 1e7 message passings. Results are in milliseconds per benchmark.</p>
 
 <table id="results">
-<thead><tr>
-<th>Fiber Impl.</th>
+	<thead>
+		<tr>
+			<th>Fiber Impl.</th>
 			<th>Min.</th>
 			<th colspan="2">Avg.</th>
 			<th>Max.</th>
 			<th>Stddev.</th>
 			<th colspan="3">Confidence Interval</th>
-		</tr></thead>
-<tbody>
-<tr>
-<td>Quasar Fibers</td>
+		</tr>
+	</thead>
+	<tbody>
+		<tr>
+			<td>Quasar Fibers</td>
 			<td>695.613</td>
 			<td>29x</td>
 			<td>721.457</td>
@@ -212,8 +215,8 @@ benchmark and 1e7 message passings. Results are in milliseconds per benchmark.</
 			<td>699.226</td>
 			<td>743.689</td>
 		</tr>
-<tr>
-<td>Akka Actors</td>
+		<tr>
+			<td>Akka Actors</td>
 			<td>856.807</td>
 			<td>23x</td>
 			<td>911.295</td>
@@ -223,8 +226,8 @@ benchmark and 1e7 message passings. Results are in milliseconds per benchmark.</
 			<td>874.578</td>
 			<td>948.012</td>
 		</tr>
-<tr>
-<td>Quasar Actors</td>
+		<tr>
+			<td>Quasar Actors</td>
 			<td>1553.224</td>
 			<td>13x</td>
 			<td>1606.718</td>
@@ -234,8 +237,8 @@ benchmark and 1e7 message passings. Results are in milliseconds per benchmark.</
 			<td>1568.492</td>
 			<td>1644.943</td>
 		</tr>
-<tr>
-<td>Java Threads</td>
+		<tr>
+			<td>Java Threads</td>
 			<td>15730.028</td>
 			<td>1x</td>
 			<td>20709.233</td>
@@ -245,12 +248,15 @@ benchmark and 1e7 message passings. Results are in milliseconds per benchmark.</
 			<td>16071.196</td>
 			<td>25347.270</td>
 		</tr>
-</tbody>
-</table><style type="text/css">
+	</tbody>
+</table>
+<style type="text/css">
 table#results tbody tr td { text-align: right; }
 table#results thead tr th { text-align: center; }
 table#results td { padding: 1px; }
-</style><div id="chartContainer" style="margin: 0 auto; height: 100px; width: 75%"></div>
+</style>
+
+<div id="chartContainer" style="margin: 0 auto; height: 100px; width: 75%"></div>
 <script type="text/javascript">
 $(document).ready(function() {
 	var chart = new CanvasJS.Chart("chartContainer", {
@@ -287,7 +293,9 @@ $(document).ready(function() {
 		});
 	chart.render();
 });
-</script><p>Results point out that even in the worst case (which corresponds to Quasar
+</script>
+
+<p>Results point out that even in the worst case (which corresponds to Quasar
 Actors in the figures) fiber implementation on the average performs 13 times
 better compared to native Java threads. In addition, Akka Actors and Quasar
 Fibers improve this level up to 23x and 29x, respectively. All that being said
@@ -299,17 +307,19 @@ order to further investigate the problem, I profiled the benchmarks using
 documentation for further information on the parameters.)</p>
 
 <table id="hprof">
-<thead><tr>
-<th>rank</th>
+	<thead>
+		<tr>
+			<th>rank</th>
 			<th>self</th>
 			<th>accum</th>
 			<th>count</th>
 			<th>trace</th>
 			<th>method</th>
-		</tr></thead>
-<tbody>
-<tr><th colspan="6">Quasar Fibers</th></tr>
-<tr class="highlight">
+		</tr>
+	</thead>
+	<tbody>
+		<tr><th colspan="6">Quasar Fibers</th></tr>
+		<tr class="highlight">
 <td>1</td>
 <td>47,55%</td>
 <td>47,55%</td>
@@ -317,7 +327,7 @@ documentation for further information on the parameters.)</p>
 <td>300366</td>
 <td>co.paralleluniverse.fibers.Fiber.run1</td>
 </tr>
-<tr>
+		<tr>
 <td>2</td>
 <td>47,48%</td>
 <td>95,04%</td>
@@ -325,7 +335,7 @@ documentation for further information on the parameters.)</p>
 <td>300364</td>
 <td>com.github.vy.fibertest.QuasarFiberRingBenchmark$InternalFiber.run</td>
 </tr>
-<tr>
+		<tr>
 <td>3</td>
 <td>3,37%</td>
 <td>98,40%</td>
@@ -333,8 +343,8 @@ documentation for further information on the parameters.)</p>
 <td>300372</td>
 <td>com.github.vy.fibertest.QuasarFiberRingBenchmark$InternalFiber.run</td>
 </tr>
-<tr><th colspan="6">Quasar Actors</th></tr>
-<tr>
+		<tr><th colspan="6">Quasar Actors</th></tr>
+		<tr>
 <td>1</td>
 <td>22,17%</td>
 <td>22,17%</td>
@@ -342,7 +352,7 @@ documentation for further information on the parameters.)</p>
 <td>300526</td>
 <td>co.paralleluniverse.fibers.Fiber.park1</td>
 </tr>
-<tr>
+		<tr>
 <td>2</td>
 <td>18,53%</td>
 <td>40,69%</td>
@@ -350,7 +360,7 @@ documentation for further information on the parameters.)</p>
 <td>300508</td>
 <td>co.paralleluniverse.fibers.Fiber.run</td>
 </tr>
-<tr class="highlight">
+		<tr class="highlight">
 <td>3</td>
 <td>18,32%</td>
 <td>59,01%</td>
@@ -358,7 +368,7 @@ documentation for further information on the parameters.)</p>
 <td>300527</td>
 <td>co.paralleluniverse.strands.channels.SingleConsumerQueueChannel.receive</td>
 </tr>
-<tr>
+		<tr>
 <td>4</td>
 <td>18,27%</td>
 <td>77,28%</td>
@@ -366,7 +376,7 @@ documentation for further information on the parameters.)</p>
 <td>300517</td>
 <td>com.github.vy.fibertest.QuasarActorRingBenchmark$InternalActor.doRun</td>
 </tr>
-<tr>
+		<tr>
 <td>5</td>
 <td>17,39%</td>
 <td>94,67%</td>
@@ -374,8 +384,8 @@ documentation for further information on the parameters.)</p>
 <td>300528</td>
 <td>co.paralleluniverse.actors.ActorRunner.run</td>
 </tr>
-<tr><th colspan="6">Akka Actors</th></tr>
-<tr class="highlight">
+		<tr><th colspan="6">Akka Actors</th></tr>
+		<tr class="highlight">
 <td>1</td>
 <td>64,09%</td>
 <td>64,09%</td>
@@ -383,7 +393,7 @@ documentation for further information on the parameters.)</p>
 <td>300307</td>
 <td>scala.concurrent.forkjoin.ForkJoinPool.runWorker</td>
 </tr>
-<tr>
+		<tr>
 <td>2</td>
 <td>12,51%</td>
 <td>76,60%</td>
@@ -391,7 +401,7 @@ documentation for further information on the parameters.)</p>
 <td>300298</td>
 <td>sun.misc.Unsafe.park</td>
 </tr>
-<tr>
+		<tr>
 <td>3</td>
 <td>10,69%</td>
 <td>87,29%</td>
@@ -399,7 +409,7 @@ documentation for further information on the parameters.)</p>
 <td>300309</td>
 <td>sun.misc.Unsafe.unpark</td>
 </tr>
-<tr>
+		<tr>
 <td>4</td>
 <td>2,65%</td>
 <td>89,94%</td>
@@ -407,7 +417,7 @@ documentation for further information on the parameters.)</p>
 <td>300300</td>
 <td>scala.concurrent.forkjoin.ForkJoinPool.scan</td>
 </tr>
-<tr>
+		<tr>
 <td>5</td>
 <td>1,12%</td>
 <td>91,05%</td>
@@ -415,8 +425,8 @@ documentation for further information on the parameters.)</p>
 <td>300316</td>
 <td>akka.dispatch.Dispatcher.dispatch</td>
 </tr>
-<tr><th colspan="6">Java Threads</th></tr>
-<tr class="highlight">
+		<tr><th colspan="6">Java Threads</th></tr>
+		<tr class="highlight">
 <td>1</td>
 <td>94,33%</td>
 <td>94,33%</td>
@@ -424,7 +434,7 @@ documentation for further information on the parameters.)</p>
 <td>300057</td>
 <td>sun.misc.Unsafe.unpark</td>
 </tr>
-<tr>
+		<tr>
 <td>2</td>
 <td>5,59%</td>
 <td>99,93%</td>
@@ -432,11 +442,14 @@ documentation for further information on the parameters.)</p>
 <td>300058</td>
 <td>sun.misc.Unsafe.park</td>
 </tr>
-</tbody>
-</table><style type="text/css">
+	</tbody>
+</table>
+<style type="text/css">
 table#hprof tr.highlight td { color: red; }
 table#hprof td { padding: 1px; }
-</style><p>As anticipated, Java Threads were bitten by <code>park</code>/<code>unpark</code> methods in
+</style>
+
+<p>As anticipated, Java Threads were bitten by <code>park</code>/<code>unpark</code> methods in
 <code>sun.misc.Unsafe</code>. Whereas, Akka Actors and Quasar Fibers perform some sort of
 interleaving between routines to avoid these calls and that totally rocks.
 Unfortunately, it turns out that the channel mechanisms (e.g.,
@@ -455,6 +468,7 @@ Actors have a certain room for improvement and might borrow some ideas from its
 Akka counterpart. In the overall, both fiber implementations show stable and
 noteworthy performance figures and stand as a perfect standard Java Thread
 replacement for a considerable amount of use cases.</p>
+
 
 	  <script type="text/javascript">
 	    $("#post table").attr("class", "table table-hover");

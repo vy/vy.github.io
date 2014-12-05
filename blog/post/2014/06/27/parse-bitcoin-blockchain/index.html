@@ -8,7 +8,7 @@
     <script src="/js/bootstrap.js"></script>
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
     <link rel="stylesheet" href="/css/common.css">
-    <meta name="generator" content="nanoc 3.6.4">
+    <meta name="generator" content="nanoc 3.7.4">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/css/post.css">
     <script type="text/javascript">
@@ -52,7 +52,8 @@
 	</div>
 	<div class="body">
 
-	  <p>Last week I spent some time on collecting certain statistics (e.g., average
+	  
+<p>Last week I spent some time on collecting certain statistics (e.g., average
 number of performed transactions and created blocks per month) over a vast
 (~20GB) Bitcoin blockchain dataset. The hardest part for me was to pick the
 right tool to parse the raw blockchain data. First, I hit the Google with
@@ -88,13 +89,15 @@ the bitcoinj Maven dependency in my <code>pom.xml</code> as follows:</p>
 <p>Next, I downloaded a couple of raw blockchain data for test purposes:</p>
 
 <ul>
-<li>
+  <li>
 <a href="https://code.google.com/p/blockchain/source/browse/trunk/blk00000.dat">Sample data composed of 5000 blocks</a> (128 MB)</li>
   <li>
 <a href="https://bitfetch.com/static/bootstrap.7z">From the genesis block through height 295,000</a> (4.7 GB)</li>
   <li>
 <a href="https://bitcoin.org/bin/blockchain/bootstrap.dat.torrent">From the genesis block through a recent height</a> (~17 GB as of this post)</li>
-</ul><p>Here comes the simplest part: the Java code. Below, I calculate the average
+</ul>
+
+<p>Here comes the simplest part: the Java code. Below, I calculate the average
 number of transactions per block per month.</p>
 
 <pre><code class="language-java"><span class="kn">import</span> <span class="nn">com.google.bitcoin.core.Block</span><span class="o">;</span>
@@ -111,10 +114,10 @@ number of transactions per block per month.</p>
 <span class="kn">import</span> <span class="nn">java.util.Map</span><span class="o">;</span>
 
 <span class="c1">// Arm the blockchain file loader.</span>
-<span class="n">NetworkParameters</span> <span class="n">np</span> <span class="o">=</span> <span class="k">new</span> <span class="n">MainNetParams</span><span class="o">();</span>
+<span class="n">NetworkParameters</span> <span class="n">np</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">MainNetParams</span><span class="o">();</span>
 <span class="n">List</span><span class="o">&lt;</span><span class="n">File</span><span class="o">&gt;</span> <span class="n">blockChainFiles</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ArrayList</span><span class="o">&lt;&gt;();</span>
-<span class="n">blockChainFiles</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="k">new</span> <span class="n">File</span><span class="o">(</span><span class="s">"/tmp/bootstrap.dat"</span><span class="o">));</span>
-<span class="n">BlockFileLoader</span> <span class="n">bfl</span> <span class="o">=</span> <span class="k">new</span> <span class="n">BlockFileLoader</span><span class="o">(</span><span class="n">np</span><span class="o">,</span> <span class="n">blockChainFiles</span><span class="o">);</span>
+<span class="n">blockChainFiles</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="k">new</span> <span class="nf">File</span><span class="o">(</span><span class="s">"/tmp/bootstrap.dat"</span><span class="o">));</span>
+<span class="n">BlockFileLoader</span> <span class="n">bfl</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">BlockFileLoader</span><span class="o">(</span><span class="n">np</span><span class="o">,</span> <span class="n">blockChainFiles</span><span class="o">);</span>
 
 <span class="c1">// Data structures to keep the statistics.</span>
 <span class="n">Map</span><span class="o">&lt;</span><span class="n">String</span><span class="o">,</span> <span class="n">Integer</span><span class="o">&gt;</span> <span class="n">monthlyTxCount</span> <span class="o">=</span> <span class="k">new</span> <span class="n">HashMap</span><span class="o">&lt;&gt;();</span>
@@ -124,7 +127,7 @@ number of transactions per block per month.</p>
 <span class="k">for</span> <span class="o">(</span><span class="n">Block</span> <span class="n">block</span> <span class="o">:</span> <span class="n">bfl</span><span class="o">)</span> <span class="o">{</span>
 
     <span class="c1">// Extract the month keyword.</span>
-    <span class="n">String</span> <span class="n">month</span> <span class="o">=</span> <span class="k">new</span> <span class="n">SimpleDateFormat</span><span class="o">(</span><span class="s">"yyyy-MM"</span><span class="o">).</span><span class="na">format</span><span class="o">(</span><span class="n">block</span><span class="o">.</span><span class="na">getTime</span><span class="o">());</span>
+    <span class="n">String</span> <span class="n">month</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">SimpleDateFormat</span><span class="o">(</span><span class="s">"yyyy-MM"</span><span class="o">).</span><span class="na">format</span><span class="o">(</span><span class="n">block</span><span class="o">.</span><span class="na">getTime</span><span class="o">());</span>
 
     <span class="c1">// Make sure there exists an entry for the extracted month.</span>
     <span class="k">if</span> <span class="o">(!</span><span class="n">monthlyBlockCount</span><span class="o">.</span><span class="na">containsKey</span><span class="o">(</span><span class="n">month</span><span class="o">))</span> <span class="o">{</span>
@@ -149,6 +152,7 @@ interface, you ought to take your time and spend a couple of hours on other
 tools first. (About the performance, for the sample blockchain dataset of size
 4.7 GB, above code snippet completes in less than 2 minutes on my 2.4 GHz
 GNU/Linux notebook without any JVM flags. Pretty zippy!)</p>
+
 
 	  <script type="text/javascript">
 	    $("#post table").attr("class", "table table-hover");

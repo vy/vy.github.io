@@ -1,9 +1,10 @@
+@charset "UTF-8";
 @import url(http://fonts.googleapis.com/css?family=Archivo+Narrow);
 @import url("http://fonts.googleapis.com/css?family=Six+Caps");
 body {
   margin: 0;
   padding: 0;
-  background: white; }
+  background: #fff; }
 
 hr {
   border: 0;
@@ -28,9 +29,9 @@ hr {
       line-height: 40px;
       font-size: 28pt;
       font-family: "Six Caps", sans-serif;
-      color: white; }
+      color: #fff; }
     #menu .active a {
-      color: black; }
+      color: #000; }
     #menu a {
       display: block; } }
 /* Portrait tablet to landscape and desktop */
@@ -44,9 +45,9 @@ hr {
       line-height: 40px;
       font-size: 28pt;
       font-family: "Six Caps", sans-serif;
-      color: white; }
+      color: #fff; }
     #menu .active a {
-      color: black; }
+      color: #000; }
     #menu a {
       display: block; } }
 /* Landscape phone to portrait tablet */
@@ -55,9 +56,9 @@ hr {
     line-height: 40px;
     font-size: 28pt;
     font-family: "Six Caps", sans-serif;
-    color: white; }
+    color: #fff; }
   #menu .active a {
-    color: black; }
+    color: #000; }
   #menu div {
     display: inline;
     margin-right: 10px; } }
@@ -67,9 +68,9 @@ hr {
     line-height: 40px;
     font-size: 28pt;
     font-family: "Six Caps", sans-serif;
-    color: white; }
+    color: #fff; }
   #menu .active a {
-    color: black; }
+    color: #000; }
   #menu div {
     display: inline;
     margin-right: 10px; } }
@@ -85,7 +86,7 @@ hr {
   text-align: right;
   font-size: 9pt; }
   #bgauthor a {
-    color: white; }
+    color: #fff; }
 
 .arrow-list {
   margin: 0; }
@@ -93,5 +94,5 @@ hr {
     list-style-type: none;
     text-indent: 0; }
   .arrow-list li:before {
-    content: "\2192";
+    content: "→";
     display: inline; }

@@ -8,7 +8,7 @@
     <script src="/js/bootstrap.js"></script>
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
     <link rel="stylesheet" href="/css/common.css">
-    <meta name="generator" content="nanoc 3.6.4">
+    <meta name="generator" content="nanoc 3.7.4">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/css/post.css">
     <script type="text/javascript">
@@ -52,14 +52,15 @@
 	</div>
 	<div class="body">
 
-	  <blockquote>
+	  
+<blockquote>
   <p><strong>TL;DR</strong> – I put together a setup to measure the performance of IP aliasing in Linux. As the numbers at the bottom of the post describe, observed throughput increases as the number of aliases increase. WTF?</p>
 </blockquote>
 
 <p>For a couple of months I have been putting together some fancy hacks using IP aliasing feature in Linux, that is, associating more than one IP address to a network interface. The limits of IP aliasing are endless…</p>
 
 <pre><code class="language-bash">sudo ifconfig eth0 192.168.1.1 netmask 255.255.0.0
-<span class="k">for </span>I in <span class="sb">`</span>seq 0 254<span class="sb">`</span>; <span class="k">do </span>sudo ifconfig eth0:<span class="nv">$I</span> 192.168.2.<span class="nv">$I</span>; <span class="k">done</span></code></pre>
+<span class="k">for</span> I in <span class="sb">`</span>seq <span class="m">0</span> 254<span class="sb">`</span><span class="p">;</span> <span class="k">do</span> sudo ifconfig eth0:<span class="nv">$I</span> 192.168.2.<span class="nv">$I</span><span class="p">;</span> <span class="k">done</span></code></pre>
 
 <p>But obviously there is a price (overhead) to pay for this at kernel level. To shed some more light into the problem at hand, for experimentation purpose, I setup a simple network as follows.</p>
 
@@ -73,8 +74,8 @@
 
 <span class="nb">set</span> -e
 
-<span class="k">if</span> <span class="o">[</span> <span class="nv">$# </span>-ne 3 <span class="o">]</span>; <span class="k">then</span>
-<span class="k">    </span><span class="nb">echo</span> <span class="s2">"Usage: $0 &lt;NAME_TMPL&gt; &lt;ADDR_TMPL&gt; &lt;N_WORKERS&gt;"</span>
+<span class="k">if</span> <span class="o">[</span> <span class="nv">$# </span>-ne <span class="m">3</span> <span class="o">]</span><span class="p">;</span> <span class="k">then</span>
+    <span class="nb">echo</span> <span class="s2">"Usage: $0 &lt;NAME_TMPL&gt; &lt;ADDR_TMPL&gt; &lt;N_WORKERS&gt;"</span>
     <span class="nb">exit </span>1
 <span class="k">fi</span>
 <span class="nv">NAME_TMPL</span><span class="o">=</span><span class="s2">"$1"</span>
@@ -83,30 +84,30 @@
 
 start<span class="o">()</span> <span class="o">{</span>
     <span class="nb">echo</span> <span class="s2">"Taking network interfaces up..."</span>
-    <span class="k">for </span>I in <span class="sb">`</span>seq 1 <span class="nv">$N_WORKERS</span><span class="sb">`</span>; <span class="k">do</span>
-<span class="k">	</span>sudo ifconfig <span class="k">$(</span><span class="nb">printf</span> <span class="nv">$NAME_TMPL</span> <span class="nv">$I</span><span class="k">)</span> <span class="k">$(</span><span class="nb">printf</span> <span class="nv">$ADDR_TMPL</span> <span class="nv">$I</span><span class="k">)</span>
+    <span class="k">for</span> I in <span class="sb">`</span>seq <span class="m">1</span> <span class="nv">$N_WORKERS</span><span class="sb">`</span><span class="p">;</span> <span class="k">do</span>
+	sudo ifconfig <span class="k">$(</span><span class="nb">printf</span> <span class="nv">$NAME_TMPL</span> <span class="nv">$I</span><span class="k">)</span> <span class="k">$(</span><span class="nb">printf</span> <span class="nv">$ADDR_TMPL</span> <span class="nv">$I</span><span class="k">)</span>
     <span class="k">done</span>
 
-<span class="k">    </span><span class="nb">echo</span> <span class="s2">"Starting iperf servers..."</span>
-    <span class="k">for </span>I in <span class="sb">`</span>seq 1 <span class="nv">$N_WORKERS</span><span class="sb">`</span>; <span class="k">do</span>
-<span class="k">	</span>iperf --server --bind <span class="k">$(</span><span class="nb">printf</span> <span class="nv">$ADDR_TMPL</span> <span class="nv">$I</span><span class="k">)</span> &amp;
+    <span class="nb">echo</span> <span class="s2">"Starting iperf servers..."</span>
+    <span class="k">for</span> I in <span class="sb">`</span>seq <span class="m">1</span> <span class="nv">$N_WORKERS</span><span class="sb">`</span><span class="p">;</span> <span class="k">do</span>
+	iperf --server --bind <span class="k">$(</span><span class="nb">printf</span> <span class="nv">$ADDR_TMPL</span> <span class="nv">$I</span><span class="k">)</span> <span class="p">&amp;</span>
     <span class="k">done</span>
 
-<span class="k">    </span><span class="nb">echo</span> <span class="s2">"Started."</span>
+    <span class="nb">echo</span> <span class="s2">"Started."</span>
 <span class="o">}</span>
 
 stop<span class="o">()</span> <span class="o">{</span>
     <span class="nb">echo</span> <span class="s2">"Taking network interfaces down..."</span>
-    <span class="k">for </span>I in <span class="sb">`</span>seq <span class="nv">$N_WORKERS</span> -1 1<span class="sb">`</span>; <span class="k">do</span>
-<span class="k">	</span>sudo ifconfig <span class="k">$(</span><span class="nb">printf</span> <span class="nv">$NAME_TMPL</span> <span class="nv">$I</span><span class="k">)</span> down
+    <span class="k">for</span> I in <span class="sb">`</span>seq <span class="nv">$N_WORKERS</span> -1 1<span class="sb">`</span><span class="p">;</span> <span class="k">do</span>
+	sudo ifconfig <span class="k">$(</span><span class="nb">printf</span> <span class="nv">$NAME_TMPL</span> <span class="nv">$I</span><span class="k">)</span> down
     <span class="k">done</span>
 
-<span class="k">    </span><span class="nb">echo</span> <span class="s2">"Stopped."</span>
+    <span class="nb">echo</span> <span class="s2">"Stopped."</span>
     <span class="nb">exit </span>0
 <span class="o">}</span>
 
 <span class="nb">trap </span>stop INT
-start <span class="o">&amp;&amp;</span> <span class="k">while</span> /bin/true; <span class="k">do </span>sleep 5m; <span class="k">done</span></code></pre>
+start <span class="o">&amp;&amp;</span> <span class="k">while</span> /bin/true<span class="p">;</span> <span class="k">do</span> sleep 5m<span class="p">;</span> <span class="k">done</span></code></pre>
 
 <p>Using <code>server.sh</code>, I’ll be able to start as many iperf instances (and necessary IP aliases for them) as I want. Next, I write <code>client.sh</code> as follows.</p>
 
@@ -114,8 +115,8 @@ start <span class="o">&amp;&amp;</span> <span class="k">while</span> /bin/true; 
 
 <span class="nb">set</span> -e
 
-<span class="k">if</span> <span class="o">[</span> <span class="nv">$# </span>-ne 3 <span class="o">]</span>; <span class="k">then</span>
-<span class="k">    </span><span class="nb">echo</span> <span class="s2">"Usage: $0 &lt;ADDR_TMPL&gt; &lt;N_WORKERS&gt; &lt;TIMEOUT&gt;"</span>
+<span class="k">if</span> <span class="o">[</span> <span class="nv">$# </span>-ne <span class="m">3</span> <span class="o">]</span><span class="p">;</span> <span class="k">then</span>
+    <span class="nb">echo</span> <span class="s2">"Usage: $0 &lt;ADDR_TMPL&gt; &lt;N_WORKERS&gt; &lt;TIMEOUT&gt;"</span>
     <span class="nb">exit </span>1
 <span class="k">fi</span>
 <span class="nv">ADDR_TMPL</span><span class="o">=</span><span class="s2">"$1"</span>
@@ -123,19 +124,19 @@ start <span class="o">&amp;&amp;</span> <span class="k">while</span> /bin/true; 
 <span class="nv">TIMEOUT</span><span class="o">=</span><span class="s2">"$3"</span>
 
 start<span class="o">()</span> <span class="o">{</span>
-    <span class="o">(</span><span class="nv">PIDS</span><span class="o">=()</span>;
-	<span class="k">for </span>I in <span class="sb">`</span>seq 1 <span class="nv">$N_WORKERS</span><span class="sb">`</span>; <span class="k">do</span>
+    <span class="o">(</span><span class="nv">PIDS</span><span class="o">=()</span><span class="p">;</span>
+	<span class="k">for</span> I in <span class="sb">`</span>seq <span class="m">1</span> <span class="nv">$N_WORKERS</span><span class="sb">`</span><span class="p">;</span> <span class="k">do</span>
 	    <span class="o">(</span>iperf <span class="se">\</span>
 		--format k <span class="se">\</span>
 		--reportexclude CMSV <span class="se">\</span>
 		--time <span class="nv">$TIMEOUT</span> <span class="se">\</span>
 		--client <span class="se">\</span>
-		<span class="k">$(</span><span class="nb">printf</span> <span class="nv">$ADDR_TMPL</span> <span class="nv">$I</span><span class="k">)</span> | <span class="se">\</span>
-		grep <span class="s2">"Kbits/sec"</span> | <span class="se">\</span>
-		sed -r <span class="s1">'s/^.* ([0-9]+) Kbits\/sec/\1/g'</span>; <span class="se">\</span>
-		PIDS<span class="o">[</span><span class="nv">$I</span><span class="o">]=</span><span class="nv">$!</span><span class="o">)</span> &amp;
-	<span class="k">done</span>;
-	<span class="nb">wait</span> <span class="k">${</span><span class="nv">PIDS</span><span class="p">[@]</span><span class="k">}</span><span class="o">)</span> | <span class="se">\</span>
+		<span class="k">$(</span><span class="nb">printf</span> <span class="nv">$ADDR_TMPL</span> <span class="nv">$I</span><span class="k">)</span> <span class="p">|</span> <span class="se">\</span>
+		grep <span class="s2">"Kbits/sec"</span> <span class="p">|</span> <span class="se">\</span>
+		sed -r <span class="s1">'s/^.* ([0-9]+) Kbits\/sec/\1/g'</span><span class="p">;</span> <span class="se">\</span>
+		PIDS<span class="o">[</span><span class="nv">$I</span><span class="o">]=</span><span class="nv">$!</span><span class="o">)</span> <span class="p">&amp;</span>
+	<span class="k">done</span><span class="p">;</span>
+	<span class="nb">wait</span> <span class="k">${</span><span class="nv">PIDS</span><span class="p">[@]</span><span class="k">}</span><span class="o">)</span> <span class="p">|</span> <span class="se">\</span>
 	    awk <span class="s1">'BEGIN{s=0} {s+=$1} END{print s}'</span>
     <span class="nb">exit </span>0
 <span class="o">}</span>
@@ -150,7 +151,7 @@ start</code></pre>
 <p>Then the workflow becomes relatively simple.</p>
 
 <pre><code class="language-bash">server<span class="nv">$ </span>./server.sh eth1:%d 192.168.2.%d 32
-client<span class="nv">$ </span>./client.sh 192.168.2.%d 32 30</code></pre>
+client<span class="nv">$ </span>./client.sh 192.168.2.%d <span class="m">32</span> 30</code></pre>
 
 <p>While going this further, nobody could stop me from writing a Gnuplot script to visualize these results.</p>
 
@@ -169,9 +170,10 @@ client<span class="nv">$ </span>./client.sh 192.168.2.%d 32 30</code></pre>
 
 <p>Ok, too much talk so far. Let’s get to results. (Timeout is set to 60 seconds.)</p>
 
-<table><tbody>
-<tr>
-<td><em># of alias</em></td>
+<table>
+  <tbody>
+    <tr>
+      <td><em># of alias</em></td>
       <td>1</td>
       <td>2</td>
       <td>4</td>
@@ -180,8 +182,8 @@ client<span class="nv">$ </span>./client.sh 192.168.2.%d 32 30</code></pre>
       <td>32</td>
       <td>64</td>
     </tr>
-<tr>
-<td><em>Kbits/sec</em></td>
+    <tr>
+      <td><em>Kbits/sec</em></td>
       <td>615,216</td>
       <td>612,580</td>
       <td>616,071</td>
@@ -190,8 +192,8 @@ client<span class="nv">$ </span>./client.sh 192.168.2.%d 32 30</code></pre>
       <td>615,340</td>
       <td>618,838</td>
     </tr>
-<tr>
-<td><em># of alias</em></td>
+    <tr>
+      <td><em># of alias</em></td>
       <td>96</td>
       <td>128</td>
       <td>160</td>
@@ -200,8 +202,8 @@ client<span class="nv">$ </span>./client.sh 192.168.2.%d 32 30</code></pre>
       <td>254</td>
       <td> </td>
     </tr>
-<tr>
-<td><em>Kbits/sec</em></td>
+    <tr>
+      <td><em>Kbits/sec</em></td>
       <td>622,344</td>
       <td>654,269</td>
       <td>640,364</td>
@@ -210,9 +212,13 @@ client<span class="nv">$ </span>./client.sh 192.168.2.%d 32 30</code></pre>
       <td>670,788</td>
       <td> </td>
     </tr>
-</tbody></table><p><img src="results.jpg" alt="Results"></p>
+  </tbody>
+</table>
+
+<p><img src="results.jpg" alt="Results"></p>
 
 <p>As the numbers suggest, Linux IP aliasing does a fairly good job that the overhead imposed by the aliases are nearly negligible. (At least I hope that is something I succeeded in measuring.) But the strange thing is, there is an improvement in the throughput as the number of network interfaces increase. What might be the explanation of this observation? Is my setup mistaken? I will be happy to hear your ideas.</p>
+
 
 	  <script type="text/javascript">
 	    $("#post table").attr("class", "table table-hover");

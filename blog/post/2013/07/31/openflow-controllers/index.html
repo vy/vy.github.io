@@ -8,7 +8,7 @@
     <script src="/js/bootstrap.js"></script>
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
     <link rel="stylesheet" href="/css/common.css">
-    <meta name="generator" content="nanoc 3.6.4">
+    <meta name="generator" content="nanoc 3.7.4">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/css/post.css">
     <script type="text/javascript">
@@ -52,21 +52,24 @@
 	</div>
 	<div class="body">
 
-	  <p><strong>TL;DR</strong> – Use Floodlight (Pythonistas might want to give POX a try) and keep an eye on OpenDaylight.</p>
+	  
+<p><strong>TL;DR</strong> – Use Floodlight (Pythonistas might want to give POX a try) and keep an eye on OpenDaylight.</p>
 
 <p>There has always been a confusion on which controller to start with for newcomers in the OpenFlow ecosystem. Should one prefer the classic <a href="http://www.nox-repo.org/">NOX</a>? Or go with a more modern choice like <a href="http://www.beaconcontroller.net/">Beacon</a> or its successor <a href="http://www.projectfloodlight.org/">Floodlight</a>? What about <a href="http://www.osrg.net/ryu/">Ryu</a>, <a href="http://trema.github.com/trema/">Trema</a>, and a dozen of <a href="http://yuba.stanford.edu/~casado/of-sw.html">other controllers</a> in the wild? Ohh! I was just forgetting about <a href="http://www.opendaylight.org/">OpenDaylight</a>, which is backed by industry giants such as Cisco, Juniper, Brocade, IBM, etc. After all you just want to push a set of simple OpenFlow commands to the forwarding plane and observe the result. On the other hand, you are also concerned with the maturity of the environment that you will work with. Nobody wants to find himself scratching his head for a bug in the controller core. And I am pretty sure you will also question whether there is an ongoing <em>active development</em> and supportive <em>community</em> in the project or not. Lucky for you, I have volunteered to share my two cents on the issue. After two years of fighting in this mud up to my neck, I have something to say!</p>
 
 <p>Let’s get this straight first: This survey investigates the existing free and open-source OpenFlow controllers in the wild from the point of view of a developer. I assume that what you look for is</p>
 
 <ul>
-<li>clean code base (not a slick GUI or ground-breaking performance),</li>
+  <li>clean code base (not a slick GUI or ground-breaking performance),</li>
   <li>versatile core (not ad-hoc solutions like STP to common problems),</li>
   <li>decent set of built-in components (e.g., device/switch query interface, access to topology, links and routing),</li>
   <li>quick deployment cycle (i.e., it should take a few minutes to compile your changes and fire up the controller),</li>
   <li>active development (i.e., presence of developers constantly contributing to the code base),</li>
   <li>supportive community (e.g., once I had a reply to one of my <a href="https://groups.google.com/d/msg/rrd4j-discuss/kXSJJibegSs/IKTbs8LEPC0J">questions</a> in RRD4J mailing lists after 9 months), and</li>
   <li>some documentation (not just a API reference).</li>
-</ul><h1 id="nox">NOX</h1>
+</ul>
+
+<h1 id="nox">NOX</h1>
 
 <p>It all began with <a href="http://www.nox-repo.org/">NOX</a>. While some might argue, NOX is the very first OpenFlow controller that attracted a whole lot of researchers around itself and achieved to have a wide acceptance. A majority of the primary Software-Defined Networking (SDN) and OpenFlow papers and applications are implemented on top of NOX. Even Google used NOX to build (prototype?) its own distributed OpenFlow controller, called <a href="http://yuba.stanford.edu/~casado/onix-osdi.pdf">ONIX</a>. That being said, all that fuss was left in 2010. From then on the NOX mailing-lists are almost abandoned and no major changes that I know of is introduced to the code base.</p>
 
@@ -120,151 +123,156 @@ In addition, while I have never been in need of one, I must admit that Floodligh
 <p>Before concluding the post, here I present a feature matrix for the controllers discussed.</p>
 
 <table>
-<thead><tr>
-<th>Feature</th>
+	<thead>
+		<tr>
+			<th>Feature</th>
 			<th>NOX</th>
 			<th>POX</th>
 			<th>Beacon</th>
 			<th>Floodlight</th>
 			<th>OpenDaylight</th>
-		</tr></thead>
-<tbody>
-<tr>
-<td>Language(s) the controller is written in</td>
+		</tr>
+	</thead>
+	<tbody>
+		<tr>
+			<td>Language(s) the controller is written in</td>
 			<td>C++</td>
 			<td>Python</td>
 			<td>Java</td>
 			<td>Java</td>
 			<td>Java</td>
 		</tr>
-<tr>
-<td>Language(s) supported by the controller</td>
+		<tr>
+			<td>Language(s) supported by the controller</td>
 			<td>C, C++, Python</td>
 			<td>Python</td>
 			<td>Java</td>
 			<td>Java, Python</td>
 			<td>Java</td>
 		</tr>
-<tr>
-<td>Is actively developed?</td>
+		<tr>
+			<td>Is actively developed?</td>
 			<td>N</td>
 			<td>Y</td>
 			<td>maintained</td>
 			<td>Y</td>
 			<td>Y</td>
 		</tr>
-<tr>
-<td>Has an active community?</td>
+		<tr>
+			<td>Has an active community?</td>
 			<td>N</td>
 			<td>Y</td>
 			<td>Y</td>
 			<td>Y</td>
 			<td>Y</td>
 		</tr>
-<tr>
-<td>Easy to install?</td>
+		<tr>
+			<td>Easy to install?</td>
 			<td>N</td>
 			<td>Y</td>
 			<td>Y</td>
 			<td>Y</td>
 			<td>Y</td>
 		</tr>
-<tr>
-<td>Easy to program?</td>
+		<tr>
+			<td>Easy to program?</td>
 			<td>N</td>
 			<td>Y</td>
 			<td>Y</td>
 			<td>Y</td>
 			<td>Y</td>
 		</tr>
-<tr>
-<td>Is documented?</td>
+		<tr>
+			<td>Is documented?</td>
 			<td>N</td>
 			<td>Y</td>
 			<td>Y</td>
 			<td>Y</td>
 			<td>some</td>
 		</tr>
-<tr>
-<td>Provides a REST API?</td>
+		<tr>
+			<td>Provides a REST API?</td>
 			<td>N</td>
 			<td>Y (limited)</td>
 			<td>Y</td>
 			<td>Y</td>
 			<td>Y</td>
 		</tr>
-<tr>
-<td>Have utility functions?</td>
+		<tr>
+			<td>Have utility functions?</td>
 			<td>N</td>
 			<td>N</td>
 			<td>N</td>
 			<td>Y</td>
 			<td>N</td>
 		</tr>
-<tr>
-<td>Has a UI?</td>
+		<tr>
+			<td>Has a UI?</td>
 			<td>Python+QT4</td>
 			<td>Python+QT4, Web</td>
 			<td>Web</td>
 			<td>Java, Web</td>
 			<td>Web</td>
 		</tr>
-<tr>
-<td>Supports hosts with multiple attachment points?</td>
+		<tr>
+			<td>Supports hosts with multiple attachment points?</td>
 			<td>N</td>
 			<td>N</td>
 			<td>N</td>
 			<td>Y</td>
 			<td>Y</td>
 		</tr>
-<tr>
-<td>Supports topologies with loops?</td>
+		<tr>
+			<td>Supports topologies with loops?</td>
 			<td>N</td>
 			<td>Y (via <code>spanning_tree</code> component)</td>
 			<td>N</td>
 			<td>Y</td>
 			<td>Y</td>
 		</tr>
-<tr>
-<td>Supports non-OF island connections?</td>
+		<tr>
+			<td>Supports non-OF island connections?</td>
 			<td>N</td>
 			<td>N</td>
 			<td>N</td>
 			<td>Y</td>
 			<td>Y</td>
 		</tr>
-<tr>
-<td>Supports OF island connections with loops?</td>
+		<tr>
+			<td>Supports OF island connections with loops?</td>
 			<td>N</td>
 			<td>N</td>
 			<td>N</td>
 			<td>N</td>
 			<td>Y</td>
 		</tr>
-<tr>
-<td>Provides an abstraction layer above south-bound protocols?</td>
+		<tr>
+			<td>Provides an abstraction layer above south-bound protocols?</td>
 			<td>N</td>
 			<td>N</td>
 			<td>N</td>
 			<td>N</td>
 			<td>Y</td>
 		</tr>
-<tr>
-<td>Supports OpenStack Quantum?</td>
+		<tr>
+			<td>Supports OpenStack Quantum?</td>
 			<td>N</td>
 			<td>N</td>
 			<td>N</td>
 			<td>Y</td>
 			<td>Y</td>
 		</tr>
-</tbody>
-</table><h1 id="conclusion">Conclusion</h1>
+	</tbody>
+</table>
+
+<h1 id="conclusion">Conclusion</h1>
 
 <p>To sum it all together, I find Floodlight the most viable controller in the ecosystem as of now. That being said, after Murphy McCauley’s corrections, I also realized that POX has made a certain amount of progress on improving its documentation and components, hence can be a viable option for Pythonistas. While other alternatives can be tailored to fit your needs, this or that way as your project nears to finalize, you start to look for stability and being bitten by some odd limitations of the controllers starts to be quite annoying. Considering the huge amount of time that you will devote for learning a controller, try to aim your shot to the best candidate as much as possible. And we will together see how far will OpenDaylight go in the future.</p>
 
 <h1 id="acknowledgement">Acknowledgement</h1>
 
 <p>I would like to thank <a href="http://yuba.stanford.edu/~derickso/">David Erickson</a>, <a href="http://jasonparraga.com/">Jason Parraga</a> and Murphy McCauley for their corrections.</p>
+
 
 	  <script type="text/javascript">
 	    $("#post table").attr("class", "table table-hover");

@@ -8,7 +8,7 @@
     <script src="/js/bootstrap.js"></script>
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
     <link rel="stylesheet" href="/css/common.css">
-    <meta name="generator" content="nanoc 3.6.4">
+    <meta name="generator" content="nanoc 3.7.4">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/css/post.css">
     <script type="text/javascript">
@@ -52,7 +52,8 @@
 	</div>
 	<div class="body">
 
-	  <p>Here is a quick tip: Do you regularly observe below <em>harmless</em> JGroups message send failures?</p>
+	  
+<p>Here is a quick tip: Do you regularly observe below <em>harmless</em> JGroups message send failures?</p>
 
 <pre><code>09:49:02.270 [Timer-3,&lt;ADDR&gt;] ERROR org.jgroups.protocols.UDP - failed sending message to cluster (95 bytes): java.lang.Exception: dest=/ff0e:0:0:0:0:8:8:8:45588 (98 bytes), cause: java.io.IOException: Network is unreachable
 09:49:03.132 [Timer-4,&lt;ADDR&gt;] ERROR org.jgroups.protocols.UDP - failed sending message to cluster (95 bytes): java.lang.Exception: dest=/ff0e:0:0:0:0:8:8:8:45588 (98 bytes), cause: java.io.IOException: Network is unreachable
@@ -67,6 +68,7 @@
 <blockquote>
   <p>Your messages are sent to an IPv6 multicast address; is this what you want? If not, and you want to force use of IPv4, use <code>-Djava.net.preferIPv4Stack=true</code>. If you want to use IPv6, make sure your routing table is set up correctly.</p>
 </blockquote>
+
 
 	  <script type="text/javascript">
 	    $("#post table").attr("class", "table table-hover");

@@ -8,7 +8,7 @@
     <script src="/js/bootstrap.js"></script>
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
     <link rel="stylesheet" href="/css/common.css">
-    <meta name="generator" content="nanoc 3.6.4">
+    <meta name="generator" content="nanoc 3.7.4">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/css/post.css">
     <script type="text/javascript">
@@ -52,7 +52,8 @@
 	</div>
 	<div class="body">
 
-	  <p>Despite the fact that <a href="http://www.hazelcast.com/">Hazelcast</a> is a data distribution (particularly, peer-to-peer) platform for Java, its group communication mechanics can be utilized for remote procedure calls in a similar fashion to <a href="http://vyazici.blogspot.com/2012/04/rpc-remote-procedure-call-with-jgroups.html">JGroups remote procedure calls</a>. Further, to ease this workflow, Hazelcast provides <a href="http://hazelcast.com/docs/2.1/manual/multi_html/ch09.html">distributed executor service</a> to execute <a href="http://docs.oracle.com/javase/6/docs/api/java/util/concurrent/Callable.html"><code>Callable</code></a> and <a href="http://docs.oracle.com/javase/6/docs/api/java/lang/Runnable.html"><code>Runnable</code></a> instances on the remote cluster members. Now, let’s glue things together for making remote procedure calls on Hazelcast cluster members.</p>
+	  
+<p>Despite the fact that <a href="http://www.hazelcast.com/">Hazelcast</a> is a data distribution (particularly, peer-to-peer) platform for Java, its group communication mechanics can be utilized for remote procedure calls in a similar fashion to <a href="http://vyazici.blogspot.com/2012/04/rpc-remote-procedure-call-with-jgroups.html">JGroups remote procedure calls</a>. Further, to ease this workflow, Hazelcast provides <a href="http://hazelcast.com/docs/2.1/manual/multi_html/ch09.html">distributed executor service</a> to execute <a href="http://docs.oracle.com/javase/6/docs/api/java/util/concurrent/Callable.html"><code>Callable</code></a> and <a href="http://docs.oracle.com/javase/6/docs/api/java/lang/Runnable.html"><code>Runnable</code></a> instances on the remote cluster members. Now, let’s glue things together for making remote procedure calls on Hazelcast cluster members.</p>
 
 <p>Assuming that you have some familiarity with executor services, check out below <code>SimpleRPC</code> class, which makes use of the Hazelcast executor service to invoke a <code>Call</code> instance on every cluster member.</p>
 
@@ -73,7 +74,7 @@
 
     <span class="kd">public</span> <span class="kd">static</span> <span class="n">SimpleRPC</span> <span class="nf">getInstance</span><span class="o">()</span> <span class="o">{</span>
         <span class="k">if</span> <span class="o">(</span><span class="n">instance</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span>
-            <span class="n">instance</span> <span class="o">=</span> <span class="k">new</span> <span class="n">SimpleRPC</span><span class="o">();</span>
+            <span class="n">instance</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">SimpleRPC</span><span class="o">();</span>
         <span class="k">return</span> <span class="n">instance</span><span class="o">;</span>
     <span class="o">}</span>
 
@@ -85,7 +86,7 @@
 
     <span class="kd">public</span> <span class="kt">void</span> <span class="nf">callEvery</span><span class="o">(</span><span class="n">String</span> <span class="n">input</span><span class="o">)</span>
             <span class="kd">throws</span> <span class="n">ExecutionException</span><span class="o">,</span> <span class="n">TimeoutException</span><span class="o">,</span> <span class="n">InterruptedException</span> <span class="o">{</span>
-        <span class="n">MultiTask</span><span class="o">&lt;</span><span class="n">Boolean</span><span class="o">&gt;</span> <span class="n">task</span> <span class="o">=</span> <span class="k">new</span> <span class="n">MultiTask</span><span class="o">&lt;</span><span class="n">Boolean</span><span class="o">&gt;(</span><span class="k">new</span> <span class="n">Call</span><span class="o">(</span><span class="n">input</span><span class="o">),</span>
+        <span class="n">MultiTask</span><span class="o">&lt;</span><span class="n">Boolean</span><span class="o">&gt;</span> <span class="n">task</span> <span class="o">=</span> <span class="k">new</span> <span class="n">MultiTask</span><span class="o">&lt;</span><span class="n">Boolean</span><span class="o">&gt;(</span><span class="k">new</span> <span class="nf">Call</span><span class="o">(</span><span class="n">input</span><span class="o">),</span>
                 <span class="n">Hazelcast</span><span class="o">.</span><span class="na">getCluster</span><span class="o">().</span><span class="na">getMembers</span><span class="o">());</span>
         <span class="n">ExecutorService</span> <span class="n">executorService</span> <span class="o">=</span> <span class="n">Hazelcast</span><span class="o">.</span><span class="na">getExecutorService</span><span class="o">();</span>
         <span class="n">executorService</span><span class="o">.</span><span class="na">execute</span><span class="o">(</span><span class="n">task</span><span class="o">);</span>
@@ -117,6 +118,7 @@
 <span class="o">}</span></code></pre>
 
 <p>Simple, eh?</p>
+
 
 	  <script type="text/javascript">
 	    $("#post table").attr("class", "table table-hover");

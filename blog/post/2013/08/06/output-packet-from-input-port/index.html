@@ -8,7 +8,7 @@
     <script src="/js/bootstrap.js"></script>
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
     <link rel="stylesheet" href="/css/common.css">
-    <meta name="generator" content="nanoc 3.6.4">
+    <meta name="generator" content="nanoc 3.7.4">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/css/post.css">
     <script type="text/javascript">
@@ -52,14 +52,15 @@
 	</div>
 	<div class="body">
 
-	  <p>A couple of weeks ago I spotted a really suspicious flow in the logs that directly made me think of a bug at the controller. A packet was arriving to a port of a switch and was getting output from the very same port of the switch. This was kind of weird. If it is supposed to be transmitted back again, then why was it ended up here in the first hand? Was it because of a bug at the controller that first redirected the packet to the switch and then redirected it backwards to the previous switch? A logical fault at the controller was definitely the first suspect here. But later it turned out that this was not the case. The details are as follows.</p>
+	  
+<p>A couple of weeks ago I spotted a really suspicious flow in the logs that directly made me think of a bug at the controller. A packet was arriving to a port of a switch and was getting output from the very same port of the switch. This was kind of weird. If it is supposed to be transmitted back again, then why was it ended up here in the first hand? Was it because of a bug at the controller that first redirected the packet to the switch and then redirected it backwards to the previous switch? A logical fault at the controller was definitely the first suspect here. But later it turned out that this was not the case. The details are as follows.</p>
 
 <p><img src="topology.jpg" alt="SDN Topology"></p>
 
 <p>Consider the above topology, where three switches <code>s1</code>, <code>s2</code>, <code>s3</code> are connected linearly and all together managed by the controller <code>c1</code>. In addition, <code>s1</code> and <code>s2</code> is connected to two hosts <code>h1</code> and <code>h2</code>, respectively. The controller, switches, hosts, their connections, and connection port numbers are given in the figure. The scenario generating the subtle gotcha is as follows.</p>
 
 <ol>
-<li>
+  <li>
 <code>h2</code> sends a packet destined to <code>h1</code>, whose attachment point is not learnt yet by <code>c1</code>.</li>
   <li>Hence, upon arrival of the packet from <code>s2</code>, <code>c1</code> commands <code>s2</code> to flood the request.</li>
   <li>The flooded request goes to <code>s1</code> and <code>s3</code>.</li>
@@ -70,7 +71,10 @@
   <li>In the meantime, <code>s2</code>s flood (see 3rd step) reaches to <code>s3</code>
 </li>
   <li>Now <code>c1</code> knows the attachment point of the <code>h1</code>. Consequently, <code>c1</code> figures out that the route to <code>h1</code> goes through <code>s1</code> and <code>s1</code> is reachable by <code>p1</code> of <code>s3</code>. Hence, <code>c1</code> commands <code>s3</code> to output the packet from the very same input port of the packet.</li>
-</ol><p>I do not have a single idea about the probability of such a subtle bug, but somehow it happened to exist in my logs, right at the lines I was just taking a glance and wasted my whole day. The saying was right, network is really unreliable. Gorgeous!</p>
+</ol>
+
+<p>I do not have a single idea about the probability of such a subtle bug, but somehow it happened to exist in my logs, right at the lines I was just taking a glance and wasted my whole day. The saying was right, network is really unreliable. Gorgeous!</p>
+
 
 	  <script type="text/javascript">
 	    $("#post table").attr("class", "table table-hover");

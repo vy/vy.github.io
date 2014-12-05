@@ -8,7 +8,7 @@
     <script src="/js/bootstrap.js"></script>
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
     <link rel="stylesheet" href="/css/common.css">
-    <meta name="generator" content="nanoc 3.6.4">
+    <meta name="generator" content="nanoc 3.7.4">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/css/post.css">
     <script type="text/javascript">
@@ -52,7 +52,8 @@
 	</div>
 	<div class="body">
 
-	  <p>Back in the old days of programming, the days we used to have blocking function calls, things were easy: <em>first</em> do this, and <em>then</em> do that, and <em>finally</em> clean things up. While this sequential style of programming has its own advantages in terms of human perception, it imposes certain concurrency related limitations. That is, each expression in a program is supposed to wait for the completion of the execution flow up until the line above, regardless of if it has anything to do with the current expression or not. Asynchronious programs are known to solve this problem of concurrency, (at least, to some extent) with the cost of sacrificing the sequential program flow. At its most basic form, functions are provided interfaces to specify dependencies between each other and hence, independent functions are allowed to execute concurrently. These interfaces are generally provided in the form of callback functions, that is, when <code>f()</code> gets completed do <code>g()</code>, and when <code>g()</code> completes do <code>h()</code>, and so on. The premise of this blog post is to investigate whether it is possible to still preserve the dependency between functions by still allowing the programmer to syntatically structure the program sequentially.</p>
+	  
+<p>Back in the old days of programming, the days we used to have blocking function calls, things were easy: <em>first</em> do this, and <em>then</em> do that, and <em>finally</em> clean things up. While this sequential style of programming has its own advantages in terms of human perception, it imposes certain concurrency related limitations. That is, each expression in a program is supposed to wait for the completion of the execution flow up until the line above, regardless of if it has anything to do with the current expression or not. Asynchronious programs are known to solve this problem of concurrency, (at least, to some extent) with the cost of sacrificing the sequential program flow. At its most basic form, functions are provided interfaces to specify dependencies between each other and hence, independent functions are allowed to execute concurrently. These interfaces are generally provided in the form of callback functions, that is, when <code>f()</code> gets completed do <code>g()</code>, and when <code>g()</code> completes do <code>h()</code>, and so on. The premise of this blog post is to investigate whether it is possible to still preserve the dependency between functions by still allowing the programmer to syntatically structure the program sequentially.</p>
 
 <p><img src="seq-tran.png" alt="Sequential vs. Concurrent Program Flow"></p>
 
@@ -149,8 +150,8 @@
 <pre><code class="language-coffeescript"><span class="k">class</span> <span class="nx">SequentialExecutor</span>
     <span class="nv">tasks: </span><span class="p">[]</span>
     <span class="nv">pos: </span><span class="mi">0</span>
-    <span class="nv">add: </span><span class="nf">(task) =&gt;</span> <span class="nx">@tasks</span><span class="p">.</span><span class="nx">push</span> <span class="o">=&gt;</span> <span class="nx">task</span> <span class="o">=&gt;</span> <span class="nx">@run</span><span class="p">()</span>
-    <span class="nv">run: </span><span class="o">=&gt;</span> <span class="nx">@tasks</span><span class="p">[</span><span class="nx">@pos</span><span class="o">++</span><span class="p">]()</span></code></pre>
+    <span class="nv">add: </span><span class="nf">(task) =&gt;</span> <span class="nx">@tasks</span><span class="p">.</span><span class="nx">push</span> <span class="nf">=&gt;</span> <span class="nx">task</span> <span class="nf">=&gt;</span> <span class="nx">@run</span><span class="p">()</span>
+    <span class="nv">run: </span><span class="nf">=&gt;</span> <span class="nx">@tasks</span><span class="p">[</span><span class="nx">@pos</span><span class="o">++</span><span class="p">]()</span></code></pre>
 
 <p><code>SequentialExecutor</code> helps you to push your functions into an array and executes them in order for you. Specifically, it passes you the pointer to the next function (i.e., <code>next</code>) that is supposed to be executed after current function. So, it is up to you to execute it or not. Here is an example using this cute <code>SequentialExecutor</code> class:</p>
 
@@ -224,8 +225,8 @@
 
 <span class="k">class</span> <span class="nx">SequentialExecutor</span>
 	<span class="nv">tasks: </span><span class="k">new</span> <span class="nx">Heap</span><span class="p">(</span><span class="nf">(u, v) -&gt;</span> <span class="nx">u</span><span class="p">.</span><span class="nx">rank</span> <span class="o">-</span> <span class="nx">v</span><span class="p">.</span><span class="nx">rank</span><span class="p">)</span>
-	<span class="nv">add: </span><span class="nf">(rank, task) =&gt;</span> <span class="nx">@tasks</span><span class="p">.</span><span class="nx">push</span> <span class="nv">rank: </span><span class="nx">rank</span><span class="p">,</span> <span class="nv">task: </span><span class="o">=&gt;</span> <span class="nx">task</span> <span class="o">=&gt;</span> <span class="nx">@run</span><span class="p">()</span>
-	<span class="nv">run: </span><span class="o">=&gt;</span> <span class="nx">@tasks</span><span class="p">.</span><span class="nx">pop</span><span class="p">()</span><span class="o">?</span><span class="p">.</span><span class="nx">task</span><span class="p">()</span></code></pre>
+	<span class="nv">add: </span><span class="nf">(rank, task) =&gt;</span> <span class="nx">@tasks</span><span class="p">.</span><span class="nx">push</span> <span class="nv">rank: </span><span class="nx">rank</span><span class="p">,</span> <span class="nv">task: </span><span class="nf">=&gt;</span> <span class="nx">task</span> <span class="nf">=&gt;</span> <span class="nx">@run</span><span class="p">()</span>
+	<span class="nv">run: </span><span class="nf">=&gt;</span> <span class="nx">@tasks</span><span class="p">.</span><span class="nx">pop</span><span class="p">()</span><span class="o">?</span><span class="p">.</span><span class="nx">task</span><span class="p">()</span></code></pre>
 
 <p>Let’s give our new gear, <code>PrioritizedSequentialExecutor</code>, a try.</p>
 
@@ -275,6 +276,7 @@
 <p>Mission accomplished! Now we have a fully-fledged sequencer where we can dynamically push tasks with different priorities.</p>
 
 <p>Note that while <code>PrioritizedSequentialExecutor</code> is quite good at doing what it is advertised for, especially compared to the lines of code written, there exists other libraries (e.g., <a href="https://github.com/substack/node-seq">seq</a>, <a href="https://github.com/substack/node-chainsaw">chainsaw</a>, <a href="https://github.com/coolaj86/futures">futures</a>, <a href="https://github.com/caolan/async">async</a>, <a href="https://github.com/JeffreyZhao/wind">windjs</a>, <a href="https://github.com/Sage/streamlinejs">streamlinejs</a>, etc.) with similar flow-control purposes. While you are at it, you might want to check them out too.</p>
+
 
 	  <script type="text/javascript">
 	    $("#post table").attr("class", "table table-hover");

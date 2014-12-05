@@ -8,7 +8,7 @@
     <script src="/js/bootstrap.js"></script>
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
     <link rel="stylesheet" href="/css/common.css">
-    <meta name="generator" content="nanoc 3.6.4">
+    <meta name="generator" content="nanoc 3.7.4">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/css/post.css">
     <script type="text/javascript">
@@ -52,7 +52,8 @@
 	</div>
 	<div class="body">
 
-	  <p>I always had a hard time with understanding wildcarded generics in Java, as in
+	  
+<p>I always had a hard time with understanding wildcarded generics in Java, as in
 <code>&lt;? extends A&gt;</code> or <code>&lt;? super A&gt;</code>. While <a href="http://docs.oracle.com/javase/tutorial/extra/generics/morefun.html">More Fun with
 Wildcards</a>
 is a good place for start, you come to a <em>TL;DR</em> point after some time. Lucky
@@ -71,17 +72,17 @@ generics in Java.</p>
 
 <pre><code class="language-java"><span class="kd">static</span> <span class="kt">void</span> <span class="nf">f</span><span class="o">(</span><span class="n">List</span><span class="o">&lt;?</span> <span class="kd">extends</span> <span class="n">A</span><span class="o">&gt;</span> <span class="n">l</span><span class="o">)</span> <span class="o">{</span>
     <span class="n">A</span> <span class="n">a</span> <span class="o">=</span> <span class="n">l</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="mi">0</span><span class="o">);</span> <span class="cm">/* okay */</span>
-    <span class="n">l</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="k">new</span> <span class="n">A</span><span class="o">());</span> <span class="cm">/* not okay, l can be of type List&lt;B&gt; */</span>
+    <span class="n">l</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="k">new</span> <span class="nf">A</span><span class="o">());</span> <span class="cm">/* not okay, l can be of type List&lt;B&gt; */</span>
 <span class="o">}</span>
 
 <span class="kd">static</span> <span class="kt">void</span> <span class="nf">g</span><span class="o">(</span><span class="n">List</span><span class="o">&lt;</span><span class="n">A</span><span class="o">&gt;</span> <span class="n">l</span><span class="o">)</span> <span class="o">{</span>
     <span class="n">A</span> <span class="n">a</span> <span class="o">=</span> <span class="n">l</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="mi">0</span><span class="o">);</span> <span class="cm">/* okay */</span>
-    <span class="n">l</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="k">new</span> <span class="n">A</span><span class="o">());</span> <span class="cm">/* okay */</span>
+    <span class="n">l</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="k">new</span> <span class="nf">A</span><span class="o">());</span> <span class="cm">/* okay */</span>
 <span class="o">}</span>
 
 <span class="kd">static</span> <span class="kt">void</span> <span class="nf">h</span><span class="o">(</span><span class="n">List</span><span class="o">&lt;?</span> <span class="kd">super</span> <span class="n">A</span><span class="o">&gt;</span> <span class="n">l</span><span class="o">)</span> <span class="o">{</span>
     <span class="n">A</span> <span class="n">a</span> <span class="o">=</span> <span class="n">l</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="mi">0</span><span class="o">);</span> <span class="cm">/* not okay, l can be of type List&lt;Object&gt; */</span>
-    <span class="n">l</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="k">new</span> <span class="n">A</span><span class="o">());</span> <span class="cm">/* okay */</span>
+    <span class="n">l</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="k">new</span> <span class="nf">A</span><span class="o">());</span> <span class="cm">/* okay */</span>
 <span class="o">}</span>
 
 <span class="kd">static</span> <span class="o">{</span>
@@ -97,6 +98,7 @@ generics in Java.</p>
 <span class="o">}</span></code></pre>
 
 <p>Hope that helps.</p>
+
 
 	  <script type="text/javascript">
 	    $("#post table").attr("class", "table table-hover");

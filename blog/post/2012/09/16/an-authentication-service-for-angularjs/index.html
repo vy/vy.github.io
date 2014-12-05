@@ -8,7 +8,7 @@
     <script src="/js/bootstrap.js"></script>
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
     <link rel="stylesheet" href="/css/common.css">
-    <meta name="generator" content="nanoc 3.6.4">
+    <meta name="generator" content="nanoc 3.7.4">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/css/post.css">
     <script type="text/javascript">
@@ -52,7 +52,8 @@
 	</div>
 	<div class="body">
 
-	  <p>I am so tired to form up explanatory, coherent sentences, but at the same time I really like to share a user authentication service that I wrote for <a href="http://www.angularjs.org/">AngularJS</a>. Hence, pardon my brevity.</p>
+	  
+<p>I am so tired to form up explanatory, coherent sentences, but at the same time I really like to share a user authentication service that I wrote for <a href="http://www.angularjs.org/">AngularJS</a>. Hence, pardon my brevity.</p>
 
 <p>In this example I use RailwayJS with CoffeeScript both at the client- and server-side. (See my previous <a href="/blog/post/2012/09/16/auto-compiling-assets-with-connect-assets/">post</a> on auto-compiling assets with connect-assets.) Here is the scenario: You have <code>assignments.html</code> such that only authenticated users are allowed.</p>
 
@@ -108,7 +109,7 @@
             <span class="p">.</span><span class="nx">otherwise</span><span class="p">(</span><span class="nv">redirectTo: </span><span class="s">'/login'</span><span class="p">)</span>
     <span class="p">.</span><span class="nx">run</span> <span class="nf">($rootScope, $location, User) -&gt;</span>
         <span class="nx">$rootScope</span><span class="p">.</span><span class="nx">$watch</span> <span class="o">\</span>
-            <span class="p">()</span> <span class="nf">-&gt;</span> <span class="nx">$location</span><span class="p">.</span><span class="nx">path</span><span class="p">(),</span>
+            <span class="nf">() -&gt;</span> <span class="nx">$location</span><span class="p">.</span><span class="nx">path</span><span class="p">(),</span>
             <span class="nf">(next, prev) -&gt;</span>
                 <span class="k">if</span> <span class="o">not</span> <span class="nx">User</span><span class="p">.</span><span class="nx">isAuthenticated</span><span class="p">()</span> <span class="o">and</span> <span class="nx">next</span> <span class="o">isnt</span> <span class="s">'/login'</span>
                     <span class="nx">$location</span><span class="p">.</span><span class="nx">path</span><span class="p">(</span><span class="s">"/login"</span><span class="p">),</span>
@@ -150,8 +151,8 @@
     <span class="p">.</span><span class="nx">factory</span> <span class="s">'User'</span><span class="p">,</span> <span class="nf">-&gt;</span>
         <span class="vi">@authenticated = </span><span class="kc">false</span>
         <span class="vi">@name = </span><span class="kc">null</span>
-        <span class="nv">isAuthenticated: </span><span class="o">=&gt;</span> <span class="nx">@authenticated</span>
-        <span class="nv">getName: </span><span class="o">=&gt;</span> <span class="nx">@name</span>
+        <span class="nv">isAuthenticated: </span><span class="nf">=&gt;</span> <span class="nx">@authenticated</span>
+        <span class="nv">getName: </span><span class="nf">=&gt;</span> <span class="nx">@name</span>
         <span class="nv">login: </span><span class="nf">(username, password, callback) =&gt;</span>
             <span class="nx">$</span><span class="p">.</span><span class="nx">post</span> <span class="s">'/login'</span><span class="p">,</span>
                 <span class="p">{</span><span class="nv">username: </span><span class="nx">username</span><span class="p">,</span> <span class="nv">password: </span><span class="nx">password</span><span class="p">},</span>
@@ -174,6 +175,7 @@
 <p>Hope it works for you as well.</p>
 
 <p><strong>Edit:</strong> Thanks <a href="https://plus.google.com/100882799970411374993">Krisztián Kerék</a> for spotting the routing problem related with listening on <code>$rootScope</code> for <code>$routeChangeStart</code>. Replaced it with <code>$rootScope.$watch</code> as suggested in <a href="http://stackoverflow.com/a/15029387/1278899">this</a> StackOverflow post.</p>
+
 
 	  <script type="text/javascript">
 	    $("#post table").attr("class", "table table-hover");

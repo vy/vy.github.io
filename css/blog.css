@@ -30,7 +30,7 @@ body {
 #tags .size-9 {
   font-size: 30pt; }
 #tags .highlight {
-  color: red; }
+  color: #ff0000; }
 #tags a {
   color: #333333;
   text-decoration: none; }
