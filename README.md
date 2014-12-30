@@ -1,18 +1,25 @@
 # About
 
-This branch contains the sources for generating my personal web site. You can either [view it online](http://vy.github.io/) or [browse the generated content](https://github.com/vy/vy.github.io/tree/master/).
+This branch contains the sources for generating my personal web site. You can
+either [view it online](http://vy.github.io/) or
+[browse the generated content](https://github.com/vy/vy.github.io/tree/master/).
 
 # Installation
 
-You will first need the following packages to compile and view the sources.
-
-    $ pip install Pygments
-    $ gem install nanoc nanoc-toolbox builder kramdown pygments.rb sass adsf
+You can easily bootstrap a development environment by using `vagrant up`. In
+the first run, Vagrant will run `bootstrap.sh` to install the necessary
+packages, hence make sure you have a decent internet connection. Next, you
+can directly ssh into the virtual machine via `vagrant ssh` and browse
+to `/vagrant` directory for sources.
 
 Then you are safe to go.
 
     $ nanoc co
     $ nanoc view
+
+By default, `nanoc view` uses port 3000, which is also forwarded to the host
+machine. Hence, you can view the website by browsing to `http://localhost:3000/`
+on your host system.
 
 # License
 
