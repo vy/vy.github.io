@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <id>https://vy.github.io//</id>
   <title>Volkan Yazıcı's Soap Co.</title>
-  <updated>2014-12-05T16:42:00Z</updated>
+  <updated>2015-01-01T17:22:00Z</updated>
   <link rel="alternate" href="https://vy.github.io//"/>
   <link rel="self" href="https://vy.github.io//blog/feed/"/>
   <author>
@@ -10,10 +10,155 @@
     <uri>https://vy.github.io/</uri>
   </author>
   <entry>
+    <id>tag:vy.github.io,2015-01-01://blog/post/2015/01/01/xubuntu-on-macbookpro/</id>
+    <title type="html">The Joy of Ditching OSX for GNU/Linux</title>
+    <published>2015-01-01T17:22:00Z</published>
+    <updated>2015-01-01T17:22:00Z</updated>
+    <link rel="alternate" href="https://vy.github.io//blog/post/2015/01/01/xubuntu-on-macbookpro/"/>
+    <content type="html">
+&lt;p&gt;Two months ago I was given a shiny Apple Macbook Pro 11 as my development
+system at work. This was my first introduction to Apple – with the exception
+of using Macintosh Classic at my fathers printing office back in the early
+90s. After spending more than 15 years in the mazes of GNU/Linux ecosystem, it
+made a cold bath effect on me and I needed at least 2-3 days to get adapted to
+the system and start writing a couple of lines of useful code. I must admit
+that I was uncomfortable and, as a result of this, unhappy from the very first
+moment. The hardware was gorgeous; battery life, display resolution, quality,
+and colors were mind-blowing and of no match. That being said, I really could
+not get the feel of a &lt;em&gt;power-user&lt;/em&gt; that I used to have in my old GNU/Linux
+box. Having the menu shared between windows was almost made me puke. I have
+been using &lt;a href="http://en.wikipedia.org/wiki/Focus_%28compu%0Ating%29#Focus_follows_pointer"&gt;focus follows pointer&lt;/a&gt; feature for quite some time and it was out of
+question. I tried really hard for getting used to the UI interactions. I mean,
+it is not that I tried to modify the UI to adopt my old conventions. Instead,
+I tried to do it in the &lt;em&gt;OSX way&lt;/em&gt; of doing things. But the desktop was far
+from being usable compared to what I had at Xfce, Fluxbox, i3, etc. In
+addition to all these interface integration aches, I really got amazed to see
+how hard OSX users try to make it look like a GNU/Linux environment: I mean,
+you are expected to install a handful of garbage using a blend of tools
+varying from brew to DMG, gem to Xcode, etc. just to establish a decent
+development environment. The more I used the system, the more I get necessary
+confidence to replace OSX with a GNU/Linux distribution, which is Xubuntu for
+my case.&lt;/p&gt;
+
+&lt;h1 id="preparation"&gt;Preparation&lt;/h1&gt;
+
+&lt;p&gt;First, I checked the avalability of having a GNU/Linux on this hardware with
+ups and downs. &lt;a href="https://help.ubuntu.com/community/MacBookPro"&gt;Installing Ubuntu on a MacBook
+Pro&lt;/a&gt; page was really helpful in
+this context. There instructions were clean, to the point, and most of the
+time produced the expected output for me. Next, while I will keep OSX next
+to my GNU/Linux, I take a backup of my local files on OSX just for case of
+emergency.&lt;/p&gt;
+
+&lt;h1 id="installation"&gt;Installation&lt;/h1&gt;
+
+&lt;p&gt;As instructed, I first partitioned the current OSX disk into two using Disk
+Utility. Just to make sure everything still works, I verified the partition
+table and it was looking fine. Then I restarted the machine to make really
+sure that everything was fine. And… Boom!&lt;/p&gt;
+
+&lt;p&gt;&lt;img src="question-mark-folder.jpg" alt="OSX Question Mark Folder"&gt;&lt;/p&gt;
+
+&lt;p&gt;And I was introduced to the &lt;em&gt;OSX question mark folder&lt;/em&gt;. No error messages, no
+explanations, nothing! That was exactly the same situation that I was driven
+away from Microsoft Windows more than a decade ago. God! I did not even know
+how to search for this error, since there were no texts or anything on the
+screen. Anyway, I tried to describe the image I saw using words on Google and
+voila! After wasting a day on various theories related with the error, I
+figured out that the problem was caused by the lock on the partition that was
+put there by Help Desk guys who handed me the notebook. Damn! I restarted the
+system pressing &lt;code&gt;Command+R&lt;/code&gt; and logon to the system in rescue mode and removed
+the partition lock. (I needed to go to the Help Desk anyway to get the rescue
+mode password.) This time restarting the system led me into OSX without a
+glitch.&lt;/p&gt;
+
+&lt;p&gt;The rest of the installation was like taking a candy from a baby, if you know
+what I mean. I downloaded the Xubuntu 14.10 into a USB disk, rebooted the
+system by pressing &lt;code&gt;Option&lt;/code&gt; key, selected the boot drive and there Ubuntu
+installation screen greeted me. At the end of the installation, prior to
+restarting the system, I just needed to set the EFI boot order via &lt;code&gt;efibootmgr
+-o 0,80&lt;/code&gt; and I was done. Now I could do the rest of the work (adding an entry
+for OSX to GRUB, appending &lt;code&gt;libata.force=noncq&lt;/code&gt; to the kernel boot parameters,
+etc.) when I logged into my brand new GNU/Linux system! I crossed my fingers
+and restarted it system…&lt;/p&gt;
+
+&lt;h1 id="home-sweet-home"&gt;Home! Sweet Home!&lt;/h1&gt;
+
+&lt;p&gt;After restart I directly got forwarded to the Xubuntu boot sequence, that is,
+GRUB display was missing. For a second that made me a little bit nervous, but
+later I figured out that I can still boot the OSX partition via opening the
+machine in rescue mode, hence no worries. After all, I want to get rid of OSX
+all together. And when I see the blue Xubuntu loading logo running on the
+screen I cannot express my relief and excitement. I installed GNU/Linux on
+hundreds of systems, but none gave a joy even close to ditching OSX away.&lt;/p&gt;
+
+&lt;p&gt;As a regular GNU/Linux user, I also am used to live with the fact that Linux
+kernel needs a little bit tweaking at each installation. So I started checking
+if everything was working.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Keyboard? Checked.&lt;/li&gt;
+  &lt;li&gt;Mousepad? Checked.&lt;/li&gt;
+  &lt;li&gt;USB mouse? Checked.&lt;/li&gt;
+  &lt;li&gt;Sound? Checked.&lt;/li&gt;
+  &lt;li&gt;Video card? Checked.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;As I get more positive checks my inclination to believe that something serious
+will get mess the whole thing up was increasing. I continued…&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Wireless network driver? Nope. No worries. &lt;code&gt;aptitude install bcmwl-kernel-source&lt;/code&gt;
+did the necessary magic. (Time to time I needed to restart Network Manager
+service after getting back from suspend, but that does not hurt much.)&lt;/li&gt;
+  &lt;li&gt;Wired network driver? No! I got shocked. Then I further read the
+documentation and it’s been told that current Thunderbolt driver does not
+provide a plug-and-play support. It is further mentioned that the situation
+got better in the most recent kernel version, which I did not find a chance
+to try yet. Anyway, I restarted the system with ethernet cable and
+Ethernet-to-Thunderbolt adapter plugged in and now I got wired
+connection working too.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;I must admit that: &lt;em&gt;I had the most smooth GNU/Linux installation experience
+that I ever had since years!&lt;/em&gt; Almost everything was working out of the box.
+Looking back to days that I was going mad for my 33600 dial-up modem drivers,
+display resolution issues… This was really the best. And additionally, now I
+have the most poweful (display, processor, memory, storage, etc.) personal
+computer hardware under my hands that I have ever touched.&lt;/p&gt;
+
+&lt;p&gt;While I was enjoying my time like a 6 year old getting introduced to his first
+computer, I got my first hit: Suspend was not working. I mean, I was closing
+the lid, the Apple logo light was going off and coming back after a couple of
+seconds. I threw myself into the ocean of Google results again and found out a
+quick and dirty fix: Unplugging adapters (USB mouse, Thunderbolt, etc.) before
+suspend. It is also mentioned that the problem should have had fixed in newer
+kernel versions but I did not give it a try. It was not a major problem for
+me, at least not yet.&lt;/p&gt;
+
+&lt;p&gt;By default, the &lt;code&gt;F&lt;/code&gt; keys (&lt;code&gt;F1&lt;/code&gt;, &lt;code&gt;F2&lt;/code&gt;, etc.) serve their traditional function
+by pressing the &lt;code&gt;fn&lt;/code&gt; key. For example, by default the &lt;code&gt;F1&lt;/code&gt; key lowers display
+brightness and &lt;code&gt;fn+F1&lt;/code&gt; is the traditional &lt;code&gt;F1&lt;/code&gt;. I switched this behavior on all
+the &lt;code&gt;F&lt;/code&gt; keys by adding a &lt;code&gt;modprobe&lt;/code&gt; config file
+&lt;code&gt;etc/modprobe.d/hid-apple.conf&lt;/code&gt; written &lt;code&gt;options hid-apple fnmode=2&lt;/code&gt; in it.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src="result.jpg" alt="Xubuntu on Macbook Pro 11"&gt;&lt;/p&gt;
+
+&lt;h1 id="conclusion"&gt;Conclusion&lt;/h1&gt;
+
+&lt;p&gt;As you might have guessed, I wrote this blog post in the aforementioned
+Xubuntu running on a Macbook Pro 11. So far my experience was totally
+satisfying and I believe the issues arised will disappear with a newer kernel
+version, of which I do not have power and time to invest right now. In
+conclusion, Macbook Pro is certainly a powerful hardware as a GNU/Linux
+development platform and I can heartly recommend it to anybody.&lt;/p&gt;
+</content>
+  </entry>
+  <entry>
     <id>tag:vy.github.io,2014-12-05://blog/post/2014/12/05/apache-devicemap/</id>
     <title type="html">Parsing User-Agent Strings with Apache DeviceMap</title>
-    <published>2014-12-05T16:42:00Z</published>
-    <updated>2014-12-05T16:42:00Z</updated>
+    <published>2014-12-05T17:42:00Z</published>
+    <updated>2014-12-05T17:42:00Z</updated>
     <link rel="alternate" href="https://vy.github.io//blog/post/2014/12/05/apache-devicemap/"/>
     <content type="html">
 &lt;p&gt;At work I am given the task of implementing a basic device profiler service to
@@ -553,8 +698,8 @@ a majority of those enhancements back to the Apache DeviceMap project.&lt;/p&gt;
   <entry>
     <id>tag:vy.github.io,2014-09-08://blog/post/2014/09/08/wildcards-in-java-generics/</id>
     <title type="html">Wildcards in Java Generics</title>
-    <published>2014-09-08T14:42:00Z</published>
-    <updated>2014-09-08T14:42:00Z</updated>
+    <published>2014-09-08T16:42:00Z</published>
+    <updated>2014-09-08T16:42:00Z</updated>
     <link rel="alternate" href="https://vy.github.io//blog/post/2014/09/08/wildcards-in-java-generics/"/>
     <content type="html">
 &lt;p&gt;I always had a hard time with understanding wildcarded generics in Java, as in
@@ -605,227 +750,10 @@ generics in Java.&lt;/p&gt;
 </content>
   </entry>
   <entry>
-    <id>tag:vy.github.io,2014-08-07://blog/post/2014/08/07/testing-websockets-in-play/</id>
-    <title type="html">Testing WebSockets in Play Framework</title>
-    <published>2014-08-07T07:28:00Z</published>
-    <updated>2014-08-07T07:28:00Z</updated>
-    <link rel="alternate" href="https://vy.github.io//blog/post/2014/08/07/testing-websockets-in-play/"/>
-    <content type="html">
-&lt;p&gt;In a recent job interview, I was asked to implement a fully fledged (that is,
-including unit and integration tests) &lt;a href="http://en.wikipedia.org/wiki/Mancala"&gt;Lubang Menggali
-(Mancala)&lt;/a&gt; game, where multiple users are
-allowed to play in real-time. I went with &lt;a href="http://www.playframework.com/"&gt;Play
-Framework&lt;/a&gt; and used
-&lt;a href="http://en.wikipedia.org/wiki/WebSocket"&gt;WebSocket&lt;/a&gt;s to implement the real-time
-server-client communication. (You can find the complete sources
-&lt;a href="https://github.com/vy/lubang-menggali"&gt;here&lt;/a&gt;.) Play provides necessary leverage
-for the integration tests – start the server, connect two browsers to it, click
-on the buttons to make a move and check the board updates. However, the tricky
-bit was the implementation of unit tests for &lt;code&gt;WebSocket&lt;/code&gt; handlers.&lt;/p&gt;
-
-&lt;h1 id="preliminaries"&gt;Preliminaries&lt;/h1&gt;
-
-&lt;p&gt;A typical &lt;code&gt;WebSocket&lt;/code&gt; handler in Play has the following entry point for the
-request dispatcher.&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="language-java"&gt;&lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kd"&gt;static&lt;/span&gt; &lt;span class="n"&gt;WebSocket&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;JsonNode&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="nf"&gt;join&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
-    &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="n"&gt;WebSocket&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;JsonNode&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;()&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
-        &lt;span class="nd"&gt;@Override&lt;/span&gt;
-        &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;onReady&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;In&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;JsonNode&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;in&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;Out&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;JsonNode&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;out&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
-            &lt;span class="c1"&gt;// ...&lt;/span&gt;
-        &lt;span class="o"&gt;}&lt;/span&gt;
-    &lt;span class="o"&gt;}&lt;/span&gt;
-&lt;span class="o"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;When a request hits to &lt;code&gt;join()&lt;/code&gt;, the function returns a new &lt;code&gt;WebSocket&lt;/code&gt;
-instance, where &lt;code&gt;onReady()&lt;/code&gt; will be invoked upon connection establishment. After
-that, the book keeping of the input and output sockets are delegated to the
-programmer. Note that the client-server communication is performed in JSON
-messages in the above code snippet.&lt;/p&gt;
-
-&lt;h1 id="mocking"&gt;Mocking&lt;/h1&gt;
-
-&lt;p&gt;In order to mock a client-server &lt;code&gt;WebSocket&lt;/code&gt; communication, I need mock
-&lt;code&gt;WebSocket.In&lt;/code&gt; and &lt;code&gt;WebSocket.Out&lt;/code&gt; class implementations. For that purpose, I
-first tried googling alternatives and checked what other people have done
-previously, but did not find much material. Hence, I came up with the following
-&lt;code&gt;MockInputWebSocket&lt;/code&gt;.&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="language-java"&gt;&lt;span class="nd"&gt;@ThreadSafe&lt;/span&gt;
-&lt;span class="kd"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;MockInputWebSocket&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
-
-    &lt;span class="kd"&gt;protected&lt;/span&gt; &lt;span class="kd"&gt;final&lt;/span&gt; &lt;span class="n"&gt;List&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;F&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;Callback&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;JsonNode&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;messageListeners&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;
-            &lt;span class="n"&gt;Collections&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;synchronizedList&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="n"&gt;ArrayList&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;F&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;Callback&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;JsonNode&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;());&lt;/span&gt;
-
-    &lt;span class="kd"&gt;protected&lt;/span&gt; &lt;span class="kd"&gt;final&lt;/span&gt; &lt;span class="n"&gt;List&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;F&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;Callback0&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;closeListeners&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;
-            &lt;span class="n"&gt;Collections&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;synchronizedList&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="n"&gt;ArrayList&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;F&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;Callback0&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;());&lt;/span&gt;
-
-    &lt;span class="kd"&gt;protected&lt;/span&gt; &lt;span class="kd"&gt;final&lt;/span&gt; &lt;span class="n"&gt;WebSocket&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;In&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;JsonNode&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;inputSocket&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="n"&gt;WebSocket&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;In&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;JsonNode&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;()&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
-
-        &lt;span class="nd"&gt;@Override&lt;/span&gt;
-        &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;onMessage&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;F&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;Callback&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;JsonNode&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;callback&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="n"&gt;messageListeners&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;add&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;callback&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
-
-        &lt;span class="nd"&gt;@Override&lt;/span&gt;
-        &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;onClose&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;F&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;Callback0&lt;/span&gt; &lt;span class="n"&gt;callback&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="n"&gt;closeListeners&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;add&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;callback&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
-
-    &lt;span class="o"&gt;};&lt;/span&gt;
-
-    &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;write&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;JsonNode&lt;/span&gt; &lt;span class="n"&gt;data&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="kd"&gt;throws&lt;/span&gt; &lt;span class="n"&gt;Throwable&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
-        &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;F&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;Callback&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;JsonNode&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;listener&lt;/span&gt; &lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="n"&gt;messageListeners&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
-            &lt;span class="n"&gt;listener&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;invoke&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;data&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
-    &lt;span class="o"&gt;}&lt;/span&gt;
-
-    &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;close&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="kd"&gt;throws&lt;/span&gt; &lt;span class="n"&gt;Throwable&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
-        &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;F&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;Callback0&lt;/span&gt; &lt;span class="n"&gt;listener&lt;/span&gt; &lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="n"&gt;closeListeners&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
-            &lt;span class="n"&gt;listener&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;invoke&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
-    &lt;span class="o"&gt;}&lt;/span&gt;
-
-    &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="n"&gt;WebSocket&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;In&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;JsonNode&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="nf"&gt;getInputSocket&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;inputSocket&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
-
-&lt;span class="o"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Here, I first implement a &lt;code&gt;WebSocket.In&lt;/code&gt; object, where message and close event
-listeners can register themselves to &lt;code&gt;messageListeners&lt;/code&gt; and &lt;code&gt;closeListeners&lt;/code&gt;
-list, respectively. Next, in order to pass data to the socket listeners, I wrote
-my custom &lt;code&gt;write()&lt;/code&gt; and &lt;code&gt;close()&lt;/code&gt; methods.&lt;/p&gt;
-
-&lt;p&gt;I also implemented &lt;code&gt;MockOutputWebSocket&lt;/code&gt; similarly:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="language-java"&gt;&lt;span class="nd"&gt;@ThreadSafe&lt;/span&gt;
-&lt;span class="kd"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;MockOutputWebSocket&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
-
-    &lt;span class="kd"&gt;private&lt;/span&gt; &lt;span class="kd"&gt;final&lt;/span&gt; &lt;span class="kd"&gt;static&lt;/span&gt; &lt;span class="n"&gt;ObjectMapper&lt;/span&gt; &lt;span class="n"&gt;objectMapper&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nf"&gt;ObjectMapper&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
-
-    &lt;span class="kd"&gt;protected&lt;/span&gt; &lt;span class="kd"&gt;final&lt;/span&gt; &lt;span class="n"&gt;BlockingQueue&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;JsonNode&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;messageQueue&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="n"&gt;LinkedBlockingQueue&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&amp;gt;();&lt;/span&gt;
-
-    &lt;span class="kd"&gt;protected&lt;/span&gt; &lt;span class="kd"&gt;final&lt;/span&gt; &lt;span class="n"&gt;WebSocket&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;Out&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;JsonNode&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;outputSocket&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="n"&gt;WebSocket&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;Out&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;JsonNode&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;()&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
-
-        &lt;span class="nd"&gt;@Override&lt;/span&gt;
-        &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;write&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;JsonNode&lt;/span&gt; &lt;span class="n"&gt;frame&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="n"&gt;messageQueue&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;add&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;frame&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
-
-        &lt;span class="nd"&gt;@Override&lt;/span&gt;
-        &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;close&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
-            &lt;span class="k"&gt;try&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="n"&gt;messageQueue&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;add&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;objectMapper&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;readTree&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="s"&gt;"{\"closed\": true}"&lt;/span&gt;&lt;span class="o"&gt;));&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
-            &lt;span class="c1"&gt;// This should not happen.&lt;/span&gt;
-            &lt;span class="k"&gt;catch&lt;/span&gt; &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;IOException&lt;/span&gt; &lt;span class="n"&gt;e&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="k"&gt;throw&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nf"&gt;RuntimeException&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;e&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
-        &lt;span class="o"&gt;}&lt;/span&gt;
-    &lt;span class="o"&gt;};&lt;/span&gt;
-
-    &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="n"&gt;BlockingQueue&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;JsonNode&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="nf"&gt;getMessageQueue&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;messageQueue&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
-
-    &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="n"&gt;WebSocket&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;Out&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;JsonNode&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="nf"&gt;getOutputSocket&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;outputSocket&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
-
-&lt;span class="o"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;If we would forget about the custom close message hack (nasty!) in &lt;code&gt;close()&lt;/code&gt;
-method of the implemented &lt;code&gt;WebSocket.Out&lt;/code&gt; class, things are self-explanative
-here as well. That is, when we receive a new message, we push it to
-&lt;code&gt;messageQueue&lt;/code&gt;. The test user will be able to consume the messages written to
-the mock output socket by polling &lt;code&gt;JsonData&lt;/code&gt; from the &lt;code&gt;messageQueue&lt;/code&gt;.&lt;/p&gt;
-
-&lt;p&gt;Since I come this far, I also implemented an entire &lt;code&gt;WebSocket&lt;/code&gt; mock
-(&lt;code&gt;MockWebSocket&lt;/code&gt;) that employs the aforementioned &lt;code&gt;MockInputWebSocket&lt;/code&gt; and
-&lt;code&gt;MockOutputWebSocket&lt;/code&gt; as follows.&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="language-java"&gt;&lt;span class="nd"&gt;@ThreadSafe&lt;/span&gt;
-&lt;span class="kd"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;MockWebSocket&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
-
-    &lt;span class="kd"&gt;protected&lt;/span&gt; &lt;span class="kd"&gt;final&lt;/span&gt; &lt;span class="n"&gt;MockInputWebSocket&lt;/span&gt; &lt;span class="n"&gt;mockInput&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nf"&gt;MockInputWebSocket&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
-    &lt;span class="kd"&gt;protected&lt;/span&gt; &lt;span class="kd"&gt;final&lt;/span&gt; &lt;span class="n"&gt;MockOutputWebSocket&lt;/span&gt; &lt;span class="n"&gt;mockOutput&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nf"&gt;MockOutputWebSocket&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
-    &lt;span class="kd"&gt;protected&lt;/span&gt; &lt;span class="kd"&gt;final&lt;/span&gt; &lt;span class="n"&gt;WebSocket&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;JsonNode&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;socket&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
-
-    &lt;span class="n"&gt;MockWebSocket&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;WebSocket&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;JsonNode&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;socket&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
-        &lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;socket&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;socket&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
-        &lt;span class="n"&gt;socket&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;onReady&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;mockInput&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;getInputSocket&lt;/span&gt;&lt;span class="o"&gt;(),&lt;/span&gt; &lt;span class="n"&gt;mockOutput&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;getOutputSocket&lt;/span&gt;&lt;span class="o"&gt;());&lt;/span&gt;
-    &lt;span class="o"&gt;}&lt;/span&gt;
-
-    &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="n"&gt;JsonNode&lt;/span&gt; &lt;span class="nf"&gt;read&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="kd"&gt;throws&lt;/span&gt; &lt;span class="n"&gt;InterruptedException&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
-        &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;mockOutput&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;getMessageQueue&lt;/span&gt;&lt;span class="o"&gt;().&lt;/span&gt;&lt;span class="na"&gt;poll&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;TimeUnit&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;SECONDS&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
-    &lt;span class="o"&gt;}&lt;/span&gt;
-
-    &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;write&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;JsonNode&lt;/span&gt; &lt;span class="n"&gt;data&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="kd"&gt;throws&lt;/span&gt; &lt;span class="n"&gt;Throwable&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="n"&gt;mockInput&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;write&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;data&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
-
-    &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;close&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="kd"&gt;throws&lt;/span&gt; &lt;span class="n"&gt;Throwable&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="n"&gt;mockInput&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;close&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
-
-&lt;span class="o"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;&lt;code&gt;MockWebSocket&lt;/code&gt; provides the caller an interface such that the two-way
-&lt;code&gt;WebSocket&lt;/code&gt; communication can be intercepted through provided &lt;code&gt;read()&lt;/code&gt;,
-&lt;code&gt;write()&lt;/code&gt; and &lt;code&gt;close()&lt;/code&gt; methods – much like a regular network socket.&lt;/p&gt;
-
-&lt;h1 id="conclusion"&gt;Conclusion&lt;/h1&gt;
-
-&lt;p&gt;Remember that I used JSON as the messaging medium. For that purpose, I created a
-couple of event classes (e.g., &lt;code&gt;WaitingForOpponent&lt;/code&gt;, &lt;code&gt;ReadyToStart&lt;/code&gt;,
-&lt;code&gt;IllegalMove&lt;/code&gt;, etc.) and used &lt;a href="http://jackson.codehaus.org/"&gt;Jackson&lt;/a&gt; for
-POJO-JSON (de)serialization. Next, I integrated my brand new &lt;code&gt;MockWebSocket&lt;/code&gt;
-into the unit tests as follows.&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="language-java"&gt;&lt;span class="kd"&gt;private&lt;/span&gt; &lt;span class="kd"&gt;static&lt;/span&gt; &lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;T&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;T&lt;/span&gt; &lt;span class="nf"&gt;readPojo&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;MockWebSocket&lt;/span&gt; &lt;span class="n"&gt;socket&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;Class&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;T&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;clazz&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
-        &lt;span class="kd"&gt;throws&lt;/span&gt; &lt;span class="n"&gt;InterruptedException&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;JsonProcessingException&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
-    &lt;span class="n"&gt;JsonNode&lt;/span&gt; &lt;span class="n"&gt;data&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;socket&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;read&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
-    &lt;span class="n"&gt;assertThat&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;data&lt;/span&gt;&lt;span class="o"&gt;).&lt;/span&gt;&lt;span class="na"&gt;isNotNull&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
-    &lt;span class="k"&gt;try&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;objectMapper&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;convertValue&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;data&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;clazz&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
-    &lt;span class="k"&gt;catch&lt;/span&gt; &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;IllegalArgumentException&lt;/span&gt; &lt;span class="n"&gt;iae&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
-        &lt;span class="k"&gt;throw&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nf"&gt;IllegalArgumentException&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;
-                &lt;span class="s"&gt;"Invalid JSON: "&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="n"&gt;objectMapper&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;writeValueAsString&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;data&lt;/span&gt;&lt;span class="o"&gt;),&lt;/span&gt; &lt;span class="n"&gt;iae&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
-    &lt;span class="o"&gt;}&lt;/span&gt;
-&lt;span class="o"&gt;}&lt;/span&gt;
-
-&lt;span class="kd"&gt;private&lt;/span&gt; &lt;span class="kd"&gt;static&lt;/span&gt; &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;writeMove&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;MockWebSocket&lt;/span&gt; &lt;span class="n"&gt;socket&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;Object&lt;/span&gt; &lt;span class="n"&gt;pit&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="kd"&gt;throws&lt;/span&gt; &lt;span class="n"&gt;Throwable&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
-    &lt;span class="n"&gt;socket&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;write&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;objectMapper&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;valueToTree&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;pit&lt;/span&gt;&lt;span class="o"&gt;));&lt;/span&gt;
-&lt;span class="o"&gt;}&lt;/span&gt;
-
-&lt;span class="nd"&gt;@Test&lt;/span&gt;
-&lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;testJoin&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="kd"&gt;throws&lt;/span&gt; &lt;span class="n"&gt;Throwable&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
-    &lt;span class="c1"&gt;// Introduce the first user and read the "WaitingForOpponent" message.&lt;/span&gt;
-    &lt;span class="n"&gt;MockWebSocket&lt;/span&gt; &lt;span class="n"&gt;fstSocket&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nf"&gt;MockWebSocket&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;Application&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;join&lt;/span&gt;&lt;span class="o"&gt;());&lt;/span&gt;
-    &lt;span class="n"&gt;WaitingForOpponent&lt;/span&gt; &lt;span class="n"&gt;fstWfo&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;readPojo&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;fstSocket&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;WaitingForOpponent&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;class&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
-    &lt;span class="n"&gt;assertThat&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;Application&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;getPendingPlayers&lt;/span&gt;&lt;span class="o"&gt;().&lt;/span&gt;&lt;span class="na"&gt;size&lt;/span&gt;&lt;span class="o"&gt;()).&lt;/span&gt;&lt;span class="na"&gt;isEqualTo&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
-    &lt;span class="n"&gt;assertThat&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;Application&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;getGames&lt;/span&gt;&lt;span class="o"&gt;().&lt;/span&gt;&lt;span class="na"&gt;size&lt;/span&gt;&lt;span class="o"&gt;()).&lt;/span&gt;&lt;span class="na"&gt;isEqualTo&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
-
-    &lt;span class="c1"&gt;// Introduce the second user and read the."WaitingForOpponent" message.&lt;/span&gt;
-    &lt;span class="n"&gt;MockWebSocket&lt;/span&gt; &lt;span class="n"&gt;sndSocket&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nf"&gt;MockWebSocket&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;Application&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;join&lt;/span&gt;&lt;span class="o"&gt;());&lt;/span&gt;
-    &lt;span class="n"&gt;WaitingForOpponent&lt;/span&gt; &lt;span class="n"&gt;sndWfo&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;readPojo&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;sndSocket&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;WaitingForOpponent&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;class&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
-    &lt;span class="n"&gt;assertThat&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;fstWfo&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;playerId&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;equals&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;sndWfo&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;playerId&lt;/span&gt;&lt;span class="o"&gt;)).&lt;/span&gt;&lt;span class="na"&gt;isFalse&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
-
-    &lt;span class="c1"&gt;// Validate "ReadyToStart" messages.&lt;/span&gt;
-    &lt;span class="n"&gt;ReadyToStart&lt;/span&gt; &lt;span class="n"&gt;fstRts&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;readPojo&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;fstSocket&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;ReadyToStart&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;class&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
-    &lt;span class="n"&gt;ReadyToStart&lt;/span&gt; &lt;span class="n"&gt;sndRts&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;readPojo&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;sndSocket&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;ReadyToStart&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;class&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
-    &lt;span class="n"&gt;assertThat&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;Application&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;getGames&lt;/span&gt;&lt;span class="o"&gt;().&lt;/span&gt;&lt;span class="na"&gt;size&lt;/span&gt;&lt;span class="o"&gt;()).&lt;/span&gt;&lt;span class="na"&gt;isEqualTo&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
-    &lt;span class="n"&gt;assertThat&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;Application&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;getPendingPlayers&lt;/span&gt;&lt;span class="o"&gt;().&lt;/span&gt;&lt;span class="na"&gt;size&lt;/span&gt;&lt;span class="o"&gt;()).&lt;/span&gt;&lt;span class="na"&gt;isEqualTo&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
-    &lt;span class="n"&gt;assertThat&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;fstRts&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;nextPlayerId&lt;/span&gt;&lt;span class="o"&gt;).&lt;/span&gt;&lt;span class="na"&gt;isEqualTo&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;sndRts&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;nextPlayerId&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
-    &lt;span class="n"&gt;assertThat&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;fstRts&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;opponentId&lt;/span&gt;&lt;span class="o"&gt;).&lt;/span&gt;&lt;span class="na"&gt;isEqualTo&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;sndWfo&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;playerId&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
-    &lt;span class="n"&gt;assertThat&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;sndRts&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;opponentId&lt;/span&gt;&lt;span class="o"&gt;).&lt;/span&gt;&lt;span class="na"&gt;isEqualTo&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;fstWfo&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;playerId&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
-
-    &lt;span class="c1"&gt;// Let 2nd player make a move, while this is not his turn.&lt;/span&gt;
-    &lt;span class="n"&gt;writeMove&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;sndSocket&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
-    &lt;span class="n"&gt;IllegalMove&lt;/span&gt; &lt;span class="n"&gt;im&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;readPojo&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;sndSocket&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;IllegalMove&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;class&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
-    &lt;span class="n"&gt;assertThat&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;im&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;reason&lt;/span&gt;&lt;span class="o"&gt;).&lt;/span&gt;&lt;span class="na"&gt;isEqualTo&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="s"&gt;"It is opponent's turn."&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
-
-    &lt;span class="c1"&gt;// Let 1st player make a move to an invalid pit index.&lt;/span&gt;
-    &lt;span class="n"&gt;writeMove&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;fstSocket&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="s"&gt;"n/a"&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
-    &lt;span class="n"&gt;im&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;readPojo&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;fstSocket&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;IllegalMove&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;class&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
-    &lt;span class="n"&gt;assertThat&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;im&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;reason&lt;/span&gt;&lt;span class="o"&gt;).&lt;/span&gt;&lt;span class="na"&gt;matches&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="s"&gt;"^Invalid pit index: .*"&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
-
-    &lt;span class="c1"&gt;// Let 1st player make a move with a negative pit index.&lt;/span&gt;
-    &lt;span class="n"&gt;writeMove&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;fstSocket&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
-    &lt;span class="n"&gt;im&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;readPojo&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;fstSocket&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;IllegalMove&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;class&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
-    &lt;span class="n"&gt;assertThat&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;im&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;reason&lt;/span&gt;&lt;span class="o"&gt;).&lt;/span&gt;&lt;span class="na"&gt;matches&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="s"&gt;"^Invalid pit index: .*"&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
-
-    &lt;span class="c1"&gt;// ...&lt;/span&gt;
-&lt;span class="o"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;I suppose I have got a nearly 99% code coverage of the game engine by using the
-mock &lt;code&gt;WebSocket&lt;/code&gt;s. I hope this scheme would help others trying to do a similar
-testing stuff.&lt;/p&gt;
-</content>
-  </entry>
-  <entry>
     <id>tag:vy.github.io,2014-08-07://blog/post/2014/09/01/java-fiber-test/</id>
     <title type="html">Testing Fiber Implementations in JVM</title>
-    <published>2014-08-07T07:28:00Z</published>
-    <updated>2014-08-07T07:28:00Z</updated>
+    <published>2014-08-07T09:28:00Z</published>
+    <updated>2014-08-07T09:28:00Z</updated>
     <link rel="alternate" href="https://vy.github.io//blog/post/2014/09/01/java-fiber-test/"/>
     <content type="html">
 &lt;p&gt;I have always been interested in concurrent programming through the use of
@@ -1246,10 +1174,227 @@ replacement for a considerable amount of use cases.&lt;/p&gt;
 </content>
   </entry>
   <entry>
+    <id>tag:vy.github.io,2014-08-07://blog/post/2014/08/07/testing-websockets-in-play/</id>
+    <title type="html">Testing WebSockets in Play Framework</title>
+    <published>2014-08-07T09:28:00Z</published>
+    <updated>2014-08-07T09:28:00Z</updated>
+    <link rel="alternate" href="https://vy.github.io//blog/post/2014/08/07/testing-websockets-in-play/"/>
+    <content type="html">
+&lt;p&gt;In a recent job interview, I was asked to implement a fully fledged (that is,
+including unit and integration tests) &lt;a href="http://en.wikipedia.org/wiki/Mancala"&gt;Lubang Menggali
+(Mancala)&lt;/a&gt; game, where multiple users are
+allowed to play in real-time. I went with &lt;a href="http://www.playframework.com/"&gt;Play
+Framework&lt;/a&gt; and used
+&lt;a href="http://en.wikipedia.org/wiki/WebSocket"&gt;WebSocket&lt;/a&gt;s to implement the real-time
+server-client communication. (You can find the complete sources
+&lt;a href="https://github.com/vy/lubang-menggali"&gt;here&lt;/a&gt;.) Play provides necessary leverage
+for the integration tests – start the server, connect two browsers to it, click
+on the buttons to make a move and check the board updates. However, the tricky
+bit was the implementation of unit tests for &lt;code&gt;WebSocket&lt;/code&gt; handlers.&lt;/p&gt;
+
+&lt;h1 id="preliminaries"&gt;Preliminaries&lt;/h1&gt;
+
+&lt;p&gt;A typical &lt;code&gt;WebSocket&lt;/code&gt; handler in Play has the following entry point for the
+request dispatcher.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-java"&gt;&lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kd"&gt;static&lt;/span&gt; &lt;span class="n"&gt;WebSocket&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;JsonNode&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="nf"&gt;join&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+    &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="n"&gt;WebSocket&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;JsonNode&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;()&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+        &lt;span class="nd"&gt;@Override&lt;/span&gt;
+        &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;onReady&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;In&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;JsonNode&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;in&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;Out&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;JsonNode&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;out&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+            &lt;span class="c1"&gt;// ...&lt;/span&gt;
+        &lt;span class="o"&gt;}&lt;/span&gt;
+    &lt;span class="o"&gt;}&lt;/span&gt;
+&lt;span class="o"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;When a request hits to &lt;code&gt;join()&lt;/code&gt;, the function returns a new &lt;code&gt;WebSocket&lt;/code&gt;
+instance, where &lt;code&gt;onReady()&lt;/code&gt; will be invoked upon connection establishment. After
+that, the book keeping of the input and output sockets are delegated to the
+programmer. Note that the client-server communication is performed in JSON
+messages in the above code snippet.&lt;/p&gt;
+
+&lt;h1 id="mocking"&gt;Mocking&lt;/h1&gt;
+
+&lt;p&gt;In order to mock a client-server &lt;code&gt;WebSocket&lt;/code&gt; communication, I need mock
+&lt;code&gt;WebSocket.In&lt;/code&gt; and &lt;code&gt;WebSocket.Out&lt;/code&gt; class implementations. For that purpose, I
+first tried googling alternatives and checked what other people have done
+previously, but did not find much material. Hence, I came up with the following
+&lt;code&gt;MockInputWebSocket&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-java"&gt;&lt;span class="nd"&gt;@ThreadSafe&lt;/span&gt;
+&lt;span class="kd"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;MockInputWebSocket&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+
+    &lt;span class="kd"&gt;protected&lt;/span&gt; &lt;span class="kd"&gt;final&lt;/span&gt; &lt;span class="n"&gt;List&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;F&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;Callback&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;JsonNode&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;messageListeners&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;
+            &lt;span class="n"&gt;Collections&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;synchronizedList&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="n"&gt;ArrayList&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;F&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;Callback&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;JsonNode&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;());&lt;/span&gt;
+
+    &lt;span class="kd"&gt;protected&lt;/span&gt; &lt;span class="kd"&gt;final&lt;/span&gt; &lt;span class="n"&gt;List&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;F&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;Callback0&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;closeListeners&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;
+            &lt;span class="n"&gt;Collections&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;synchronizedList&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="n"&gt;ArrayList&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;F&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;Callback0&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;());&lt;/span&gt;
+
+    &lt;span class="kd"&gt;protected&lt;/span&gt; &lt;span class="kd"&gt;final&lt;/span&gt; &lt;span class="n"&gt;WebSocket&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;In&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;JsonNode&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;inputSocket&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="n"&gt;WebSocket&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;In&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;JsonNode&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;()&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+
+        &lt;span class="nd"&gt;@Override&lt;/span&gt;
+        &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;onMessage&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;F&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;Callback&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;JsonNode&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;callback&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="n"&gt;messageListeners&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;add&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;callback&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
+
+        &lt;span class="nd"&gt;@Override&lt;/span&gt;
+        &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;onClose&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;F&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;Callback0&lt;/span&gt; &lt;span class="n"&gt;callback&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="n"&gt;closeListeners&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;add&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;callback&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
+
+    &lt;span class="o"&gt;};&lt;/span&gt;
+
+    &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;write&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;JsonNode&lt;/span&gt; &lt;span class="n"&gt;data&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="kd"&gt;throws&lt;/span&gt; &lt;span class="n"&gt;Throwable&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+        &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;F&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;Callback&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;JsonNode&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;listener&lt;/span&gt; &lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="n"&gt;messageListeners&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
+            &lt;span class="n"&gt;listener&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;invoke&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;data&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+    &lt;span class="o"&gt;}&lt;/span&gt;
+
+    &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;close&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="kd"&gt;throws&lt;/span&gt; &lt;span class="n"&gt;Throwable&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+        &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;F&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;Callback0&lt;/span&gt; &lt;span class="n"&gt;listener&lt;/span&gt; &lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="n"&gt;closeListeners&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
+            &lt;span class="n"&gt;listener&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;invoke&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
+    &lt;span class="o"&gt;}&lt;/span&gt;
+
+    &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="n"&gt;WebSocket&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;In&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;JsonNode&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="nf"&gt;getInputSocket&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;inputSocket&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
+
+&lt;span class="o"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Here, I first implement a &lt;code&gt;WebSocket.In&lt;/code&gt; object, where message and close event
+listeners can register themselves to &lt;code&gt;messageListeners&lt;/code&gt; and &lt;code&gt;closeListeners&lt;/code&gt;
+list, respectively. Next, in order to pass data to the socket listeners, I wrote
+my custom &lt;code&gt;write()&lt;/code&gt; and &lt;code&gt;close()&lt;/code&gt; methods.&lt;/p&gt;
+
+&lt;p&gt;I also implemented &lt;code&gt;MockOutputWebSocket&lt;/code&gt; similarly:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-java"&gt;&lt;span class="nd"&gt;@ThreadSafe&lt;/span&gt;
+&lt;span class="kd"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;MockOutputWebSocket&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+
+    &lt;span class="kd"&gt;private&lt;/span&gt; &lt;span class="kd"&gt;final&lt;/span&gt; &lt;span class="kd"&gt;static&lt;/span&gt; &lt;span class="n"&gt;ObjectMapper&lt;/span&gt; &lt;span class="n"&gt;objectMapper&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nf"&gt;ObjectMapper&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
+
+    &lt;span class="kd"&gt;protected&lt;/span&gt; &lt;span class="kd"&gt;final&lt;/span&gt; &lt;span class="n"&gt;BlockingQueue&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;JsonNode&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;messageQueue&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="n"&gt;LinkedBlockingQueue&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&amp;gt;();&lt;/span&gt;
+
+    &lt;span class="kd"&gt;protected&lt;/span&gt; &lt;span class="kd"&gt;final&lt;/span&gt; &lt;span class="n"&gt;WebSocket&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;Out&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;JsonNode&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;outputSocket&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="n"&gt;WebSocket&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;Out&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;JsonNode&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;()&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+
+        &lt;span class="nd"&gt;@Override&lt;/span&gt;
+        &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;write&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;JsonNode&lt;/span&gt; &lt;span class="n"&gt;frame&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="n"&gt;messageQueue&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;add&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;frame&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
+
+        &lt;span class="nd"&gt;@Override&lt;/span&gt;
+        &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;close&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+            &lt;span class="k"&gt;try&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="n"&gt;messageQueue&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;add&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;objectMapper&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;readTree&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="s"&gt;"{\"closed\": true}"&lt;/span&gt;&lt;span class="o"&gt;));&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
+            &lt;span class="c1"&gt;// This should not happen.&lt;/span&gt;
+            &lt;span class="k"&gt;catch&lt;/span&gt; &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;IOException&lt;/span&gt; &lt;span class="n"&gt;e&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="k"&gt;throw&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nf"&gt;RuntimeException&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;e&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
+        &lt;span class="o"&gt;}&lt;/span&gt;
+    &lt;span class="o"&gt;};&lt;/span&gt;
+
+    &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="n"&gt;BlockingQueue&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;JsonNode&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="nf"&gt;getMessageQueue&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;messageQueue&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
+
+    &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="n"&gt;WebSocket&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;Out&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;JsonNode&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="nf"&gt;getOutputSocket&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;outputSocket&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
+
+&lt;span class="o"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If we would forget about the custom close message hack (nasty!) in &lt;code&gt;close()&lt;/code&gt;
+method of the implemented &lt;code&gt;WebSocket.Out&lt;/code&gt; class, things are self-explanative
+here as well. That is, when we receive a new message, we push it to
+&lt;code&gt;messageQueue&lt;/code&gt;. The test user will be able to consume the messages written to
+the mock output socket by polling &lt;code&gt;JsonData&lt;/code&gt; from the &lt;code&gt;messageQueue&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Since I come this far, I also implemented an entire &lt;code&gt;WebSocket&lt;/code&gt; mock
+(&lt;code&gt;MockWebSocket&lt;/code&gt;) that employs the aforementioned &lt;code&gt;MockInputWebSocket&lt;/code&gt; and
+&lt;code&gt;MockOutputWebSocket&lt;/code&gt; as follows.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-java"&gt;&lt;span class="nd"&gt;@ThreadSafe&lt;/span&gt;
+&lt;span class="kd"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;MockWebSocket&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+
+    &lt;span class="kd"&gt;protected&lt;/span&gt; &lt;span class="kd"&gt;final&lt;/span&gt; &lt;span class="n"&gt;MockInputWebSocket&lt;/span&gt; &lt;span class="n"&gt;mockInput&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nf"&gt;MockInputWebSocket&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
+    &lt;span class="kd"&gt;protected&lt;/span&gt; &lt;span class="kd"&gt;final&lt;/span&gt; &lt;span class="n"&gt;MockOutputWebSocket&lt;/span&gt; &lt;span class="n"&gt;mockOutput&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nf"&gt;MockOutputWebSocket&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
+    &lt;span class="kd"&gt;protected&lt;/span&gt; &lt;span class="kd"&gt;final&lt;/span&gt; &lt;span class="n"&gt;WebSocket&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;JsonNode&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;socket&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+
+    &lt;span class="n"&gt;MockWebSocket&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;WebSocket&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;JsonNode&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;socket&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+        &lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;socket&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;socket&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+        &lt;span class="n"&gt;socket&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;onReady&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;mockInput&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;getInputSocket&lt;/span&gt;&lt;span class="o"&gt;(),&lt;/span&gt; &lt;span class="n"&gt;mockOutput&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;getOutputSocket&lt;/span&gt;&lt;span class="o"&gt;());&lt;/span&gt;
+    &lt;span class="o"&gt;}&lt;/span&gt;
+
+    &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="n"&gt;JsonNode&lt;/span&gt; &lt;span class="nf"&gt;read&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="kd"&gt;throws&lt;/span&gt; &lt;span class="n"&gt;InterruptedException&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+        &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;mockOutput&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;getMessageQueue&lt;/span&gt;&lt;span class="o"&gt;().&lt;/span&gt;&lt;span class="na"&gt;poll&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;TimeUnit&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;SECONDS&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+    &lt;span class="o"&gt;}&lt;/span&gt;
+
+    &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;write&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;JsonNode&lt;/span&gt; &lt;span class="n"&gt;data&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="kd"&gt;throws&lt;/span&gt; &lt;span class="n"&gt;Throwable&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="n"&gt;mockInput&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;write&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;data&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
+
+    &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;close&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="kd"&gt;throws&lt;/span&gt; &lt;span class="n"&gt;Throwable&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="n"&gt;mockInput&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;close&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
+
+&lt;span class="o"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;MockWebSocket&lt;/code&gt; provides the caller an interface such that the two-way
+&lt;code&gt;WebSocket&lt;/code&gt; communication can be intercepted through provided &lt;code&gt;read()&lt;/code&gt;,
+&lt;code&gt;write()&lt;/code&gt; and &lt;code&gt;close()&lt;/code&gt; methods – much like a regular network socket.&lt;/p&gt;
+
+&lt;h1 id="conclusion"&gt;Conclusion&lt;/h1&gt;
+
+&lt;p&gt;Remember that I used JSON as the messaging medium. For that purpose, I created a
+couple of event classes (e.g., &lt;code&gt;WaitingForOpponent&lt;/code&gt;, &lt;code&gt;ReadyToStart&lt;/code&gt;,
+&lt;code&gt;IllegalMove&lt;/code&gt;, etc.) and used &lt;a href="http://jackson.codehaus.org/"&gt;Jackson&lt;/a&gt; for
+POJO-JSON (de)serialization. Next, I integrated my brand new &lt;code&gt;MockWebSocket&lt;/code&gt;
+into the unit tests as follows.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-java"&gt;&lt;span class="kd"&gt;private&lt;/span&gt; &lt;span class="kd"&gt;static&lt;/span&gt; &lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;T&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;T&lt;/span&gt; &lt;span class="nf"&gt;readPojo&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;MockWebSocket&lt;/span&gt; &lt;span class="n"&gt;socket&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;Class&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;T&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;clazz&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
+        &lt;span class="kd"&gt;throws&lt;/span&gt; &lt;span class="n"&gt;InterruptedException&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;JsonProcessingException&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+    &lt;span class="n"&gt;JsonNode&lt;/span&gt; &lt;span class="n"&gt;data&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;socket&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;read&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
+    &lt;span class="n"&gt;assertThat&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;data&lt;/span&gt;&lt;span class="o"&gt;).&lt;/span&gt;&lt;span class="na"&gt;isNotNull&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
+    &lt;span class="k"&gt;try&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;objectMapper&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;convertValue&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;data&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;clazz&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
+    &lt;span class="k"&gt;catch&lt;/span&gt; &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;IllegalArgumentException&lt;/span&gt; &lt;span class="n"&gt;iae&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+        &lt;span class="k"&gt;throw&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nf"&gt;IllegalArgumentException&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;
+                &lt;span class="s"&gt;"Invalid JSON: "&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="n"&gt;objectMapper&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;writeValueAsString&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;data&lt;/span&gt;&lt;span class="o"&gt;),&lt;/span&gt; &lt;span class="n"&gt;iae&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+    &lt;span class="o"&gt;}&lt;/span&gt;
+&lt;span class="o"&gt;}&lt;/span&gt;
+
+&lt;span class="kd"&gt;private&lt;/span&gt; &lt;span class="kd"&gt;static&lt;/span&gt; &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;writeMove&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;MockWebSocket&lt;/span&gt; &lt;span class="n"&gt;socket&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;Object&lt;/span&gt; &lt;span class="n"&gt;pit&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="kd"&gt;throws&lt;/span&gt; &lt;span class="n"&gt;Throwable&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+    &lt;span class="n"&gt;socket&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;write&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;objectMapper&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;valueToTree&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;pit&lt;/span&gt;&lt;span class="o"&gt;));&lt;/span&gt;
+&lt;span class="o"&gt;}&lt;/span&gt;
+
+&lt;span class="nd"&gt;@Test&lt;/span&gt;
+&lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;testJoin&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="kd"&gt;throws&lt;/span&gt; &lt;span class="n"&gt;Throwable&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+    &lt;span class="c1"&gt;// Introduce the first user and read the "WaitingForOpponent" message.&lt;/span&gt;
+    &lt;span class="n"&gt;MockWebSocket&lt;/span&gt; &lt;span class="n"&gt;fstSocket&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nf"&gt;MockWebSocket&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;Application&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;join&lt;/span&gt;&lt;span class="o"&gt;());&lt;/span&gt;
+    &lt;span class="n"&gt;WaitingForOpponent&lt;/span&gt; &lt;span class="n"&gt;fstWfo&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;readPojo&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;fstSocket&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;WaitingForOpponent&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;class&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+    &lt;span class="n"&gt;assertThat&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;Application&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;getPendingPlayers&lt;/span&gt;&lt;span class="o"&gt;().&lt;/span&gt;&lt;span class="na"&gt;size&lt;/span&gt;&lt;span class="o"&gt;()).&lt;/span&gt;&lt;span class="na"&gt;isEqualTo&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+    &lt;span class="n"&gt;assertThat&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;Application&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;getGames&lt;/span&gt;&lt;span class="o"&gt;().&lt;/span&gt;&lt;span class="na"&gt;size&lt;/span&gt;&lt;span class="o"&gt;()).&lt;/span&gt;&lt;span class="na"&gt;isEqualTo&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+
+    &lt;span class="c1"&gt;// Introduce the second user and read the."WaitingForOpponent" message.&lt;/span&gt;
+    &lt;span class="n"&gt;MockWebSocket&lt;/span&gt; &lt;span class="n"&gt;sndSocket&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nf"&gt;MockWebSocket&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;Application&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;join&lt;/span&gt;&lt;span class="o"&gt;());&lt;/span&gt;
+    &lt;span class="n"&gt;WaitingForOpponent&lt;/span&gt; &lt;span class="n"&gt;sndWfo&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;readPojo&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;sndSocket&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;WaitingForOpponent&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;class&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+    &lt;span class="n"&gt;assertThat&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;fstWfo&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;playerId&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;equals&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;sndWfo&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;playerId&lt;/span&gt;&lt;span class="o"&gt;)).&lt;/span&gt;&lt;span class="na"&gt;isFalse&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
+
+    &lt;span class="c1"&gt;// Validate "ReadyToStart" messages.&lt;/span&gt;
+    &lt;span class="n"&gt;ReadyToStart&lt;/span&gt; &lt;span class="n"&gt;fstRts&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;readPojo&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;fstSocket&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;ReadyToStart&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;class&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+    &lt;span class="n"&gt;ReadyToStart&lt;/span&gt; &lt;span class="n"&gt;sndRts&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;readPojo&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;sndSocket&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;ReadyToStart&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;class&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+    &lt;span class="n"&gt;assertThat&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;Application&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;getGames&lt;/span&gt;&lt;span class="o"&gt;().&lt;/span&gt;&lt;span class="na"&gt;size&lt;/span&gt;&lt;span class="o"&gt;()).&lt;/span&gt;&lt;span class="na"&gt;isEqualTo&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+    &lt;span class="n"&gt;assertThat&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;Application&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;getPendingPlayers&lt;/span&gt;&lt;span class="o"&gt;().&lt;/span&gt;&lt;span class="na"&gt;size&lt;/span&gt;&lt;span class="o"&gt;()).&lt;/span&gt;&lt;span class="na"&gt;isEqualTo&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+    &lt;span class="n"&gt;assertThat&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;fstRts&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;nextPlayerId&lt;/span&gt;&lt;span class="o"&gt;).&lt;/span&gt;&lt;span class="na"&gt;isEqualTo&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;sndRts&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;nextPlayerId&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+    &lt;span class="n"&gt;assertThat&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;fstRts&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;opponentId&lt;/span&gt;&lt;span class="o"&gt;).&lt;/span&gt;&lt;span class="na"&gt;isEqualTo&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;sndWfo&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;playerId&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+    &lt;span class="n"&gt;assertThat&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;sndRts&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;opponentId&lt;/span&gt;&lt;span class="o"&gt;).&lt;/span&gt;&lt;span class="na"&gt;isEqualTo&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;fstWfo&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;playerId&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+
+    &lt;span class="c1"&gt;// Let 2nd player make a move, while this is not his turn.&lt;/span&gt;
+    &lt;span class="n"&gt;writeMove&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;sndSocket&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+    &lt;span class="n"&gt;IllegalMove&lt;/span&gt; &lt;span class="n"&gt;im&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;readPojo&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;sndSocket&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;IllegalMove&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;class&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+    &lt;span class="n"&gt;assertThat&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;im&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;reason&lt;/span&gt;&lt;span class="o"&gt;).&lt;/span&gt;&lt;span class="na"&gt;isEqualTo&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="s"&gt;"It is opponent's turn."&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+
+    &lt;span class="c1"&gt;// Let 1st player make a move to an invalid pit index.&lt;/span&gt;
+    &lt;span class="n"&gt;writeMove&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;fstSocket&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="s"&gt;"n/a"&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+    &lt;span class="n"&gt;im&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;readPojo&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;fstSocket&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;IllegalMove&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;class&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+    &lt;span class="n"&gt;assertThat&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;im&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;reason&lt;/span&gt;&lt;span class="o"&gt;).&lt;/span&gt;&lt;span class="na"&gt;matches&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="s"&gt;"^Invalid pit index: .*"&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+
+    &lt;span class="c1"&gt;// Let 1st player make a move with a negative pit index.&lt;/span&gt;
+    &lt;span class="n"&gt;writeMove&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;fstSocket&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+    &lt;span class="n"&gt;im&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;readPojo&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;fstSocket&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;IllegalMove&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;class&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+    &lt;span class="n"&gt;assertThat&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;im&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;reason&lt;/span&gt;&lt;span class="o"&gt;).&lt;/span&gt;&lt;span class="na"&gt;matches&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="s"&gt;"^Invalid pit index: .*"&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+
+    &lt;span class="c1"&gt;// ...&lt;/span&gt;
+&lt;span class="o"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I suppose I have got a nearly 99% code coverage of the game engine by using the
+mock &lt;code&gt;WebSocket&lt;/code&gt;s. I hope this scheme would help others trying to do a similar
+testing stuff.&lt;/p&gt;
+</content>
+  </entry>
+  <entry>
     <id>tag:vy.github.io,2014-06-27://blog/post/2014/06/27/parse-bitcoin-blockchain/</id>
     <title type="html">Parsing Bitcoin Blockchain Data in Java</title>
-    <published>2014-06-27T14:49:00Z</published>
-    <updated>2014-06-27T14:49:00Z</updated>
+    <published>2014-06-27T16:49:00Z</published>
+    <updated>2014-06-27T16:49:00Z</updated>
     <link rel="alternate" href="https://vy.github.io//blog/post/2014/06/27/parse-bitcoin-blockchain/"/>
     <content type="html">
 &lt;p&gt;Last week I spent some time on collecting certain statistics (e.g., average
@@ -1356,8 +1501,8 @@ GNU/Linux notebook without any JVM flags. Pretty zippy!)&lt;/p&gt;
   <entry>
     <id>tag:vy.github.io,2014-05-16://blog/post/2014/05/16/bandwidth-shaping/</id>
     <title type="html">Bandwidth Shaping on Linux</title>
-    <published>2014-05-16T15:05:00Z</published>
-    <updated>2014-05-16T15:05:00Z</updated>
+    <published>2014-05-16T17:05:00Z</published>
+    <updated>2014-05-16T17:05:00Z</updated>
     <link rel="alternate" href="https://vy.github.io//blog/post/2014/05/16/bandwidth-shaping/"/>
     <content type="html">
 &lt;p&gt;Networking stack in Linux kernel by default ships an immense set of
@@ -1451,8 +1596,8 @@ blew me away.&lt;/strong&gt; So true!&lt;/p&gt;
   <entry>
     <id>tag:vy.github.io,2014-02-14://blog/post/2014/02/14/java-safe-publication/</id>
     <title type="html">Safe Object Publication in Java</title>
-    <published>2014-02-14T13:22:00Z</published>
-    <updated>2014-02-14T13:22:00Z</updated>
+    <published>2014-02-14T14:22:00Z</published>
+    <updated>2014-02-14T14:22:00Z</updated>
     <link rel="alternate" href="https://vy.github.io//blog/post/2014/02/14/java-safe-publication/"/>
     <content type="html">
 &lt;p&gt;I have just finished reading &lt;a href="http://jcip.net/"&gt;Java Concurrency in Practice&lt;/a&gt; yesterday and would like to share some excerpts from the book on safe object publication in Java. Before stepping into the details, I would like to state that I found every single page of the book quite useful and found numerous places that I can enhance my existing code base during my daily coding routine. Thanks to &lt;a href="https://twitter.com/BrianGoetz"&gt;@BrianGoetz&lt;/a&gt; et al for such a comprehensive and practical guide. (For those who want to go further up to its extremes, I strongly recommend you to check &lt;a href="http://shipilev.net/"&gt;Aleksey Shipilёv&lt;/a&gt;’s &lt;a href="http://shipilev.net/blog/2014/safe-public-construction/"&gt;Safe Publication and Safe Initialization in Java&lt;/a&gt; article – a must read on the subject.)&lt;/p&gt;
@@ -1560,8 +1705,8 @@ blew me away.&lt;/strong&gt; So true!&lt;/p&gt;
   <entry>
     <id>tag:vy.github.io,2014-01-03://blog/post/2014/01/03/tcp-time-wait/</id>
     <title type="html">Sockets, TCP Keep Alive and TIME_WAIT</title>
-    <published>2014-01-03T20:19:00Z</published>
-    <updated>2014-01-03T20:19:00Z</updated>
+    <published>2014-01-03T21:19:00Z</published>
+    <updated>2014-01-03T21:19:00Z</updated>
     <link rel="alternate" href="https://vy.github.io//blog/post/2014/01/03/tcp-time-wait/"/>
     <content type="html">
 &lt;p&gt;Time to time I share some technical links on Twitter and let them get lost in the internet junk yard. I thought it might be a better idea to archive them on my blog in a more organized fashion. (I will group such posts under tag &lt;a href="/blog/tag/link"&gt;link&lt;/a&gt;.) This way they will at least be more accessible by myself. This post is my first effort towards this goal. (Sorry for the ugly Twitter embeddings. I find some 3rd party libraries to configure the display, but that stuff usually gets broken in the long run due to changes in the Twitter API.)&lt;/p&gt;
@@ -1592,8 +1737,8 @@ blew me away.&lt;/strong&gt; So true!&lt;/p&gt;
   <entry>
     <id>tag:vy.github.io,2014-01-03://blog/post/2014/01/03/safe-math-ops/</id>
     <title type="html">Detecting Overflows in Java Arithmetic Operators</title>
-    <published>2014-01-03T19:13:00Z</published>
-    <updated>2014-01-03T19:13:00Z</updated>
+    <published>2014-01-03T20:13:00Z</published>
+    <updated>2014-01-03T20:13:00Z</updated>
     <link rel="alternate" href="https://vy.github.io//blog/post/2014/01/03/safe-math-ops/"/>
     <content type="html">
 &lt;p&gt;A couple of months ago I came across &lt;a href="https://www.securecoding.cert.org/confluence/display/java/The+CERT+Oracle+Secure+Coding+Standard+for+Java"&gt;The CERT Oracle Secure Coding Standard for Java&lt;/a&gt;. It is suprising how come I did not find this fascinating resource before. I first skimmed through the chapters and figured out that the recommended conventions are so practical that I can even directly use some of them in my existing code base. Right at that time I was working on a routing engine, which performs some arithmetic operators over link costs. It was a good place to apply the conventions metioned in the chapter &lt;a href="https://www.securecoding.cert.org/confluence/display/java/NUM00-J.+Detect+or+prevent+integer+overflow"&gt;NUM00-J. Detect or prevent integer overflow&lt;/a&gt;. Hence, I directly copied safe versions of arithmetic operators into my &lt;code&gt;util&lt;/code&gt; package. (Everybody does have a &lt;code&gt;util&lt;/code&gt;, right?)&lt;/p&gt;
@@ -1620,230 +1765,6 @@ blew me away.&lt;/strong&gt; So true!&lt;/p&gt;
 &lt;span class="o"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
 
 &lt;p&gt;To my suprise, I observed integer overflow error messages in the server logs today. Yay! Further examination of the problem revealed that I cause an integer overflow while taking the square of link costs for a particular routing algorithm. Some might argue about the overhead of replacing operators with methods, but let’s think about this: How would I ever figure this problem out if I would not be using these safe arithmetic operators. No need to mention about the problem’s consequences.&lt;/p&gt;
-</content>
-  </entry>
-  <entry>
-    <id>tag:vy.github.io,2013-12-04://blog/post/2013/12/04/combinations/</id>
-    <title type="html">Key to Parallel Combinations: Enumeration</title>
-    <published>2013-12-04T17:44:00Z</published>
-    <updated>2013-12-04T17:44:00Z</updated>
-    <link rel="alternate" href="https://vy.github.io//blog/post/2013/12/04/combinations/"/>
-    <content type="html">
-&lt;p&gt;Combinations have many use cases in the daily life of a programmer: for
-testing a given function, for generating the all possible input sets of a
-particular problem instance, etc. Writing them down in lexicographic order is
-something we all do time to time. For instance, 2-combination of a set
-&lt;script type="math/tex"&gt;(0, 1, 2, 3)&lt;/script&gt; can simply be written as follows.&lt;/p&gt;
-
-&lt;script type="math/tex; mode=display"&gt;{(0, 1), (0, 2), (0, 3), (1, 2), (1, 3), (2, 3)}&lt;/script&gt;
-
-&lt;p&gt;We also have a shortcut to get the total number of combinations for a particular
-instance. That is,&lt;/p&gt;
-
-&lt;script type="math/tex; mode=display"&gt;{n \choose r} = \frac{n(n-1)\ldots(n-r+1)}{r(r-1)\dots1}=\frac{n!}{r!(n-r)!},&lt;/script&gt;
-
-&lt;p&gt;which applies to our above example 4-choose-2 as follows:
-&lt;script type="math/tex"&gt;{4 \choose 2} = \frac{4 \times 3}{2} = 6&lt;/script&gt;.&lt;/p&gt;
-
-&lt;p&gt;You might also have noticed the pattern we used to generate the combinations in
-lexicographic order. The algorithm finds the rightmost index element that can be
-incremented, increments it, and then changes the elements to the right to each
-be 1 plus the element on their left. This procedure repeats until there are no
-more rooms left to increment. (You might want to check out &lt;a href="http://eu.wiley.com/WileyCDA/WileyTitle/productCd-%0AEHEP001993.html"&gt;Applied
-Combinatorics&lt;/a&gt; by Alan Tucker for further details of the algorithm.)&lt;/p&gt;
-
-&lt;p&gt;One advantage of generating combinations in lexicographic order using the above
-algorithm is that given the &lt;script type="math/tex"&gt;k&lt;/script&gt;‘th combination, one can easily generate
-&lt;script type="math/tex"&gt;k+1&lt;/script&gt;‘th combination. Which leads us to the fact that one can continue
-generating combinations given the combination at a particular position.&lt;/p&gt;
-
-&lt;h1 id="the-problem"&gt;The Problem&lt;/h1&gt;
-
-&lt;p&gt;In the case of a single consumer, one can iterate over a set of combinations
-step by step. However, what if there are multiple consumers? In this case, a
-single producer can present a central combination queue, where it pushes new
-combinations on demand, and then the consumers can poll the queue as they
-desire. That being said, in this setup the producer can become the bottleneck.
-That is, what if consumers poll the queue at a speed faster than the producer’s
-push rate? Houston, we have a problem.&lt;/p&gt;
-
-&lt;p&gt;Previously we have seen that given the &lt;script type="math/tex"&gt;k&lt;/script&gt;‘th combination, we can compute the
-&lt;script type="math/tex"&gt;k+1&lt;/script&gt;‘th one. In addition, we also know how to calculate the total number of
-combinations, that is, &lt;script type="math/tex"&gt;{n \choose r}&lt;/script&gt;. With this in mind, we can split the
-all possible combinations set &lt;script type="math/tex"&gt;\{c_1, c_2, \dots\}&lt;/script&gt; into two separate parts:&lt;/p&gt;
-
-&lt;script type="math/tex; mode=display"&gt;
-\{c_1, \dots, c_m\} \textrm{ and } \{c_{m+1}, \dots, c_l\}, \\
-\textrm{where } l = {n \choose r} \textrm{ and } m = \lfloor ^l/_2 \rfloor.
-&lt;/script&gt;
-
-&lt;p&gt;Going from &lt;script type="math/tex"&gt;c_1&lt;/script&gt; to &lt;script type="math/tex"&gt;c_m&lt;/script&gt; is trivial, we can keep a counter for the
-generated combinations up to &lt;script type="math/tex"&gt;m&lt;/script&gt;. But what about &lt;script type="math/tex"&gt;c_{m+1}&lt;/script&gt;? How can we
-compute the &lt;script type="math/tex"&gt;{m+1}&lt;/script&gt;‘th combination without having a prior information about
-&lt;script type="math/tex"&gt;m&lt;/script&gt;‘th one. In other words, can we calculate &lt;script type="math/tex"&gt;c_{m+1}&lt;/script&gt;, given just &lt;script type="math/tex"&gt;n&lt;/script&gt; and
-&lt;script type="math/tex"&gt;r&lt;/script&gt;?&lt;/p&gt;
-
-&lt;h1 id="enumerating-combinations"&gt;Enumerating Combinations&lt;/h1&gt;
-
-&lt;p&gt;Lucky for us, there exists a vast literature for &lt;a href="http://en.wikipedia.org/wiki/Combinatorial_number_system"&gt;combinatorial number
-system&lt;/a&gt;, where people
-come up with a way to enumerate combinations. Long story short, combinatorial
-number system presents a mapping between natural numbers (taken to include 0)
-and the combinations. In a combinatorial number system of degree &lt;script type="math/tex"&gt;r&lt;/script&gt;, each
-natural number &lt;script type="math/tex"&gt;b\in\mathbb{N}&lt;/script&gt; map to a one and only one r-combination
-&lt;script type="math/tex"&gt;[d_1, d_2, \dots, d_r]&lt;/script&gt; with the following equality.&lt;/p&gt;
-
-&lt;script type="math/tex; mode=display"&gt;
-b = {d_1 \choose r} + {d_2 \choose r-1} + \dots + {d_r \choose 1},\\
-\textrm{ where } d_1 &gt; d_2 &gt; \dots &gt; d_r.
-&lt;/script&gt;
-
-&lt;p&gt;For instance, let &lt;script type="math/tex"&gt;b=8&lt;/script&gt; and &lt;script type="math/tex"&gt;r=2&lt;/script&gt;. Here &lt;script type="math/tex"&gt;b&lt;/script&gt; corresponds to the
-2-combination &lt;script type="math/tex"&gt;[4, 2]&lt;/script&gt; in combinatorial number system of degree 2 with the
-following equality.&lt;/p&gt;
-
-&lt;script type="math/tex; mode=display"&gt;8 = {4 \choose 2} + {2 \choose 1}&lt;/script&gt;
-
-&lt;p&gt;The r-combination of a given number &lt;script type="math/tex"&gt;b&lt;/script&gt; can be computed using the following
-greedy algorithm: take &lt;script type="math/tex"&gt;d_i&lt;/script&gt; maximal with &lt;script type="math/tex"&gt;{d_i \choose i} \leq b&lt;/script&gt;, then
-take &lt;script type="math/tex"&gt;d_{i-1}&lt;/script&gt; maximal with &lt;script type="math/tex"&gt;{d_{i-1} \choose i-1} \leq b - {d_i \choose i}&lt;/script&gt;,
-and so forth.&lt;/p&gt;
-
-&lt;p&gt;So far so good. Let’s do the magic. Suppose that we want to enumerate the
-combinations of 5-choose-2. That is, we want the following mapping.&lt;/p&gt;
-
-&lt;script type="math/tex; mode=display"&gt;
-0 \rightarrow [0, 1] \quad 5 \rightarrow [1, 3] \\
-1 \rightarrow [0, 2] \quad 6 \rightarrow [1, 4] \\
-2 \rightarrow [0, 3] \quad 7 \rightarrow [2, 3] \\
-3 \rightarrow [0, 4] \quad 8 \rightarrow [2, 4] \\
-4 \rightarrow [1, 2] \quad 9 \rightarrow [3, 4]
-&lt;/script&gt;
-
-&lt;p&gt;We know that &lt;script type="math/tex"&gt;{5 \choose 2} = 10&lt;/script&gt;, hence we have 10 combinations enumerated
-from 0 to 9. Let’s try to find the 3rd combination in this sequence from
-scratch.&lt;/p&gt;
-
-&lt;ol&gt;
-  &lt;li&gt;First, we set &lt;script type="math/tex"&gt;i&lt;/script&gt; to the index of the combination we are interested in: &lt;script type="math/tex"&gt;i=3&lt;/script&gt;
-&lt;/li&gt;
-  &lt;li&gt;Second, we set &lt;script type="math/tex"&gt;j&lt;/script&gt; to the dual index of &lt;script type="math/tex"&gt;i&lt;/script&gt; in &lt;script type="math/tex"&gt;{5 \choose 2}&lt;/script&gt; system:
-&lt;script type="math/tex"&gt;j = {5 \choose 2} - i - 1 = 6&lt;/script&gt;.&lt;/li&gt;
-  &lt;li&gt;Now let’s find the 2-combination of &lt;script type="math/tex"&gt;j&lt;/script&gt;: &lt;script type="math/tex"&gt;6 = {4 \choose 2} + {0 \choose 1}&lt;/script&gt;,
-that is, the 2-combination corresponding to &lt;script type="math/tex"&gt;j=6&lt;/script&gt; is &lt;script type="math/tex"&gt;[4, 0]&lt;/script&gt;.&lt;/li&gt;
-  &lt;li&gt;Next we subtract the found 2-combination from the mask &lt;script type="math/tex"&gt;[4, 4]&lt;/script&gt;, where 4’s
-comes from &lt;script type="math/tex"&gt;5-1&lt;/script&gt;: &lt;script type="math/tex"&gt;[4, 4] - [4, 0] = [0, 4]&lt;/script&gt;.&lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;p&gt;Yay! 3rd combination of &lt;script type="math/tex"&gt;{5 \choose 2}&lt;/script&gt; system is &lt;script type="math/tex"&gt;[0, 4]&lt;/script&gt;! Hrm… Was that
-a coincidence? Let’s give it another try with 8th combination this time.&lt;/p&gt;
-
-&lt;ol&gt;
-  &lt;li&gt;First, we set &lt;script type="math/tex"&gt;i&lt;/script&gt; to the index of the combination we are interested in: &lt;script type="math/tex"&gt;i=8&lt;/script&gt;
-&lt;/li&gt;
-  &lt;li&gt;Second, we set &lt;script type="math/tex"&gt;j&lt;/script&gt; to the dual index of &lt;script type="math/tex"&gt;i&lt;/script&gt; in &lt;script type="math/tex"&gt;{5 \choose 2}&lt;/script&gt; system:
-&lt;script type="math/tex"&gt;j = {5 \choose 2} - i - 1 = 1&lt;/script&gt;.&lt;/li&gt;
-  &lt;li&gt;Now let’s find the 2-combination of &lt;script type="math/tex"&gt;j&lt;/script&gt;: &lt;script type="math/tex"&gt;1 = {2 \choose 2} + {0 \choose 1}&lt;/script&gt;,
-that is, the 2-combination corresponding to &lt;script type="math/tex"&gt;j=1&lt;/script&gt; is &lt;script type="math/tex"&gt;[2, 0]&lt;/script&gt;.&lt;/li&gt;
-  &lt;li&gt;Next we subtract the found 2-combination from the mask &lt;script type="math/tex"&gt;[4, 4]&lt;/script&gt;:
-&lt;script type="math/tex"&gt;[4, 4] - [2, 0] = [2, 4]&lt;/script&gt;.&lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;p&gt;8th combination turns out to be &lt;script type="math/tex"&gt;[2, 4]&lt;/script&gt;. Eureka!&lt;/p&gt;
-
-&lt;h1 id="conclusion"&gt;Conclusion&lt;/h1&gt;
-
-&lt;p&gt;We have shown that using &lt;script type="math/tex"&gt;r&lt;/script&gt;-combinations one can compute the &lt;script type="math/tex"&gt;k&lt;/script&gt;‘th
-combination among the lexicographically ordered set of combinations of
-&lt;script type="math/tex"&gt;n&lt;/script&gt;-choose-&lt;script type="math/tex"&gt;r&lt;/script&gt;, where &lt;script type="math/tex"&gt;0 \leq k \lt {n \choose r}&lt;/script&gt;. Using this method we
-can partition the space of all combinations into multiple subsets and generate
-each of them individually. For this purpose, I put together a Java library:
-&lt;a href="https://github.com/vy/combination"&gt;combination&lt;/a&gt;. Here is a sample snippet.&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="language-java"&gt;&lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kd"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;Main&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
-
-    &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kd"&gt;static&lt;/span&gt; &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;main&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;String&lt;/span&gt;&lt;span class="o"&gt;[]&lt;/span&gt; &lt;span class="n"&gt;args&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
-        &lt;span class="n"&gt;Combination&lt;/span&gt; &lt;span class="n"&gt;c52&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nf"&gt;Combination&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;5&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
-        &lt;span class="kt"&gt;long&lt;/span&gt; &lt;span class="n"&gt;l&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;c52&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;size&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
-        &lt;span class="n"&gt;println&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="s"&gt;"size(c52): %d"&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;l&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
-        &lt;span class="n"&gt;println&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="s"&gt;"c52"&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;CombinationIterator&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="n"&gt;c52&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;iterator&lt;/span&gt;&lt;span class="o"&gt;());&lt;/span&gt;
-        &lt;span class="cm"&gt;/*&lt;/span&gt;
-&lt;span class="cm"&gt;         * size(c52): 10&lt;/span&gt;
-&lt;span class="cm"&gt;         * c52:&lt;/span&gt;
-&lt;span class="cm"&gt;         * -&amp;gt; [0, 1]&lt;/span&gt;
-&lt;span class="cm"&gt;         * -&amp;gt; [0, 2]&lt;/span&gt;
-&lt;span class="cm"&gt;         * -&amp;gt; [0, 3]&lt;/span&gt;
-&lt;span class="cm"&gt;         * -&amp;gt; [0, 4]&lt;/span&gt;
-&lt;span class="cm"&gt;         * -&amp;gt; [1, 2]&lt;/span&gt;
-&lt;span class="cm"&gt;         * -&amp;gt; [1, 3]&lt;/span&gt;
-&lt;span class="cm"&gt;         * -&amp;gt; [1, 4]&lt;/span&gt;
-&lt;span class="cm"&gt;         * -&amp;gt; [2, 3]&lt;/span&gt;
-&lt;span class="cm"&gt;         * -&amp;gt; [2, 4]&lt;/span&gt;
-&lt;span class="cm"&gt;         * -&amp;gt; [3, 4]&lt;/span&gt;
-&lt;span class="cm"&gt;         */&lt;/span&gt;
-
-        &lt;span class="kt"&gt;long&lt;/span&gt; &lt;span class="n"&gt;m&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;l&lt;/span&gt; &lt;span class="o"&gt;/&lt;/span&gt; &lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
-        &lt;span class="n"&gt;CombinationIterator&lt;/span&gt; &lt;span class="n"&gt;c52_lhs&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nf"&gt;CombinationIterator&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;5&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;m&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
-        &lt;span class="n"&gt;CombinationIterator&lt;/span&gt; &lt;span class="n"&gt;c52_rhs&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nf"&gt;CombinationIterator&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;5&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;m&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
-
-        &lt;span class="n"&gt;println&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="s"&gt;"c52_lhs"&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;c52_lhs&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
-        &lt;span class="cm"&gt;/*&lt;/span&gt;
-&lt;span class="cm"&gt;         * c52_lhs:&lt;/span&gt;
-&lt;span class="cm"&gt;         * -&amp;gt; [0, 1]&lt;/span&gt;
-&lt;span class="cm"&gt;         * -&amp;gt; [0, 2]&lt;/span&gt;
-&lt;span class="cm"&gt;         * -&amp;gt; [0, 3]&lt;/span&gt;
-&lt;span class="cm"&gt;         * -&amp;gt; [0, 4]&lt;/span&gt;
-&lt;span class="cm"&gt;         * -&amp;gt; [1, 2]&lt;/span&gt;
-&lt;span class="cm"&gt;         */&lt;/span&gt;
-
-        &lt;span class="n"&gt;println&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="s"&gt;"c52_rhs"&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;c52_rhs&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
-        &lt;span class="cm"&gt;/*&lt;/span&gt;
-&lt;span class="cm"&gt;         * c52_rhs:&lt;/span&gt;
-&lt;span class="cm"&gt;         * -&amp;gt; [2, 3]&lt;/span&gt;
-&lt;span class="cm"&gt;         * -&amp;gt; [2, 4]&lt;/span&gt;
-&lt;span class="cm"&gt;         * -&amp;gt; [3, 4]&lt;/span&gt;
-&lt;span class="cm"&gt;         * -&amp;gt; [3, 4]&lt;/span&gt;
-&lt;span class="cm"&gt;         */&lt;/span&gt;
-
-        &lt;span class="n"&gt;println&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="s"&gt;"5C2: %d"&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;Combination&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;choose&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;5&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="o"&gt;));&lt;/span&gt;
-        &lt;span class="cm"&gt;/*&lt;/span&gt;
-&lt;span class="cm"&gt;         * 5C2: 10&lt;/span&gt;
-&lt;span class="cm"&gt;         */&lt;/span&gt;
-
-        &lt;span class="kt"&gt;int&lt;/span&gt;&lt;span class="o"&gt;[]&lt;/span&gt; &lt;span class="n"&gt;c&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="kt"&gt;int&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="o"&gt;];&lt;/span&gt;
-        &lt;span class="n"&gt;Combination&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;get&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;5&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;3&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;c&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
-        &lt;span class="n"&gt;println&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="s"&gt;"3rd combination of 5C2: %s"&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;Arrays&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;toString&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;c&lt;/span&gt;&lt;span class="o"&gt;));&lt;/span&gt;
-        &lt;span class="cm"&gt;/*&lt;/span&gt;
-&lt;span class="cm"&gt;         * 3rd combination of 5C2: [0, 4]&lt;/span&gt;
-&lt;span class="cm"&gt;         */&lt;/span&gt;
-
-        &lt;span class="n"&gt;Combination&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;get&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;5&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;8&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;c&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
-        &lt;span class="n"&gt;println&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="s"&gt;"8th combination of 5C2: %s"&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;Arrays&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;toString&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;c&lt;/span&gt;&lt;span class="o"&gt;));&lt;/span&gt;
-        &lt;span class="cm"&gt;/*&lt;/span&gt;
-&lt;span class="cm"&gt;         * 8th combination of 5C2: [2, 4]&lt;/span&gt;
-&lt;span class="cm"&gt;         */&lt;/span&gt;
-    &lt;span class="o"&gt;}&lt;/span&gt;
-
-    &lt;span class="kd"&gt;private&lt;/span&gt; &lt;span class="kd"&gt;static&lt;/span&gt; &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;println&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;String&lt;/span&gt; &lt;span class="n"&gt;fmt&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;Object&lt;/span&gt;&lt;span class="o"&gt;...&lt;/span&gt; &lt;span class="n"&gt;args&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
-        &lt;span class="n"&gt;System&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;out&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;println&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;String&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;format&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;fmt&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;args&lt;/span&gt;&lt;span class="o"&gt;));&lt;/span&gt;
-    &lt;span class="o"&gt;}&lt;/span&gt;
-
-    &lt;span class="kd"&gt;private&lt;/span&gt; &lt;span class="kd"&gt;static&lt;/span&gt; &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;println&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;String&lt;/span&gt; &lt;span class="n"&gt;caption&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;CombinationIterator&lt;/span&gt; &lt;span class="n"&gt;ci&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
-        &lt;span class="n"&gt;println&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="s"&gt;"%s:"&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;caption&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
-        &lt;span class="k"&gt;while&lt;/span&gt; &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;ci&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;hasNext&lt;/span&gt;&lt;span class="o"&gt;())&lt;/span&gt;
-            &lt;span class="n"&gt;println&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="s"&gt;"-&amp;gt; %s"&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;Arrays&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;toString&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;ci&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;next&lt;/span&gt;&lt;span class="o"&gt;()));&lt;/span&gt;
-    &lt;span class="o"&gt;}&lt;/span&gt;
-&lt;span class="o"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
-
-&lt;h1 id="references"&gt;References&lt;/h1&gt;
-
-&lt;p&gt;I started my pursuit with Wikipedia page of &lt;a href="http://en.wikipedia.org/wiki/Combinatorial_number_system"&gt;combinatorial number
-system&lt;/a&gt;. In the
-beginning it did not make much sense. Later I found the enlightening 2004 post
-&lt;a href="http://msdn.microsoft.com/en-us/library/aa289166%28VS.71%29.aspx"&gt;Generating the mth Lexicographical Element of a Mathematical
-Combination&lt;/a&gt;
-by James McCaffrey, which cleared out the things and made me start to understand
-the Wikipedia page.&lt;/p&gt;
 </content>
   </entry>
 </feed>
