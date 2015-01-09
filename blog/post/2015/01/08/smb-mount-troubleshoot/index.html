@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Troubleshooting a SMB/CIFS Mount Problem</title>
+    <link rel="stylesheet" href="/css/bootstrap.css">
+    <link rel="stylesheet" href="/css/bootstrap-responsive.css">
+    <script src="/js/bootstrap.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="/css/common.css">
+    <meta name="generator" content="nanoc 3.7.4">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/post.css">
+    <script type="text/javascript">
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-40183531-1']);
+      _gaq.push(['_trackPageview']);
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="menu">
+      <div><a href="/">Home</a></div><div><a href="/about/">About</a></div><div><a href="/blog/">Blog</a></div><div><a href="/code/">Code</a></div><div><a href="/blog/feed/">Feed</a></div>
+    </div>
+    
+
+<div class="container">
+  <div class="row-fluid">
+    <div class="offset2 span8">
+      <div id="post" class="more-white-box rounded-corners">
+	<div class="head">
+	  <div class="title">Troubleshooting a SMB/CIFS Mount Problem</div>
+	  <div class="subtitle">posted at
+	    January 8, 2015
+	    with tags <a href="/blog/tag/cifs">cifs</a>, <a href="/blog/tag/kernel">kernel</a>, <a href="/blog/tag/linux">linux</a>, <a href="/blog/tag/samba">samba</a>
+	  </div>
+	  <div class="share">
+	    <div class="addthis_toolbox addthis_default_style ">
+	      <a class="addthis_button_preferred_1"></a>
+	      <a class="addthis_button_preferred_2"></a>
+	      <a class="addthis_button_preferred_3"></a>
+	      <a class="addthis_button_preferred_4"></a>
+	      <a class="addthis_button_compact"></a>
+	    </div>
+	    <script type="text/javascript">var addthis_config = {"data_track_addressbar":false};</script>
+	    <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-5144adf75211a62b"></script>
+	  </div>
+	</div>
+	<div class="body">
+
+	  
+<p>At every introduction to a new office environment, I spend (waste?) a certain
+period of time to connect to network shares through CIFS/SMB. This was not
+different at my new work place either. After spending almost two days to
+troubleshoot the problem, I figured out that the problem was due to the
+missing <code>/sbin/request-key</code> binary provided by <code>keyutils</code> package in Xubuntu
+14.04 LTS. So how did I really get it solved?</p>
+
+<h1 id="defining-the-problem">Defining the Problem</h1>
+
+<p>It is really sick that <code>cifs</code> kernel module which is responsible for loading
+CIFS/SMB filesystems returns <code>EINVAL</code> (that is, <code>error(22): Invalid argument</code>)
+for an entire family of errors and makes it impossible for the user to spot
+the problem. This was also the case for me.</p>
+
+<pre><code>$ sudo mount \
+	-t cifs //path/to/network/shares /local/mount/point \
+	-o credentials=$HOME/.smbcredentials,iocharset=utf8,rw,uid=$USER,serverino
+mount error(22): Invalid argument
+Refer to the mount.cifs(8) manual page (e.g. man mount.cifs)
+</code></pre>
+
+<p>So given that the UNC is correct, the local mount point does exist and
+accessible, and mount options are valid, <code>invalid argument</code> error does not
+provide any context for the problem.</p>
+
+<p>Further searching on the internet leaded me to <a href="https://wiki.samba.org/index.php/LinuxCIFS_troubleshooting">LinuxCIFS
+troubleshooting</a>
+at Samba Wiki. There it is told that I can enable debug messages for <code>cifs</code>
+module by echoing a non-zero value to <code>/proc/fs/cifs/cifsFYI</code>, hence I did so:</p>
+
+<pre><code>$ echo 1 | sudo tee /proc/fs/cifs/cifsFYI
+</code></pre>
+
+<p>And tried to mount the network share again. And observed the following snippet
+in the <code>dmesg</code> output:</p>
+
+<pre><code>CIFS VFS: dns_resolve_server_name_to_ip: unable to resolve: path
+CIFS VFS: compose_mount_options: Failed to resolve server part of \\path\to\network\shares to IP
+</code></pre>
+
+<p>So <code>dns_resolve_server_name_to_ip</code> could not resolve <code>path</code> for some reason.</p>
+
+<h1 id="dns-at-the-kernel-level">DNS at the Kernel-Level</h1>
+
+<p>So how does kernel really resolve domain names to IP addresses? After reading
+<a href="http://linux.die.net/man/8/mount.cifs"><code>mount.cifs(8)</code></a> a couple of times, I
+saw <em>See Also</em> section telling that
+<a href="https://www.kernel.org/doc/readme/Documentation-filesystems-cifs-README"><code>Documentation/filesystems/cifs.txt</code></a>
+in the linux kernel source tree may contain additional options and
+information. I checked that too and spotted the following lines:</p>
+
+<blockquote>
+  <p>DFS support allows transparent redirection to shares in an MS-DFS name
+space. In addition, DFS support for target shares which are specified as UNC
+names which begin with host names (rather than IP addresses) requires a user
+space helper (such as <code>cifs.upcall</code>) to be present in order to translate
+host names to ip address, and the user space helper must also be configured
+in the file <code>/etc/request-key.conf</code>.  Samba, Windows servers and many NAS
+appliances support DFS as a way of constructing a global name space to ease
+network configuration and improve reliability.</p>
+
+  <p>To use cifs Kerberos and DFS support, the Linux <code>keyutils</code> package should be
+installed and something like the following lines should be added to the
+<code>/etc/request-key.conf</code> file:</p>
+
+  <pre><code>create cifs.spnego * * /usr/local/sbin/cifs.upcall %k
+create dns_resolver * * /usr/local/sbin/cifs.upcall %k
+</code></pre>
+</blockquote>
+
+<p>This was getting interesting. I spotted the <code>dns_resolver</code> keyword at the
+bottom and started reading
+<a href="https://www.kernel.org/doc/Documentation/networking/dns_resolver.txt"><code>Documentation/networking/dns_resolver.txt</code></a>
+as well.</p>
+
+<blockquote>
+  <p>The DNS resolver module provides a way for kernel services to make DNS
+queries by way of requesting a key of key type <code>dns_resolver</code>.  These
+queries are upcalled to userspace through <code>/sbin/request-key</code>.</p>
+</blockquote>
+
+<p>The long story short, CIFS module employs DNS resolver module, which
+internally upcalls the queries to userspace through <code>/sbin/request-key</code>. I got
+further curious and checked the <code>request-key(8)</code>:</p>
+
+<blockquote>
+  <p>This  program  is invoked by the kernel when the kernel is asked for a key
+that it doesn’t have immediately available. The kernel creates a partially
+set up key and then calls out to this program to instantiate it. It is not
+intended to be called directly.</p>
+</blockquote>
+
+<h1 id="the-solution">The Solution</h1>
+
+<p>Everything was pointing that something was wrong with my <code>/sbin/request-key</code>.
+Ooops! The binary was not there at all. <code>apt-file search /sbin/request-key</code>
+told that the binary was provided by <code>keyutils</code> package, which was missing in
+my system. After installing <code>keyutils</code>, I did not observe any DNS resolver
+issues in the <code>dmesg</code> logs and <code>mount.cifs</code> worked without a problem.</p>
+
+
+	  <script type="text/javascript">
+	    $("#post table").attr("class", "table table-hover");
+	  </script>
+
+	  <div id="disqus_thread"></div>
+	  <script type="text/javascript">
+	  var disqus_shortname = 'vyazici';
+	  var disqus_identifier = '/blog/post/20150108-smb-mount-troubleshoot/';
+	  var disqus_title = 'Troubleshooting a SMB/CIFS Mount Problem';
+	  (function() {
+	  	var dsq = document.createElement('script');
+	  	dsq.type = 'text/javascript';
+	  	dsq.async = true;
+	  	dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+	  	(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+	  })();
+	  </script>
+
+	</div>
+      </div>
+      <div id="bgauthor" class="narrow-font">
+	background image by
+	<a href="http://jenniferwetzel.com/">Jennifer Wetzel</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
+  </body>
+</html>
+
