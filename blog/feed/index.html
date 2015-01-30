@@ -10,6 +10,121 @@
     <uri>https://vy.github.io/</uri>
   </author>
   <entry>
+    <id>tag:vy.github.io,2015-01-08://blog/post/2015/01/30/java-null-check/</id>
+    <title type="html">Checking Null Arguments at Runtime Using Spring AOP</title>
+    <published>2015-01-08T09:43:00Z</published>
+    <updated>2015-01-08T09:43:00Z</updated>
+    <link rel="alternate" href="https://vy.github.io//blog/post/2015/01/30/java-null-check/"/>
+    <content type="html">
+&lt;p&gt;For almost every function I wrote in Java, I add null checks to the method
+header as follows:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-java"&gt;&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;javax.annotation.Nonnull&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;static&lt;/span&gt; &lt;span class="n"&gt;com&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;google&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;common&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;base&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;Preconditions&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;checkNotNull&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+
+&lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;foo&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="nd"&gt;@Nonnull&lt;/span&gt; &lt;span class="n"&gt;String&lt;/span&gt; &lt;span class="n"&gt;bar&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="nd"&gt;@Nonnull&lt;/span&gt; &lt;span class="n"&gt;String&lt;/span&gt; &lt;span class="n"&gt;baz&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+    &lt;span class="n"&gt;checkNotNull&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;bar&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="s"&gt;"bar == NULL"&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+    &lt;span class="n"&gt;checkNotNull&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;baz&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="s"&gt;"baz == NULL"&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+    &lt;span class="c1"&gt;// ...&lt;/span&gt;
+&lt;span class="o"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;When the code is examined, &lt;code&gt;checkNotNull&lt;/code&gt; calls look totally redundant given
+that the parameters are already annotated with &lt;code&gt;@Nonnull&lt;/code&gt;. However, &lt;code&gt;@Nonnull&lt;/code&gt;
+just provides an insight to the static code analysis tools and does not have
+an effect at runtime, which makes &lt;code&gt;checkNotNull&lt;/code&gt; calls necessary. I thought as
+programmers we should be able to do better than this and found myself working
+on a way to intercept methods with one or more &lt;code&gt;@Nonnull&lt;/code&gt; annotated parameters
+and check if they are null at runtime. Finally, I managed to find a solution
+using &lt;a href="http://docs.spring.io/spring/docs/current/spring-framework-reference/html/aop.html"&gt;Spring AOP&lt;/a&gt;.
+All you have to do is it include &lt;code&gt;spring-boot-starter-aop&lt;/code&gt; artifact in your
+dependencies, add the following Spring aspect to your project, and you are
+done.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-java"&gt;&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;org.aspectj.lang.JoinPoint&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;org.aspectj.lang.annotation.Aspect&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;org.aspectj.lang.annotation.Before&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;org.aspectj.lang.reflect.CodeSignature&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;org.aspectj.lang.reflect.MethodSignature&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;org.springframework.stereotype.Component&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+
+&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;javax.annotation.Nonnull&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;java.lang.annotation.Annotation&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;java.util.ArrayList&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;java.util.Arrays&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;java.util.Collections&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;java.util.List&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+
+&lt;span class="nd"&gt;@Aspect&lt;/span&gt;
+&lt;span class="nd"&gt;@Component&lt;/span&gt;
+&lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kd"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;NullMonitor&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+
+    &lt;span class="kd"&gt;private&lt;/span&gt; &lt;span class="kd"&gt;static&lt;/span&gt; &lt;span class="kd"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;MethodArgument&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+
+        &lt;span class="kd"&gt;private&lt;/span&gt; &lt;span class="kd"&gt;final&lt;/span&gt; &lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="n"&gt;index&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+        &lt;span class="kd"&gt;private&lt;/span&gt; &lt;span class="kd"&gt;final&lt;/span&gt; &lt;span class="n"&gt;String&lt;/span&gt; &lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+        &lt;span class="kd"&gt;private&lt;/span&gt; &lt;span class="kd"&gt;final&lt;/span&gt; &lt;span class="n"&gt;List&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;Annotation&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;annotations&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+        &lt;span class="kd"&gt;private&lt;/span&gt; &lt;span class="kd"&gt;final&lt;/span&gt; &lt;span class="n"&gt;Object&lt;/span&gt; &lt;span class="n"&gt;value&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+
+        &lt;span class="kd"&gt;private&lt;/span&gt; &lt;span class="nf"&gt;MethodArgument&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;
+                &lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="n"&gt;index&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt;
+                &lt;span class="n"&gt;String&lt;/span&gt; &lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt;
+                &lt;span class="n"&gt;List&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;Annotation&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;annotations&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt;
+                &lt;span class="n"&gt;Object&lt;/span&gt; &lt;span class="n"&gt;value&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+            &lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;index&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;index&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+            &lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;name&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+            &lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;annotations&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;Collections&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;unmodifiableList&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;annotations&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+            &lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;value&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;value&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+        &lt;span class="o"&gt;}&lt;/span&gt;
+
+        &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="nf"&gt;getIndex&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;index&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
+
+        &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="n"&gt;String&lt;/span&gt; &lt;span class="nf"&gt;getName&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
+
+        &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="n"&gt;List&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;Annotation&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="nf"&gt;getAnnotations&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;annotations&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
+
+        &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kt"&gt;boolean&lt;/span&gt; &lt;span class="nf"&gt;hasAnnotation&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;Class&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;?&lt;/span&gt; &lt;span class="kd"&gt;extends&lt;/span&gt; &lt;span class="n"&gt;Annotation&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;type&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+            &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;Annotation&lt;/span&gt; &lt;span class="n"&gt;annotation&lt;/span&gt; &lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="n"&gt;annotations&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
+                &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;annotation&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;annotationType&lt;/span&gt;&lt;span class="o"&gt;().&lt;/span&gt;&lt;span class="na"&gt;equals&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;type&lt;/span&gt;&lt;span class="o"&gt;))&lt;/span&gt;
+                    &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="kc"&gt;true&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+            &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="kc"&gt;false&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+        &lt;span class="o"&gt;}&lt;/span&gt;
+
+        &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="n"&gt;Object&lt;/span&gt; &lt;span class="nf"&gt;getValue&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;value&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
+
+        &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kd"&gt;static&lt;/span&gt; &lt;span class="n"&gt;List&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;MethodArgument&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="nf"&gt;of&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;JoinPoint&lt;/span&gt; &lt;span class="n"&gt;joinPoint&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+            &lt;span class="n"&gt;List&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;MethodArgument&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;arguments&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="n"&gt;ArrayList&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&amp;gt;();&lt;/span&gt;
+            &lt;span class="n"&gt;CodeSignature&lt;/span&gt; &lt;span class="n"&gt;codeSignature&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;CodeSignature&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="n"&gt;joinPoint&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;getSignature&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt; 
+            &lt;span class="n"&gt;String&lt;/span&gt;&lt;span class="o"&gt;[]&lt;/span&gt; &lt;span class="n"&gt;names&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;codeSignature&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;getParameterNames&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
+            &lt;span class="n"&gt;MethodSignature&lt;/span&gt; &lt;span class="n"&gt;methodSignature&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;
+                    &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;MethodSignature&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="n"&gt;joinPoint&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;getStaticPart&lt;/span&gt;&lt;span class="o"&gt;().&lt;/span&gt;&lt;span class="na"&gt;getSignature&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
+            &lt;span class="n"&gt;Annotation&lt;/span&gt;&lt;span class="o"&gt;[][]&lt;/span&gt; &lt;span class="n"&gt;annotations&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;methodSignature&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;getMethod&lt;/span&gt;&lt;span class="o"&gt;().&lt;/span&gt;&lt;span class="na"&gt;getParameterAnnotations&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
+            &lt;span class="n"&gt;Object&lt;/span&gt;&lt;span class="o"&gt;[]&lt;/span&gt; &lt;span class="n"&gt;values&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;joinPoint&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;getArgs&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
+            &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="n"&gt;i&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt; &lt;span class="n"&gt;i&lt;/span&gt; &lt;span class="o"&gt;&amp;lt;&lt;/span&gt; &lt;span class="n"&gt;values&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;length&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt; &lt;span class="n"&gt;i&lt;/span&gt;&lt;span class="o"&gt;++)&lt;/span&gt;
+                &lt;span class="n"&gt;arguments&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;add&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nf"&gt;MethodArgument&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;
+                        &lt;span class="n"&gt;i&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;names&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="n"&gt;i&lt;/span&gt;&lt;span class="o"&gt;],&lt;/span&gt; &lt;span class="n"&gt;Arrays&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;asList&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;annotations&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="n"&gt;i&lt;/span&gt;&lt;span class="o"&gt;]),&lt;/span&gt; &lt;span class="n"&gt;values&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="n"&gt;i&lt;/span&gt;&lt;span class="o"&gt;]));&lt;/span&gt;
+            &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;Collections&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;unmodifiableList&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;arguments&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+        &lt;span class="o"&gt;}&lt;/span&gt;
+
+    &lt;span class="o"&gt;}&lt;/span&gt;
+
+    &lt;span class="nd"&gt;@Before&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="s"&gt;"execution(* *(.., @javax.annotation.Nonnull (*), ..))"&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
+    &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;nullCheck&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;JoinPoint&lt;/span&gt; &lt;span class="n"&gt;joinPoint&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+        &lt;span class="n"&gt;MethodSignature&lt;/span&gt; &lt;span class="n"&gt;methodSignature&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;MethodSignature&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="n"&gt;joinPoint&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;getSignature&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
+        &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;MethodArgument&lt;/span&gt; &lt;span class="n"&gt;argument&lt;/span&gt; &lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="n"&gt;MethodArgument&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;of&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;joinPoint&lt;/span&gt;&lt;span class="o"&gt;))&lt;/span&gt;
+            &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;argument&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;hasAnnotation&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;Nonnull&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;class&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; &lt;span class="n"&gt;argument&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;getValue&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="kc"&gt;null&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
+                &lt;span class="k"&gt;throw&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nf"&gt;NullPointerException&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;String&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;format&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;
+                        &lt;span class="s"&gt;"%s: argument \"%s\" (at position %d) cannot be null"&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt;
+                        &lt;span class="n"&gt;methodSignature&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;getMethod&lt;/span&gt;&lt;span class="o"&gt;(),&lt;/span&gt; &lt;span class="n"&gt;argument&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;getName&lt;/span&gt;&lt;span class="o"&gt;(),&lt;/span&gt; &lt;span class="n"&gt;argument&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;getIndex&lt;/span&gt;&lt;span class="o"&gt;()));&lt;/span&gt;
+    &lt;span class="o"&gt;}&lt;/span&gt;
+
+&lt;span class="o"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The source code is available in &lt;a href="https://github.com/vy/null-check"&gt;null-check&lt;/a&gt;
+project at GitHub with some unit tests and a little bit more detailed
+installation instructions.&lt;/p&gt;
+</content>
+  </entry>
+  <entry>
     <id>tag:vy.github.io,2015-01-08://blog/post/2015/01/08/smb-mount-troubleshoot/</id>
     <title type="html">Troubleshooting a SMB/CIFS Mount Problem</title>
     <published>2015-01-08T09:43:00Z</published>
@@ -1808,38 +1923,6 @@ blew me away.&lt;/strong&gt; So true!&lt;/p&gt;
 &lt;span class="o"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
 
 &lt;p&gt;Here the JVM defers initializing the &lt;code&gt;ResourceHolder&lt;/code&gt; class until it is actually used [JLS 12.4.1], and because the &lt;code&gt;Resource&lt;/code&gt; is initialized with a static initializer, no additional synchronization is needed. The first call to &lt;code&gt;getResource&lt;/code&gt; by any thread causes &lt;code&gt;ResourceHolder&lt;/code&gt; to be loaded and initialized, at which time the initialization of the &lt;code&gt;Resource&lt;/code&gt; happens through the static initializer.&lt;/p&gt;
-</content>
-  </entry>
-  <entry>
-    <id>tag:vy.github.io,2014-01-03://blog/post/2014/01/03/tcp-time-wait/</id>
-    <title type="html">Sockets, TCP Keep Alive and TIME_WAIT</title>
-    <published>2014-01-03T21:19:00Z</published>
-    <updated>2014-01-03T21:19:00Z</updated>
-    <link rel="alternate" href="https://vy.github.io//blog/post/2014/01/03/tcp-time-wait/"/>
-    <content type="html">
-&lt;p&gt;Time to time I share some technical links on Twitter and let them get lost in the internet junk yard. I thought it might be a better idea to archive them on my blog in a more organized fashion. (I will group such posts under tag &lt;a href="/blog/tag/link"&gt;link&lt;/a&gt;.) This way they will at least be more accessible by myself. This post is my first effort towards this goal. (Sorry for the ugly Twitter embeddings. I find some 3rd party libraries to configure the display, but that stuff usually gets broken in the long run due to changes in the Twitter API.)&lt;/p&gt;
-
-&lt;p&gt;Last month I have been bitten seriously by a software bug caused by &lt;code&gt;TIME_WAIT&lt;/code&gt; sockets. Below is the list of links I found useful in the pursuit of trying to solve the problem.&lt;/p&gt;
-
-&lt;blockquote class="twitter-tweet" lang="en" data-conversation="none" data-cards="hidden"&gt;
-&lt;p&gt;Multi-platform &lt;a href="https://twitter.com/search?q=%23TCP&amp;amp;src=hash"&gt;#TCP&lt;/a&gt; Keep Alive guide: &lt;a href="http://t.co/uEukpMrCEV"&gt;http://t.co/uEukpMrCEV&lt;/a&gt; &lt;a href="https://twitter.com/search?q=%23bsd&amp;amp;src=hash"&gt;#bsd&lt;/a&gt; &lt;a href="https://twitter.com/search?q=%23linux&amp;amp;src=hash"&gt;#linux&lt;/a&gt; &lt;a href="https://twitter.com/search?q=%23solaris&amp;amp;src=hash"&gt;#solaris&lt;/a&gt; &lt;a href="https://twitter.com/search?q=%23windows&amp;amp;src=hash"&gt;#windows&lt;/a&gt; &lt;a href="https://twitter.com/search?q=%23osx&amp;amp;src=hash"&gt;#osx&lt;/a&gt;&lt;/p&gt;— Volkan Yazıcı (@yazicivo) &lt;a href="https://twitter.com/yazicivo/statuses/413989234052067328"&gt;December 20, 2013&lt;/a&gt;
-&lt;/blockquote&gt;
-
-&lt;blockquote class="twitter-tweet" lang="en" data-conversation="none" data-cards="hidden"&gt;
-&lt;p&gt;The ultimate guide to socket/bind/connect: &lt;a href="http://t.co/7YjSiIfWnX"&gt;http://t.co/7YjSiIfWnX&lt;/a&gt; &lt;a href="https://twitter.com/search?q=%23bsd&amp;amp;src=hash"&gt;#bsd&lt;/a&gt; &lt;a href="https://twitter.com/search?q=%23linux&amp;amp;src=hash"&gt;#linux&lt;/a&gt; &lt;a href="https://twitter.com/search?q=%23unix&amp;amp;src=hash"&gt;#unix&lt;/a&gt; &lt;a href="https://twitter.com/search?q=%23network&amp;amp;src=hash"&gt;#network&lt;/a&gt; &lt;a href="https://twitter.com/search?q=%23programming&amp;amp;src=hash"&gt;#programming&lt;/a&gt;&lt;/p&gt;— Volkan Yazıcı (@yazicivo) &lt;a href="https://twitter.com/yazicivo/statuses/413970759489294336"&gt;December 20, 2013&lt;/a&gt;
-&lt;/blockquote&gt;
-
-&lt;blockquote class="twitter-tweet" lang="en" data-conversation="none" data-cards="hidden"&gt;
-&lt;p&gt;Suffering from &lt;a href="https://twitter.com/search?q=%23TIME_WAIT&amp;amp;src=hash"&gt;#TIME_WAIT&lt;/a&gt; &lt;a href="https://twitter.com/search?q=%23sockets&amp;amp;src=hash"&gt;#sockets&lt;/a&gt; while trying to handle thousands of connections? Enabled tcp_tw_recycle? &lt;a href="http://t.co/XGdPYNibGE"&gt;http://t.co/XGdPYNibGE&lt;/a&gt; &lt;a href="https://twitter.com/search?q=%23linux&amp;amp;src=hash"&gt;#linux&lt;/a&gt;&lt;/p&gt;— Volkan Yazıcı (@yazicivo) &lt;a href="https://twitter.com/yazicivo/statuses/413967038147612672"&gt;December 20, 2013&lt;/a&gt;
-&lt;/blockquote&gt;
-
-&lt;blockquote class="twitter-tweet" lang="en" data-conversation="none" data-cards="hidden"&gt;
-&lt;p&gt;tcpdrop: Drop TCP flows, unschedule TIME_WAIT sockets &lt;a href="https://t.co/c8mP6Bn8f7"&gt;https://t.co/c8mP6Bn8f7&lt;/a&gt;&lt;/p&gt;— Volkan Yazıcı (@yazicivo) &lt;a href="https://twitter.com/yazicivo/statuses/403816364445429760"&gt;November 22, 2013&lt;/a&gt;
-&lt;/blockquote&gt;
-
-&lt;blockquote class="twitter-tweet" lang="en"&gt;
-&lt;p&gt;RT &lt;a href="https://twitter.com/EmreSevinc"&gt;@EmreSevinc&lt;/a&gt;: Coping with the TCP TIME-WAIT state on busy Linux servers &lt;a href="http://t.co/juPGPxaRad"&gt;http://t.co/juPGPxaRad&lt;/a&gt;&lt;/p&gt;— Volkan Yazıcı (@yazicivo) &lt;a href="https://twitter.com/yazicivo/statuses/438630417722540032"&gt;February 26, 2014&lt;/a&gt;
-&lt;/blockquote&gt;
 </content>
   </entry>
 </feed>
