@@ -230,6 +230,71 @@ keep things simple, I purposed a &lt;code&gt;Map&amp;lt;Long, Employee&amp;gt;&l
 
 &lt;span class="o"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
 
+&lt;p&gt;Below you can find an example code snippet that uses the introduced classes.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-java"&gt;&lt;span class="n"&gt;EmployeeService&lt;/span&gt; &lt;span class="n"&gt;service&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nf"&gt;EmployeeService&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
+
+&lt;span class="c1"&gt;// Create a draft from scratch using the service interface.&lt;/span&gt;
+&lt;span class="n"&gt;EmployeeDraft&lt;/span&gt; &lt;span class="n"&gt;draft&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;service&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;draft&lt;/span&gt;&lt;span class="o"&gt;().&lt;/span&gt;&lt;span class="na"&gt;name&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="s"&gt;"Volkan"&lt;/span&gt;&lt;span class="o"&gt;).&lt;/span&gt;&lt;span class="na"&gt;surname&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="s"&gt;"Yazici"&lt;/span&gt;&lt;span class="o"&gt;).&lt;/span&gt;&lt;span class="na"&gt;salary&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;1000&lt;/span&gt;&lt;span class="o"&gt;).&lt;/span&gt;&lt;span class="na"&gt;build&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
+
+&lt;span class="cm"&gt;/*&lt;/span&gt;
+&lt;span class="cm"&gt; *         Drafts&lt;/span&gt;
+&lt;span class="cm"&gt; * -------------------------&lt;/span&gt;
+&lt;span class="cm"&gt; *  draft:&lt;/span&gt;
+&lt;span class="cm"&gt; *    "Volkan Yazici" $1000&lt;/span&gt;
+&lt;span class="cm"&gt; */&lt;/span&gt;
+
+&lt;span class="c1"&gt;// Persist the draft into the data store and obtain an actual employee.&lt;/span&gt;
+&lt;span class="n"&gt;Employee&lt;/span&gt; &lt;span class="n"&gt;employee&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;service&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;save&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;draft&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+
+&lt;span class="cm"&gt;/*&lt;/span&gt;
+&lt;span class="cm"&gt; *           Drafts         |    Persisted Employees&lt;/span&gt;
+&lt;span class="cm"&gt; * -------------------------+----------------------------&lt;/span&gt;
+&lt;span class="cm"&gt; *  draft:                  | employee:&lt;/span&gt;
+&lt;span class="cm"&gt; *    "Volkan Yazici" $1000 |   #0 "Volkan Yazici" $1000&lt;/span&gt;
+&lt;span class="cm"&gt; */&lt;/span&gt;
+
+&lt;span class="c1"&gt;// Modify the persisted employee and save it again.&lt;/span&gt;
+&lt;span class="n"&gt;EmployeeDraft&lt;/span&gt; &lt;span class="n"&gt;updatedDraft&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;employee&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;draft&lt;/span&gt;&lt;span class="o"&gt;().&lt;/span&gt;&lt;span class="na"&gt;salary&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;2000&lt;/span&gt;&lt;span class="o"&gt;).&lt;/span&gt;&lt;span class="na"&gt;build&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
+&lt;span class="n"&gt;Employee&lt;/span&gt; &lt;span class="n"&gt;updatedEmployee&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;service&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;save&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;updatedDraft&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;employee&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;getId&lt;/span&gt;&lt;span class="o"&gt;());&lt;/span&gt;
+
+&lt;span class="cm"&gt;/*&lt;/span&gt;
+&lt;span class="cm"&gt; *           Drafts         |    Persisted Employees&lt;/span&gt;
+&lt;span class="cm"&gt; * -------------------------+----------------------------&lt;/span&gt;
+&lt;span class="cm"&gt; *  draft:                  | employee:&lt;/span&gt;
+&lt;span class="cm"&gt; *    "Volkan Yazici" $1000 |   #0 "Volkan Yazici" $1000&lt;/span&gt;
+&lt;span class="cm"&gt; *                          |&lt;/span&gt;
+&lt;span class="cm"&gt; *  updatedDraft:           | updatedEmployee&lt;/span&gt;
+&lt;span class="cm"&gt; *    "Volkan Yazici" $2000 |   #0 "Volkan Yazici" $2000&lt;/span&gt;
+&lt;span class="cm"&gt; */&lt;/span&gt;
+
+&lt;span class="c1"&gt;// Create a new employee with the same amount of salary using the most recent draft.&lt;/span&gt;
+&lt;span class="n"&gt;EmployeeDraft&lt;/span&gt; &lt;span class="n"&gt;forkedDraft&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;updatedDraft&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;draft&lt;/span&gt;&lt;span class="o"&gt;().&lt;/span&gt;&lt;span class="na"&gt;name&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="s"&gt;"Bob"&lt;/span&gt;&lt;span class="o"&gt;).&lt;/span&gt;&lt;span class="na"&gt;surname&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="s"&gt;"Ross"&lt;/span&gt;&lt;span class="o"&gt;).&lt;/span&gt;&lt;span class="na"&gt;build&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
+&lt;span class="n"&gt;Employee&lt;/span&gt; &lt;span class="n"&gt;forkedEmployee&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;service&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;save&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;forkedDraft&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+
+&lt;span class="cm"&gt;/*&lt;/span&gt;
+&lt;span class="cm"&gt; *           Drafts         |    Persisted Employees&lt;/span&gt;
+&lt;span class="cm"&gt; * -------------------------+----------------------------&lt;/span&gt;
+&lt;span class="cm"&gt; *  draft:                  | employee:&lt;/span&gt;
+&lt;span class="cm"&gt; *    "Volkan Yazici" $1000 |   #0 "Volkan Yazici" $1000&lt;/span&gt;
+&lt;span class="cm"&gt; *                          |&lt;/span&gt;
+&lt;span class="cm"&gt; *  updatedDraft:           | updatedEmployee&lt;/span&gt;
+&lt;span class="cm"&gt; *    "Volkan Yazici" $2000 |   #0 "Volkan Yazici" $2000&lt;/span&gt;
+&lt;span class="cm"&gt; *                          |&lt;/span&gt;
+&lt;span class="cm"&gt; *  forkedDraft:            | forkedEmployee:&lt;/span&gt;
+&lt;span class="cm"&gt; *    "Bob Ross" $2000      |   #1 "Bob Ross" $2000&lt;/span&gt;
+&lt;span class="cm"&gt; */&lt;/span&gt;
+
+&lt;span class="n"&gt;System&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;out&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;println&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="s"&gt;"Persisted Employees:\n"&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="n"&gt;service&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;findAll&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt;
+        &lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;map&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;e&lt;/span&gt; &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;String&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;format&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="s"&gt;"#%d \"%s %s\" $%d"&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt;
+                &lt;span class="n"&gt;e&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;getId&lt;/span&gt;&lt;span class="o"&gt;(),&lt;/span&gt; &lt;span class="n"&gt;e&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;getName&lt;/span&gt;&lt;span class="o"&gt;(),&lt;/span&gt; &lt;span class="n"&gt;e&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;getSurname&lt;/span&gt;&lt;span class="o"&gt;(),&lt;/span&gt; &lt;span class="n"&gt;e&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;getSalary&lt;/span&gt;&lt;span class="o"&gt;()))&lt;/span&gt;
+        &lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;collect&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;joining&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="s"&gt;"\n"&lt;/span&gt;&lt;span class="o"&gt;)));&lt;/span&gt;
+&lt;span class="cm"&gt;/*&lt;/span&gt;
+&lt;span class="cm"&gt; * Persisted Employees:&lt;/span&gt;
+&lt;span class="cm"&gt; * #0 "Volkan Yazici" $2000&lt;/span&gt;
+&lt;span class="cm"&gt; * #1 "Bob Ross" $2000&lt;/span&gt;
+&lt;span class="cm"&gt; */&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+
 &lt;h1 id="the-conclusion"&gt;The Conclusion&lt;/h1&gt;
 
 &lt;p&gt;I had always found it puzzling to work with mutable objects when I needed to

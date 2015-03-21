@@ -267,6 +267,71 @@ keep things simple, I purposed a <code>Map&lt;Long, Employee&gt;</code> together
 
 <span class="o">}</span></code></pre>
 
+<p>Below you can find an example code snippet that uses the introduced classes.</p>
+
+<pre><code class="language-java"><span class="n">EmployeeService</span> <span class="n">service</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">EmployeeService</span><span class="o">();</span>
+
+<span class="c1">// Create a draft from scratch using the service interface.</span>
+<span class="n">EmployeeDraft</span> <span class="n">draft</span> <span class="o">=</span> <span class="n">service</span><span class="o">.</span><span class="na">draft</span><span class="o">().</span><span class="na">name</span><span class="o">(</span><span class="s">"Volkan"</span><span class="o">).</span><span class="na">surname</span><span class="o">(</span><span class="s">"Yazici"</span><span class="o">).</span><span class="na">salary</span><span class="o">(</span><span class="mi">1000</span><span class="o">).</span><span class="na">build</span><span class="o">();</span>
+
+<span class="cm">/*</span>
+<span class="cm"> *         Drafts</span>
+<span class="cm"> * -------------------------</span>
+<span class="cm"> *  draft:</span>
+<span class="cm"> *    "Volkan Yazici" $1000</span>
+<span class="cm"> */</span>
+
+<span class="c1">// Persist the draft into the data store and obtain an actual employee.</span>
+<span class="n">Employee</span> <span class="n">employee</span> <span class="o">=</span> <span class="n">service</span><span class="o">.</span><span class="na">save</span><span class="o">(</span><span class="n">draft</span><span class="o">);</span>
+
+<span class="cm">/*</span>
+<span class="cm"> *           Drafts         |    Persisted Employees</span>
+<span class="cm"> * -------------------------+----------------------------</span>
+<span class="cm"> *  draft:                  | employee:</span>
+<span class="cm"> *    "Volkan Yazici" $1000 |   #0 "Volkan Yazici" $1000</span>
+<span class="cm"> */</span>
+
+<span class="c1">// Modify the persisted employee and save it again.</span>
+<span class="n">EmployeeDraft</span> <span class="n">updatedDraft</span> <span class="o">=</span> <span class="n">employee</span><span class="o">.</span><span class="na">draft</span><span class="o">().</span><span class="na">salary</span><span class="o">(</span><span class="mi">2000</span><span class="o">).</span><span class="na">build</span><span class="o">();</span>
+<span class="n">Employee</span> <span class="n">updatedEmployee</span> <span class="o">=</span> <span class="n">service</span><span class="o">.</span><span class="na">save</span><span class="o">(</span><span class="n">updatedDraft</span><span class="o">,</span> <span class="n">employee</span><span class="o">.</span><span class="na">getId</span><span class="o">());</span>
+
+<span class="cm">/*</span>
+<span class="cm"> *           Drafts         |    Persisted Employees</span>
+<span class="cm"> * -------------------------+----------------------------</span>
+<span class="cm"> *  draft:                  | employee:</span>
+<span class="cm"> *    "Volkan Yazici" $1000 |   #0 "Volkan Yazici" $1000</span>
+<span class="cm"> *                          |</span>
+<span class="cm"> *  updatedDraft:           | updatedEmployee</span>
+<span class="cm"> *    "Volkan Yazici" $2000 |   #0 "Volkan Yazici" $2000</span>
+<span class="cm"> */</span>
+
+<span class="c1">// Create a new employee with the same amount of salary using the most recent draft.</span>
+<span class="n">EmployeeDraft</span> <span class="n">forkedDraft</span> <span class="o">=</span> <span class="n">updatedDraft</span><span class="o">.</span><span class="na">draft</span><span class="o">().</span><span class="na">name</span><span class="o">(</span><span class="s">"Bob"</span><span class="o">).</span><span class="na">surname</span><span class="o">(</span><span class="s">"Ross"</span><span class="o">).</span><span class="na">build</span><span class="o">();</span>
+<span class="n">Employee</span> <span class="n">forkedEmployee</span> <span class="o">=</span> <span class="n">service</span><span class="o">.</span><span class="na">save</span><span class="o">(</span><span class="n">forkedDraft</span><span class="o">);</span>
+
+<span class="cm">/*</span>
+<span class="cm"> *           Drafts         |    Persisted Employees</span>
+<span class="cm"> * -------------------------+----------------------------</span>
+<span class="cm"> *  draft:                  | employee:</span>
+<span class="cm"> *    "Volkan Yazici" $1000 |   #0 "Volkan Yazici" $1000</span>
+<span class="cm"> *                          |</span>
+<span class="cm"> *  updatedDraft:           | updatedEmployee</span>
+<span class="cm"> *    "Volkan Yazici" $2000 |   #0 "Volkan Yazici" $2000</span>
+<span class="cm"> *                          |</span>
+<span class="cm"> *  forkedDraft:            | forkedEmployee:</span>
+<span class="cm"> *    "Bob Ross" $2000      |   #1 "Bob Ross" $2000</span>
+<span class="cm"> */</span>
+
+<span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">"Persisted Employees:\n"</span> <span class="o">+</span> <span class="n">service</span><span class="o">.</span><span class="na">findAll</span><span class="o">()</span>
+        <span class="o">.</span><span class="na">map</span><span class="o">(</span><span class="n">e</span> <span class="o">-&gt;</span> <span class="n">String</span><span class="o">.</span><span class="na">format</span><span class="o">(</span><span class="s">"#%d \"%s %s\" $%d"</span><span class="o">,</span>
+                <span class="n">e</span><span class="o">.</span><span class="na">getId</span><span class="o">(),</span> <span class="n">e</span><span class="o">.</span><span class="na">getName</span><span class="o">(),</span> <span class="n">e</span><span class="o">.</span><span class="na">getSurname</span><span class="o">(),</span> <span class="n">e</span><span class="o">.</span><span class="na">getSalary</span><span class="o">()))</span>
+        <span class="o">.</span><span class="na">collect</span><span class="o">(</span><span class="n">joining</span><span class="o">(</span><span class="s">"\n"</span><span class="o">)));</span>
+<span class="cm">/*</span>
+<span class="cm"> * Persisted Employees:</span>
+<span class="cm"> * #0 "Volkan Yazici" $2000</span>
+<span class="cm"> * #1 "Bob Ross" $2000</span>
+<span class="cm"> */</span></code></pre>
+
 <h1 id="the-conclusion">The Conclusion</h1>
 
 <p>I had always found it puzzling to work with mutable objects when I needed to
