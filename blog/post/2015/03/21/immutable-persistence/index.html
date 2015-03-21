@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Using Immutable Objects for Persistence in Java</title>
+    <link rel="stylesheet" href="/css/bootstrap.css">
+    <link rel="stylesheet" href="/css/bootstrap-responsive.css">
+    <script src="/js/bootstrap.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="/css/common.css">
+    <meta name="generator" content="nanoc 3.7.5">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/post.css">
+    <script type="text/javascript">
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-40183531-1']);
+      _gaq.push(['_trackPageview']);
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="menu">
+      <div><a href="/">Home</a></div><div><a href="/about/">About</a></div><div><a href="/blog/">Blog</a></div><div><a href="/code/">Code</a></div><div><a href="/blog/feed/">Feed</a></div>
+    </div>
+    
+
+<div class="container">
+  <div class="row-fluid">
+    <div class="offset2 span8">
+      <div id="post" class="more-white-box rounded-corners">
+	<div class="head">
+	  <div class="title">Using Immutable Objects for Persistence in Java</div>
+	  <div class="subtitle">posted at
+	    March 21, 2015
+	    with tags <a href="/blog/tag/java">java</a>
+	  </div>
+	  <div class="share">
+	    <div class="addthis_toolbox addthis_default_style ">
+	      <a class="addthis_button_preferred_1"></a>
+	      <a class="addthis_button_preferred_2"></a>
+	      <a class="addthis_button_preferred_3"></a>
+	      <a class="addthis_button_preferred_4"></a>
+	      <a class="addthis_button_compact"></a>
+	    </div>
+	    <script type="text/javascript">var addthis_config = {"data_track_addressbar":false};</script>
+	    <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-5144adf75211a62b"></script>
+	  </div>
+	</div>
+	<div class="body">
+
+	  
+<p><strong>TL;DR</strong> – A software design pattern to employ immutable classes for
+persisting data models in Java. That is, you do not need to ruin your
+immutable classes because of uncertain <code>id</code> fields.</p>
+
+<p>When you want store a plain Java model in a data store, you are expected to
+deliver an <code>@Id</code> field to the underlying persistence framework.</p>
+
+<pre><code class="language-java"><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Employee</span> <span class="o">{</span>
+
+    <span class="nd">@Id</span>
+    <span class="kd">private</span> <span class="kt">long</span> <span class="n">id</span><span class="o">;</span>
+
+    <span class="c1">// ...</span>
+
+<span class="o">}</span></code></pre>
+
+<p>This single <em>mutable</em> field ruins all your immutable data structure model.
+Why? You cannot add a <code>final</code> modifier to an <code>id</code> field, because you do not
+know the <code>id</code> yet before persisiting it to the data store.</p>
+
+<pre><code class="language-java"><span class="n">Employee</span> <span class="n">employee</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">Employee</span><span class="o">(</span><span class="s">"bob"</span><span class="o">);</span>    <span class="c1">// id = null</span>
+<span class="n">employeeService</span><span class="o">.</span><span class="na">save</span><span class="o">(</span><span class="n">employee</span><span class="o">);</span>             <span class="c1">// id = 84357...</span></code></pre>
+
+<p>And this dirty bit propagates through all your code base and pollutes the
+model space with mutable <code>id</code> fields. Further, it becomes almost impossible to
+differentiate whether a given <code>Employee</code> instance actually represents a record
+retrieved from the data store or just a temporal instance created by
+application itself at some point in time. Actually, the entire deficiency is a
+side effect of a misunderstanding: you are using the very same model to
+encapsulate two different type of entities. One is a model draft, that is yet
+to be saved. And the other one is an object that is associated with an
+actually persisted object at the data store.</p>
+
+<p><img src="mutable.svg" alt="Mutable POJO Persistence Architecture"></p>
+
+<h1 id="defining-the-problem-and-its-requirements">Defining the Problem and its Requirements</h1>
+
+<p>Before trying to come up with a practical solution to the problem at hand,
+lets determine the set of constraints that needs to be satisfied in order to
+use immutable data entities throughout the entire code base.</p>
+
+<ol>
+  <li>
+    <p>An entity cannot be mutated by any means.</p>
+  </li>
+  <li>
+    <p>An entity can only be instantiated by the data store service.</p>
+  </li>
+</ol>
+
+<p>The first constraint ensures that the application cannot modify an entity,
+hence you can freely pass it to around and enjoy the safety of your immutable
+data structure. But the most important outcome of this scheme, which is
+addressed in the second constraint, is that: You are guaranteed that an entity
+<em>always</em> represents a record retrived from the data store at some point in
+time. That is, you know that it is not an artificially generated instance
+created out of blue.</p>
+
+<h1 id="the-proposal">The Proposal</h1>
+
+<p>After defining what we are looking for, we are ready to come up with a
+practical solution. The solution I propose for this problem is a scheme such
+that each <code>Employee</code> entity is represented by two different encapsulations
+throughout their entire lifetime:</p>
+
+<ol>
+  <li>
+    <p><code>Employee</code>: An immutable representation of a record retrieved from the data
+store. Hence, it has an <code>id</code> field as expected.</p>
+  </li>
+  <li>
+    <p><code>EmployeeDraft</code>: A yet to be persisted <code>Employee</code> instance (<em>draft</em>)
+created either from scratch by the application or by updating an <code>Employee</code>
+instance. Since entity is still in the draft stage, it has no <code>id</code> field.</p>
+  </li>
+  <li>
+    <p><code>EmployeeService</code>: The one and only one entry point that can create an
+<code>Employee</code> service.</p>
+  </li>
+</ol>
+
+<p><img src="immutable.svg" alt="Immutable POJO Persistence Architecture"></p>
+
+<h1 id="the-code">The Code</h1>
+
+<p>I will start by implementing the <code>EmployeeDraft</code> class:</p>
+
+<pre><code class="language-java"><span class="kn">package</span> <span class="n">com</span><span class="o">.</span><span class="na">vlkan</span><span class="o">.</span><span class="na">immutableentity</span><span class="o">.</span><span class="na">repository</span><span class="o">.</span><span class="na">employee</span><span class="o">;</span>
+
+<span class="kn">import</span> <span class="nn">static</span> <span class="n">com</span><span class="o">.</span><span class="na">google</span><span class="o">.</span><span class="na">common</span><span class="o">.</span><span class="na">base</span><span class="o">.</span><span class="na">Preconditions</span><span class="o">.</span><span class="na">checkArgument</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">static</span> <span class="n">com</span><span class="o">.</span><span class="na">google</span><span class="o">.</span><span class="na">common</span><span class="o">.</span><span class="na">base</span><span class="o">.</span><span class="na">Preconditions</span><span class="o">.</span><span class="na">checkNotNull</span><span class="o">;</span>
+
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">EmployeeDraft</span> <span class="o">{</span>
+
+    <span class="kd">protected</span> <span class="kd">final</span> <span class="n">String</span> <span class="n">name</span><span class="o">;</span>
+
+    <span class="kd">protected</span> <span class="kd">final</span> <span class="n">String</span> <span class="n">surname</span><span class="o">;</span>
+
+    <span class="kd">protected</span> <span class="kd">final</span> <span class="kt">int</span> <span class="n">salary</span><span class="o">;</span>
+
+    <span class="cm">/** Can only be instantiated through a builder. */</span>
+    <span class="kd">protected</span> <span class="nf">EmployeeDraft</span><span class="o">(</span><span class="n">String</span> <span class="n">name</span><span class="o">,</span> <span class="n">String</span> <span class="n">surname</span><span class="o">,</span> <span class="kt">int</span> <span class="n">salary</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">checkNotNull</span><span class="o">(</span><span class="n">name</span><span class="o">,</span> <span class="s">"name cannot be null"</span><span class="o">);</span>
+        <span class="n">checkArgument</span><span class="o">(</span><span class="n">salary</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="o">,</span> <span class="s">"salary cannot be negative, found: %d"</span><span class="o">,</span> <span class="n">salary</span><span class="o">);</span>
+        <span class="n">checkNotNull</span><span class="o">(</span><span class="n">surname</span><span class="o">,</span> <span class="s">"surname cannot be null"</span><span class="o">);</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">name</span> <span class="o">=</span> <span class="n">name</span><span class="o">;</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">surname</span> <span class="o">=</span> <span class="n">surname</span><span class="o">;</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">salary</span> <span class="o">=</span> <span class="n">salary</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="n">String</span> <span class="nf">getName</span><span class="o">()</span> <span class="o">{</span> <span class="k">return</span> <span class="n">name</span><span class="o">;</span> <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="n">String</span> <span class="nf">getSurname</span><span class="o">()</span> <span class="o">{</span> <span class="k">return</span> <span class="n">surname</span><span class="o">;</span> <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="kt">int</span> <span class="nf">getSalary</span><span class="o">()</span> <span class="o">{</span> <span class="k">return</span> <span class="n">salary</span><span class="o">;</span> <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="n">Builder</span> <span class="nf">draft</span><span class="o">()</span> <span class="o">{</span> <span class="k">return</span> <span class="k">new</span> <span class="nf">Builder</span><span class="o">(</span><span class="k">this</span><span class="o">);</span> <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="kd">static</span> <span class="kd">class</span> <span class="nc">Builder</span> <span class="o">{</span>
+
+        <span class="kd">protected</span> <span class="n">String</span> <span class="n">name</span><span class="o">;</span>
+
+        <span class="kd">protected</span> <span class="n">String</span> <span class="n">surname</span><span class="o">;</span>
+
+        <span class="kd">protected</span> <span class="kt">int</span> <span class="n">salary</span><span class="o">;</span>
+
+        <span class="cm">/** Note that the default constructor is only visible to the package classes. */</span>
+        <span class="n">Builder</span><span class="o">()</span> <span class="o">{}</span>
+
+        <span class="kd">protected</span> <span class="nf">Builder</span><span class="o">(</span><span class="n">EmployeeDraft</span> <span class="n">draft</span><span class="o">)</span> <span class="o">{</span>
+            <span class="k">this</span><span class="o">.</span><span class="na">name</span> <span class="o">=</span> <span class="n">draft</span><span class="o">.</span><span class="na">name</span><span class="o">;</span>
+            <span class="k">this</span><span class="o">.</span><span class="na">surname</span> <span class="o">=</span> <span class="n">draft</span><span class="o">.</span><span class="na">surname</span><span class="o">;</span>
+            <span class="k">this</span><span class="o">.</span><span class="na">salary</span> <span class="o">=</span> <span class="n">draft</span><span class="o">.</span><span class="na">salary</span><span class="o">;</span>
+        <span class="o">}</span>
+
+        <span class="kd">public</span> <span class="n">Builder</span> <span class="nf">name</span><span class="o">(</span><span class="n">String</span> <span class="n">name</span><span class="o">)</span> <span class="o">{</span> <span class="k">this</span><span class="o">.</span><span class="na">name</span> <span class="o">=</span> <span class="n">name</span><span class="o">;</span> <span class="k">return</span> <span class="k">this</span><span class="o">;</span> <span class="o">}</span>
+
+        <span class="kd">public</span> <span class="n">Builder</span> <span class="nf">surname</span><span class="o">(</span><span class="n">String</span> <span class="n">surname</span><span class="o">)</span> <span class="o">{</span> <span class="k">this</span><span class="o">.</span><span class="na">surname</span> <span class="o">=</span> <span class="n">surname</span><span class="o">;</span> <span class="k">return</span> <span class="k">this</span><span class="o">;</span> <span class="o">}</span>
+
+        <span class="kd">public</span> <span class="n">Builder</span> <span class="nf">salary</span><span class="o">(</span><span class="kt">int</span> <span class="n">salary</span><span class="o">)</span> <span class="o">{</span> <span class="k">this</span><span class="o">.</span><span class="na">salary</span> <span class="o">=</span> <span class="n">salary</span><span class="o">;</span> <span class="k">return</span> <span class="k">this</span><span class="o">;</span> <span class="o">}</span>
+
+        <span class="kd">public</span> <span class="n">EmployeeDraft</span> <span class="nf">build</span><span class="o">()</span> <span class="o">{</span> <span class="k">return</span> <span class="k">new</span> <span class="nf">EmployeeDraft</span><span class="o">(</span><span class="n">name</span><span class="o">,</span> <span class="n">surname</span><span class="o">,</span> <span class="n">salary</span><span class="o">);</span> <span class="o">}</span>
+
+    <span class="o">}</span>
+
+<span class="o">}</span></code></pre>
+
+<p>Note that in order to isolate certain fields and methods which are expected to
+be only accessed by the <code>Employee</code> ecosystem, the classes are put into a
+separate <code>c.v.i.r.employee</code> package and internals are exposed to just package
+members. Per see, non-package classes are not allowed to instantiate either
+<code>EmployeeDraft</code> or <code>EmployeeDraft.Builder</code>.</p>
+
+<pre><code class="language-java"><span class="kn">package</span> <span class="n">com</span><span class="o">.</span><span class="na">vlkan</span><span class="o">.</span><span class="na">immutableentity</span><span class="o">.</span><span class="na">repository</span><span class="o">.</span><span class="na">employee</span><span class="o">;</span>
+
+<span class="kd">public</span> <span class="kd">final</span> <span class="kd">class</span> <span class="nc">Employee</span> <span class="kd">extends</span> <span class="n">EmployeeDraft</span> <span class="o">{</span>
+
+    <span class="kd">private</span> <span class="kd">final</span> <span class="kt">long</span> <span class="n">id</span><span class="o">;</span>
+
+    <span class="cm">/** Note that the default constructor is only visible to the package classes. */</span>
+    <span class="n">Employee</span><span class="o">(</span><span class="n">String</span> <span class="n">name</span><span class="o">,</span> <span class="n">String</span> <span class="n">surname</span><span class="o">,</span> <span class="kt">int</span> <span class="n">salary</span><span class="o">,</span> <span class="kt">long</span> <span class="n">id</span><span class="o">)</span> <span class="o">{</span>
+        <span class="kd">super</span><span class="o">(</span><span class="n">name</span><span class="o">,</span> <span class="n">surname</span><span class="o">,</span> <span class="n">salary</span><span class="o">);</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">id</span> <span class="o">=</span> <span class="n">id</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="kt">long</span> <span class="nf">getId</span><span class="o">()</span> <span class="o">{</span> <span class="k">return</span> <span class="n">id</span><span class="o">;</span> <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="n">Builder</span> <span class="nf">draft</span><span class="o">()</span> <span class="o">{</span> <span class="k">return</span> <span class="k">new</span> <span class="nf">Builder</span><span class="o">(</span><span class="k">this</span><span class="o">);</span> <span class="o">}</span>
+
+<span class="o">}</span></code></pre>
+
+<p><code>Employee</code> merely wraps <code>EmployeeDraft</code> by just adding new <code>id</code> field. Note
+that non-package classes are not again allowed to instantiate <code>Employee</code>.
+Additionally, calling <code>draft()</code> either from an <code>Employee</code> or an
+<code>EmployeeDraft</code> always creates a new <code>EmployeeDraft</code>, which also make sense
+since the new drafted changes are not persisted yet.</p>
+
+<p>To glue the last piece of the puzzle, here comes the <code>EmployeeService</code>. To
+keep things simple, I purposed a <code>Map&lt;Long, Employee&gt;</code> together with an
+<code>AtomicLong</code> as a repository.</p>
+
+<pre><code class="language-java"><span class="kn">package</span> <span class="n">com</span><span class="o">.</span><span class="na">vlkan</span><span class="o">.</span><span class="na">immutableentity</span><span class="o">.</span><span class="na">repository</span><span class="o">.</span><span class="na">employee</span><span class="o">;</span>
+
+<span class="kn">import</span> <span class="nn">java.util.Map</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">java.util.Optional</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">java.util.concurrent.ConcurrentHashMap</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">java.util.concurrent.atomic.AtomicLong</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">java.util.stream.Stream</span><span class="o">;</span>
+
+<span class="kn">import</span> <span class="nn">static</span> <span class="n">com</span><span class="o">.</span><span class="na">google</span><span class="o">.</span><span class="na">common</span><span class="o">.</span><span class="na">base</span><span class="o">.</span><span class="na">Preconditions</span><span class="o">.</span><span class="na">checkNotNull</span><span class="o">;</span>
+
+<span class="kd">public</span> <span class="kd">final</span> <span class="kd">class</span> <span class="nc">EmployeeService</span> <span class="o">{</span>
+
+    <span class="kd">private</span> <span class="kd">final</span> <span class="n">AtomicLong</span> <span class="n">dataCounter</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">AtomicLong</span><span class="o">(</span><span class="mi">0</span><span class="o">);</span>
+
+    <span class="kd">private</span> <span class="kd">final</span> <span class="n">Map</span><span class="o">&lt;</span><span class="n">Long</span><span class="o">,</span> <span class="n">Employee</span><span class="o">&gt;</span> <span class="n">dataStore</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ConcurrentHashMap</span><span class="o">&lt;&gt;();</span>
+
+    <span class="kd">public</span> <span class="n">EmployeeDraft</span><span class="o">.</span><span class="na">Builder</span> <span class="nf">draft</span><span class="o">()</span> <span class="o">{</span> <span class="k">return</span> <span class="k">new</span> <span class="n">EmployeeDraft</span><span class="o">.</span><span class="na">Builder</span><span class="o">();</span> <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="n">Employee</span> <span class="nf">save</span><span class="o">(</span><span class="n">EmployeeDraft</span> <span class="n">draft</span><span class="o">)</span> <span class="o">{</span> <span class="k">return</span> <span class="nf">save</span><span class="o">(</span><span class="n">draft</span><span class="o">,</span> <span class="n">dataCounter</span><span class="o">.</span><span class="na">getAndIncrement</span><span class="o">());</span> <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="n">Employee</span> <span class="nf">save</span><span class="o">(</span><span class="n">EmployeeDraft</span> <span class="n">draft</span><span class="o">,</span> <span class="kt">long</span> <span class="n">id</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">checkNotNull</span><span class="o">(</span><span class="n">draft</span><span class="o">,</span> <span class="s">"draft cannot be null"</span><span class="o">);</span>
+        <span class="n">Employee</span> <span class="n">employee</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">Employee</span><span class="o">(</span><span class="n">draft</span><span class="o">.</span><span class="na">getName</span><span class="o">(),</span> <span class="n">draft</span><span class="o">.</span><span class="na">getSurname</span><span class="o">(),</span> <span class="n">draft</span><span class="o">.</span><span class="na">getSalary</span><span class="o">(),</span> <span class="n">id</span><span class="o">);</span>
+        <span class="n">dataStore</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="n">id</span><span class="o">,</span> <span class="n">employee</span><span class="o">);</span>
+        <span class="k">return</span> <span class="n">employee</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="n">Stream</span><span class="o">&lt;</span><span class="n">Employee</span><span class="o">&gt;</span> <span class="nf">findAll</span><span class="o">()</span> <span class="o">{</span> <span class="k">return</span> <span class="n">dataStore</span><span class="o">.</span><span class="na">values</span><span class="o">().</span><span class="na">stream</span><span class="o">();</span> <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="n">Optional</span><span class="o">&lt;</span><span class="n">Employee</span><span class="o">&gt;</span> <span class="nf">findById</span><span class="o">(</span><span class="kt">long</span> <span class="n">id</span><span class="o">)</span> <span class="o">{</span> <span class="k">return</span> <span class="n">Optional</span><span class="o">.</span><span class="na">ofNullable</span><span class="o">(</span><span class="n">dataStore</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="n">id</span><span class="o">));</span> <span class="o">}</span>
+
+<span class="o">}</span></code></pre>
+
+<h1 id="the-conclusion">The Conclusion</h1>
+
+<p>I had always found it puzzling to work with mutable objects when I needed to
+work with persistence frameworks; JPA, Hibernate, Spring Data, etc. In the
+lifetime of almost every project that I start, after a certain period of time,
+I always find myself implementing my own service layer on top of the used
+persistence framework using my custom immutable entities. I really do not know
+whether the approach described in this post is something that was already
+addressed in the literature or not, but I came up with this idea a couple of
+months ago and totally benefitted from it in a project. I hope you would find
+it useful too.</p>
+
+
+	  <script type="text/javascript">
+	    $("#post table").attr("class", "table table-hover");
+	  </script>
+
+	  <div id="disqus_thread"></div>
+	  <script type="text/javascript">
+	  var disqus_shortname = 'vyazici';
+	  var disqus_identifier = '/blog/post/20150321-immutable-persistence/';
+	  var disqus_title = 'Using Immutable Objects for Persistence in Java';
+	  (function() {
+	  	var dsq = document.createElement('script');
+	  	dsq.type = 'text/javascript';
+	  	dsq.async = true;
+	  	dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+	  	(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+	  })();
+	  </script>
+
+	</div>
+      </div>
+      <div id="bgauthor" class="narrow-font">
+	background image by
+	<a href="http://jenniferwetzel.com/">Jennifer Wetzel</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
+  </body>
+</html>
+

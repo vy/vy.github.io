@@ -2,13 +2,355 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <id>https://vy.github.io//</id>
   <title>Volkan Yazıcı's Soap Co.</title>
-  <updated>2015-01-08T09:43:00Z</updated>
+  <updated>2015-03-21T13:39:00Z</updated>
   <link rel="alternate" href="https://vy.github.io//"/>
   <link rel="self" href="https://vy.github.io//blog/feed/"/>
   <author>
     <name>Volkan Yazıcı</name>
     <uri>https://vy.github.io/</uri>
   </author>
+  <entry>
+    <id>tag:vy.github.io,2015-03-21://blog/post/2015/03/21/immutable-persistence/</id>
+    <title type="html">Using Immutable Objects for Persistence in Java</title>
+    <published>2015-03-21T13:39:00Z</published>
+    <updated>2015-03-21T13:39:00Z</updated>
+    <link rel="alternate" href="https://vy.github.io//blog/post/2015/03/21/immutable-persistence/"/>
+    <content type="html">
+&lt;p&gt;&lt;strong&gt;TL;DR&lt;/strong&gt; – A software design pattern to employ immutable classes for
+persisting data models in Java. That is, you do not need to ruin your
+immutable classes because of uncertain &lt;code&gt;id&lt;/code&gt; fields.&lt;/p&gt;
+
+&lt;p&gt;When you want store a plain Java model in a data store, you are expected to
+deliver an &lt;code&gt;@Id&lt;/code&gt; field to the underlying persistence framework.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-java"&gt;&lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kd"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;Employee&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+
+    &lt;span class="nd"&gt;@Id&lt;/span&gt;
+    &lt;span class="kd"&gt;private&lt;/span&gt; &lt;span class="kt"&gt;long&lt;/span&gt; &lt;span class="n"&gt;id&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+
+    &lt;span class="c1"&gt;// ...&lt;/span&gt;
+
+&lt;span class="o"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This single &lt;em&gt;mutable&lt;/em&gt; field ruins all your immutable data structure model.
+Why? You cannot add a &lt;code&gt;final&lt;/code&gt; modifier to an &lt;code&gt;id&lt;/code&gt; field, because you do not
+know the &lt;code&gt;id&lt;/code&gt; yet before persisiting it to the data store.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-java"&gt;&lt;span class="n"&gt;Employee&lt;/span&gt; &lt;span class="n"&gt;employee&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nf"&gt;Employee&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="s"&gt;"bob"&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;    &lt;span class="c1"&gt;// id = null&lt;/span&gt;
+&lt;span class="n"&gt;employeeService&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;save&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;employee&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;             &lt;span class="c1"&gt;// id = 84357...&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And this dirty bit propagates through all your code base and pollutes the
+model space with mutable &lt;code&gt;id&lt;/code&gt; fields. Further, it becomes almost impossible to
+differentiate whether a given &lt;code&gt;Employee&lt;/code&gt; instance actually represents a record
+retrieved from the data store or just a temporal instance created by
+application itself at some point in time. Actually, the entire deficiency is a
+side effect of a misunderstanding: you are using the very same model to
+encapsulate two different type of entities. One is a model draft, that is yet
+to be saved. And the other one is an object that is associated with an
+actually persisted object at the data store.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src="mutable.svg" alt="Mutable POJO Persistence Architecture"&gt;&lt;/p&gt;
+
+&lt;h1 id="defining-the-problem-and-its-requirements"&gt;Defining the Problem and its Requirements&lt;/h1&gt;
+
+&lt;p&gt;Before trying to come up with a practical solution to the problem at hand,
+lets determine the set of constraints that needs to be satisfied in order to
+use immutable data entities throughout the entire code base.&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;
+    &lt;p&gt;An entity cannot be mutated by any means.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;An entity can only be instantiated by the data store service.&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;The first constraint ensures that the application cannot modify an entity,
+hence you can freely pass it to around and enjoy the safety of your immutable
+data structure. But the most important outcome of this scheme, which is
+addressed in the second constraint, is that: You are guaranteed that an entity
+&lt;em&gt;always&lt;/em&gt; represents a record retrived from the data store at some point in
+time. That is, you know that it is not an artificially generated instance
+created out of blue.&lt;/p&gt;
+
+&lt;h1 id="the-proposal"&gt;The Proposal&lt;/h1&gt;
+
+&lt;p&gt;After defining what we are looking for, we are ready to come up with a
+practical solution. The solution I propose for this problem is a scheme such
+that each &lt;code&gt;Employee&lt;/code&gt; entity is represented by two different encapsulations
+throughout their entire lifetime:&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;code&gt;Employee&lt;/code&gt;: An immutable representation of a record retrieved from the data
+store. Hence, it has an &lt;code&gt;id&lt;/code&gt; field as expected.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;code&gt;EmployeeDraft&lt;/code&gt;: A yet to be persisted &lt;code&gt;Employee&lt;/code&gt; instance (&lt;em&gt;draft&lt;/em&gt;)
+created either from scratch by the application or by updating an &lt;code&gt;Employee&lt;/code&gt;
+instance. Since entity is still in the draft stage, it has no &lt;code&gt;id&lt;/code&gt; field.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;code&gt;EmployeeService&lt;/code&gt;: The one and only one entry point that can create an
+&lt;code&gt;Employee&lt;/code&gt; service.&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;&lt;img src="immutable.svg" alt="Immutable POJO Persistence Architecture"&gt;&lt;/p&gt;
+
+&lt;h1 id="the-code"&gt;The Code&lt;/h1&gt;
+
+&lt;p&gt;I will start by implementing the &lt;code&gt;EmployeeDraft&lt;/code&gt; class:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-java"&gt;&lt;span class="kn"&gt;package&lt;/span&gt; &lt;span class="n"&gt;com&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;vlkan&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;immutableentity&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;repository&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;employee&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+
+&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;static&lt;/span&gt; &lt;span class="n"&gt;com&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;google&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;common&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;base&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;Preconditions&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;checkArgument&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;static&lt;/span&gt; &lt;span class="n"&gt;com&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;google&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;common&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;base&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;Preconditions&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;checkNotNull&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+
+&lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kd"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;EmployeeDraft&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+
+    &lt;span class="kd"&gt;protected&lt;/span&gt; &lt;span class="kd"&gt;final&lt;/span&gt; &lt;span class="n"&gt;String&lt;/span&gt; &lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+
+    &lt;span class="kd"&gt;protected&lt;/span&gt; &lt;span class="kd"&gt;final&lt;/span&gt; &lt;span class="n"&gt;String&lt;/span&gt; &lt;span class="n"&gt;surname&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+
+    &lt;span class="kd"&gt;protected&lt;/span&gt; &lt;span class="kd"&gt;final&lt;/span&gt; &lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="n"&gt;salary&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+
+    &lt;span class="cm"&gt;/** Can only be instantiated through a builder. */&lt;/span&gt;
+    &lt;span class="kd"&gt;protected&lt;/span&gt; &lt;span class="nf"&gt;EmployeeDraft&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;String&lt;/span&gt; &lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;String&lt;/span&gt; &lt;span class="n"&gt;surname&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="n"&gt;salary&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+        &lt;span class="n"&gt;checkNotNull&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="s"&gt;"name cannot be null"&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+        &lt;span class="n"&gt;checkArgument&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;salary&lt;/span&gt; &lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="s"&gt;"salary cannot be negative, found: %d"&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;salary&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+        &lt;span class="n"&gt;checkNotNull&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;surname&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="s"&gt;"surname cannot be null"&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+        &lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;name&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+        &lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;surname&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;surname&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+        &lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;salary&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;salary&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+    &lt;span class="o"&gt;}&lt;/span&gt;
+
+    &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="n"&gt;String&lt;/span&gt; &lt;span class="nf"&gt;getName&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
+
+    &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="n"&gt;String&lt;/span&gt; &lt;span class="nf"&gt;getSurname&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;surname&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
+
+    &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="nf"&gt;getSalary&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;salary&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
+
+    &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="n"&gt;Builder&lt;/span&gt; &lt;span class="nf"&gt;draft&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nf"&gt;Builder&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
+
+    &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kd"&gt;static&lt;/span&gt; &lt;span class="kd"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;Builder&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+
+        &lt;span class="kd"&gt;protected&lt;/span&gt; &lt;span class="n"&gt;String&lt;/span&gt; &lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+
+        &lt;span class="kd"&gt;protected&lt;/span&gt; &lt;span class="n"&gt;String&lt;/span&gt; &lt;span class="n"&gt;surname&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+
+        &lt;span class="kd"&gt;protected&lt;/span&gt; &lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="n"&gt;salary&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+
+        &lt;span class="cm"&gt;/** Note that the default constructor is only visible to the package classes. */&lt;/span&gt;
+        &lt;span class="n"&gt;Builder&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;{}&lt;/span&gt;
+
+        &lt;span class="kd"&gt;protected&lt;/span&gt; &lt;span class="nf"&gt;Builder&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;EmployeeDraft&lt;/span&gt; &lt;span class="n"&gt;draft&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+            &lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;name&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;draft&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;name&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+            &lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;surname&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;draft&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;surname&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+            &lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;salary&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;draft&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;salary&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+        &lt;span class="o"&gt;}&lt;/span&gt;
+
+        &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="n"&gt;Builder&lt;/span&gt; &lt;span class="nf"&gt;name&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;String&lt;/span&gt; &lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;name&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt; &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
+
+        &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="n"&gt;Builder&lt;/span&gt; &lt;span class="nf"&gt;surname&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;String&lt;/span&gt; &lt;span class="n"&gt;surname&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;surname&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;surname&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt; &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
+
+        &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="n"&gt;Builder&lt;/span&gt; &lt;span class="nf"&gt;salary&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="n"&gt;salary&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;salary&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;salary&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt; &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
+
+        &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="n"&gt;EmployeeDraft&lt;/span&gt; &lt;span class="nf"&gt;build&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nf"&gt;EmployeeDraft&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;surname&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;salary&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
+
+    &lt;span class="o"&gt;}&lt;/span&gt;
+
+&lt;span class="o"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Note that in order to isolate certain fields and methods which are expected to
+be only accessed by the &lt;code&gt;Employee&lt;/code&gt; ecosystem, the classes are put into a
+separate &lt;code&gt;c.v.i.r.employee&lt;/code&gt; package and internals are exposed to just package
+members. Per see, non-package classes are not allowed to instantiate either
+&lt;code&gt;EmployeeDraft&lt;/code&gt; or &lt;code&gt;EmployeeDraft.Builder&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-java"&gt;&lt;span class="kn"&gt;package&lt;/span&gt; &lt;span class="n"&gt;com&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;vlkan&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;immutableentity&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;repository&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;employee&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+
+&lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kd"&gt;final&lt;/span&gt; &lt;span class="kd"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;Employee&lt;/span&gt; &lt;span class="kd"&gt;extends&lt;/span&gt; &lt;span class="n"&gt;EmployeeDraft&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+
+    &lt;span class="kd"&gt;private&lt;/span&gt; &lt;span class="kd"&gt;final&lt;/span&gt; &lt;span class="kt"&gt;long&lt;/span&gt; &lt;span class="n"&gt;id&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+
+    &lt;span class="cm"&gt;/** Note that the default constructor is only visible to the package classes. */&lt;/span&gt;
+    &lt;span class="n"&gt;Employee&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;String&lt;/span&gt; &lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;String&lt;/span&gt; &lt;span class="n"&gt;surname&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="n"&gt;salary&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="kt"&gt;long&lt;/span&gt; &lt;span class="n"&gt;id&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+        &lt;span class="kd"&gt;super&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;surname&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;salary&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+        &lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;id&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;id&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+    &lt;span class="o"&gt;}&lt;/span&gt;
+
+    &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kt"&gt;long&lt;/span&gt; &lt;span class="nf"&gt;getId&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;id&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
+
+    &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="n"&gt;Builder&lt;/span&gt; &lt;span class="nf"&gt;draft&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nf"&gt;Builder&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
+
+&lt;span class="o"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;Employee&lt;/code&gt; merely wraps &lt;code&gt;EmployeeDraft&lt;/code&gt; by just adding new &lt;code&gt;id&lt;/code&gt; field. Note
+that non-package classes are not again allowed to instantiate &lt;code&gt;Employee&lt;/code&gt;.
+Additionally, calling &lt;code&gt;draft()&lt;/code&gt; either from an &lt;code&gt;Employee&lt;/code&gt; or an
+&lt;code&gt;EmployeeDraft&lt;/code&gt; always creates a new &lt;code&gt;EmployeeDraft&lt;/code&gt;, which also make sense
+since the new drafted changes are not persisted yet.&lt;/p&gt;
+
+&lt;p&gt;To glue the last piece of the puzzle, here comes the &lt;code&gt;EmployeeService&lt;/code&gt;. To
+keep things simple, I purposed a &lt;code&gt;Map&amp;lt;Long, Employee&amp;gt;&lt;/code&gt; together with an
+&lt;code&gt;AtomicLong&lt;/code&gt; as a repository.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-java"&gt;&lt;span class="kn"&gt;package&lt;/span&gt; &lt;span class="n"&gt;com&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;vlkan&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;immutableentity&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;repository&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;employee&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+
+&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;java.util.Map&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;java.util.Optional&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;java.util.concurrent.ConcurrentHashMap&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;java.util.concurrent.atomic.AtomicLong&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;java.util.stream.Stream&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+
+&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;static&lt;/span&gt; &lt;span class="n"&gt;com&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;google&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;common&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;base&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;Preconditions&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;checkNotNull&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+
+&lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kd"&gt;final&lt;/span&gt; &lt;span class="kd"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;EmployeeService&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+
+    &lt;span class="kd"&gt;private&lt;/span&gt; &lt;span class="kd"&gt;final&lt;/span&gt; &lt;span class="n"&gt;AtomicLong&lt;/span&gt; &lt;span class="n"&gt;dataCounter&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nf"&gt;AtomicLong&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+
+    &lt;span class="kd"&gt;private&lt;/span&gt; &lt;span class="kd"&gt;final&lt;/span&gt; &lt;span class="n"&gt;Map&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;Long&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;Employee&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;dataStore&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="n"&gt;ConcurrentHashMap&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&amp;gt;();&lt;/span&gt;
+
+    &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="n"&gt;EmployeeDraft&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;Builder&lt;/span&gt; &lt;span class="nf"&gt;draft&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="n"&gt;EmployeeDraft&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;Builder&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
+
+    &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="n"&gt;Employee&lt;/span&gt; &lt;span class="nf"&gt;save&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;EmployeeDraft&lt;/span&gt; &lt;span class="n"&gt;draft&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="nf"&gt;save&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;draft&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;dataCounter&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;getAndIncrement&lt;/span&gt;&lt;span class="o"&gt;());&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
+
+    &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="n"&gt;Employee&lt;/span&gt; &lt;span class="nf"&gt;save&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;EmployeeDraft&lt;/span&gt; &lt;span class="n"&gt;draft&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="kt"&gt;long&lt;/span&gt; &lt;span class="n"&gt;id&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+        &lt;span class="n"&gt;checkNotNull&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;draft&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="s"&gt;"draft cannot be null"&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+        &lt;span class="n"&gt;Employee&lt;/span&gt; &lt;span class="n"&gt;employee&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nf"&gt;Employee&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;draft&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;getName&lt;/span&gt;&lt;span class="o"&gt;(),&lt;/span&gt; &lt;span class="n"&gt;draft&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;getSurname&lt;/span&gt;&lt;span class="o"&gt;(),&lt;/span&gt; &lt;span class="n"&gt;draft&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;getSalary&lt;/span&gt;&lt;span class="o"&gt;(),&lt;/span&gt; &lt;span class="n"&gt;id&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+        &lt;span class="n"&gt;dataStore&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;put&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;id&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;employee&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+        &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;employee&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+    &lt;span class="o"&gt;}&lt;/span&gt;
+
+    &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="n"&gt;Stream&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;Employee&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="nf"&gt;findAll&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;dataStore&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;values&lt;/span&gt;&lt;span class="o"&gt;().&lt;/span&gt;&lt;span class="na"&gt;stream&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
+
+    &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="n"&gt;Optional&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;Employee&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="nf"&gt;findById&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="kt"&gt;long&lt;/span&gt; &lt;span class="n"&gt;id&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;Optional&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;ofNullable&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;dataStore&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;get&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;id&lt;/span&gt;&lt;span class="o"&gt;));&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
+
+&lt;span class="o"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h1 id="the-conclusion"&gt;The Conclusion&lt;/h1&gt;
+
+&lt;p&gt;I had always found it puzzling to work with mutable objects when I needed to
+work with persistence frameworks; JPA, Hibernate, Spring Data, etc. In the
+lifetime of almost every project that I start, after a certain period of time,
+I always find myself implementing my own service layer on top of the used
+persistence framework using my custom immutable entities. I really do not know
+whether the approach described in this post is something that was already
+addressed in the literature or not, but I came up with this idea a couple of
+months ago and totally benefitted from it in a project. I hope you would find
+it useful too.&lt;/p&gt;
+</content>
+  </entry>
+  <entry>
+    <id>tag:vy.github.io,2015-01-08://blog/post/2015/01/08/smb-mount-troubleshoot/</id>
+    <title type="html">Troubleshooting a SMB/CIFS Mount Problem</title>
+    <published>2015-01-08T09:43:00Z</published>
+    <updated>2015-01-08T09:43:00Z</updated>
+    <link rel="alternate" href="https://vy.github.io//blog/post/2015/01/08/smb-mount-troubleshoot/"/>
+    <content type="html">
+&lt;p&gt;At every introduction to a new office environment, I spend (waste?) a certain
+period of time to connect to network shares through CIFS/SMB. This was not
+different at my new work place either. After spending almost two days to
+troubleshoot the problem, I figured out that the problem was due to the
+missing &lt;code&gt;/sbin/request-key&lt;/code&gt; binary provided by &lt;code&gt;keyutils&lt;/code&gt; package in Xubuntu
+14.04 LTS. So how did I really get it solved?&lt;/p&gt;
+
+&lt;h1 id="defining-the-problem"&gt;Defining the Problem&lt;/h1&gt;
+
+&lt;p&gt;It is really sick that &lt;code&gt;cifs&lt;/code&gt; kernel module which is responsible for loading
+CIFS/SMB filesystems returns &lt;code&gt;EINVAL&lt;/code&gt; (that is, &lt;code&gt;error(22): Invalid argument&lt;/code&gt;)
+for an entire family of errors and makes it impossible for the user to spot
+the problem. This was also the case for me.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ sudo mount \
+	-t cifs //path/to/network/shares /local/mount/point \
+	-o credentials=$HOME/.smbcredentials,iocharset=utf8,rw,uid=$USER,serverino
+mount error(22): Invalid argument
+Refer to the mount.cifs(8) manual page (e.g. man mount.cifs)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;So given that the UNC is correct, the local mount point does exist and
+accessible, and mount options are valid, &lt;code&gt;invalid argument&lt;/code&gt; error does not
+provide any context for the problem.&lt;/p&gt;
+
+&lt;p&gt;Further searching on the internet leaded me to &lt;a href="https://wiki.samba.org/index.php/LinuxCIFS_troubleshooting"&gt;LinuxCIFS
+troubleshooting&lt;/a&gt;
+at Samba Wiki. There it is told that I can enable debug messages for &lt;code&gt;cifs&lt;/code&gt;
+module by echoing a non-zero value to &lt;code&gt;/proc/fs/cifs/cifsFYI&lt;/code&gt;, hence I did so:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ echo 1 | sudo tee /proc/fs/cifs/cifsFYI
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And tried to mount the network share again. And observed the following snippet
+in the &lt;code&gt;dmesg&lt;/code&gt; output:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;CIFS VFS: dns_resolve_server_name_to_ip: unable to resolve: path
+CIFS VFS: compose_mount_options: Failed to resolve server part of \\path\to\network\shares to IP
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;So &lt;code&gt;dns_resolve_server_name_to_ip&lt;/code&gt; could not resolve &lt;code&gt;path&lt;/code&gt; for some reason.&lt;/p&gt;
+
+&lt;h1 id="dns-at-the-kernel-level"&gt;DNS at the Kernel-Level&lt;/h1&gt;
+
+&lt;p&gt;So how does kernel really resolve domain names to IP addresses? After reading
+&lt;a href="http://linux.die.net/man/8/mount.cifs"&gt;&lt;code&gt;mount.cifs(8)&lt;/code&gt;&lt;/a&gt; a couple of times, I
+saw &lt;em&gt;See Also&lt;/em&gt; section telling that
+&lt;a href="https://www.kernel.org/doc/readme/Documentation-filesystems-cifs-README"&gt;&lt;code&gt;Documentation/filesystems/cifs.txt&lt;/code&gt;&lt;/a&gt;
+in the linux kernel source tree may contain additional options and
+information. I checked that too and spotted the following lines:&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;DFS support allows transparent redirection to shares in an MS-DFS name
+space. In addition, DFS support for target shares which are specified as UNC
+names which begin with host names (rather than IP addresses) requires a user
+space helper (such as &lt;code&gt;cifs.upcall&lt;/code&gt;) to be present in order to translate
+host names to ip address, and the user space helper must also be configured
+in the file &lt;code&gt;/etc/request-key.conf&lt;/code&gt;.  Samba, Windows servers and many NAS
+appliances support DFS as a way of constructing a global name space to ease
+network configuration and improve reliability.&lt;/p&gt;
+
+  &lt;p&gt;To use cifs Kerberos and DFS support, the Linux &lt;code&gt;keyutils&lt;/code&gt; package should be
+installed and something like the following lines should be added to the
+&lt;code&gt;/etc/request-key.conf&lt;/code&gt; file:&lt;/p&gt;
+
+  &lt;pre&gt;&lt;code&gt;create cifs.spnego * * /usr/local/sbin/cifs.upcall %k
+create dns_resolver * * /usr/local/sbin/cifs.upcall %k
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;This was getting interesting. I spotted the &lt;code&gt;dns_resolver&lt;/code&gt; keyword at the
+bottom and started reading
+&lt;a href="https://www.kernel.org/doc/Documentation/networking/dns_resolver.txt"&gt;&lt;code&gt;Documentation/networking/dns_resolver.txt&lt;/code&gt;&lt;/a&gt;
+as well.&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;The DNS resolver module provides a way for kernel services to make DNS
+queries by way of requesting a key of key type &lt;code&gt;dns_resolver&lt;/code&gt;.  These
+queries are upcalled to userspace through &lt;code&gt;/sbin/request-key&lt;/code&gt;.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;The long story short, CIFS module employs DNS resolver module, which
+internally upcalls the queries to userspace through &lt;code&gt;/sbin/request-key&lt;/code&gt;. I got
+further curious and checked the &lt;code&gt;request-key(8)&lt;/code&gt;:&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;This  program  is invoked by the kernel when the kernel is asked for a key
+that it doesn’t have immediately available. The kernel creates a partially
+set up key and then calls out to this program to instantiate it. It is not
+intended to be called directly.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h1 id="the-solution"&gt;The Solution&lt;/h1&gt;
+
+&lt;p&gt;Everything was pointing that something was wrong with my &lt;code&gt;/sbin/request-key&lt;/code&gt;.
+Ooops! The binary was not there at all. &lt;code&gt;apt-file search /sbin/request-key&lt;/code&gt;
+told that the binary was provided by &lt;code&gt;keyutils&lt;/code&gt; package, which was missing in
+my system. After installing &lt;code&gt;keyutils&lt;/code&gt;, I did not observe any DNS resolver
+issues in the &lt;code&gt;dmesg&lt;/code&gt; logs and &lt;code&gt;mount.cifs&lt;/code&gt; worked without a problem.&lt;/p&gt;
+</content>
+  </entry>
   <entry>
     <id>tag:vy.github.io,2015-01-08://blog/post/2015/01/30/java-null-check/</id>
     <title type="html">Checking Null Arguments at Runtime Using Spring AOP</title>
@@ -122,114 +464,6 @@ done.&lt;/p&gt;
 &lt;p&gt;The source code is available in &lt;a href="https://github.com/vy/null-check"&gt;null-check&lt;/a&gt;
 project at GitHub with some unit tests and a little bit more detailed
 installation instructions.&lt;/p&gt;
-</content>
-  </entry>
-  <entry>
-    <id>tag:vy.github.io,2015-01-08://blog/post/2015/01/08/smb-mount-troubleshoot/</id>
-    <title type="html">Troubleshooting a SMB/CIFS Mount Problem</title>
-    <published>2015-01-08T09:43:00Z</published>
-    <updated>2015-01-08T09:43:00Z</updated>
-    <link rel="alternate" href="https://vy.github.io//blog/post/2015/01/08/smb-mount-troubleshoot/"/>
-    <content type="html">
-&lt;p&gt;At every introduction to a new office environment, I spend (waste?) a certain
-period of time to connect to network shares through CIFS/SMB. This was not
-different at my new work place either. After spending almost two days to
-troubleshoot the problem, I figured out that the problem was due to the
-missing &lt;code&gt;/sbin/request-key&lt;/code&gt; binary provided by &lt;code&gt;keyutils&lt;/code&gt; package in Xubuntu
-14.04 LTS. So how did I really get it solved?&lt;/p&gt;
-
-&lt;h1 id="defining-the-problem"&gt;Defining the Problem&lt;/h1&gt;
-
-&lt;p&gt;It is really sick that &lt;code&gt;cifs&lt;/code&gt; kernel module which is responsible for loading
-CIFS/SMB filesystems returns &lt;code&gt;EINVAL&lt;/code&gt; (that is, &lt;code&gt;error(22): Invalid argument&lt;/code&gt;)
-for an entire family of errors and makes it impossible for the user to spot
-the problem. This was also the case for me.&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;$ sudo mount \
-	-t cifs //path/to/network/shares /local/mount/point \
-	-o credentials=$HOME/.smbcredentials,iocharset=utf8,rw,uid=$USER,serverino
-mount error(22): Invalid argument
-Refer to the mount.cifs(8) manual page (e.g. man mount.cifs)
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;So given that the UNC is correct, the local mount point does exist and
-accessible, and mount options are valid, &lt;code&gt;invalid argument&lt;/code&gt; error does not
-provide any context for the problem.&lt;/p&gt;
-
-&lt;p&gt;Further searching on the internet leaded me to &lt;a href="https://wiki.samba.org/index.php/LinuxCIFS_troubleshooting"&gt;LinuxCIFS
-troubleshooting&lt;/a&gt;
-at Samba Wiki. There it is told that I can enable debug messages for &lt;code&gt;cifs&lt;/code&gt;
-module by echoing a non-zero value to &lt;code&gt;/proc/fs/cifs/cifsFYI&lt;/code&gt;, hence I did so:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;$ echo 1 | sudo tee /proc/fs/cifs/cifsFYI
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;And tried to mount the network share again. And observed the following snippet
-in the &lt;code&gt;dmesg&lt;/code&gt; output:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;CIFS VFS: dns_resolve_server_name_to_ip: unable to resolve: path
-CIFS VFS: compose_mount_options: Failed to resolve server part of \\path\to\network\shares to IP
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;So &lt;code&gt;dns_resolve_server_name_to_ip&lt;/code&gt; could not resolve &lt;code&gt;path&lt;/code&gt; for some reason.&lt;/p&gt;
-
-&lt;h1 id="dns-at-the-kernel-level"&gt;DNS at the Kernel-Level&lt;/h1&gt;
-
-&lt;p&gt;So how does kernel really resolve domain names to IP addresses? After reading
-&lt;a href="http://linux.die.net/man/8/mount.cifs"&gt;&lt;code&gt;mount.cifs(8)&lt;/code&gt;&lt;/a&gt; a couple of times, I
-saw &lt;em&gt;See Also&lt;/em&gt; section telling that
-&lt;a href="https://www.kernel.org/doc/readme/Documentation-filesystems-cifs-README"&gt;&lt;code&gt;Documentation/filesystems/cifs.txt&lt;/code&gt;&lt;/a&gt;
-in the linux kernel source tree may contain additional options and
-information. I checked that too and spotted the following lines:&lt;/p&gt;
-
-&lt;blockquote&gt;
-  &lt;p&gt;DFS support allows transparent redirection to shares in an MS-DFS name
-space. In addition, DFS support for target shares which are specified as UNC
-names which begin with host names (rather than IP addresses) requires a user
-space helper (such as &lt;code&gt;cifs.upcall&lt;/code&gt;) to be present in order to translate
-host names to ip address, and the user space helper must also be configured
-in the file &lt;code&gt;/etc/request-key.conf&lt;/code&gt;.  Samba, Windows servers and many NAS
-appliances support DFS as a way of constructing a global name space to ease
-network configuration and improve reliability.&lt;/p&gt;
-
-  &lt;p&gt;To use cifs Kerberos and DFS support, the Linux &lt;code&gt;keyutils&lt;/code&gt; package should be
-installed and something like the following lines should be added to the
-&lt;code&gt;/etc/request-key.conf&lt;/code&gt; file:&lt;/p&gt;
-
-  &lt;pre&gt;&lt;code&gt;create cifs.spnego * * /usr/local/sbin/cifs.upcall %k
-create dns_resolver * * /usr/local/sbin/cifs.upcall %k
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/blockquote&gt;
-
-&lt;p&gt;This was getting interesting. I spotted the &lt;code&gt;dns_resolver&lt;/code&gt; keyword at the
-bottom and started reading
-&lt;a href="https://www.kernel.org/doc/Documentation/networking/dns_resolver.txt"&gt;&lt;code&gt;Documentation/networking/dns_resolver.txt&lt;/code&gt;&lt;/a&gt;
-as well.&lt;/p&gt;
-
-&lt;blockquote&gt;
-  &lt;p&gt;The DNS resolver module provides a way for kernel services to make DNS
-queries by way of requesting a key of key type &lt;code&gt;dns_resolver&lt;/code&gt;.  These
-queries are upcalled to userspace through &lt;code&gt;/sbin/request-key&lt;/code&gt;.&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;p&gt;The long story short, CIFS module employs DNS resolver module, which
-internally upcalls the queries to userspace through &lt;code&gt;/sbin/request-key&lt;/code&gt;. I got
-further curious and checked the &lt;code&gt;request-key(8)&lt;/code&gt;:&lt;/p&gt;
-
-&lt;blockquote&gt;
-  &lt;p&gt;This  program  is invoked by the kernel when the kernel is asked for a key
-that it doesn’t have immediately available. The kernel creates a partially
-set up key and then calls out to this program to instantiate it. It is not
-intended to be called directly.&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;h1 id="the-solution"&gt;The Solution&lt;/h1&gt;
-
-&lt;p&gt;Everything was pointing that something was wrong with my &lt;code&gt;/sbin/request-key&lt;/code&gt;.
-Ooops! The binary was not there at all. &lt;code&gt;apt-file search /sbin/request-key&lt;/code&gt;
-told that the binary was provided by &lt;code&gt;keyutils&lt;/code&gt; package, which was missing in
-my system. After installing &lt;code&gt;keyutils&lt;/code&gt;, I did not observe any DNS resolver
-issues in the &lt;code&gt;dmesg&lt;/code&gt; logs and &lt;code&gt;mount.cifs&lt;/code&gt; worked without a problem.&lt;/p&gt;
 </content>
   </entry>
   <entry>
@@ -1814,115 +2048,6 @@ section and make your way through a working solution.&lt;/p&gt;
 Disciplines for Bandwidth Management&lt;/a&gt;
 chapter in LARTC, it makes me smile: &lt;strong&gt;Now, when I discovered this, it really
 blew me away.&lt;/strong&gt; So true!&lt;/p&gt;
-</content>
-  </entry>
-  <entry>
-    <id>tag:vy.github.io,2014-02-14://blog/post/2014/02/14/java-safe-publication/</id>
-    <title type="html">Safe Object Publication in Java</title>
-    <published>2014-02-14T14:22:00Z</published>
-    <updated>2014-02-14T14:22:00Z</updated>
-    <link rel="alternate" href="https://vy.github.io//blog/post/2014/02/14/java-safe-publication/"/>
-    <content type="html">
-&lt;p&gt;I have just finished reading &lt;a href="http://jcip.net/"&gt;Java Concurrency in Practice&lt;/a&gt; yesterday and would like to share some excerpts from the book on safe object publication in Java. Before stepping into the details, I would like to state that I found every single page of the book quite useful and found numerous places that I can enhance my existing code base during my daily coding routine. Thanks to &lt;a href="https://twitter.com/BrianGoetz"&gt;@BrianGoetz&lt;/a&gt; et al for such a comprehensive and practical guide. (For those who want to go further up to its extremes, I strongly recommend you to check &lt;a href="http://shipilev.net/"&gt;Aleksey Shipilёv&lt;/a&gt;’s &lt;a href="http://shipilev.net/blog/2014/safe-public-construction/"&gt;Safe Publication and Safe Initialization in Java&lt;/a&gt; article – a must read on the subject.)&lt;/p&gt;
-
-&lt;p&gt;&lt;em&gt;[Presented excerpts are copied directly, sometimes with slight changes, from &lt;a href="http://jcip.net/"&gt;Java Concurrency in Practice&lt;/a&gt;.]&lt;/em&gt;&lt;/p&gt;
-
-&lt;h1 id="safe-construction-practices"&gt;Safe Construction Practices&lt;/h1&gt;
-
-&lt;p&gt;An object is in a predictable, consistent state only after its constructor returns, so publishing an object from within its constructor can publish an incompletely constructed object. This is true &lt;em&gt;even if the publication is the last statement in the constructor&lt;/em&gt;. If the &lt;code&gt;this&lt;/code&gt; reference escapes during construction, the object is considered &lt;em&gt;not properly constructed&lt;/em&gt;.&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="language-java"&gt;&lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kd"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;ThisEscape&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
-    &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="nf"&gt;ThisEscape&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;EventSource&lt;/span&gt; &lt;span class="n"&gt;source&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
-        &lt;span class="n"&gt;source&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;registerListener&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;
-            &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nf"&gt;EventListener&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
-                &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;onEvent&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;Event&lt;/span&gt; &lt;span class="n"&gt;event&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
-                    &lt;span class="n"&gt;doSomething&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;event&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
-                &lt;span class="o"&gt;}&lt;/span&gt;
-            &lt;span class="o"&gt;});&lt;/span&gt;
-    &lt;span class="o"&gt;}&lt;/span&gt;
-&lt;span class="o"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Here, when &lt;code&gt;ThisEscape&lt;/code&gt; publishes the &lt;code&gt;EventListener&lt;/code&gt;, it implicitly publishes the enclosing &lt;code&gt;ThisEscape&lt;/code&gt; instance as well, because inner class instances contain a hidden reference to the enclosing instance.&lt;/p&gt;
-
-&lt;p&gt;If you are tempted to register an event listener or start a thread from a constructor, you can avoid the improper construction by using a private constructor and a public factory method, as shown in &lt;code&gt;SafeListener&lt;/code&gt; below.&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="language-java"&gt;&lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kd"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;SafeListener&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
-    &lt;span class="kd"&gt;private&lt;/span&gt; &lt;span class="kd"&gt;final&lt;/span&gt; &lt;span class="n"&gt;EventListener&lt;/span&gt; &lt;span class="n"&gt;listener&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
-
-    &lt;span class="kd"&gt;private&lt;/span&gt; &lt;span class="nf"&gt;SafeListener&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
-        &lt;span class="n"&gt;listener&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nf"&gt;EventListener&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
-            &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;onEvent&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;Event&lt;/span&gt; &lt;span class="n"&gt;event&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
-                &lt;span class="n"&gt;doSomething&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;event&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
-            &lt;span class="o"&gt;}&lt;/span&gt;
-        &lt;span class="o"&gt;}&lt;/span&gt;
-    &lt;span class="o"&gt;}&lt;/span&gt;
-
-    &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kd"&gt;static&lt;/span&gt; &lt;span class="n"&gt;SafeListener&lt;/span&gt; &lt;span class="nf"&gt;newInstance&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;EventSource&lt;/span&gt; &lt;span class="n"&gt;source&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
-        &lt;span class="n"&gt;SafeListener&lt;/span&gt; &lt;span class="n"&gt;safe&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nf"&gt;SafeListener&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
-        &lt;span class="n"&gt;source&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;registerListener&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;safe&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;listener&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
-        &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;safe&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
-    &lt;span class="o"&gt;}&lt;/span&gt;
-&lt;span class="o"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
-
-&lt;h1 id="lazy-initialization"&gt;Lazy Initialization&lt;/h1&gt;
-
-&lt;p&gt;Unsafe publication can happen as a result of an incorrect lazy initialization as follows.&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="language-java"&gt;&lt;span class="nd"&gt;@NotThreadSafe&lt;/span&gt;
-&lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kd"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;UnsafeLazyInitialization&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
-    &lt;span class="kd"&gt;private&lt;/span&gt; &lt;span class="kd"&gt;static&lt;/span&gt; &lt;span class="n"&gt;Resource&lt;/span&gt; &lt;span class="n"&gt;resource&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
-
-    &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kd"&gt;static&lt;/span&gt; &lt;span class="n"&gt;Resource&lt;/span&gt; &lt;span class="nf"&gt;getInstance&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
-        &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;resource&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="kc"&gt;null&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
-            &lt;span class="n"&gt;resource&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nf"&gt;Resource&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
-        &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;resource&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
-    &lt;span class="o"&gt;}&lt;/span&gt;
-&lt;span class="o"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Under certain circumstances, such as when all instances of the &lt;code&gt;Resource&lt;/code&gt; are identical, you might be willing to overlook these (along with the inefficiency of possibly creating the &lt;code&gt;Resource&lt;/code&gt; more than once). Unfortunately, even if these defects are overlooked, &lt;code&gt;UnsafeLazyInitialization&lt;/code&gt; is still not safe, because another thread could observe a reference to a partially constructed &lt;code&gt;Resource&lt;/code&gt;.&lt;/p&gt;
-
-&lt;p&gt;Suppose thread &lt;code&gt;A&lt;/code&gt; is the first to invoke &lt;code&gt;getInstance&lt;/code&gt;. It sees that &lt;code&gt;resource&lt;/code&gt; is &lt;code&gt;null&lt;/code&gt;, instantiates a new &lt;code&gt;Resource&lt;/code&gt;, and sets &lt;code&gt;resource&lt;/code&gt; to reference it. When thread &lt;code&gt;B&lt;/code&gt; later calls &lt;code&gt;getInstance&lt;/code&gt;, it might see that &lt;code&gt;resource&lt;/code&gt; already has a non-null value and just use the already constructed &lt;code&gt;Resource&lt;/code&gt;. This might look harmless at first, but &lt;em&gt;there is no happens-before ordering between the writing of &lt;code&gt;resource&lt;/code&gt; in &lt;code&gt;A&lt;/code&gt; and the reading of &lt;code&gt;resource&lt;/code&gt; in &lt;code&gt;B&lt;/code&gt;&lt;/em&gt;. A data race has been used to publish the object, and therefore &lt;code&gt;B&lt;/code&gt; is not guaranteed to see the correct state of the &lt;code&gt;Resource&lt;/code&gt;.&lt;/p&gt;
-
-&lt;p&gt;The &lt;code&gt;Resource&lt;/code&gt; constructor changes the fields of the freshly allocated &lt;code&gt;Resource&lt;/code&gt; from their default values (written by the &lt;code&gt;Object&lt;/code&gt; constructor) to their initial values. Since neither thread used synchronization, &lt;code&gt;B&lt;/code&gt; could possible see &lt;code&gt;A&lt;/code&gt;’s actions in a different order than &lt;code&gt;A&lt;/code&gt; performed them. So even though &lt;code&gt;A&lt;/code&gt; initialized the &lt;code&gt;Resource&lt;/code&gt; before setting &lt;code&gt;resource&lt;/code&gt; to reference it, &lt;code&gt;B&lt;/code&gt; could see the write to &lt;code&gt;resource&lt;/code&gt; as occuring &lt;em&gt;before&lt;/em&gt; the writes to the fields of the &lt;code&gt;Resource&lt;/code&gt;. &lt;code&gt;B&lt;/code&gt; could thus see a partially constructed &lt;code&gt;Resource&lt;/code&gt; that may well be in an invalid state – and whose state may unexpectedly change later.&lt;/p&gt;
-
-&lt;p&gt;&lt;code&gt;UnsafeLazyInitialization&lt;/code&gt; can be fixed by making the &lt;code&gt;getResource&lt;/code&gt; method &lt;code&gt;synchronized&lt;/code&gt; as follows.&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="language-java"&gt;&lt;span class="nd"&gt;@ThreadSafe&lt;/span&gt;
-&lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kd"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;SafeLazyInitialization&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
-    &lt;span class="kd"&gt;private&lt;/span&gt; &lt;span class="kd"&gt;static&lt;/span&gt; &lt;span class="n"&gt;Resource&lt;/span&gt; &lt;span class="n"&gt;resource&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
-
-    &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kd"&gt;synchronized&lt;/span&gt; &lt;span class="kd"&gt;static&lt;/span&gt; &lt;span class="n"&gt;Resource&lt;/span&gt; &lt;span class="nf"&gt;getInstance&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
-        &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;resource&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="kc"&gt;null&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
-            &lt;span class="n"&gt;resource&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nf"&gt;Resource&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
-        &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;resource&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
-    &lt;span class="o"&gt;}&lt;/span&gt;
-&lt;span class="o"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Because the code path through the &lt;code&gt;getInstance&lt;/code&gt; is fairly short (a test and a predicted branch), if &lt;code&gt;getInstance&lt;/code&gt; is not called frequently by many threads, there is a little enough contention for the &lt;code&gt;SafeLazyInitialization&lt;/code&gt; lock that this approach offers adequate performance.&lt;/p&gt;
-
-&lt;p&gt;The treatment of static fields with initializers (or fields whose value is initialized in a static initialization block [JPL 2.2.1 and 2.5.3]) is somewhat special and offers additional thread-safety guarantees. Static initializers are run by the JVM at class initialization time, after class loading but before the class is used by any thread. Because the JVM acquires a lock during initialization [JSL 12.4.2] and this lock is acquired by each thread at least once to ensure that the class has been loaded, memory writes made during static initialization are automatically visible to all threads. Thus statically initialized objects require no explicit synchronization either during construction or when being referenced. However, this applies only to the &lt;em&gt;as-constructed&lt;/em&gt; state – if the object is mutable, synchronization is still required by both readers and writers to make subsequent modifications visible to avoid data corruption.&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="language-java"&gt;&lt;span class="nd"&gt;@ThreadSafe&lt;/span&gt;
-&lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kd"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;EagerInitialization&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
-    &lt;span class="kd"&gt;private&lt;/span&gt; &lt;span class="kd"&gt;static&lt;/span&gt; &lt;span class="n"&gt;Resource&lt;/span&gt; &lt;span class="n"&gt;resource&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nf"&gt;Resource&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
-
-    &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kd"&gt;static&lt;/span&gt; &lt;span class="n"&gt;Resource&lt;/span&gt; &lt;span class="nf"&gt;getResource&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;resource&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
-&lt;span class="o"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Using eager initialization eliminates the synchronization cost incurred on each call to &lt;code&gt;getInstace&lt;/code&gt; in &lt;code&gt;SafeLazyInitialization&lt;/code&gt;. This technique can be combined with the JVM’s lazy class loading to create a lazy initialization technique that does not require synchronization on the common code path. The &lt;em&gt;lazy initialization holder class&lt;/em&gt; idiom [EJ Item 48] presented below uses a class whose only purpose is to initialize the &lt;code&gt;Resource&lt;/code&gt;.&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="language-java"&gt;&lt;span class="nd"&gt;@ThreadSafe&lt;/span&gt;
-&lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kd"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;ResourceFactory&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
-    &lt;span class="kd"&gt;private&lt;/span&gt; &lt;span class="kd"&gt;static&lt;/span&gt; &lt;span class="kd"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;ResourceHolder&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
-        &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kd"&gt;static&lt;/span&gt; &lt;span class="n"&gt;Resource&lt;/span&gt; &lt;span class="n"&gt;resource&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nf"&gt;Resource&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
-    &lt;span class="o"&gt;}&lt;/span&gt;
-
-    &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kd"&gt;static&lt;/span&gt; &lt;span class="n"&gt;Resource&lt;/span&gt; &lt;span class="nf"&gt;getResource&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
-        &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;ResourceHolder&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;resource&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
-    &lt;span class="o"&gt;}&lt;/span&gt;
-&lt;span class="o"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Here the JVM defers initializing the &lt;code&gt;ResourceHolder&lt;/code&gt; class until it is actually used [JLS 12.4.1], and because the &lt;code&gt;Resource&lt;/code&gt; is initialized with a static initializer, no additional synchronization is needed. The first call to &lt;code&gt;getResource&lt;/code&gt; by any thread causes &lt;code&gt;ResourceHolder&lt;/code&gt; to be loaded and initialized, at which time the initialization of the &lt;code&gt;Resource&lt;/code&gt; happens through the static initializer.&lt;/p&gt;
 </content>
   </entry>
 </feed>

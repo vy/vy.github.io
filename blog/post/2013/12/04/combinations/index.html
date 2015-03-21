@@ -96,10 +96,8 @@ push rate? Houston, we have a problem.</p>
 combinations, that is, <script type="math/tex">{n \choose r}</script>. With this in mind, we can split the
 all possible combinations set <script type="math/tex">\{c_1, c_2, \dots\}</script> into two separate parts:</p>
 
-<script type="math/tex; mode=display">
-\{c_1, \dots, c_m\} \textrm{ and } \{c_{m+1}, \dots, c_l\}, \\
-\textrm{where } l = {n \choose r} \textrm{ and } m = \lfloor ^l/_2 \rfloor.
-</script>
+<script type="math/tex; mode=display">\{c_1, \dots, c_m\} \textrm{ and } \{c_{m+1}, \dots, c_l\}, \\
+\textrm{where } l = {n \choose r} \textrm{ and } m = \lfloor ^l/_2 \rfloor.</script>
 
 <p>Going from <script type="math/tex">c_1</script> to <script type="math/tex">c_m</script> is trivial, we can keep a counter for the
 generated combinations up to <script type="math/tex">m</script>. But what about <script type="math/tex">c_{m+1}</script>? How can we
@@ -117,10 +115,8 @@ and the combinations. In a combinatorial number system of degree <script type="m
 natural number <script type="math/tex">b\in\mathbb{N}</script> map to a one and only one r-combination
 <script type="math/tex">[d_1, d_2, \dots, d_r]</script> with the following equality.</p>
 
-<script type="math/tex; mode=display">
-b = {d_1 \choose r} + {d_2 \choose r-1} + \dots + {d_r \choose 1},\\
-\textrm{ where } d_1 > d_2 > \dots > d_r.
-</script>
+<script type="math/tex; mode=display">b = {d_1 \choose r} + {d_2 \choose r-1} + \dots + {d_r \choose 1},\\
+\textrm{ where } d_1 > d_2 > \dots > d_r.</script>
 
 <p>For instance, let <script type="math/tex">b=8</script> and <script type="math/tex">r=2</script>. Here <script type="math/tex">b</script> corresponds to the
 2-combination <script type="math/tex">[4, 2]</script> in combinatorial number system of degree 2 with the
@@ -136,13 +132,11 @@ and so forth.</p>
 <p>So far so good. Let’s do the magic. Suppose that we want to enumerate the
 combinations of 5-choose-2. That is, we want the following mapping.</p>
 
-<script type="math/tex; mode=display">
-0 \rightarrow [0, 1] \quad 5 \rightarrow [1, 3] \\
+<script type="math/tex; mode=display">0 \rightarrow [0, 1] \quad 5 \rightarrow [1, 3] \\
 1 \rightarrow [0, 2] \quad 6 \rightarrow [1, 4] \\
 2 \rightarrow [0, 3] \quad 7 \rightarrow [2, 3] \\
 3 \rightarrow [0, 4] \quad 8 \rightarrow [2, 4] \\
-4 \rightarrow [1, 2] \quad 9 \rightarrow [3, 4]
-</script>
+4 \rightarrow [1, 2] \quad 9 \rightarrow [3, 4]</script>
 
 <p>We know that <script type="math/tex">{5 \choose 2} = 10</script>, hence we have 10 combinations enumerated
 from 0 to 9. Let’s try to find the 3rd combination in this sequence from
