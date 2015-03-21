@@ -217,6 +217,72 @@ keep things simple, I purposed a `Map<Long, Employee>` together with an
 
     }
 
+Below you can find an example code snippet that uses the introduced classes.
+
+    #!java
+    EmployeeService service = new EmployeeService();
+
+    // Create a draft from scratch using the service interface.
+    EmployeeDraft draft = service.draft().name("Volkan").surname("Yazici").salary(1000).build();
+
+    /*
+     *         Drafts
+     * -------------------------
+     *  draft:
+     *    "Volkan Yazici" $1000
+     */
+
+    // Persist the draft into the data store and obtain an actual employee.
+    Employee employee = service.save(draft);
+
+    /*
+     *           Drafts         |    Persisted Employees
+     * -------------------------+----------------------------
+     *  draft:                  | employee:
+     *    "Volkan Yazici" $1000 |   #0 "Volkan Yazici" $1000
+     */
+
+    // Modify the persisted employee and save it again.
+    EmployeeDraft updatedDraft = employee.draft().salary(2000).build();
+    Employee updatedEmployee = service.save(updatedDraft, employee.getId());
+
+    /*
+     *           Drafts         |    Persisted Employees
+     * -------------------------+----------------------------
+     *  draft:                  | employee:
+     *    "Volkan Yazici" $1000 |   #0 "Volkan Yazici" $1000
+     *                          |
+     *  updatedDraft:           | updatedEmployee
+     *    "Volkan Yazici" $2000 |   #0 "Volkan Yazici" $2000
+     */
+
+    // Create a new employee with the same amount of salary using the most recent draft.
+    EmployeeDraft forkedDraft = updatedDraft.draft().name("Bob").surname("Ross").build();
+    Employee forkedEmployee = service.save(forkedDraft);
+
+    /*
+     *           Drafts         |    Persisted Employees
+     * -------------------------+----------------------------
+     *  draft:                  | employee:
+     *    "Volkan Yazici" $1000 |   #0 "Volkan Yazici" $1000
+     *                          |
+     *  updatedDraft:           | updatedEmployee
+     *    "Volkan Yazici" $2000 |   #0 "Volkan Yazici" $2000
+     *                          |
+     *  forkedDraft:            | forkedEmployee:
+     *    "Bob Ross" $2000      |   #1 "Bob Ross" $2000
+     */
+
+    System.out.println("Persisted Employees:\n" + service.findAll()
+            .map(e -> String.format("#%d \"%s %s\" $%d",
+                    e.getId(), e.getName(), e.getSurname(), e.getSalary()))
+            .collect(joining("\n")));
+    /*
+     * Persisted Employees:
+     * #0 "Volkan Yazici" $2000
+     * #1 "Bob Ross" $2000
+     */
+
 The Conclusion
 ==============
 
