@@ -32,6 +32,12 @@ compile %r{^/blog/post} do
   end
 end
 
+compile %r{^/blog/tag} do
+  unless item.binary?
+    filter :erb
+  end
+end
+
 compile %r{^/blog/$} do
   unless item.binary?
     filter :erb
