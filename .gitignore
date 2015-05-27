@@ -3,3 +3,7 @@ output
 .sass-cache
 crash.log
 .vagrant
+*.iml
+.idea
+*.iml
+.idea

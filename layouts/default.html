@@ -3,9 +3,6 @@
   <head>
     <meta charset="utf-8">
     <title><%= @item[:title] %></title>
-    <link rel="stylesheet" href="/css/bootstrap.css">
-    <link rel="stylesheet" href="/css/bootstrap-responsive.css">
-    <script src="/js/bootstrap.js"></script>
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
     <link rel="stylesheet" href="/css/common.css">
     <meta name="generator" content="nanoc <%= Nanoc::VERSION %>">
@@ -27,20 +24,24 @@
     </script>
   </head>
   <body>
-    <div id="menu">
-      <%=
-        [
-          ["Home", "/"],
-          ["About", "/about/"],
-          ["Blog", "/blog/"],
-          ["Code", "/code/"],
-          ["Feed", "/blog/feed/"]
-        ].map { |caption, url|
-          "<div%s>#{link_to caption, url}</div>" %
-            (" class='active'" if @item.identifier == url)
-        }.join()
-      %>
-    </div>
+    <div id="container">
+
+      <ul id="menu">
+        <%=
+          [
+            ["Home", "/"],
+            ["Blog", "/blog/"],
+            ["Code", "/code/"],
+            ["Feed", "/blog/feed/"]
+          ].map { |caption, url|
+            "<li%s>#{link_to caption, url}</li>" %
+              (" class='active'" if @item.identifier == url)
+          }.join()
+        %>
+      </ul>
+
     <%= yield %>
+
+    </div>
   </body>
 </html>

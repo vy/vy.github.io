@@ -6,9 +6,9 @@ tags:
   - java
 ---
 
-**TL;DR** -- A software design pattern to employ immutable classes for
-persisting data models in Java. That is, you do not need to ruin your
-immutable classes because of uncertain `id` fields.
+> **TL;DR** -- A software design pattern to employ immutable classes for
+> persisting data models in Java. That is, you do not need to ruin your
+> immutable classes because of uncertain `id` fields.
 
 When you want store a plain Java model in a data store, you are expected to
 deliver an `@Id` field to the underlying persistence framework.

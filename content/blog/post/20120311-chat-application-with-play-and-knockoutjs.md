@@ -283,14 +283,14 @@ Let me introduce you to KnockoutJS with a very simple snippet from the above mes
 2. There is a submit button to send messages to the room and we want the button to be enabled and disabled appropriately according to the `RoomModel.isJoined` flag.
 3. We instantiate `RoomModel` as an observable using KnockoutJS.
 
-    #!javascript
-    var roomModel = new RoomModel();
-    ko.applyBindings(roomModel);
+       #!javascript
+       var roomModel = new RoomModel();
+       ko.applyBindings(roomModel);
 
 4. We set `isJoined` to an observable as well.
 
-    #!javascript
-    self.isJoined = ko.observable(false);
+       #!javascript
+       self.isJoined = ko.observable(false);
 
 5. Add `data-bind="enable: isJoined"` attribute to the button.
 
@@ -306,15 +306,15 @@ Another cool KnockoutJS feature is its `foreach` looping functionality over obse
 
 1. Messages are stored in an observable array via
 
-    #!javascript
-    self.messages = ko.observableArray([]);
+       #!javascript
+       self.messages = ko.observableArray([]);
 
 2. We loop over the `messages` observable via
 
-    #!html
-    <div ... data-bind="foreach: messages">
-    ...
-    </div>
+       #!html
+       <div ... data-bind="foreach: messages">
+       ...
+       </div>
 
 3. Inside the loop body, current array element is accessed as is. (Remember the list of JSON-inified `Room.Event` subclasses?)
 

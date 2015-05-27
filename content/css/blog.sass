@@ -1,17 +1,14 @@
-@import url(http://fonts.googleapis.com/css?family=Yanone+Kaffeesatz:400,700)
-
-body
-  background: url("/img/bg-blog.jpg") no-repeat center center fixed
-  -webkit-background-size: cover
-  -moz-background-size: cover
-  -o-background-size: cover
-  background-size: cover
-
-$fontColor: #333333
-
 #tags
-  $size: 12pt
-  $coef: 2
+  vertical-align: top
+  text-align: right
+  display: inline-block
+  width: 20%
+  .highlight
+    color: #ff0000
+  a
+    text-decoration: none
+  $size: 1em
+  $coef: 0.2em
   span
     vertical-align: middle
     line-height: 95%
@@ -35,32 +32,26 @@ $fontColor: #333333
     font-size: $size + $coef * 8
   .size-9
     font-size: $size + $coef * 9
-  .highlight
-    color: #ff0000
-  a
-    color: $fontColor
-    text-decoration: none
 
-#blog
-  margin-top: 10px
-  margin-bottom: 10px
-  h2
-    font-family: "Yanone Kaffeesatz", sans-serif
-    font-size: 14pt
-    border-bottom: 1px dotted
+#posts
+  margin-left: 4%
+  display: inline-block
+  width: 75%
   li
-    margin-bottom: 10px
-    line-height: 100%
-    .title a
-      font-size: 12pt
+    line-height: 1.5em
+    margin-bottom: 0.6em
     .info
-      font-size: 9pt
+      font-size: 0.8em
       a
-        color: $fontColor
+        text-decoration: none
         border-bottom: 1px dotted
       a:hover
-        text-decoration: none
         border-bottom: 1px solid
-  #tags
-    margin-top: 20px
-    text-align: right
+  h2
+    font-size: 1em
+    border-bottom: 1px dotted
+
+<%= config[:mobile_media_query] %>
+  #tags, #posts
+    display: block
+    width: 100%

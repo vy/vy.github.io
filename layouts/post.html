@@ -1,38 +1,37 @@
 <% render 'default', :css => "post" do %>
 
-<div class="container">
-  <div class="row-fluid">
-    <div class="offset2 span8">
-      <div id="post" class="more-white-box rounded-corners">
+<div id="post">
+
 	<div class="head">
-	  <div class="title"><%= @item[:title] %></div>
-	  <div class="subtitle">posted at
-	    <%=
-	       require 'time'
-	       tm = Time.parse(@item[:created_at])
-	       tm.strftime('%B %-d, %Y')
-	    %>
-	    <%=
-	       unless @item[:tags].nil?
-	           "with tags " + \
-	            @item[:tags].map { |tag|
-                    link_to(tag, tag_identifier(tag))
-                } .join(", ")
-	       end
-	    %>
-	  </div>
-	  <div class="share">
-	    <div class="addthis_toolbox addthis_default_style ">
-	      <a class="addthis_button_preferred_1"></a>
-	      <a class="addthis_button_preferred_2"></a>
-	      <a class="addthis_button_preferred_3"></a>
-	      <a class="addthis_button_preferred_4"></a>
-	      <a class="addthis_button_compact"></a>
+		<div class="title"><%= @item[:title] %></div>
+		<div class="subtitle">posted at
+			<%=
+			   require 'time'
+			   tm = Time.parse(@item[:created_at])
+			   tm.strftime('%B %-d, %Y')
+			%>
+			<%=
+			   unless @item[:tags].nil?
+			       "with tags " + \
+			        @item[:tags].map { |tag|
+			            link_to(tag, tag_identifier(tag))
+			        } .join(", ")
+			   end
+			%>
+		</div>
+	  	<div class="share">
+	      	<div class="addthis_toolbox addthis_default_style ">
+	      		<a class="addthis_button_preferred_1"></a>
+	      		<a class="addthis_button_preferred_2"></a>
+	      		<a class="addthis_button_preferred_3"></a>
+	      		<a class="addthis_button_preferred_4"></a>
+	      		<a class="addthis_button_compact"></a>
+	    	</div>
+	    	<script type="text/javascript">var addthis_config = {"data_track_addressbar":false};</script>
+	        <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-5144adf75211a62b"></script>
 	    </div>
-	    <script type="text/javascript">var addthis_config = {"data_track_addressbar":false};</script>
-	    <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-5144adf75211a62b"></script>
-	  </div>
 	</div>
+
 	<div class="body">
 
 	  <%= yield %>
@@ -56,13 +55,7 @@
 	  </script>
 
 	</div>
-      </div>
-      <div id="bgauthor" class="narrow-font">
-	background image by
-	<a href="http://jenniferwetzel.com/">Jennifer Wetzel</a>
-      </div>
-    </div>
-  </div>
+
 </div>
 
 <% if @item[:modules] %>

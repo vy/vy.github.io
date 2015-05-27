@@ -3,60 +3,46 @@ title: "Volkan Yazıcı's Soap Co."
 css: "home"
 ---
 
-<div class="container">
-  <div class="row-fluid">
-    <div class="offset9 span3 text-center">
-      <img src="/img/photo.png">
-    </div>
-  </div>
+<img id="photo" src="/img/photo.png">
 
-  <div class="row-fluid">
-    <div class="offset8 span4 text-right">
-      <div id="title">
-       <span class="head">Volkan Yazıcı</span><span class="body">'s<br/>
-       Soap Co.</span>
-     </div>
-    </div>
-  </div>
+<p>I am a programmer living in Utrecht, Netherlands. I have a BS in math,
+MS and PhD in CS. Right now I am working as Java &amp; Scala developer at
+<a href="http://bol.com/">bol.com</a>. <a id="continues"
+href="#">Continues...</a><span id="rest">Sometimes in parallel with my
+education, sometimes as a full-time employee, I worked in several
+industrial projects ranging from embedded systems programming to database
+administration, mobile asset tracking to enterprise Java application
+development. I have work experience with C, Common Lisp, Java, PostgreSQL,
+Scala and spent significant amount of time with CoffeeScript, Hazelcast,
+JavaScript, JGroups, OpenFlow (Beacon, Floodlight, FlowVisor, OpenFlowJ),
+and Python. In addition, I used C++, Erlang, Haskell, MongoDB, NodeJS,
+OCaml, Scheme in various personal projects.</span> You can send me an <a
+href="mailto:volkan.yazici@gmail.com">e-mail</a> and follow me on <a
+href="https://twitter.com/yazicivo">Twitter</a> and <a
+href="https://github.com/vy">GitHub</a>. For a list of my F/OSS projects
+check out <a href="/code/">Code</a> page. </p>
 
-  <div class="row-fluid">
-    <div class="span9">
-      <div class="white-box rounded-corners">
-        <div id="posts" class="narrow-font">
-          <div class="title">Recent Blog Posts</div>
-          <ul class="arrow-list">
-            <% recent_posts(5).each do |article| %>
-            <li>
-              <%= link_to(article[:title], article.path) %>
-              at
-              <%=
-                 require "time"
-                 Time.parse(article[:created_at]).strftime("%e %b, %Y")
-              %>
-            </li>
-            <% end %>
-          </ul>
-          <div><%= link_to "Continues...", "/blog/" %></div>
-        </div>
-      </div>
-    </div>
+<script type="text/javascript">
+  $(document).ready(function() {
+    $("#rest").hide();
+    $("#continues").click(function() {
+      $("#continues").hide();
+      $("#rest").show();
+    });
+  });
+</script>
 
-    <div class="span3 text-right">
-      <div class="white-box rounded-corners">
-        <div class="narrow-font">
-          I am a programmer living in the Netherlands with a background in math and
-          computer science. Right now I am working as a Java developer at
-          <a href="http://bol.com">bol.com</a>, while trying to finish my PhD in
-          the background.
-          <%= link_to "Continues...", "/about/" %>
-        </div>
-      </div>
-      <div id="bgauthor" class="narrow-font">
-        background image by
-        <a href="http://ubphotoart.com/series/istanbul-night-photos/"
-        >Ugur Bektaş</a>
-      </div>
-    </div>
+<ul class="arrow-list">
+  <% recent_posts(5).each do |article| %>
+  <li>
+    <%= link_to(article[:title], article.path) %>
+    at
+    <%=
+       require "time"
+       Time.parse(article[:created_at]).strftime("%e %b, %Y")
+    %>
+  </li>
+  <% end %>
+</ul>
 
-  </div>
-</div>
+<p><%= link_to "Continues...", "/blog/" %></p>

@@ -1,89 +1,47 @@
-@import url(http://fonts.googleapis.com/css?family=Archivo+Narrow)
-@import url("http://fonts.googleapis.com/css?family=Six+Caps")
+@import url("http://fonts.googleapis.com/css?family=PT+Serif:400,400italic")
 
 body
   margin: 0
   padding: 0
-  background: #fff
+  font-family: "PT Serif", serif
 
-hr
-  border: 0
-  border-bottom: 1px dotted
+p, li
+  line-height: 2em
 
-.white-box
-  background-color: transparentize(rgba(255, 255, 255, 1.0), 0.5)
-  padding: 10px
-
-.more-white-box
-  background-color: transparentize(rgba(255, 255, 255, 1.0), 0.1)
-  padding: 10px
-
-@mixin menu-base
-  a
-    line-height: 40px
-    font-size: 28pt
-    font-family: "Six Caps", sans-serif
-    color: #fff
-  .active a
-    color: #000
-
-@mixin menu-horizontal
-  div
+#menu
+  list-style-type: none
+  text-indent: 0
+  text-align: center
+  padding: 0
+  li
     display: inline
-    margin-right: 10px
+    margin-left: 1.05em
+    margin-right: 1.05em
+    a
+      text-decoration: none
+      text-transform: lowercase
+      font-weight: bold
+      color: #000
+    a:before
+      content: "/"
+  li.active
+    a
+      color: #f00
 
-@mixin menu-vertical
+#container
+  padding: 10px
   position: absolute
-  right: 10px
-  top: 5px
-  text-align: right
-  a
-    display: block
+  left: 25%
+  right: 25%
 
-@mixin menu-desktop
-  @include menu-base
-  @include menu-vertical
-
-@mixin menu-mobile
-  @include menu-base
-  @include menu-horizontal
-
-/* Large desktop */
-@media (min-width: 1200px)
-  #menu
-    @include menu-desktop
-
-/* Portrait tablet to landscape and desktop */
-@media (min-width: 768px) and (max-width: 979px)
-  #menu
-    @include menu-desktop
-
-/* Landscape phone to portrait tablet */
-@media (max-width: 767px)
-  #menu
-    @include menu-mobile
-
-/* Landscape phones and down */
-@media (max-width: 480px)
-  #menu
-    @include menu-mobile
-
-.rounded-corners
-  border-radius: 5px
-  -moz-border-radius: 5px
-
-.narrow-font
-  font-family: "Archivo Narrow", sans-serif
-
-#bgauthor
-  margin-bottom: 10px
-  text-align: right
-  font-size: 9pt
-  a
-    color: #fff
+<%= config[:mobile_media_query] %>
+  #container
+    left: 0
+    right: 0
 
 .arrow-list
   margin: 0
+  padding: 0
   li
     list-style-type: none
     text-indent: 0
