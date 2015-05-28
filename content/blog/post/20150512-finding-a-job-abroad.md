@@ -246,9 +246,9 @@ I have mixed feelings on whether I found what I was looking for or not. And
 there are some things I still complain and could be improved. That being said,
 it is more or less ok and discussion of these subjects is out of the scope of
 this post. If I would stick to the subject, *what would I have done
-differently?* I would try to get more information about the software ecosystem
-and a working continuous integration cycle with all commit-test-review cycles.
-But those would not add much to my previous knowledge and not affect my
-decision, I believe. Additionally, I would have surely made a more in-depth
-investigation on how much will I spend for housing, where despite all my
-efforts, my estimations were way off.
+differently?* I would have tried to get more information about the software
+ecosystem and a working continuous integration cycle with all
+commit-test-review cycles. But those would not add much to my previous
+knowledge and not affect my decision, I believe. Additionally, I would have
+surely made a more in-depth investigation on how much will I spend for
+housing, where despite all my efforts, my estimations were way off.
