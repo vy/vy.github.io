@@ -30,7 +30,7 @@
 
 <div class="container">
   <div class="row-fluid">
-    <div class="offset2 span8">
+    <div class="offset1 span10">
       <div id="post" class="more-white-box rounded-corners">
 	<div class="head">
 	  <div class="title">Chat Application with Play Framework and KnockoutJS</div>
@@ -326,15 +326,13 @@ wget http://github.com/downloads/SteveSanderson/knockout/knockout-2.0.0.js -O kn
   <li>
     <p>We instantiate <code>RoomModel</code> as an observable using KnockoutJS.</p>
 
-    <p>#!javascript
- var roomModel = new RoomModel();
- ko.applyBindings(roomModel);</p>
+    <pre><code class="language-javascript"><span class="kd">var</span> <span class="nx">roomModel</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">RoomModel</span><span class="p">();</span>
+<span class="nx">ko</span><span class="p">.</span><span class="nx">applyBindings</span><span class="p">(</span><span class="nx">roomModel</span><span class="p">);</span></code></pre>
   </li>
   <li>
     <p>We set <code>isJoined</code> to an observable as well.</p>
 
-    <p>#!javascript
- self.isJoined = ko.observable(false);</p>
+    <pre><code class="language-javascript"><span class="nx">self</span><span class="p">.</span><span class="nx">isJoined</span> <span class="o">=</span> <span class="nx">ko</span><span class="p">.</span><span class="nx">observable</span><span class="p">(</span><span class="kc">false</span><span class="p">);</span></code></pre>
   </li>
   <li>Add <code>data-bind="enable: isJoined"</code> attribute to the button.</li>
 </ol>
@@ -355,16 +353,14 @@ Another cool KnockoutJS feature is its <code>foreach</code> looping functionalit
   <li>
     <p>Messages are stored in an observable array via</p>
 
-    <p>#!javascript
- self.messages = ko.observableArray([]);</p>
+    <pre><code class="language-javascript"><span class="nx">self</span><span class="p">.</span><span class="nx">messages</span> <span class="o">=</span> <span class="nx">ko</span><span class="p">.</span><span class="nx">observableArray</span><span class="p">([]);</span></code></pre>
   </li>
   <li>
     <p>We loop over the <code>messages</code> observable via</p>
 
-    <p>#!html
- &lt;div … data-bind=”foreach: messages”&gt;
- …
- &lt;/div&gt;</p>
+    <pre><code class="language-html"><span class="nt">&lt;div</span> <span class="err">...</span> <span class="na">data-bind=</span><span class="s">"foreach: messages"</span><span class="nt">&gt;</span>
+...
+<span class="nt">&lt;/div&gt;</span></code></pre>
   </li>
   <li>
     <p>Inside the loop body, current array element is accessed as is. (Remember the list of JSON-inified <code>Room.Event</code> subclasses?)</p>
