@@ -2,6 +2,8 @@
 kind: article
 created_at: 2015-05-12 16:23 EET
 title: Finding a Software Engineering Job Abroad
+modules:
+  - twitter
 tags:
   - programming
 ---
@@ -181,3 +183,72 @@ to the Netherlands.
   a professional expat agency hired by the company.
 - I spent a fortune for the housing, almost 5-6x more than I anticipated.
 - Commuting is quite expensive and problematic than I was expecting.
+
+The Aftermath
+=============
+
+Here I will try to address some of the questions raised by the readers.
+
+<blockquote class="twitter-tweet" data-conversation="none" lang="en">
+  <p lang="tr" dir="ltr">
+    <a href="https://twitter.com/yazicivo">@yazicivo</a> eline saglik. Neden
+    Phd aldigin alan uzerine bir is/sirket secmedgini, gorusmelrde buna dair
+    sorulr alip almdigini ekleyebilr msn?</p>&mdash; Ferhat Aydın (@ferhtaydn)
+    <a href="https://twitter.com/ferhtaydn/status/602545230387290112">May 24,
+    2015</a>
+</blockquote>
+
+Well... What this Tweet roughly translates is this: **Why didn't I go for a
+career aligned with my PhD study?** I actually tried really hard to go towards
+that path. After all, thrashing out 5 years of experience on SDN was not also
+an easy decision for me. I needed to think on this quite some time.
+Nevertheless, it concluded with a bitter end.
+
+Over the years, I had quite some idea about the SDN companies in Europe. (I
+did not want to go for United States for various personal reasons.) Further, I
+checked hundreds of other candidates listed in [SDX
+Central](https://www.sdxcentral.com/)'s [NFV & SDN Companies
+Directory](https://www.sdxcentral.com/nfv-sdn-companies-directory/). But a
+majority of those companies were more or less like a black box. I mean, most
+of them are startups and it was not visible what they are actually doing, what
+are their products, what sort of a software ecosystem used internally, etc. Or
+they just did not have any positions for backend developers. Long story short,
+when I eliminated the companies that did not look like a suitable place for
+me, I ended up with a handful of candidates. Further, I actually applied to
+them. And guess what? None returned. I mean literally no responses.
+
+One particular exception was [Tail-f](http://www.tail-f.com/), which a month
+later my application was [acquired by
+Cisco](http://newsroom.cisco.com/release/1451764). I had heard about it a lot
+in various SDN news channels, but after getting to know in a mail discussion
+with [Luke Gorrie](http://www.lukego.com/) that they employ hardcore
+programming veterans in the field and Erlang is used behind the scenes, I felt
+a strong interest in the job opportunities over there. And as with my other
+SDN applications, I literally got no reply from this company too.
+
+All in all, I should also admit that the situation would be a lot different if
+I would have considered job vacancies in United States.
+
+<blockquote class="twitter-tweet" data-conversation="none" lang="en">
+  <p lang="tr" dir="ltr">
+    <a href="https://twitter.com/yazicivo">@yazicivo</a> abi &quot;aradigimi
+    buldum mu?&quot;, &quot;simdi nelerden sikayet ediyorum?&quot;, &quot;neyi
+    farkli yapardim?&quot; gibi sorularin cevaplarini da istiyoruz
+    :)</p>&mdash; sinan (@sinan1111111111) <a
+    href="https://twitter.com/sinan1111111111/status/602524691174182913">May
+    24, 2015</a>
+</blockquote>
+
+Sinan asks for **Did I find what I was looking for? What am I complaining
+right now? What would I do differently if I would have done it again?**
+
+I have mixed feelings on whether I found what I was looking for or not. And
+there are some things I still complain and could be improved. That being said,
+it is more or less ok and discussion of these subjects is out of the scope of
+this post. If I would stick to the subject, *what would I have done
+differently?* I would try to get more information about the software ecosystem
+and a working continuous integration cycle with all commit-test-review cycles.
+But those would not add much to my previous knowledge and not affect my
+decision, I believe. Additionally, I would have surely made a more in-depth
+investigation on how much will I spend for housing, where despite all my
+efforts, my estimations were way off.
