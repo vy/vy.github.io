@@ -23,11 +23,14 @@ git checkout master
 echo "Copying output files..."
 cp -r output/* .
 
+echo "Adding all output files to the repository..."
+git add .
+
 echo "Committing changes..."
 git commit -a -m "Copied changes from source/$lastCommitId."
 
 echo "Pushing changes..."
-git push origin master source
+git push -f origin master source
 
 echo "Switching back to source..."
 git checkout source
