@@ -2,13 +2,30 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <id>https://vy.github.io//</id>
   <title>Volkan Yazıcı's Soap Co.</title>
-  <updated>2015-05-12T16:23:00Z</updated>
+  <updated>2015-06-09T20:32:00Z</updated>
   <link rel="alternate" href="https://vy.github.io//"/>
   <link rel="self" href="https://vy.github.io//blog/feed/"/>
   <author>
     <name>Volkan Yazıcı</name>
     <uri>https://vy.github.io/</uri>
   </author>
+  <entry>
+    <id>tag:vy.github.io,2015-06-09://blog/post/2015/06/09/fibers-in-jvm/</id>
+    <title type="html">Presentation: Fibers in Java Virtual Machine</title>
+    <published>2015-06-09T20:32:00Z</published>
+    <updated>2015-06-09T20:32:00Z</updated>
+    <link rel="alternate" href="https://vy.github.io//blog/post/2015/06/09/fibers-in-jvm/"/>
+    <content type="html">
+&lt;p&gt;A couple of months ago, I made a presentation in one of
+&lt;a href="http://bol.com"&gt;bol.com&lt;/a&gt; Brown Bag Sessions on the &lt;em&gt;Fiber Implementations in
+Java Virtual Machine&lt;/em&gt;. With the hope that others might find it useful, I share
+it here. (Slides are also available in &lt;a href="fibers-in-jvm.pdf"&gt;PDF&lt;/a&gt; and
+&lt;a href="fibers-in-jvm-org.odp"&gt;ODP&lt;/a&gt; formats.)&lt;/p&gt;
+
+&lt;iframe src="https://www.slideshare.net/slideshow/embed_code/key/CdpM73pq92heMk" width="476" height="400" frameborder="0" marginwidth="0" marginheight="0" scrolling="no"&gt;
+&lt;/iframe&gt;
+</content>
+  </entry>
   <entry>
     <id>tag:vy.github.io,2015-05-12://blog/post/2015/05/12/finding-a-job-abroad/</id>
     <title type="html">Finding a Software Engineering Job Abroad</title>
@@ -2163,114 +2180,6 @@ Actors have a certain room for improvement and might borrow some ideas from its
 Akka counterpart. In the overall, both fiber implementations show stable and
 noteworthy performance figures and stand as a perfect standard Java Thread
 replacement for a considerable amount of use cases.&lt;/p&gt;
-</content>
-  </entry>
-  <entry>
-    <id>tag:vy.github.io,2014-06-27://blog/post/2014/06/27/parse-bitcoin-blockchain/</id>
-    <title type="html">Parsing Bitcoin Blockchain Data in Java</title>
-    <published>2014-06-27T16:49:00Z</published>
-    <updated>2014-06-27T16:49:00Z</updated>
-    <link rel="alternate" href="https://vy.github.io//blog/post/2014/06/27/parse-bitcoin-blockchain/"/>
-    <content type="html">
-&lt;p&gt;Last week I spent some time on collecting certain statistics (e.g., average
-number of performed transactions and created blocks per month) over a vast
-(~20GB) Bitcoin blockchain dataset. The hardest part for me was to pick the
-right tool to parse the raw blockchain data. First, I hit the Google with
-&lt;em&gt;“parse bitcoin blockchain”&lt;/em&gt; keywords. Unfortunately, the returned results
-(&lt;a href="https://github.com/gavinandresen/bitcointools"&gt;bitcointools&lt;/a&gt;,
-&lt;a href="https://code.google.com/p/blockchain/"&gt;blockchain&lt;/a&gt;,
-&lt;a href="https://github.com/znort987/blockparser"&gt;blockparser&lt;/a&gt;, etc.) point to almost
-undocumented projects, where some appear to not even work. (As a side note,
-bitcointools require a running BitcoinQt/bitcoind process in the background,
-which I find pretty amusing.) Next, I checked some papers on Google Scholars to
-find out how other people solved the problem. A paper leaded me to
-&lt;a href="https://github.com/etotheipi/BitcoinArmory"&gt;BitcoinArmory&lt;/a&gt; project, which
-requires a dozen of manual interventions to get installed. (I did not even
-attempt to install it.) Suddenly, it occured me to add a &lt;em&gt;“java”&lt;/em&gt; keyword to the
-search phrase, which led me to &lt;a href="https://bitcoinj.github.io/"&gt;bitcoinj&lt;/a&gt; project.
-&lt;strong&gt;&lt;em&gt;bitcoinj is far most the best Bitcoin blockchain parser library that I have
-ever met.&lt;/em&gt;&lt;/strong&gt; It has a rich documentation, developer-friendly (and fully
-documented) API and works out of the box. It is composed of a single JAR, no
-other requirements, stupid hassles, etc. In addition, its IRC channel at
-FreeNode is packed with real people that provide instant support on any Bitcoin
-related questions.&lt;/p&gt;
-
-&lt;p&gt;Enough with the talk! Let’s get our hands dirty with the code. I first included
-the bitcoinj Maven dependency in my &lt;code&gt;pom.xml&lt;/code&gt; as follows:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="language-xml"&gt;&lt;span class="nt"&gt;&amp;lt;dependency&amp;gt;&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;lt;groupId&amp;gt;&lt;/span&gt;com.google&lt;span class="nt"&gt;&amp;lt;/groupId&amp;gt;&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;lt;artifactId&amp;gt;&lt;/span&gt;bitcoinj&lt;span class="nt"&gt;&amp;lt;/artifactId&amp;gt;&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;lt;version&amp;gt;&lt;/span&gt;0.11.3&lt;span class="nt"&gt;&amp;lt;/version&amp;gt;&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;lt;scope&amp;gt;&lt;/span&gt;compile&lt;span class="nt"&gt;&amp;lt;/scope&amp;gt;&lt;/span&gt;
-&lt;span class="nt"&gt;&amp;lt;/dependency&amp;gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Next, I downloaded a couple of raw blockchain data for test purposes:&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;
-&lt;a href="https://code.google.com/p/blockchain/source/browse/trunk/blk00000.dat"&gt;Sample data composed of 5000 blocks&lt;/a&gt; (128 MB)&lt;/li&gt;
-  &lt;li&gt;
-&lt;a href="https://bitfetch.com/static/bootstrap.7z"&gt;From the genesis block through height 295,000&lt;/a&gt; (4.7 GB)&lt;/li&gt;
-  &lt;li&gt;
-&lt;a href="https://bitcoin.org/bin/blockchain/bootstrap.dat.torrent"&gt;From the genesis block through a recent height&lt;/a&gt; (~17 GB as of this post)&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;Here comes the simplest part: the Java code. Below, I calculate the average
-number of transactions per block per month.&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="language-java"&gt;&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;com.google.bitcoin.core.Block&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
-&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;com.google.bitcoin.core.NetworkParameters&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
-&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;com.google.bitcoin.core.PrunedException&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
-&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;com.google.bitcoin.core.Transaction&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
-&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;com.google.bitcoin.params.MainNetParams&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
-&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;com.google.bitcoin.store.BlockStoreException&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
-
-&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;java.io.File&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
-&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;java.util.ArrayList&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;  
-&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;java.util.HashMap&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
-&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;java.util.List&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
-&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;java.util.Map&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
-
-&lt;span class="c1"&gt;// Arm the blockchain file loader.&lt;/span&gt;
-&lt;span class="n"&gt;NetworkParameters&lt;/span&gt; &lt;span class="n"&gt;np&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nf"&gt;MainNetParams&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
-&lt;span class="n"&gt;List&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;File&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;blockChainFiles&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="n"&gt;ArrayList&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&amp;gt;();&lt;/span&gt;
-&lt;span class="n"&gt;blockChainFiles&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;add&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nf"&gt;File&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="s"&gt;"/tmp/bootstrap.dat"&lt;/span&gt;&lt;span class="o"&gt;));&lt;/span&gt;
-&lt;span class="n"&gt;BlockFileLoader&lt;/span&gt; &lt;span class="n"&gt;bfl&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nf"&gt;BlockFileLoader&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;np&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;blockChainFiles&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
-
-&lt;span class="c1"&gt;// Data structures to keep the statistics.&lt;/span&gt;
-&lt;span class="n"&gt;Map&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;String&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;Integer&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;monthlyTxCount&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="n"&gt;HashMap&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&amp;gt;();&lt;/span&gt;
-&lt;span class="n"&gt;Map&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;String&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;Integer&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;monthlyBlockCount&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="n"&gt;HashMap&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&amp;gt;();&lt;/span&gt;
-
-&lt;span class="c1"&gt;// Iterate over the blocks in the dataset.&lt;/span&gt;
-&lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;Block&lt;/span&gt; &lt;span class="n"&gt;block&lt;/span&gt; &lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="n"&gt;bfl&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
-
-    &lt;span class="c1"&gt;// Extract the month keyword.&lt;/span&gt;
-    &lt;span class="n"&gt;String&lt;/span&gt; &lt;span class="n"&gt;month&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nf"&gt;SimpleDateFormat&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="s"&gt;"yyyy-MM"&lt;/span&gt;&lt;span class="o"&gt;).&lt;/span&gt;&lt;span class="na"&gt;format&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;block&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;getTime&lt;/span&gt;&lt;span class="o"&gt;());&lt;/span&gt;
-
-    &lt;span class="c1"&gt;// Make sure there exists an entry for the extracted month.&lt;/span&gt;
-    &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="o"&gt;(!&lt;/span&gt;&lt;span class="n"&gt;monthlyBlockCount&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;containsKey&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;month&lt;/span&gt;&lt;span class="o"&gt;))&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
-        &lt;span class="n"&gt;monthlyBlockCount&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;put&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;month&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
-        &lt;span class="n"&gt;monthlyTxCount&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;put&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;month&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
-    &lt;span class="o"&gt;}&lt;/span&gt;
-
-    &lt;span class="c1"&gt;// Update the statistics.&lt;/span&gt;
-    &lt;span class="n"&gt;monthlyBlockCount&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;put&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;month&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="n"&gt;monthlyBlockCount&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;get&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;month&lt;/span&gt;&lt;span class="o"&gt;));&lt;/span&gt;
-    &lt;span class="n"&gt;monthlyTxCount&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;put&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;month&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;block&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;getTransactions&lt;/span&gt;&lt;span class="o"&gt;().&lt;/span&gt;&lt;span class="na"&gt;size&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="n"&gt;monthlyTxCount&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;get&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;month&lt;/span&gt;&lt;span class="o"&gt;));&lt;/span&gt;
-
-&lt;span class="o"&gt;}&lt;/span&gt;
-
-&lt;span class="c1"&gt;// Compute the average number of transactions per block per month.&lt;/span&gt;
-&lt;span class="n"&gt;Map&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;String&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;Float&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;monthlyAvgTxCountPerBlock&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="n"&gt;HashMap&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&amp;gt;();&lt;/span&gt;
-&lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;String&lt;/span&gt; &lt;span class="n"&gt;month&lt;/span&gt; &lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="n"&gt;monthlyBlockCount&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;keySet&lt;/span&gt;&lt;span class="o"&gt;())&lt;/span&gt;
-    &lt;span class="n"&gt;monthlyAvgTxCountPerBlock&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;put&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;
-            &lt;span class="n"&gt;month&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="kt"&gt;float&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="n"&gt;monthlyTxCount&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;get&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;month&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;/&lt;/span&gt; &lt;span class="n"&gt;monthlyBlockCount&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;get&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;month&lt;/span&gt;&lt;span class="o"&gt;));&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;That’s it! In order to appreciate the hassle-free simplicity of the bitcoinj
-interface, you ought to take your time and spend a couple of hours on other
-tools first. (About the performance, for the sample blockchain dataset of size
-4.7 GB, above code snippet completes in less than 2 minutes on my 2.4 GHz
-GNU/Linux notebook without any JVM flags. Pretty zippy!)&lt;/p&gt;
 </content>
   </entry>
 </feed>

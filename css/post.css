@@ -45,6 +45,9 @@ body {
     font-family: serif;
     font-style: oblique;
     margin-bottom: 7px; }
+  #post iframe {
+    display: block;
+    margin: 0 auto; }
   #post .gist pre {
     font-size: 8pt; }
 

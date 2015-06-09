@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <title>JGroups IPv6 Broadcast Problem</title>
+    <title>Presentation: Fibers in Java Virtual Machine</title>
     <link rel="stylesheet" href="/css/bootstrap.css">
     <link rel="stylesheet" href="/css/bootstrap-responsive.css">
     <script src="/js/bootstrap.js"></script>
@@ -33,10 +33,10 @@
     <div class="offset1 span10">
       <div id="post" class="more-white-box rounded-corners">
 	<div class="head">
-	  <div class="title">JGroups IPv6 Broadcast Problem</div>
+	  <div class="title">Presentation: Fibers in Java Virtual Machine</div>
 	  <div class="subtitle">posted at
-	    April 27, 2012
-	    with tags <a href="/blog/tag/java">java</a>, <a href="/blog/tag/groups">groups</a>
+	    June 9, 2015
+	    with tags <a href="/blog/tag/akka">akka</a>, <a href="/blog/tag/java">java</a>, <a href="/blog/tag/quasar">quasar</a>
 	  </div>
 	  <div class="share">
 	    <div class="addthis_toolbox addthis_default_style ">
@@ -53,21 +53,14 @@
 	<div class="body">
 
 	  
-<p>Here is a quick tip: Do you regularly observe below <em>harmless</em> JGroups message send failures?</p>
+<p>A couple of months ago, I made a presentation in one of
+<a href="http://bol.com">bol.com</a> Brown Bag Sessions on the <em>Fiber Implementations in
+Java Virtual Machine</em>. With the hope that others might find it useful, I share
+it here. (Slides are also available in <a href="fibers-in-jvm.pdf">PDF</a> and
+<a href="fibers-in-jvm-org.odp">ODP</a> formats.)</p>
 
-<pre><code>09:49:02.270 [Timer-3,&lt;ADDR&gt;] ERROR org.jgroups.protocols.UDP - failed sending message to cluster (95 bytes): java.lang.Exception: dest=/ff0e:0:0:0:0:8:8:8:45588 (98 bytes), cause: java.io.IOException: Network is unreachable
-09:49:03.132 [Timer-4,&lt;ADDR&gt;] ERROR org.jgroups.protocols.UDP - failed sending message to cluster (95 bytes): java.lang.Exception: dest=/ff0e:0:0:0:0:8:8:8:45588 (98 bytes), cause: java.io.IOException: Network is unreachable
-09:49:04.111 [Timer-5,&lt;ADDR&gt;] ERROR org.jgroups.protocols.UDP - failed sending message to cluster (84 bytes): java.lang.Exception: dest=/ff0e:0:0:0:0:8:8:8:45588 (87 bytes), cause: java.io.IOException: Network is unreachable
-09:49:04.328 [Timer-3,&lt;ADDR&gt;] ERROR org.jgroups.protocols.UDP - failed sending message to cluster (91 bytes): java.lang.Exception: dest=/ff0e:0:0:0:0:8:8:8:45588 (94 bytes), cause: java.io.IOException: Network is unreachable
-09:49:05.281 [Timer-4,&lt;ADDR&gt;] ERROR org.jgroups.protocols.UDP - failed sending message to cluster (91 bytes): java.lang.Exception: dest=/ff0e:0:0:0:0:8:8:8:45588 (94 bytes), cause: java.io.IOException: Network is unreachable
-09:49:06.331 [Timer-3,&lt;ADDR&gt;] ERROR org.jgroups.protocols.UDP - failed sending message to cluster (74 bytes): java.lang.Exception: dest=/ff0e:0:0:0:0:8:8:8:45588 (77 bytes), cause: java.io.IOException: Network is unreachable
-</code></pre>
-
-<p>As Bela Ban <a href="http://article.gmane.org/gmane.comp.java.javagroups.general/7932">says</a>,</p>
-
-<blockquote>
-  <p>Your messages are sent to an IPv6 multicast address; is this what you want? If not, and you want to force use of IPv4, use <code>-Djava.net.preferIPv4Stack=true</code>. If you want to use IPv6, make sure your routing table is set up correctly.</p>
-</blockquote>
+<iframe src="https://www.slideshare.net/slideshow/embed_code/key/CdpM73pq92heMk" width="476" height="400" frameborder="0" marginwidth="0" marginheight="0" scrolling="no">
+</iframe>
 
 
 	  <script type="text/javascript">
@@ -77,8 +70,8 @@
 	  <div id="disqus_thread"></div>
 	  <script type="text/javascript">
 	  var disqus_shortname = 'vyazici';
-	  var disqus_identifier = '/blog/post/20120427-jgroups-ipv6-broadcast-problem/';
-	  var disqus_title = 'JGroups IPv6 Broadcast Problem';
+	  var disqus_identifier = '/blog/post/20150609-fibers-in-jvm/';
+	  var disqus_title = 'Presentation: Fibers in Java Virtual Machine';
 	  (function() {
 	  	var dsq = document.createElement('script');
 	  	dsq.type = 'text/javascript';
