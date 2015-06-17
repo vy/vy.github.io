@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>GOTO 2015 Microservices Workshop</title>
+    <link rel="stylesheet" href="/css/bootstrap.css">
+    <link rel="stylesheet" href="/css/bootstrap-responsive.css">
+    <script src="/js/bootstrap.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="/css/common.css">
+    <meta name="generator" content="nanoc 3.8.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/post.css">
+    <script type="text/javascript">
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-40183531-1']);
+      _gaq.push(['_trackPageview']);
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="menu">
+      <div><a href="/">Home</a></div><div><a href="/about/">About</a></div><div><a href="/blog/">Blog</a></div><div><a href="/code/">Code</a></div><div><a href="/blog/feed/">Feed</a></div>
+    </div>
+    
+
+<div class="container">
+  <div class="row-fluid">
+    <div class="offset1 span10">
+      <div id="post" class="more-white-box rounded-corners">
+	<div class="head">
+	  <div class="title">GOTO 2015 Microservices Workshop</div>
+	  <div class="subtitle">posted at
+	    June 17, 2015
+	    with tags <a href="/blog/tag/java">java</a>, <a href="/blog/tag/microservice">microservice</a>, <a href="/blog/tag/programming">programming</a>
+	  </div>
+	  <div class="share">
+	    <div class="addthis_toolbox addthis_default_style ">
+	      <a class="addthis_button_preferred_1"></a>
+	      <a class="addthis_button_preferred_2"></a>
+	      <a class="addthis_button_preferred_3"></a>
+	      <a class="addthis_button_preferred_4"></a>
+	      <a class="addthis_button_compact"></a>
+	    </div>
+	    <script type="text/javascript">var addthis_config = {"data_track_addressbar":false};</script>
+	    <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-5144adf75211a62b"></script>
+	  </div>
+	</div>
+	<div class="body">
+
+	  
+<p>Today I have attended to the
+<a href="http://gotocon.com/amsterdam-2015/presentations/show_presentation.jsp?oid=6678">Microservices</a>
+workshop by <a href="https://twitter.com/fgeorge52">Fred George</a> in <a href="http://gotocon.com/amsterdam-2015/">GOTO
+2015</a>. For captain’s diary, here I will
+try to briefly write down the highlights of the session along with my personal
+take aways.</p>
+
+<h1 id="about-fred-george">About Fred George</h1>
+
+<p>He is definitely the right guy for the advocacy of the microservice
+architectures. He stated that, throughout his entire programming career, he
+had involved in various software projects where he had chance to employ
+microservice systems. Further, he had many failures (most of the time not
+related with the software itself) and some notable achievements that turned
+into million dollar success stories.</p>
+
+<p>Personally, I found him a little bit biased about microservices – which could
+very well be due to my inexperience in this field compared to his. That is, he
+almost approaches every problem from a microservice perspective, which reminds
+me that everything looks like a nail when you have a hammer in your hand.
+Nevertheless, this might also be necessiated from the problems he had been
+thrown at. From what I understood, most of the time he is exposed to teams
+which already have a significant amount of code base and is asked to break it
+into reusable and self-contained components, which he eventually molded into
+yet another microservice architecture.</p>
+
+<h1 id="defining-a-microservice">Defining a Microservice</h1>
+
+<p>He has an inclination to put almost every functionality into a microservice
+which exceeds 100 lines of code! And by <em>microservice</em>, most of the time he
+refers to a bus architecture. This puzzled me quite a bit. I mean, there are
+many other ways to build an inter-service communication channel and apperantly
+he had designed such systems in the past too. But somehow in this workshop he
+prefered to stick with bus architectures for some reason I could not really
+understand.</p>
+
+<h1 id="rapids-rivers-and-ponds">Rapids, Rivers, and Ponds</h1>
+
+<p>He categorizes a microservice architecture into three layers as follows.</p>
+
+<ol>
+  <li>The uppermost layer is called <em>rapids</em>. Every microservice writes (not
+reads!) to this bus. He prefers to realize this layer with a persistent
+message bus like <a href="http://kafka.apache.org/">Apache Kafka</a>.</li>
+  <li>The middle layer is called <em>rivers</em>, which is realized by a non-persisting
+bus (where <a href="http://zeromq.org/">ZeroMQ</a> is his personal choice) filtering
+on themed events from <em>rapids</em>. Microservices are expected to read from
+rivers. Note that he also uses a microservice to hook up every river to
+rapids bus.</li>
+  <li>At the bottom there are <em>ponds</em>. Here the history/state of events and
+entities are kept. Ponds are again provided by microservices that
+internally interface to a (No)SQL storage component.</li>
+</ol>
+
+<p><img src="rapids-rivers-ponds.svg" alt="Microservices: Rapids, Rivers, and Ponds"></p>
+
+<p>I found this layering approach surprisingly enlightening. Though it still
+contains some parts that puzzle me, I believe those question marks are mainly
+project specific components that can be (should be?) completed during the
+development of the system.</p>
+
+<h1 id="messaging-medium">Messaging Medium</h1>
+
+<p>According to his experiences, most of the time the message size and its
+(de)serialization costs do not rank the top priority in terms of overall
+system performance. Hence, he had always sticked with JSON and is so far
+really happy with the outcome. We even had a small discussion about
+<a href="https://lmax-exchange.github.io/disruptor/">Disruptor</a> and
+<a href="http://www.lmax.com/">L-MAX</a>. He had told that he had chance to work with
+some really talented programmers in L-MAX and stated that problems they were
+tackling over there in finance world is quite some different from the ones
+addressed in ordinary software industry.</p>
+
+<p>At <a href="http://www.bol.com/">bol.com</a>, our definition of a microservice can be
+described in three main components:</p>
+
+<ol>
+  <li>
+    <p><em>server</em> – accessible by REST via a multitude of protocols: JSON, XML, and
+protobuf. It can either be a J2EE application or a self-contained Docker
+image.</p>
+  </li>
+  <li>
+    <p><em>api</em> – exposes entities for the programming language, which is 99% of the
+time in Java.</p>
+  </li>
+  <li>
+    <p><em>driver</em> – provides Java-friendly function calls to the <em>server</em> using
+<em>api</em> models. The caller does not need to worry about the messaging format,
+REST call mechanics, or the protocol version.</p>
+  </li>
+</ol>
+
+<p>Hence, it is not possible to write a 100 LOC microservice here, which makes
+totally sense in my opinion. On the contrary, Fred George just passes around a
+JSON object where both ends need to eat their own dog food in order to
+parse/create messages. Here I found Fred’s approach resembling a prototype for
+a feasibility examination rather than a final product. Personally, I did not
+buy his reasoning on this issue.</p>
+
+<h1 id="unit-and-acceptance-tests">Unit and Acceptance Tests</h1>
+
+<p>Let me quote directly from Fred George’s slides:</p>
+
+<blockquote>
+  <ol>
+    <li>self-monitoring services replaces unit tests</li>
+    <li>business monitoring replaces acceptance tests</li>
+    <li>monitor live system continuously rather than testing</li>
+  </ol>
+</blockquote>
+
+<p>His reasoning for the above points was a microservice composed of 100 LOC
+should be simple enough to not necessitate any tests at all. Monitoring live
+system would expose any potential bugs and with rapid deployments you can
+easily fix it on production. To say the least, I do not agree.</p>
+
+<h1 id="programming-languages">Programming Languages</h1>
+
+<p>He prefers dynamicly-typed languages to build microservices. I think this also
+emanetes from the fact that he just passes around a JSON object with no
+certain schema and language-specific driver implementation. This eventually
+necessitates him to write his JSON reader/writer for each microservice, where
+dynamically-typed languages play well. Again, I do not agree. I mean, solving
+the problem of ad-hoc parsing via a dynamically-typed language, I think, just
+solves the problem of a prevoiusly given wrong decision: You have neither
+drivers, nor a contract in the message format.</p>
+
+<p>He also talked about how he believes Clojure is very suitable for
+microservices and Elixir is also a promising language in the field without
+giving any actual facts. I mean, why? Why Clojure and why not Groovy? I
+honestly found it really annoying that he presents his personal taste as
+facts without providing any actual rationale or context. While I am a big fan
+of Lisp family of languages and also Erlang/Elixir, I found this part of the
+presentation totally non-sense.</p>
+
+<h1 id="the-tooling-for-microservices">The Tooling for Microservices</h1>
+
+<p>He also complained about the required free and open source tooling for
+microservices are not there yet, but it is very close. He stated that</p>
+
+<ul>
+  <li>NodeJS community is doing really good work in this field,</li>
+  <li>Netflix released really good software building blocks (which I also agree),</li>
+  <li>Cassandra helps to get better microservices (WTF!),</li>
+  <li>Docker plays a milestone in the microservice history, etc.</li>
+</ul>
+
+<p>While I totally agree with some points, playing around with buzzwords like
+NodeJS, Cassandra… I found it amusing. He also added that there is still not
+a single good book on microservices. Nope! He did not accept service-oriented
+architecture books in the literature as an answer.</p>
+
+<h1 id="the-workshop">The Workshop</h1>
+
+<p>So what did we really do in the workshop? We wrote a couple of basic
+microservices, where we employ a JSON object as a messaging medium and a
+central RabbitMQ server as the bus. (Fun fact: Wi-Fi sucked as usual. Fred
+George was experienced enough to bring his own access point.)</p>
+
+<h1 id="conclusion">Conclusion</h1>
+
+<p>Fred George apparently has a vast amount of experience in the field of
+microservice architectures. I really liked the <em>Rapids, Rivers, and Ponds</em>
+design of a bus-oriented system. He had also shared some really interesting
+software development experiences he had in the past, which also provided
+further clues on potential pitfalls and exceptions. Nevertheless, I found his
+JSON-passing approach (where each microservice needs to implement its own
+reader/writer) not solid enough and I did not buy his facts on rationale
+behind this. Further, relating the microservice architectures with a
+particular language or tool was absolutely awkward, to say the least.</p>
+
+
+	  <script type="text/javascript">
+	    $("#post table").attr("class", "table table-hover");
+	  </script>
+
+	  <div id="disqus_thread"></div>
+	  <script type="text/javascript">
+	  var disqus_shortname = 'vyazici';
+	  var disqus_identifier = '/blog/post/20150617-goto2015-microservices-workshop/';
+	  var disqus_title = 'GOTO 2015 Microservices Workshop';
+	  (function() {
+	  	var dsq = document.createElement('script');
+	  	dsq.type = 'text/javascript';
+	  	dsq.async = true;
+	  	dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+	  	(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+	  })();
+	  </script>
+
+	</div>
+      </div>
+      <div id="bgauthor" class="narrow-font">
+	background image by
+	<a href="http://jenniferwetzel.com/">Jennifer Wetzel</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
+  </body>
+</html>
+

@@ -2,13 +2,193 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <id>https://vy.github.io//</id>
   <title>Volkan Yazıcı's Soap Co.</title>
-  <updated>2015-06-09T20:32:00Z</updated>
+  <updated>2015-06-17T21:47:00Z</updated>
   <link rel="alternate" href="https://vy.github.io//"/>
   <link rel="self" href="https://vy.github.io//blog/feed/"/>
   <author>
     <name>Volkan Yazıcı</name>
     <uri>https://vy.github.io/</uri>
   </author>
+  <entry>
+    <id>tag:vy.github.io,2015-06-17://blog/post/2015/06/17/goto2015-microservices-workshop/</id>
+    <title type="html">GOTO 2015 Microservices Workshop</title>
+    <published>2015-06-17T21:47:00Z</published>
+    <updated>2015-06-17T21:47:00Z</updated>
+    <link rel="alternate" href="https://vy.github.io//blog/post/2015/06/17/goto2015-microservices-workshop/"/>
+    <content type="html">
+&lt;p&gt;Today I have attended to the
+&lt;a href="http://gotocon.com/amsterdam-2015/presentations/show_presentation.jsp?oid=6678"&gt;Microservices&lt;/a&gt;
+workshop by &lt;a href="https://twitter.com/fgeorge52"&gt;Fred George&lt;/a&gt; in &lt;a href="http://gotocon.com/amsterdam-2015/"&gt;GOTO
+2015&lt;/a&gt;. For captain’s diary, here I will
+try to briefly write down the highlights of the session along with my personal
+take aways.&lt;/p&gt;
+
+&lt;h1 id="about-fred-george"&gt;About Fred George&lt;/h1&gt;
+
+&lt;p&gt;He is definitely the right guy for the advocacy of the microservice
+architectures. He stated that, throughout his entire programming career, he
+had involved in various software projects where he had chance to employ
+microservice systems. Further, he had many failures (most of the time not
+related with the software itself) and some notable achievements that turned
+into million dollar success stories.&lt;/p&gt;
+
+&lt;p&gt;Personally, I found him a little bit biased about microservices – which could
+very well be due to my inexperience in this field compared to his. That is, he
+almost approaches every problem from a microservice perspective, which reminds
+me that everything looks like a nail when you have a hammer in your hand.
+Nevertheless, this might also be necessiated from the problems he had been
+thrown at. From what I understood, most of the time he is exposed to teams
+which already have a significant amount of code base and is asked to break it
+into reusable and self-contained components, which he eventually molded into
+yet another microservice architecture.&lt;/p&gt;
+
+&lt;h1 id="defining-a-microservice"&gt;Defining a Microservice&lt;/h1&gt;
+
+&lt;p&gt;He has an inclination to put almost every functionality into a microservice
+which exceeds 100 lines of code! And by &lt;em&gt;microservice&lt;/em&gt;, most of the time he
+refers to a bus architecture. This puzzled me quite a bit. I mean, there are
+many other ways to build an inter-service communication channel and apperantly
+he had designed such systems in the past too. But somehow in this workshop he
+prefered to stick with bus architectures for some reason I could not really
+understand.&lt;/p&gt;
+
+&lt;h1 id="rapids-rivers-and-ponds"&gt;Rapids, Rivers, and Ponds&lt;/h1&gt;
+
+&lt;p&gt;He categorizes a microservice architecture into three layers as follows.&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;The uppermost layer is called &lt;em&gt;rapids&lt;/em&gt;. Every microservice writes (not
+reads!) to this bus. He prefers to realize this layer with a persistent
+message bus like &lt;a href="http://kafka.apache.org/"&gt;Apache Kafka&lt;/a&gt;.&lt;/li&gt;
+  &lt;li&gt;The middle layer is called &lt;em&gt;rivers&lt;/em&gt;, which is realized by a non-persisting
+bus (where &lt;a href="http://zeromq.org/"&gt;ZeroMQ&lt;/a&gt; is his personal choice) filtering
+on themed events from &lt;em&gt;rapids&lt;/em&gt;. Microservices are expected to read from
+rivers. Note that he also uses a microservice to hook up every river to
+rapids bus.&lt;/li&gt;
+  &lt;li&gt;At the bottom there are &lt;em&gt;ponds&lt;/em&gt;. Here the history/state of events and
+entities are kept. Ponds are again provided by microservices that
+internally interface to a (No)SQL storage component.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;&lt;img src="rapids-rivers-ponds.svg" alt="Microservices: Rapids, Rivers, and Ponds"&gt;&lt;/p&gt;
+
+&lt;p&gt;I found this layering approach surprisingly enlightening. Though it still
+contains some parts that puzzle me, I believe those question marks are mainly
+project specific components that can be (should be?) completed during the
+development of the system.&lt;/p&gt;
+
+&lt;h1 id="messaging-medium"&gt;Messaging Medium&lt;/h1&gt;
+
+&lt;p&gt;According to his experiences, most of the time the message size and its
+(de)serialization costs do not rank the top priority in terms of overall
+system performance. Hence, he had always sticked with JSON and is so far
+really happy with the outcome. We even had a small discussion about
+&lt;a href="https://lmax-exchange.github.io/disruptor/"&gt;Disruptor&lt;/a&gt; and
+&lt;a href="http://www.lmax.com/"&gt;L-MAX&lt;/a&gt;. He had told that he had chance to work with
+some really talented programmers in L-MAX and stated that problems they were
+tackling over there in finance world is quite some different from the ones
+addressed in ordinary software industry.&lt;/p&gt;
+
+&lt;p&gt;At &lt;a href="http://www.bol.com/"&gt;bol.com&lt;/a&gt;, our definition of a microservice can be
+described in three main components:&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;em&gt;server&lt;/em&gt; – accessible by REST via a multitude of protocols: JSON, XML, and
+protobuf. It can either be a J2EE application or a self-contained Docker
+image.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;em&gt;api&lt;/em&gt; – exposes entities for the programming language, which is 99% of the
+time in Java.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;em&gt;driver&lt;/em&gt; – provides Java-friendly function calls to the &lt;em&gt;server&lt;/em&gt; using
+&lt;em&gt;api&lt;/em&gt; models. The caller does not need to worry about the messaging format,
+REST call mechanics, or the protocol version.&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;Hence, it is not possible to write a 100 LOC microservice here, which makes
+totally sense in my opinion. On the contrary, Fred George just passes around a
+JSON object where both ends need to eat their own dog food in order to
+parse/create messages. Here I found Fred’s approach resembling a prototype for
+a feasibility examination rather than a final product. Personally, I did not
+buy his reasoning on this issue.&lt;/p&gt;
+
+&lt;h1 id="unit-and-acceptance-tests"&gt;Unit and Acceptance Tests&lt;/h1&gt;
+
+&lt;p&gt;Let me quote directly from Fred George’s slides:&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;ol&gt;
+    &lt;li&gt;self-monitoring services replaces unit tests&lt;/li&gt;
+    &lt;li&gt;business monitoring replaces acceptance tests&lt;/li&gt;
+    &lt;li&gt;monitor live system continuously rather than testing&lt;/li&gt;
+  &lt;/ol&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;His reasoning for the above points was a microservice composed of 100 LOC
+should be simple enough to not necessitate any tests at all. Monitoring live
+system would expose any potential bugs and with rapid deployments you can
+easily fix it on production. To say the least, I do not agree.&lt;/p&gt;
+
+&lt;h1 id="programming-languages"&gt;Programming Languages&lt;/h1&gt;
+
+&lt;p&gt;He prefers dynamicly-typed languages to build microservices. I think this also
+emanetes from the fact that he just passes around a JSON object with no
+certain schema and language-specific driver implementation. This eventually
+necessitates him to write his JSON reader/writer for each microservice, where
+dynamically-typed languages play well. Again, I do not agree. I mean, solving
+the problem of ad-hoc parsing via a dynamically-typed language, I think, just
+solves the problem of a prevoiusly given wrong decision: You have neither
+drivers, nor a contract in the message format.&lt;/p&gt;
+
+&lt;p&gt;He also talked about how he believes Clojure is very suitable for
+microservices and Elixir is also a promising language in the field without
+giving any actual facts. I mean, why? Why Clojure and why not Groovy? I
+honestly found it really annoying that he presents his personal taste as
+facts without providing any actual rationale or context. While I am a big fan
+of Lisp family of languages and also Erlang/Elixir, I found this part of the
+presentation totally non-sense.&lt;/p&gt;
+
+&lt;h1 id="the-tooling-for-microservices"&gt;The Tooling for Microservices&lt;/h1&gt;
+
+&lt;p&gt;He also complained about the required free and open source tooling for
+microservices are not there yet, but it is very close. He stated that&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;NodeJS community is doing really good work in this field,&lt;/li&gt;
+  &lt;li&gt;Netflix released really good software building blocks (which I also agree),&lt;/li&gt;
+  &lt;li&gt;Cassandra helps to get better microservices (WTF!),&lt;/li&gt;
+  &lt;li&gt;Docker plays a milestone in the microservice history, etc.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;While I totally agree with some points, playing around with buzzwords like
+NodeJS, Cassandra… I found it amusing. He also added that there is still not
+a single good book on microservices. Nope! He did not accept service-oriented
+architecture books in the literature as an answer.&lt;/p&gt;
+
+&lt;h1 id="the-workshop"&gt;The Workshop&lt;/h1&gt;
+
+&lt;p&gt;So what did we really do in the workshop? We wrote a couple of basic
+microservices, where we employ a JSON object as a messaging medium and a
+central RabbitMQ server as the bus. (Fun fact: Wi-Fi sucked as usual. Fred
+George was experienced enough to bring his own access point.)&lt;/p&gt;
+
+&lt;h1 id="conclusion"&gt;Conclusion&lt;/h1&gt;
+
+&lt;p&gt;Fred George apparently has a vast amount of experience in the field of
+microservice architectures. I really liked the &lt;em&gt;Rapids, Rivers, and Ponds&lt;/em&gt;
+design of a bus-oriented system. He had also shared some really interesting
+software development experiences he had in the past, which also provided
+further clues on potential pitfalls and exceptions. Nevertheless, I found his
+JSON-passing approach (where each microservice needs to implement its own
+reader/writer) not solid enough and I did not buy his facts on rationale
+behind this. Further, relating the microservice architectures with a
+particular language or tool was absolutely awkward, to say the least.&lt;/p&gt;
+</content>
+  </entry>
   <entry>
     <id>tag:vy.github.io,2015-06-09://blog/post/2015/06/09/fibers-in-jvm/</id>
     <title type="html">Presentation: Fibers in Java Virtual Machine</title>
@@ -579,6 +759,114 @@ it useful too.&lt;/p&gt;
 </content>
   </entry>
   <entry>
+    <id>tag:vy.github.io,2015-01-08://blog/post/2015/01/08/smb-mount-troubleshoot/</id>
+    <title type="html">Troubleshooting a SMB/CIFS Mount Problem</title>
+    <published>2015-01-08T09:43:00Z</published>
+    <updated>2015-01-08T09:43:00Z</updated>
+    <link rel="alternate" href="https://vy.github.io//blog/post/2015/01/08/smb-mount-troubleshoot/"/>
+    <content type="html">
+&lt;p&gt;At every introduction to a new office environment, I spend (waste?) a certain
+period of time to connect to network shares through CIFS/SMB. This was not
+different at my new work place either. After spending almost two days to
+troubleshoot the problem, I figured out that the problem was due to the
+missing &lt;code&gt;/sbin/request-key&lt;/code&gt; binary provided by &lt;code&gt;keyutils&lt;/code&gt; package in Xubuntu
+14.04 LTS. So how did I really get it solved?&lt;/p&gt;
+
+&lt;h1 id="defining-the-problem"&gt;Defining the Problem&lt;/h1&gt;
+
+&lt;p&gt;It is really sick that &lt;code&gt;cifs&lt;/code&gt; kernel module which is responsible for loading
+CIFS/SMB filesystems returns &lt;code&gt;EINVAL&lt;/code&gt; (that is, &lt;code&gt;error(22): Invalid argument&lt;/code&gt;)
+for an entire family of errors and makes it impossible for the user to spot
+the problem. This was also the case for me.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ sudo mount \
+	-t cifs //path/to/network/shares /local/mount/point \
+	-o credentials=$HOME/.smbcredentials,iocharset=utf8,rw,uid=$USER,serverino
+mount error(22): Invalid argument
+Refer to the mount.cifs(8) manual page (e.g. man mount.cifs)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;So given that the UNC is correct, the local mount point does exist and
+accessible, and mount options are valid, &lt;code&gt;invalid argument&lt;/code&gt; error does not
+provide any context for the problem.&lt;/p&gt;
+
+&lt;p&gt;Further searching on the internet leaded me to &lt;a href="https://wiki.samba.org/index.php/LinuxCIFS_troubleshooting"&gt;LinuxCIFS
+troubleshooting&lt;/a&gt;
+at Samba Wiki. There it is told that I can enable debug messages for &lt;code&gt;cifs&lt;/code&gt;
+module by echoing a non-zero value to &lt;code&gt;/proc/fs/cifs/cifsFYI&lt;/code&gt;, hence I did so:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ echo 1 | sudo tee /proc/fs/cifs/cifsFYI
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And tried to mount the network share again. And observed the following snippet
+in the &lt;code&gt;dmesg&lt;/code&gt; output:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;CIFS VFS: dns_resolve_server_name_to_ip: unable to resolve: path
+CIFS VFS: compose_mount_options: Failed to resolve server part of \\path\to\network\shares to IP
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;So &lt;code&gt;dns_resolve_server_name_to_ip&lt;/code&gt; could not resolve &lt;code&gt;path&lt;/code&gt; for some reason.&lt;/p&gt;
+
+&lt;h1 id="dns-at-the-kernel-level"&gt;DNS at the Kernel-Level&lt;/h1&gt;
+
+&lt;p&gt;So how does kernel really resolve domain names to IP addresses? After reading
+&lt;a href="http://linux.die.net/man/8/mount.cifs"&gt;&lt;code&gt;mount.cifs(8)&lt;/code&gt;&lt;/a&gt; a couple of times, I
+saw &lt;em&gt;See Also&lt;/em&gt; section telling that
+&lt;a href="https://www.kernel.org/doc/readme/Documentation-filesystems-cifs-README"&gt;&lt;code&gt;Documentation/filesystems/cifs.txt&lt;/code&gt;&lt;/a&gt;
+in the linux kernel source tree may contain additional options and
+information. I checked that too and spotted the following lines:&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;DFS support allows transparent redirection to shares in an MS-DFS name
+space. In addition, DFS support for target shares which are specified as UNC
+names which begin with host names (rather than IP addresses) requires a user
+space helper (such as &lt;code&gt;cifs.upcall&lt;/code&gt;) to be present in order to translate
+host names to ip address, and the user space helper must also be configured
+in the file &lt;code&gt;/etc/request-key.conf&lt;/code&gt;.  Samba, Windows servers and many NAS
+appliances support DFS as a way of constructing a global name space to ease
+network configuration and improve reliability.&lt;/p&gt;
+
+  &lt;p&gt;To use cifs Kerberos and DFS support, the Linux &lt;code&gt;keyutils&lt;/code&gt; package should be
+installed and something like the following lines should be added to the
+&lt;code&gt;/etc/request-key.conf&lt;/code&gt; file:&lt;/p&gt;
+
+  &lt;pre&gt;&lt;code&gt;create cifs.spnego * * /usr/local/sbin/cifs.upcall %k
+create dns_resolver * * /usr/local/sbin/cifs.upcall %k
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;This was getting interesting. I spotted the &lt;code&gt;dns_resolver&lt;/code&gt; keyword at the
+bottom and started reading
+&lt;a href="https://www.kernel.org/doc/Documentation/networking/dns_resolver.txt"&gt;&lt;code&gt;Documentation/networking/dns_resolver.txt&lt;/code&gt;&lt;/a&gt;
+as well.&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;The DNS resolver module provides a way for kernel services to make DNS
+queries by way of requesting a key of key type &lt;code&gt;dns_resolver&lt;/code&gt;.  These
+queries are upcalled to userspace through &lt;code&gt;/sbin/request-key&lt;/code&gt;.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;The long story short, CIFS module employs DNS resolver module, which
+internally upcalls the queries to userspace through &lt;code&gt;/sbin/request-key&lt;/code&gt;. I got
+further curious and checked the &lt;code&gt;request-key(8)&lt;/code&gt;:&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;This  program  is invoked by the kernel when the kernel is asked for a key
+that it doesn’t have immediately available. The kernel creates a partially
+set up key and then calls out to this program to instantiate it. It is not
+intended to be called directly.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h1 id="the-solution"&gt;The Solution&lt;/h1&gt;
+
+&lt;p&gt;Everything was pointing that something was wrong with my &lt;code&gt;/sbin/request-key&lt;/code&gt;.
+Ooops! The binary was not there at all. &lt;code&gt;apt-file search /sbin/request-key&lt;/code&gt;
+told that the binary was provided by &lt;code&gt;keyutils&lt;/code&gt; package, which was missing in
+my system. After installing &lt;code&gt;keyutils&lt;/code&gt;, I did not observe any DNS resolver
+issues in the &lt;code&gt;dmesg&lt;/code&gt; logs and &lt;code&gt;mount.cifs&lt;/code&gt; worked without a problem.&lt;/p&gt;
+</content>
+  </entry>
+  <entry>
     <id>tag:vy.github.io,2015-01-08://blog/post/2015/01/30/java-null-check/</id>
     <title type="html">Checking Null Arguments at Runtime Using Spring AOP</title>
     <published>2015-01-08T09:43:00Z</published>
@@ -691,114 +979,6 @@ done.&lt;/p&gt;
 &lt;p&gt;The source code is available in &lt;a href="https://github.com/vy/null-check"&gt;null-check&lt;/a&gt;
 project at GitHub with some unit tests and a little bit more detailed
 installation instructions.&lt;/p&gt;
-</content>
-  </entry>
-  <entry>
-    <id>tag:vy.github.io,2015-01-08://blog/post/2015/01/08/smb-mount-troubleshoot/</id>
-    <title type="html">Troubleshooting a SMB/CIFS Mount Problem</title>
-    <published>2015-01-08T09:43:00Z</published>
-    <updated>2015-01-08T09:43:00Z</updated>
-    <link rel="alternate" href="https://vy.github.io//blog/post/2015/01/08/smb-mount-troubleshoot/"/>
-    <content type="html">
-&lt;p&gt;At every introduction to a new office environment, I spend (waste?) a certain
-period of time to connect to network shares through CIFS/SMB. This was not
-different at my new work place either. After spending almost two days to
-troubleshoot the problem, I figured out that the problem was due to the
-missing &lt;code&gt;/sbin/request-key&lt;/code&gt; binary provided by &lt;code&gt;keyutils&lt;/code&gt; package in Xubuntu
-14.04 LTS. So how did I really get it solved?&lt;/p&gt;
-
-&lt;h1 id="defining-the-problem"&gt;Defining the Problem&lt;/h1&gt;
-
-&lt;p&gt;It is really sick that &lt;code&gt;cifs&lt;/code&gt; kernel module which is responsible for loading
-CIFS/SMB filesystems returns &lt;code&gt;EINVAL&lt;/code&gt; (that is, &lt;code&gt;error(22): Invalid argument&lt;/code&gt;)
-for an entire family of errors and makes it impossible for the user to spot
-the problem. This was also the case for me.&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;$ sudo mount \
-	-t cifs //path/to/network/shares /local/mount/point \
-	-o credentials=$HOME/.smbcredentials,iocharset=utf8,rw,uid=$USER,serverino
-mount error(22): Invalid argument
-Refer to the mount.cifs(8) manual page (e.g. man mount.cifs)
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;So given that the UNC is correct, the local mount point does exist and
-accessible, and mount options are valid, &lt;code&gt;invalid argument&lt;/code&gt; error does not
-provide any context for the problem.&lt;/p&gt;
-
-&lt;p&gt;Further searching on the internet leaded me to &lt;a href="https://wiki.samba.org/index.php/LinuxCIFS_troubleshooting"&gt;LinuxCIFS
-troubleshooting&lt;/a&gt;
-at Samba Wiki. There it is told that I can enable debug messages for &lt;code&gt;cifs&lt;/code&gt;
-module by echoing a non-zero value to &lt;code&gt;/proc/fs/cifs/cifsFYI&lt;/code&gt;, hence I did so:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;$ echo 1 | sudo tee /proc/fs/cifs/cifsFYI
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;And tried to mount the network share again. And observed the following snippet
-in the &lt;code&gt;dmesg&lt;/code&gt; output:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;CIFS VFS: dns_resolve_server_name_to_ip: unable to resolve: path
-CIFS VFS: compose_mount_options: Failed to resolve server part of \\path\to\network\shares to IP
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;So &lt;code&gt;dns_resolve_server_name_to_ip&lt;/code&gt; could not resolve &lt;code&gt;path&lt;/code&gt; for some reason.&lt;/p&gt;
-
-&lt;h1 id="dns-at-the-kernel-level"&gt;DNS at the Kernel-Level&lt;/h1&gt;
-
-&lt;p&gt;So how does kernel really resolve domain names to IP addresses? After reading
-&lt;a href="http://linux.die.net/man/8/mount.cifs"&gt;&lt;code&gt;mount.cifs(8)&lt;/code&gt;&lt;/a&gt; a couple of times, I
-saw &lt;em&gt;See Also&lt;/em&gt; section telling that
-&lt;a href="https://www.kernel.org/doc/readme/Documentation-filesystems-cifs-README"&gt;&lt;code&gt;Documentation/filesystems/cifs.txt&lt;/code&gt;&lt;/a&gt;
-in the linux kernel source tree may contain additional options and
-information. I checked that too and spotted the following lines:&lt;/p&gt;
-
-&lt;blockquote&gt;
-  &lt;p&gt;DFS support allows transparent redirection to shares in an MS-DFS name
-space. In addition, DFS support for target shares which are specified as UNC
-names which begin with host names (rather than IP addresses) requires a user
-space helper (such as &lt;code&gt;cifs.upcall&lt;/code&gt;) to be present in order to translate
-host names to ip address, and the user space helper must also be configured
-in the file &lt;code&gt;/etc/request-key.conf&lt;/code&gt;.  Samba, Windows servers and many NAS
-appliances support DFS as a way of constructing a global name space to ease
-network configuration and improve reliability.&lt;/p&gt;
-
-  &lt;p&gt;To use cifs Kerberos and DFS support, the Linux &lt;code&gt;keyutils&lt;/code&gt; package should be
-installed and something like the following lines should be added to the
-&lt;code&gt;/etc/request-key.conf&lt;/code&gt; file:&lt;/p&gt;
-
-  &lt;pre&gt;&lt;code&gt;create cifs.spnego * * /usr/local/sbin/cifs.upcall %k
-create dns_resolver * * /usr/local/sbin/cifs.upcall %k
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/blockquote&gt;
-
-&lt;p&gt;This was getting interesting. I spotted the &lt;code&gt;dns_resolver&lt;/code&gt; keyword at the
-bottom and started reading
-&lt;a href="https://www.kernel.org/doc/Documentation/networking/dns_resolver.txt"&gt;&lt;code&gt;Documentation/networking/dns_resolver.txt&lt;/code&gt;&lt;/a&gt;
-as well.&lt;/p&gt;
-
-&lt;blockquote&gt;
-  &lt;p&gt;The DNS resolver module provides a way for kernel services to make DNS
-queries by way of requesting a key of key type &lt;code&gt;dns_resolver&lt;/code&gt;.  These
-queries are upcalled to userspace through &lt;code&gt;/sbin/request-key&lt;/code&gt;.&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;p&gt;The long story short, CIFS module employs DNS resolver module, which
-internally upcalls the queries to userspace through &lt;code&gt;/sbin/request-key&lt;/code&gt;. I got
-further curious and checked the &lt;code&gt;request-key(8)&lt;/code&gt;:&lt;/p&gt;
-
-&lt;blockquote&gt;
-  &lt;p&gt;This  program  is invoked by the kernel when the kernel is asked for a key
-that it doesn’t have immediately available. The kernel creates a partially
-set up key and then calls out to this program to instantiate it. It is not
-intended to be called directly.&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;h1 id="the-solution"&gt;The Solution&lt;/h1&gt;
-
-&lt;p&gt;Everything was pointing that something was wrong with my &lt;code&gt;/sbin/request-key&lt;/code&gt;.
-Ooops! The binary was not there at all. &lt;code&gt;apt-file search /sbin/request-key&lt;/code&gt;
-told that the binary was provided by &lt;code&gt;keyutils&lt;/code&gt; package, which was missing in
-my system. After installing &lt;code&gt;keyutils&lt;/code&gt;, I did not observe any DNS resolver
-issues in the &lt;code&gt;dmesg&lt;/code&gt; logs and &lt;code&gt;mount.cifs&lt;/code&gt; worked without a problem.&lt;/p&gt;
 </content>
   </entry>
   <entry>
@@ -1756,430 +1936,6 @@ into the unit tests as follows.&lt;/p&gt;
 &lt;p&gt;I suppose I have got a nearly 99% code coverage of the game engine by using the
 mock &lt;code&gt;WebSocket&lt;/code&gt;s. I hope this scheme would help others trying to do a similar
 testing stuff.&lt;/p&gt;
-</content>
-  </entry>
-  <entry>
-    <id>tag:vy.github.io,2014-08-07://blog/post/2014/09/01/java-fiber-test/</id>
-    <title type="html">Testing Fiber Implementations in JVM</title>
-    <published>2014-08-07T09:28:00Z</published>
-    <updated>2014-08-07T09:28:00Z</updated>
-    <link rel="alternate" href="https://vy.github.io//blog/post/2014/09/01/java-fiber-test/"/>
-    <content type="html">
-&lt;p&gt;I have always been interested in concurrent programming through the use of
-threads. This inclination did not originate from a need to exploit the
-parallelism at the hardware level for performance reasons, but rather due to the
-fact that I believe it establishes a model of reasoning about your code that
-provides a more convenient and natural way for encapsulating concurrency in the
-overall program flow. I cannot express the relief I felt when I first ported an
-asynchronous piece of networking code to
-&lt;a href="http://en.wikipedia.org/wiki/POSIX_Threads"&gt;PThreads&lt;/a&gt;. But my joy did not last
-long – context switching, memory, cache miss costs and more importantly the
-physical constraints that bounds the number of threads were waiting for me at
-the end of the tunnel. Lucky for me, it did not take much time to figure out the
-notion of &lt;a href="http://en.wikipedia.org/wiki/Light-weight_process"&gt;Light-weight
-processes&lt;/a&gt;, which later
-introduced me to &lt;a href="http://dunkels.com/adam/pt/"&gt;Protothreads&lt;/a&gt;. That being said, I
-should have admit that I fell back to my single-threaded asynchronous event loop
-many times rather than a Protothreads flavored PThreads spaghetti. I suppose
-every programmer had once dreamed about having light-weight threads that maps to
-a multitude of physical CPU cores via some sort of mechanism in the background,
-many similar efforts in the literature (&lt;a href="http://swtch.com/plan9port/man/man3/rfork.html"&gt;Plan9
-rfork&lt;/a&gt;, &lt;a href="http://www.princeton.edu/~unix/Solaris/troubleshoot/process.html"&gt;Solaris
-LWP&lt;/a&gt;, &lt;a href="http://www.daemon-systems.org/man/_lwp_create.2.html"&gt;NetBSD
-lwp_create&lt;/a&gt;) backs this
-claim, I suppose.&lt;/p&gt;
-
-&lt;h1 id="threads-coroutines-and-fibers"&gt;Threads, Coroutines, and Fibers&lt;/h1&gt;
-
-&lt;p&gt;The heart of the problem lies in the question of mapping &lt;script type="math/tex"&gt;m&lt;/script&gt; light-weight
-threads to &lt;script type="math/tex"&gt;n&lt;/script&gt; physical processor cores (&lt;script type="math/tex"&gt;m \gg n&lt;/script&gt;) given that the operating
-system has no prior knowledge on what is going on at the application level. As
-an inevitable consequence of this problem, developers come up with the idea of
-providing application level constructs to hint the underlying process scheduling
-mechanism about the concurrency operating at the application level. Among many
-other attempts, &lt;a href="http://en.wikipedia.org/wiki/Coroutine"&gt;coroutines&lt;/a&gt; and
-&lt;a href="http://en.wikipedia.org/wiki/Fiber_(computer_science)"&gt;fibers&lt;/a&gt; are the two
-well-known examples emanated from this research. Quoting from
-&lt;a href="http://en.wikipedia.org/wiki/Fiber_(computer_science)"&gt;Wikipedia&lt;/a&gt;,&lt;/p&gt;
-
-&lt;blockquote&gt;
-  &lt;p&gt;Fibers describe essentially the same concept as coroutines. The distinction,
-if there is any, is that coroutines are a language-level construct, a form of
-control flow, while fibers are a systems-level construct, viewed as threads
-that happen not to run concurrently. Priority is contentious; fibers may be
-viewed as an implementation of coroutines, or as a substrate on which to
-implement coroutines.&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;p&gt;If I would try to restate the given description from a more naive perspective
-targeting the Java Virtual Machine, &lt;em&gt;coroutines are language-level constructs to
-form a way of cooperative execution of multiple tasks, whereas fibers are
-light-weight threads scheduled preemptively by the virtual machine&lt;/em&gt;. There is &lt;a href="http://stackoverflow.com/questions/2846428/available-coroutine-libraries-in-java"&gt;a
-set of coroutine
-implementations&lt;/a&gt;
-available for JVM, but in this post I will try to stick with two particular
-fiber implementations: &lt;a href="http://akka.io/"&gt;Akka&lt;/a&gt; from
-&lt;a href="http://typesafe.com/"&gt;Typesafe&lt;/a&gt; and
-&lt;a href="http://docs.paralleluniverse.co/quasar/"&gt;Quasar&lt;/a&gt; from &lt;a href="http://paralleluniverse.co/"&gt;Parallel
-Universe&lt;/a&gt;.&lt;/p&gt;
-
-&lt;h1 id="akka-and-quasar"&gt;Akka and Quasar&lt;/h1&gt;
-
-&lt;p&gt;Last year I had a plenty amount of time to play around with
-&lt;a href="http://akka.io/"&gt;Akka&lt;/a&gt; during the &lt;a href="https://www.coursera.org/course/reactive"&gt;The Principles of Reactive
-Programming&lt;/a&gt; course. Claiming that
-Akka is just a toolkit to realize fibers on the JVM would be a fairly incomplete
-definition – it is totally much more than that. Designed for resiliency from
-top to ground, a gigantic toolbox of common messaging pattern shortcuts,
-adaptive load balancing, routing, partitioning, and configuration-driven
-remoting, etc. just to name a few. Additionally, one should note that it is
-battle-tested with real-world work loads by means of both as a standalone
-application and a compound to the &lt;a href="https://typesafe.com/platform"&gt;Typesafe
-Platform&lt;/a&gt;.&lt;/p&gt;
-
-&lt;p&gt;On the other hand, &lt;a href="http://docs.paralleluniverse.co/quasar/"&gt;Quasar&lt;/a&gt; is a
-relatively new player in this league. That being said, it is implemented as a
-compact library with – in my opinion – a relatively sufficient set of
-features. Though it has a lot to go to catch Akka in terms of out of the box
-features. In addition, while Akka just provides
-&lt;a href="http://en.wikipedia.org/wiki/Actor_model"&gt;actor&lt;/a&gt; abstractions at the
-programming language level, Quasar ships both actors and fibers. (Actually,
-Quasar actors are built on top of fibers.) Quoting from Quasar core developer
-Ron Pressler’s
-&lt;a href="https://groups.google.com/d/msg/quasar-pulsar-user/NrYOyUTqdcg/MFPl6S0USigJ"&gt;post&lt;/a&gt;:&lt;/p&gt;
-
-&lt;blockquote&gt;
-  &lt;p&gt;Quasar and Akka provide completely different abstractions. Quasar provides
-fibers while Akka provides an asynchronous-programming framework based on
-callbacks. Both libraries then implement actors using their respective
-abstractions. […] fibers are lightweight threads, which
-means that their most important property – even before being light-weight –
-is being threads. The thread abstraction is a series of sequential
-computations with the ability to block – on IO or synchronization. Callbacks,
-on the other hand, are a completely different abstraction. Akka’s callbacks
-(and therefore actors), are not allowed to block, and therefore do not provide
-a thread abstraction; hence they’re not fibers.&lt;/p&gt;
-
-  &lt;p&gt;Quasar’s main design goal was the desire to make the simple, familiar,
-threading abstraction (i.e., synchronous, blocking code) cheap, as kernel
-threads are expensive, and blocking a kernel thread carries a lot of overhead.
-Quasar is used to run servlets that serve hundreds of thousands of concurrent
-requests – instead of mere thousands – all without changing your existing
-Java code. We want developers get the full performance benefits of
-asynchronous code – which Akka also offers – while keeping their APIs and
-synchronous programming model – which Akka certainly doesn’t. Quasar makes
-threading cheap, while Akka abandons the thread abstraction altogether. In
-that respect, Quasar is a lot more similar to Erlang and Go (which, of course,
-provided the inspiration to Quasar), which also use the thread abstraction but
-provide a lightweight thread implementation.&lt;/p&gt;
-
-  &lt;p&gt;Akka’s design goals are different, and we think Quasar is far simpler to use
-than Akka, requires less mental overhead and far-less re-engineering, while at
-the same time being more feature-rich.&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;h1 id="the-benchmark"&gt;The Benchmark&lt;/h1&gt;
-
-&lt;p&gt;In order to have an idea on how two implementations compare to each other in
-terms of performance, I put together a small benchmark suite
-(&lt;a href="https://github.com/vy/fiber-test/"&gt;fiber-test&lt;/a&gt;) that employs both Akka (2.3.5)
-and Quasar (0.6.0) for the well-known
-&lt;a href="http://www.sics.se/~joe/ericsson/du98024.html"&gt;thread-ring&lt;/a&gt; problem. (&lt;script type="math/tex"&gt;n&lt;/script&gt;
-threads are spawned and connected as a ring structure. Through this ring a
-message – an integer comprising 4 bytes – is circulated involving &lt;script type="math/tex"&gt;m&lt;/script&gt;
-message passings.) In addition, I included a version of the benchmark that uses
-Java Threads to establish a base line.&lt;/p&gt;
-
-&lt;p&gt;In &lt;a href="https://github.com/vy/fiber-test/"&gt;fiber-test&lt;/a&gt;, you will observe that
-&lt;a href="https://github.com/vy/fiber-test/blob/master/benchmark.sh"&gt;benchmark.sh&lt;/a&gt;
-employs &lt;a href="http://linux.die.net/man/1/taskset"&gt;taskset&lt;/a&gt; to bond the JVM to a given
-set of CPUs on the system. However, for small number (1-2) of CPUs, Quasar
-freezes randomly and Java Threads become totally unresponsive. Hence, I get rid
-off of the &lt;code&gt;taskset&lt;/code&gt; for the figures presented here.&lt;/p&gt;
-
-&lt;p&gt;Tests are deployed on a Ubuntu GNU/Linux 14.04 (LTS) system running on a 6
-physical core Intel(R) Xeon(R) E5645 2.40GHz processor, where 64-bit Java
-HotSpot VM (build 1.8.0_20-ea-b05) is used.
-&lt;a href="http://openjdk.java.net/projects/code-tools/jmh/"&gt;JMH&lt;/a&gt; is set to run 5+5 warmup
-and regular iterations using 3 JVM forks. There are 503 threads in each
-benchmark and 1e7 message passings. Results are in milliseconds per benchmark.&lt;/p&gt;
-
-&lt;table id="results"&gt;
-	&lt;thead&gt;
-		&lt;tr&gt;
-			&lt;th&gt;Fiber Impl.&lt;/th&gt;
-			&lt;th&gt;Min.&lt;/th&gt;
-			&lt;th colspan="2"&gt;Avg.&lt;/th&gt;
-			&lt;th&gt;Max.&lt;/th&gt;
-			&lt;th&gt;Stddev.&lt;/th&gt;
-			&lt;th colspan="3"&gt;Confidence Interval&lt;/th&gt;
-		&lt;/tr&gt;
-	&lt;/thead&gt;
-	&lt;tbody&gt;
-		&lt;tr&gt;
-			&lt;td&gt;Quasar Fibers&lt;/td&gt;
-			&lt;td&gt;695.613&lt;/td&gt;
-			&lt;td&gt;29x&lt;/td&gt;
-			&lt;td&gt;721.457&lt;/td&gt;
-			&lt;td&gt;758.231&lt;/td&gt;
-			&lt;td&gt;20.796&lt;/td&gt;
-			&lt;td&gt;99.9%&lt;/td&gt;
-			&lt;td&gt;699.226&lt;/td&gt;
-			&lt;td&gt;743.689&lt;/td&gt;
-		&lt;/tr&gt;
-		&lt;tr&gt;
-			&lt;td&gt;Akka Actors&lt;/td&gt;
-			&lt;td&gt;856.807&lt;/td&gt;
-			&lt;td&gt;23x&lt;/td&gt;
-			&lt;td&gt;911.295&lt;/td&gt;
-			&lt;td&gt;963.403&lt;/td&gt;
-			&lt;td&gt;34.345&lt;/td&gt;
-			&lt;td&gt;99.9%&lt;/td&gt;
-			&lt;td&gt;874.578&lt;/td&gt;
-			&lt;td&gt;948.012&lt;/td&gt;
-		&lt;/tr&gt;
-		&lt;tr&gt;
-			&lt;td&gt;Quasar Actors&lt;/td&gt;
-			&lt;td&gt;1553.224&lt;/td&gt;
-			&lt;td&gt;13x&lt;/td&gt;
-			&lt;td&gt;1606.718&lt;/td&gt;
-			&lt;td&gt;1660.329&lt;/td&gt;
-			&lt;td&gt;35.756&lt;/td&gt;
-			&lt;td&gt;99.9%&lt;/td&gt;
-			&lt;td&gt;1568.492&lt;/td&gt;
-			&lt;td&gt;1644.943&lt;/td&gt;
-		&lt;/tr&gt;
-		&lt;tr&gt;
-			&lt;td&gt;Java Threads&lt;/td&gt;
-			&lt;td&gt;15730.028&lt;/td&gt;
-			&lt;td&gt;1x&lt;/td&gt;
-			&lt;td&gt;20709.233&lt;/td&gt;
-			&lt;td&gt;33084.117&lt;/td&gt;
-			&lt;td&gt;4338.423&lt;/td&gt;
-			&lt;td&gt;99.9%&lt;/td&gt;
-			&lt;td&gt;16071.196&lt;/td&gt;
-			&lt;td&gt;25347.270&lt;/td&gt;
-		&lt;/tr&gt;
-	&lt;/tbody&gt;
-&lt;/table&gt;
-&lt;style type="text/css"&gt;
-table#results tbody tr td { text-align: right; }
-table#results thead tr th { text-align: center; }
-table#results td { padding: 1px; }
-&lt;/style&gt;
-
-&lt;div id="chartContainer" style="margin: 0 auto; height: 100px; width: 75%"&gt;&lt;/div&gt;
-&lt;script type="text/javascript"&gt;
-$(document).ready(function() {
-	var chart = new CanvasJS.Chart("chartContainer", {
-			backgroundColor: "transparent",
-			creditText: null,
-			axisX: {
-				interval: 1,
-				gridThickness: 0,
-				labelFontSize: 10,
-				labelFontStyle: "normal",
-				labelFontWeight: "normal",
-				labelFontFamily: "'Arial', sans"
-			},
-			axisY2: {
-				labelFontSize: 10,
-				labelFontStyle: "normal",
-				labelFontWeight: "normal",
-				labelFontFamily: "'Arial', sans",
-				interlacedColor: "rgba(1,77,101,.2)",
-				gridColor: "rgba(1,77,101,.1)"
-			},
-			data: [{
-				type: "bar",
-                name: "companies",
-				axisYType: "secondary",
-				color: "#014D65",
-				dataPoints: [
-					{y: 20709.233, label: "Java Threads"},
-					{y: 1606.718, label: "Quasar Actors"},
-					{y: 911.295, label: "Akka Actors"},
-					{y: 721.457, label: "Quasar Fibers"}
-				]
-			}]
-		});
-	chart.render();
-});
-&lt;/script&gt;
-
-&lt;p&gt;Results point out that even in the worst case (which corresponds to Quasar
-Actors in the figures) fiber implementation on the average performs 13 times
-better compared to native Java threads. In addition, Akka Actors and Quasar
-Fibers improve this level up to 23x and 29x, respectively. All that being said
-and done, I could not reason about the performance difference between Quasar
-Fibers and Actors, given that actors are implemented using fibers in Quasar. In
-order to further investigate the problem, I profiled the benchmarks using
-&lt;code&gt;-agentlib:hprof=cpu=samples,interval=20,depth=3&lt;/code&gt;. (See
-&lt;a href="http://docs.oracle.com/javase/7/docs/technotes/samples/hprof.html"&gt;HPROF&lt;/a&gt;
-documentation for further information on the parameters.)&lt;/p&gt;
-
-&lt;table id="hprof"&gt;
-	&lt;thead&gt;
-		&lt;tr&gt;
-			&lt;th&gt;rank&lt;/th&gt;
-			&lt;th&gt;self&lt;/th&gt;
-			&lt;th&gt;accum&lt;/th&gt;
-			&lt;th&gt;count&lt;/th&gt;
-			&lt;th&gt;trace&lt;/th&gt;
-			&lt;th&gt;method&lt;/th&gt;
-		&lt;/tr&gt;
-	&lt;/thead&gt;
-	&lt;tbody&gt;
-		&lt;tr&gt;&lt;th colspan="6"&gt;Quasar Fibers&lt;/th&gt;&lt;/tr&gt;
-		&lt;tr class="highlight"&gt;
-&lt;td&gt;1&lt;/td&gt;
-&lt;td&gt;47,55%&lt;/td&gt;
-&lt;td&gt;47,55%&lt;/td&gt;
-&lt;td&gt;67286&lt;/td&gt;
-&lt;td&gt;300366&lt;/td&gt;
-&lt;td&gt;co.paralleluniverse.fibers.Fiber.run1&lt;/td&gt;
-&lt;/tr&gt;
-		&lt;tr&gt;
-&lt;td&gt;2&lt;/td&gt;
-&lt;td&gt;47,48%&lt;/td&gt;
-&lt;td&gt;95,04%&lt;/td&gt;
-&lt;td&gt;67186&lt;/td&gt;
-&lt;td&gt;300364&lt;/td&gt;
-&lt;td&gt;com.github.vy.fibertest.QuasarFiberRingBenchmark$InternalFiber.run&lt;/td&gt;
-&lt;/tr&gt;
-		&lt;tr&gt;
-&lt;td&gt;3&lt;/td&gt;
-&lt;td&gt;3,37%&lt;/td&gt;
-&lt;td&gt;98,40%&lt;/td&gt;
-&lt;td&gt;4765&lt;/td&gt;
-&lt;td&gt;300372&lt;/td&gt;
-&lt;td&gt;com.github.vy.fibertest.QuasarFiberRingBenchmark$InternalFiber.run&lt;/td&gt;
-&lt;/tr&gt;
-		&lt;tr&gt;&lt;th colspan="6"&gt;Quasar Actors&lt;/th&gt;&lt;/tr&gt;
-		&lt;tr&gt;
-&lt;td&gt;1&lt;/td&gt;
-&lt;td&gt;22,17%&lt;/td&gt;
-&lt;td&gt;22,17%&lt;/td&gt;
-&lt;td&gt;77787&lt;/td&gt;
-&lt;td&gt;300526&lt;/td&gt;
-&lt;td&gt;co.paralleluniverse.fibers.Fiber.park1&lt;/td&gt;
-&lt;/tr&gt;
-		&lt;tr&gt;
-&lt;td&gt;2&lt;/td&gt;
-&lt;td&gt;18,53%&lt;/td&gt;
-&lt;td&gt;40,69%&lt;/td&gt;
-&lt;td&gt;65011&lt;/td&gt;
-&lt;td&gt;300508&lt;/td&gt;
-&lt;td&gt;co.paralleluniverse.fibers.Fiber.run&lt;/td&gt;
-&lt;/tr&gt;
-		&lt;tr class="highlight"&gt;
-&lt;td&gt;3&lt;/td&gt;
-&lt;td&gt;18,32%&lt;/td&gt;
-&lt;td&gt;59,01%&lt;/td&gt;
-&lt;td&gt;64292&lt;/td&gt;
-&lt;td&gt;300527&lt;/td&gt;
-&lt;td&gt;co.paralleluniverse.strands.channels.SingleConsumerQueueChannel.receive&lt;/td&gt;
-&lt;/tr&gt;
-		&lt;tr&gt;
-&lt;td&gt;4&lt;/td&gt;
-&lt;td&gt;18,27%&lt;/td&gt;
-&lt;td&gt;77,28%&lt;/td&gt;
-&lt;td&gt;64114&lt;/td&gt;
-&lt;td&gt;300517&lt;/td&gt;
-&lt;td&gt;com.github.vy.fibertest.QuasarActorRingBenchmark$InternalActor.doRun&lt;/td&gt;
-&lt;/tr&gt;
-		&lt;tr&gt;
-&lt;td&gt;5&lt;/td&gt;
-&lt;td&gt;17,39%&lt;/td&gt;
-&lt;td&gt;94,67%&lt;/td&gt;
-&lt;td&gt;61009&lt;/td&gt;
-&lt;td&gt;300528&lt;/td&gt;
-&lt;td&gt;co.paralleluniverse.actors.ActorRunner.run&lt;/td&gt;
-&lt;/tr&gt;
-		&lt;tr&gt;&lt;th colspan="6"&gt;Akka Actors&lt;/th&gt;&lt;/tr&gt;
-		&lt;tr class="highlight"&gt;
-&lt;td&gt;1&lt;/td&gt;
-&lt;td&gt;64,09%&lt;/td&gt;
-&lt;td&gt;64,09%&lt;/td&gt;
-&lt;td&gt;5158&lt;/td&gt;
-&lt;td&gt;300307&lt;/td&gt;
-&lt;td&gt;scala.concurrent.forkjoin.ForkJoinPool.runWorker&lt;/td&gt;
-&lt;/tr&gt;
-		&lt;tr&gt;
-&lt;td&gt;2&lt;/td&gt;
-&lt;td&gt;12,51%&lt;/td&gt;
-&lt;td&gt;76,60%&lt;/td&gt;
-&lt;td&gt;1007&lt;/td&gt;
-&lt;td&gt;300298&lt;/td&gt;
-&lt;td&gt;sun.misc.Unsafe.park&lt;/td&gt;
-&lt;/tr&gt;
-		&lt;tr&gt;
-&lt;td&gt;3&lt;/td&gt;
-&lt;td&gt;10,69%&lt;/td&gt;
-&lt;td&gt;87,29%&lt;/td&gt;
-&lt;td&gt;860&lt;/td&gt;
-&lt;td&gt;300309&lt;/td&gt;
-&lt;td&gt;sun.misc.Unsafe.unpark&lt;/td&gt;
-&lt;/tr&gt;
-		&lt;tr&gt;
-&lt;td&gt;4&lt;/td&gt;
-&lt;td&gt;2,65%&lt;/td&gt;
-&lt;td&gt;89,94%&lt;/td&gt;
-&lt;td&gt;213&lt;/td&gt;
-&lt;td&gt;300300&lt;/td&gt;
-&lt;td&gt;scala.concurrent.forkjoin.ForkJoinPool.scan&lt;/td&gt;
-&lt;/tr&gt;
-		&lt;tr&gt;
-&lt;td&gt;5&lt;/td&gt;
-&lt;td&gt;1,12%&lt;/td&gt;
-&lt;td&gt;91,05%&lt;/td&gt;
-&lt;td&gt;90&lt;/td&gt;
-&lt;td&gt;300316&lt;/td&gt;
-&lt;td&gt;akka.dispatch.Dispatcher.dispatch&lt;/td&gt;
-&lt;/tr&gt;
-		&lt;tr&gt;&lt;th colspan="6"&gt;Java Threads&lt;/th&gt;&lt;/tr&gt;
-		&lt;tr class="highlight"&gt;
-&lt;td&gt;1&lt;/td&gt;
-&lt;td&gt;94,33%&lt;/td&gt;
-&lt;td&gt;94,33%&lt;/td&gt;
-&lt;td&gt;10373&lt;/td&gt;
-&lt;td&gt;300057&lt;/td&gt;
-&lt;td&gt;sun.misc.Unsafe.unpark&lt;/td&gt;
-&lt;/tr&gt;
-		&lt;tr&gt;
-&lt;td&gt;2&lt;/td&gt;
-&lt;td&gt;5,59%&lt;/td&gt;
-&lt;td&gt;99,93%&lt;/td&gt;
-&lt;td&gt;615&lt;/td&gt;
-&lt;td&gt;300058&lt;/td&gt;
-&lt;td&gt;sun.misc.Unsafe.park&lt;/td&gt;
-&lt;/tr&gt;
-	&lt;/tbody&gt;
-&lt;/table&gt;
-&lt;style type="text/css"&gt;
-table#hprof tr.highlight td { color: red; }
-table#hprof td { padding: 1px; }
-&lt;/style&gt;
-
-&lt;p&gt;As anticipated, Java Threads were bitten by &lt;code&gt;park&lt;/code&gt;/&lt;code&gt;unpark&lt;/code&gt; methods in
-&lt;code&gt;sun.misc.Unsafe&lt;/code&gt;. Whereas, Akka Actors and Quasar Fibers perform some sort of
-interleaving between routines to avoid these calls and that totally rocks.
-Unfortunately, it turns out that the channel mechanisms (e.g.,
-&lt;code&gt;co.paralleluniverse.strands.channels.SingleConsumerQueueChannel&lt;/code&gt;) in Quasar
-Actors somehow trigger the Quasar core to employ &lt;code&gt;park&lt;/code&gt; calls in between the
-message receivers and that predominantly consumes the majority of the fiber
-runtime.&lt;/p&gt;
-
-&lt;h1 id="the-conclusion"&gt;The Conclusion&lt;/h1&gt;
-
-&lt;p&gt;Observing that fiber implementations perform superior compared to standard Java
-Threads is nothing new. However, seeing Quasar Fibers showing up impressive
-performance is not something I was expecting, considering that the project is in
-its very early stages. That being said, it appears that channels in Quasar
-Actors have a certain room for improvement and might borrow some ideas from its
-Akka counterpart. In the overall, both fiber implementations show stable and
-noteworthy performance figures and stand as a perfect standard Java Thread
-replacement for a considerable amount of use cases.&lt;/p&gt;
 </content>
   </entry>
 </feed>
