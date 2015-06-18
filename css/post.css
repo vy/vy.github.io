@@ -1,4 +1,5 @@
 @import url(http://fonts.googleapis.com/css?family=Yanone+Kaffeesatz:400,700);
+@import url(http://fonts.googleapis.com/css?family=Open+Sans:400,300);
 body {
   background: url("/img/bg-post.jpg") no-repeat center center fixed;
   -webkit-background-size: cover;
@@ -13,17 +14,18 @@ body {
     margin-bottom: 15px; }
     #post .head .title {
       font-family: "Yanone Kaffeesatz", sans-serif;
-      font-size: 22pt; }
+      font-size: 2.2em; }
     #post .head .subtitle {
       margin-top: 5px;
-      font-size: 9pt;
+      font-size: 0.9em;
       font-family: "Archivo Narrow", sans-serif; }
     #post .head .share {
       margin-top: 5px;
       margin-bottom: 20px; }
-  #post .body {
-    font-family: "Arial", sans;
-    font-size: 9pt; }
+  #post .body, #post li, #post p {
+    font-family: "Open Sans", sans-serif;
+    line-height: 1.9em;
+    font-size: 1.05em; }
   #post img {
     border: 1px solid #cfcfcf;
     margin: 0px auto;
@@ -32,7 +34,7 @@ body {
     border-bottom: 1px dotted; }
   #post h1 {
     font-family: "Yanone Kaffeesatz", sans-serif;
-    font-size: 18pt;
+    font-size: 1.6em;
     margin-bottom: 0px; }
   #post pre, #post code {
     overflow: auto;
@@ -40,11 +42,7 @@ body {
     white-space: pre;
     line-height: 105%; }
   #post blockquote p {
-    font-size: 10pt;
-    line-height: 20px;
-    font-family: serif;
-    font-style: oblique;
-    margin-bottom: 7px; }
+    font-style: oblique; }
   #post iframe {
     display: block;
     margin: 0 auto; }
