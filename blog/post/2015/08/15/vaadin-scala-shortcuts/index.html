@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Scala Shortcuts for Vaadin Development</title>
+    <link rel="stylesheet" href="/css/bootstrap.css">
+    <link rel="stylesheet" href="/css/bootstrap-responsive.css">
+    <script src="/js/bootstrap.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="/css/common.css">
+    <meta name="generator" content="nanoc 3.8.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/post.css">
+    <script type="text/javascript">
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-40183531-1']);
+      _gaq.push(['_trackPageview']);
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="menu">
+      <div><a href="/">Home</a></div><div><a href="/about/">About</a></div><div><a href="/blog/">Blog</a></div><div><a href="/code/">Code</a></div><div><a href="/blog/feed/">Feed</a></div>
+    </div>
+    
+
+<div class="container">
+  <div class="row-fluid">
+    <div class="offset1 span10">
+      <div id="post" class="more-white-box rounded-corners">
+	<div class="head">
+	  <div class="title">Scala Shortcuts for Vaadin Development</div>
+	  <div class="subtitle">posted at
+	    August 15, 2015
+	    with tags <a href="/blog/tag/scala">scala</a>, <a href="/blog/tag/vaadin">vaadin</a>
+	  </div>
+	  <div class="share">
+	    <div class="addthis_toolbox addthis_default_style ">
+	      <a class="addthis_button_preferred_1"></a>
+	      <a class="addthis_button_preferred_2"></a>
+	      <a class="addthis_button_preferred_3"></a>
+	      <a class="addthis_button_preferred_4"></a>
+	      <a class="addthis_button_compact"></a>
+	    </div>
+	    <script type="text/javascript">var addthis_config = {"data_track_addressbar":false};</script>
+	    <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-5144adf75211a62b"></script>
+	  </div>
+	</div>
+	<div class="body">
+
+	  
+<p>This year I had found chance to get my hands dirty with
+<a href="https://vaadin.com/">Vaadin</a>. Given the fact that this was the first time I
+was exposed to a GWT-based web framework using Scala, I tried various coding
+conventions, utility functions, shortcuts, etc. in the beginning. Over the
+time, I came up with some common conventions that I employ throughout the code
+base. In this post, I will share some of these custom tricks I developed along
+this pursuit.</p>
+
+<h1 id="returning-the-first-value">“Returning” the First Value</h1>
+
+<p>While creating a certain UI component, what a programmer occasionally performs
+is to 1) instantiate the class, 2) set certain properties, and 3) return/use
+the instance.</p>
+
+<pre><code class="language-scala"><span class="k">val</span> <span class="n">buttonLayout</span><span class="k">:</span> <span class="kt">HorizontalLayout</span> <span class="o">=</span> <span class="o">{</span>
+  <span class="k">val</span> <span class="n">layout</span> <span class="k">=</span> <span class="k">new</span> <span class="nc">HorizontalLayout</span>
+  <span class="n">layout</span><span class="o">.</span><span class="n">setMargin</span><span class="o">(</span><span class="kc">true</span><span class="o">)</span>
+  <span class="n">layout</span><span class="o">.</span><span class="n">setSpacing</span><span class="o">(</span><span class="kc">true</span><span class="o">)</span>
+  <span class="n">layout</span><span class="o">.</span><span class="n">addComponent</span><span class="o">(</span><span class="n">submitButton</span><span class="o">)</span>
+  <span class="n">layout</span><span class="o">.</span><span class="n">addComponent</span><span class="o">(</span><span class="n">resetButton</span><span class="o">)</span>
+  <span class="n">layout</span>
+<span class="o">}</span></code></pre>
+
+<p>This pattern was so idiomatic and repetitive throughout the code base that I
+thought having something similar to <a href="http://www.lispworks.com/documentation/HyperSpec/Body/m_prog1c.htm">prog1 in Common
+Lisp</a>
+would be really helpful for structuring similar components. Hence, I came up
+with my own <code>returning</code> utility function as follows:</p>
+
+<pre><code class="language-scala"><span class="k">def</span> <span class="n">returning</span><span class="o">[</span><span class="kt">T</span><span class="o">](</span><span class="n">result</span><span class="k">:</span> <span class="kt">T</span><span class="o">)(</span><span class="n">body</span><span class="k">:</span> <span class="kt">T</span> <span class="o">=&gt;</span> <span class="nc">Unit</span><span class="o">)</span><span class="k">:</span> <span class="kt">T</span> <span class="o">=</span> <span class="o">{</span>
+  <span class="n">body</span><span class="o">(</span><span class="n">result</span><span class="o">)</span>
+  <span class="n">result</span>
+<span class="o">}</span></code></pre>
+
+<p>When we employ <code>returning</code> in <code>buttonLayout</code>, code translates as follows:</p>
+
+<pre><code class="language-scala"><span class="k">val</span> <span class="n">buttonLayout</span><span class="k">:</span> <span class="kt">HorizontalLayout</span> <span class="o">=</span>
+  <span class="n">returning</span><span class="o">(</span><span class="k">new</span> <span class="nc">HorizontalLayout</span><span class="o">)</span> <span class="o">{</span>
+    <span class="n">layout</span> <span class="k">=&gt;</span> 
+      <span class="n">layout</span><span class="o">.</span><span class="n">setMargin</span><span class="o">(</span><span class="kc">true</span><span class="o">)</span>
+      <span class="n">layout</span><span class="o">.</span><span class="n">setSpacing</span><span class="o">(</span><span class="kc">true</span><span class="o">)</span>
+      <span class="n">layout</span><span class="o">.</span><span class="n">addComponent</span><span class="o">(</span><span class="n">submitButton</span><span class="o">)</span>
+      <span class="n">layout</span><span class="o">.</span><span class="n">addComponent</span><span class="o">(</span><span class="n">resetButton</span><span class="o">)</span>
+  <span class="o">}</span></code></pre>
+
+<p>I find this version more clear on intent.</p>
+
+<h1 id="reading-nullable-text-fields">Reading Nullable Text Fields</h1>
+
+<p>While coding in Scala, I write my code as if there are no <code>null</code>s. And
+whenever there is an external API that I need to communicate and has potential
+to return <code>null</code>, I wrap it in an <code>Option</code>. This practice also applies to
+<code>getValue</code> method of <code>TextField</code>s in Vaadin. Hence, I purposed a common
+function to read from text fields:</p>
+
+<pre><code class="language-scala"><span class="k">def</span> <span class="n">getTrimmedValue</span><span class="o">(</span><span class="n">field</span><span class="k">:</span> <span class="kt">AbstractTextField</span><span class="o">)</span><span class="k">:</span> <span class="kt">Option</span><span class="o">[</span><span class="kt">String</span><span class="o">]</span> <span class="k">=</span>
+  <span class="nc">Option</span><span class="o">(</span><span class="n">field</span><span class="o">.</span><span class="n">getValue</span><span class="o">).</span><span class="n">filterNot</span><span class="o">(</span><span class="k">_</span><span class="o">.</span><span class="n">trim</span><span class="o">.</span><span class="n">isEmpty</span><span class="o">)</span></code></pre>
+
+<p>Note that <code>getTrimmedValue</code> treats input fields of redundant whitespace as a
+<code>None</code>.</p>
+
+<h1 id="grouping-component-getterssetters">Grouping Component Getters/Setters</h1>
+
+<p>While creating forms, I was using the following scheme to implement fields one
+by one:</p>
+
+<pre><code class="language-scala"><span class="k">val</span> <span class="n">nameField</span><span class="k">:</span> <span class="kt">TextField</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">TextField</span>
+
+<span class="k">def</span> <span class="n">getNameFieldValue</span><span class="k">:</span> <span class="kt">Option</span><span class="o">[</span><span class="kt">String</span><span class="o">]</span> <span class="k">=</span> <span class="n">getTrimmedValue</span><span class="o">(</span><span class="n">nameField</span><span class="o">)</span>
+
+<span class="k">def</span> <span class="n">resetNameFieldValue</span><span class="o">()</span><span class="k">:</span> <span class="kt">Unit</span> <span class="o">=</span> <span class="n">nameField</span><span class="o">.</span><span class="n">setValue</span><span class="o">(</span><span class="n">name</span><span class="o">.</span><span class="n">orNull</span><span class="o">)</span>
+
+<span class="k">val</span> <span class="n">surnameField</span><span class="k">:</span> <span class="kt">TextField</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">TextField</span>
+
+<span class="k">def</span> <span class="n">getSurnameFieldValue</span><span class="k">:</span> <span class="kt">Option</span><span class="o">[</span><span class="kt">String</span><span class="o">]</span> <span class="k">=</span> <span class="n">getTrimmedValue</span><span class="o">(</span><span class="n">surnameField</span><span class="o">)</span>
+
+<span class="k">def</span> <span class="n">resetSurameFieldValue</span><span class="o">()</span><span class="k">:</span> <span class="kt">Unit</span> <span class="o">=</span> <span class="n">surnameField</span><span class="o">.</span><span class="n">setValue</span><span class="o">(</span><span class="n">surname</span><span class="o">.</span><span class="n">orNull</span><span class="o">)</span>
+
+<span class="c1">// ...</span>
+
+<span class="k">def</span> <span class="n">reset</span><span class="o">()</span><span class="k">:</span> <span class="kt">Unit</span> <span class="o">=</span> <span class="o">{</span>
+	<span class="n">resetNameFieldValue</span><span class="o">()</span>
+	<span class="n">resetSurnameFieldValue</span><span class="o">()</span>
+	<span class="c1">// ...</span>
+<span class="o">}</span></code></pre>
+
+<p>Per see, the namespace of the class gets polluted as you add more fields. That
+is, in order to implement a form of 10 fields, you end up with at least
+3x10=30 class variables/methods. In order to mitigate this problem, I wrote a
+custom trait to group component accessors into a single field:</p>
+
+<pre><code class="language-scala"><span class="k">trait</span> <span class="nc">CustomField</span><span class="o">[</span><span class="kt">ComponentType</span> <span class="k">&lt;:</span> <span class="kt">Component</span>, <span class="kt">ValueType</span><span class="o">]</span> <span class="o">{</span>
+
+  <span class="k">val</span> <span class="n">component</span><span class="k">:</span> <span class="kt">ComponentType</span>
+
+  <span class="k">def</span> <span class="n">value</span><span class="o">()</span><span class="k">:</span> <span class="kt">ValueType</span>
+
+  <span class="k">def</span> <span class="n">reset</span><span class="o">()</span><span class="k">:</span> <span class="kt">Unit</span>
+
+<span class="o">}</span></code></pre>
+
+<p>Using <code>CustomField</code>, the above code translates to this:</p>
+
+<pre><code class="language-scala"><span class="k">val</span> <span class="n">nameField</span><span class="k">:</span> <span class="kt">CustomField</span><span class="o">[</span><span class="kt">TextField</span>, <span class="kt">String</span><span class="o">]</span> <span class="k">=</span> <span class="k">new</span> <span class="nc">CustomField</span><span class="o">[</span><span class="kt">TextField</span>, <span class="kt">String</span><span class="o">]</span> <span class="o">{</span>
+	
+  <span class="k">val</span> <span class="n">component</span><span class="k">:</span> <span class="kt">TextField</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">TextField</span>
+
+  <span class="k">def</span> <span class="n">value</span><span class="o">()</span><span class="k">:</span> <span class="kt">ComponentHelpers.getTrimmedValue</span><span class="o">(</span><span class="kt">component</span><span class="o">)</span>
+
+  <span class="kt">def</span> <span class="kt">reset</span><span class="o">()</span><span class="kt">:</span> <span class="kt">Unit</span> <span class="o">=</span> <span class="n">nameField</span><span class="o">.</span><span class="n">setValue</span><span class="o">(</span><span class="n">name</span><span class="o">.</span><span class="n">orNull</span><span class="o">)</span>
+
+<span class="o">}</span>
+
+<span class="k">val</span> <span class="n">surnameField</span><span class="k">:</span> <span class="kt">CustomField</span><span class="o">[</span><span class="kt">TextField</span>, <span class="kt">String</span><span class="o">]</span> <span class="k">=</span> <span class="k">new</span> <span class="nc">CustomField</span><span class="o">[</span><span class="kt">TextField</span>, <span class="kt">String</span><span class="o">]</span> <span class="o">{</span>
+	
+  <span class="k">val</span> <span class="n">component</span><span class="k">:</span> <span class="kt">TextField</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">TextField</span>
+
+  <span class="k">def</span> <span class="n">value</span><span class="o">()</span><span class="k">:</span> <span class="kt">ComponentHelpers.getTrimmedValue</span><span class="o">(</span><span class="kt">component</span><span class="o">)</span>
+
+  <span class="kt">def</span> <span class="kt">reset</span><span class="o">()</span><span class="kt">:</span> <span class="kt">Unit</span> <span class="o">=</span> <span class="n">surnameField</span><span class="o">.</span><span class="n">setValue</span><span class="o">(</span><span class="n">surname</span><span class="o">.</span><span class="n">orNull</span><span class="o">)</span>
+
+<span class="o">}</span>
+
+<span class="c1">// ...</span>
+
+<span class="k">val</span> <span class="n">fields</span><span class="k">:</span> <span class="kt">Seq</span><span class="o">[</span><span class="kt">CustomField</span><span class="o">[</span><span class="k">_</span> <span class="k">&lt;:</span> <span class="kt">Component</span>, <span class="k">_</span><span class="o">]]</span> <span class="k">=</span> <span class="nc">Seq</span><span class="o">(</span>
+  <span class="n">nameField</span><span class="o">,</span>
+  <span class="n">surnameField</span><span class="o">,</span>
+  <span class="c1">// ...</span>
+<span class="o">)</span>
+
+<span class="k">def</span> <span class="n">reset</span><span class="o">()</span><span class="k">:</span> <span class="kt">Unit</span> <span class="o">=</span> <span class="n">fields</span><span class="o">.</span><span class="n">foreach</span><span class="o">(</span><span class="k">_</span><span class="o">.</span><span class="n">reset</span><span class="o">())</span></code></pre>
+
+<h1 id="confirmation-dialogs">Confirmation Dialogs</h1>
+
+<p>This one needs no introduction I guess. Here it is:</p>
+
+<pre><code class="language-scala"><span class="k">def</span> <span class="n">confirmationDialog</span><span class="o">(</span><span class="n">title</span><span class="k">:</span> <span class="kt">String</span><span class="o">,</span> <span class="n">content</span><span class="k">:</span> <span class="kt">String</span><span class="o">,</span> <span class="n">ok</span><span class="k">:</span> <span class="o">()</span> <span class="o">=&gt;</span> <span class="nc">Unit</span><span class="o">,</span> <span class="n">cancel</span><span class="k">:</span> <span class="o">()</span> <span class="o">=&gt;</span> <span class="nc">Unit</span><span class="o">)</span><span class="k">:</span> <span class="kt">Unit</span> <span class="o">=</span> <span class="o">{</span>
+  <span class="k">lazy</span> <span class="k">val</span> <span class="n">dialog</span><span class="k">:</span> <span class="kt">ConfirmationDialog</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">ConfirmationDialog</span><span class="o">(</span>
+    <span class="n">title</span><span class="o">,</span> <span class="n">content</span><span class="o">,</span>
+    <span class="k">new</span> <span class="nc">ClickButtonEventHandler</span> <span class="o">{</span>
+      <span class="k">override</span> <span class="k">def</span> <span class="n">handleEvent</span><span class="o">(</span><span class="n">event</span><span class="k">:</span> <span class="kt">ClickEvent</span><span class="o">)</span><span class="k">:</span> <span class="kt">Unit</span> <span class="o">=</span> <span class="o">{</span>
+        <span class="k">try</span> <span class="o">{</span> <span class="n">ok</span><span class="o">()</span> <span class="o">}</span>
+        <span class="k">catch</span> <span class="o">{</span> <span class="k">case</span> <span class="k">_:</span> <span class="kt">Throwable</span> <span class="o">=&gt;</span> <span class="n">dialog</span><span class="o">.</span><span class="n">close</span><span class="o">()</span> <span class="o">}</span>
+      <span class="o">}</span>
+    <span class="o">},</span>
+    <span class="k">new</span> <span class="nc">ClickButtonEventHandler</span> <span class="o">{</span>
+      <span class="k">override</span> <span class="k">def</span> <span class="n">handleEvent</span><span class="o">(</span><span class="n">event</span><span class="k">:</span> <span class="kt">ClickEvent</span><span class="o">)</span><span class="k">:</span> <span class="kt">Unit</span> <span class="o">=</span> <span class="o">{</span>
+        <span class="k">try</span> <span class="o">{</span> <span class="n">cancel</span><span class="o">()</span> <span class="o">}</span>
+        <span class="k">catch</span> <span class="o">{</span> <span class="k">case</span> <span class="k">_:</span> <span class="kt">Throwable</span> <span class="o">=&gt;</span> <span class="n">dialog</span><span class="o">.</span><span class="n">close</span><span class="o">()</span> <span class="o">}</span>
+      <span class="o">}</span>
+    <span class="o">})</span>
+  <span class="nc">UI</span><span class="o">.</span><span class="n">getCurrent</span><span class="o">.</span><span class="n">addWindow</span><span class="o">(</span><span class="n">dialog</span><span class="o">)</span>
+<span class="o">}</span></code></pre>
+
+<p>And you use it as follows:</p>
+
+<pre><code class="language-scala"><span class="k">override</span> <span class="k">def</span> <span class="n">uploadFinished</span><span class="o">(</span><span class="n">event</span><span class="k">:</span> <span class="kt">FinishedEvent</span><span class="o">)</span><span class="k">:</span> <span class="kt">Unit</span> <span class="o">=</span>
+  <span class="n">confirmationDialog</span><span class="o">(</span>
+    <span class="s">"Deploy Shelf Plan"</span><span class="o">,</span>
+    <span class="s">"""You are about to populate tables using the provided shelf plan.&lt;br/&gt;</span>
+<span class="s">      |Do you want to proceed?"""</span><span class="o">.</span><span class="n">stripMargin</span><span class="o">,</span>
+    <span class="n">ok</span><span class="o">,</span> <span class="n">cancel</span><span class="o">)</span></code></pre>
+
+<h1 id="escapeable-window">“Escapeable” Window</h1>
+
+<p>So you have a <code>Window</code>, that you want to be <code>closeable</code> using the <code>ESCAPE</code>
+key. Fine, just extend from <code>EscapeableWindow</code>:</p>
+
+<pre><code class="language-scala"><span class="k">trait</span> <span class="nc">EscapeableWindow</span> <span class="o">{</span> <span class="n">self</span><span class="k">:</span> <span class="kt">Window</span> <span class="o">=&gt;</span>
+
+  <span class="k">protected</span> <span class="k">val</span> <span class="n">escapeActionHandler</span><span class="k">:</span> <span class="kt">Handler</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">Handler</span> <span class="o">{</span>
+
+    <span class="k">override</span> <span class="k">def</span> <span class="n">handleAction</span><span class="o">(</span><span class="n">action</span><span class="k">:</span> <span class="kt">Action</span><span class="o">,</span> <span class="n">sender</span><span class="k">:</span> <span class="kt">scala.Any</span><span class="o">,</span> <span class="n">target</span><span class="k">:</span> <span class="kt">scala.Any</span><span class="o">)</span><span class="k">:</span> <span class="kt">Unit</span> <span class="o">=</span>
+      <span class="k">if</span> <span class="o">(</span><span class="n">action</span><span class="o">.</span><span class="n">equals</span><span class="o">(</span><span class="nc">EscapeableWindow</span><span class="o">.</span><span class="n">escapeAction</span><span class="o">))</span>
+        <span class="n">close</span><span class="o">()</span>
+
+    <span class="k">override</span> <span class="k">def</span> <span class="n">getActions</span><span class="o">(</span><span class="n">target</span><span class="k">:</span> <span class="kt">scala.Any</span><span class="o">,</span> <span class="n">sender</span><span class="k">:</span> <span class="kt">scala.Any</span><span class="o">)</span><span class="k">:</span> <span class="kt">Array</span><span class="o">[</span><span class="kt">Action</span><span class="o">]</span> <span class="k">=</span>
+      <span class="nc">Array</span><span class="o">(</span><span class="nc">EscapeableWindow</span><span class="o">.</span><span class="n">escapeAction</span><span class="o">)</span>
+
+  <span class="o">}</span>
+
+  <span class="n">setClosable</span><span class="o">(</span><span class="kc">true</span><span class="o">)</span>
+  <span class="k">this</span><span class="o">.</span><span class="n">addActionHandler</span><span class="o">(</span><span class="n">escapeActionHandler</span><span class="o">)</span>
+
+<span class="o">}</span>
+
+<span class="k">object</span> <span class="nc">EscapeableWindow</span> <span class="o">{</span>
+
+  <span class="k">val</span> <span class="n">escapeAction</span> <span class="k">=</span> <span class="k">new</span> <span class="nc">ShortcutAction</span><span class="o">(</span><span class="s">"ESCAPE"</span><span class="o">,</span> <span class="nc">ShortcutAction</span><span class="o">.</span><span class="nc">KeyCode</span><span class="o">.</span><span class="nc">ESCAPE</span><span class="o">,</span> <span class="kc">null</span><span class="o">)</span>
+
+<span class="o">}</span></code></pre>
+
+<h1 id="boolean-combo-box">Boolean Combo Box</h1>
+
+<p>For plain boolean options, you can just simply go with a check box. But if you
+have a nullable boolean field, you need a representation to encapsulate three
+different states: 1) true, 2) false, and 3) null. For that purpose, I use a
+combo box as follows:</p>
+
+<pre><code class="language-scala"><span class="k">def</span> <span class="n">createBooleanComboBox</span>
+<span class="o">(</span><span class="n">id</span><span class="k">:</span> <span class="kt">String</span><span class="o">,</span>
+ <span class="n">caption</span><span class="k">:</span> <span class="kt">String</span><span class="o">,</span>
+ <span class="n">description</span><span class="k">:</span> <span class="kt">Option</span><span class="o">[</span><span class="kt">String</span><span class="o">]</span> <span class="k">=</span> <span class="nc">None</span><span class="o">,</span>
+ <span class="n">nullSelectionAllowed</span><span class="k">:</span> <span class="kt">Boolean</span> <span class="o">=</span> <span class="kc">false</span><span class="o">)</span><span class="k">:</span> <span class="kt">ComboBox</span> <span class="o">=</span>
+  <span class="nc">Commons</span><span class="o">.</span><span class="n">returning</span><span class="o">(</span><span class="k">new</span> <span class="nc">ComboBox</span><span class="o">(</span><span class="n">id</span><span class="o">,</span> <span class="n">caption</span><span class="o">))</span> <span class="o">{</span>
+    <span class="n">field</span> <span class="k">=&gt;</span>
+      <span class="n">field</span><span class="o">.</span><span class="n">setNullSelectionAllowed</span><span class="o">(</span><span class="n">nullSelectionAllowed</span><span class="o">)</span>
+      <span class="n">description</span><span class="o">.</span><span class="n">foreach</span><span class="o">(</span><span class="n">field</span><span class="o">.</span><span class="n">setDescription</span><span class="o">)</span>
+      <span class="nc">Seq</span><span class="o">(</span><span class="kc">true</span><span class="o">,</span> <span class="kc">false</span><span class="o">).</span><span class="n">foreach</span><span class="o">(</span><span class="n">field</span><span class="o">.</span><span class="n">addItem</span><span class="o">)</span>
+  <span class="o">}</span></code></pre>
+
+<p>And below you can find a field that uses <code>createBooleanComboBox</code>:</p>
+
+<pre><code class="language-scala"><span class="k">val</span> <span class="n">outputMultiValueField</span><span class="k">:</span> <span class="kt">ComboBox</span> <span class="o">=</span>
+  <span class="n">createBooleanComboBox</span><span class="o">(</span>
+    <span class="s">"outputMultiValue"</span><span class="o">,</span>
+    <span class="s">"Output Multi-Value"</span><span class="o">,</span>
+    <span class="n">nullSelectionAllowed</span> <span class="k">=</span> <span class="kc">true</span><span class="o">)</span></code></pre>
+
+
+	  <script type="text/javascript">
+	    $("#post table").attr("class", "table table-hover");
+	  </script>
+
+	  <div id="disqus_thread"></div>
+	  <script type="text/javascript">
+	  var disqus_shortname = 'vyazici';
+	  var disqus_identifier = '/blog/post/20150815-vaadin-scala-shortcuts/';
+	  var disqus_title = 'Scala Shortcuts for Vaadin Development';
+	  (function() {
+	  	var dsq = document.createElement('script');
+	  	dsq.type = 'text/javascript';
+	  	dsq.async = true;
+	  	dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+	  	(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+	  })();
+	  </script>
+
+	</div>
+      </div>
+      <div id="bgauthor" class="narrow-font">
+	background image by
+	<a href="http://jenniferwetzel.com/">Jennifer Wetzel</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
+  </body>
+</html>
+

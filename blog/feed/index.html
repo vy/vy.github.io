@@ -2,13 +2,241 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <id>https://vy.github.io//</id>
   <title>Volkan Yazıcı's Soap Co.</title>
-  <updated>2015-08-13T18:14:00Z</updated>
+  <updated>2015-08-15T15:25:00Z</updated>
   <link rel="alternate" href="https://vy.github.io//"/>
   <link rel="self" href="https://vy.github.io//blog/feed/"/>
   <author>
     <name>Volkan Yazıcı</name>
     <uri>https://vy.github.io/</uri>
   </author>
+  <entry>
+    <id>tag:vy.github.io,2015-08-15://blog/post/2015/08/15/vaadin-scala-shortcuts/</id>
+    <title type="html">Scala Shortcuts for Vaadin Development</title>
+    <published>2015-08-15T15:25:00Z</published>
+    <updated>2015-08-15T15:25:00Z</updated>
+    <link rel="alternate" href="https://vy.github.io//blog/post/2015/08/15/vaadin-scala-shortcuts/"/>
+    <content type="html">
+&lt;p&gt;This year I had found chance to get my hands dirty with
+&lt;a href="https://vaadin.com/"&gt;Vaadin&lt;/a&gt;. Given the fact that this was the first time I
+was exposed to a GWT-based web framework using Scala, I tried various coding
+conventions, utility functions, shortcuts, etc. in the beginning. Over the
+time, I came up with some common conventions that I employ throughout the code
+base. In this post, I will share some of these custom tricks I developed along
+this pursuit.&lt;/p&gt;
+
+&lt;h1 id="returning-the-first-value"&gt;“Returning” the First Value&lt;/h1&gt;
+
+&lt;p&gt;While creating a certain UI component, what a programmer occasionally performs
+is to 1) instantiate the class, 2) set certain properties, and 3) return/use
+the instance.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-scala"&gt;&lt;span class="k"&gt;val&lt;/span&gt; &lt;span class="n"&gt;buttonLayout&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;HorizontalLayout&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+  &lt;span class="k"&gt;val&lt;/span&gt; &lt;span class="n"&gt;layout&lt;/span&gt; &lt;span class="k"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nc"&gt;HorizontalLayout&lt;/span&gt;
+  &lt;span class="n"&gt;layout&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;setMargin&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="kc"&gt;true&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
+  &lt;span class="n"&gt;layout&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;setSpacing&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="kc"&gt;true&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
+  &lt;span class="n"&gt;layout&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;addComponent&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;submitButton&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
+  &lt;span class="n"&gt;layout&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;addComponent&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;resetButton&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
+  &lt;span class="n"&gt;layout&lt;/span&gt;
+&lt;span class="o"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This pattern was so idiomatic and repetitive throughout the code base that I
+thought having something similar to &lt;a href="http://www.lispworks.com/documentation/HyperSpec/Body/m_prog1c.htm"&gt;prog1 in Common
+Lisp&lt;/a&gt;
+would be really helpful for structuring similar components. Hence, I came up
+with my own &lt;code&gt;returning&lt;/code&gt; utility function as follows:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-scala"&gt;&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;returning&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="kt"&gt;T&lt;/span&gt;&lt;span class="o"&gt;](&lt;/span&gt;&lt;span class="n"&gt;result&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;T&lt;/span&gt;&lt;span class="o"&gt;)(&lt;/span&gt;&lt;span class="n"&gt;body&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;T&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="nc"&gt;Unit&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;T&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+  &lt;span class="n"&gt;body&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;result&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
+  &lt;span class="n"&gt;result&lt;/span&gt;
+&lt;span class="o"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;When we employ &lt;code&gt;returning&lt;/code&gt; in &lt;code&gt;buttonLayout&lt;/code&gt;, code translates as follows:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-scala"&gt;&lt;span class="k"&gt;val&lt;/span&gt; &lt;span class="n"&gt;buttonLayout&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;HorizontalLayout&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;
+  &lt;span class="n"&gt;returning&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nc"&gt;HorizontalLayout&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+    &lt;span class="n"&gt;layout&lt;/span&gt; &lt;span class="k"&gt;=&amp;gt;&lt;/span&gt; 
+      &lt;span class="n"&gt;layout&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;setMargin&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="kc"&gt;true&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
+      &lt;span class="n"&gt;layout&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;setSpacing&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="kc"&gt;true&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
+      &lt;span class="n"&gt;layout&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;addComponent&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;submitButton&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
+      &lt;span class="n"&gt;layout&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;addComponent&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;resetButton&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
+  &lt;span class="o"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I find this version more clear on intent.&lt;/p&gt;
+
+&lt;h1 id="reading-nullable-text-fields"&gt;Reading Nullable Text Fields&lt;/h1&gt;
+
+&lt;p&gt;While coding in Scala, I write my code as if there are no &lt;code&gt;null&lt;/code&gt;s. And
+whenever there is an external API that I need to communicate and has potential
+to return &lt;code&gt;null&lt;/code&gt;, I wrap it in an &lt;code&gt;Option&lt;/code&gt;. This practice also applies to
+&lt;code&gt;getValue&lt;/code&gt; method of &lt;code&gt;TextField&lt;/code&gt;s in Vaadin. Hence, I purposed a common
+function to read from text fields:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-scala"&gt;&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;getTrimmedValue&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;field&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;AbstractTextField&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Option&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="kt"&gt;String&lt;/span&gt;&lt;span class="o"&gt;]&lt;/span&gt; &lt;span class="k"&gt;=&lt;/span&gt;
+  &lt;span class="nc"&gt;Option&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;field&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;getValue&lt;/span&gt;&lt;span class="o"&gt;).&lt;/span&gt;&lt;span class="n"&gt;filterNot&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="k"&gt;_&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;trim&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;isEmpty&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Note that &lt;code&gt;getTrimmedValue&lt;/code&gt; treats input fields of redundant whitespace as a
+&lt;code&gt;None&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h1 id="grouping-component-getterssetters"&gt;Grouping Component Getters/Setters&lt;/h1&gt;
+
+&lt;p&gt;While creating forms, I was using the following scheme to implement fields one
+by one:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-scala"&gt;&lt;span class="k"&gt;val&lt;/span&gt; &lt;span class="n"&gt;nameField&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;TextField&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nc"&gt;TextField&lt;/span&gt;
+
+&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;getNameFieldValue&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Option&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="kt"&gt;String&lt;/span&gt;&lt;span class="o"&gt;]&lt;/span&gt; &lt;span class="k"&gt;=&lt;/span&gt; &lt;span class="n"&gt;getTrimmedValue&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;nameField&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
+
+&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;resetNameFieldValue&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Unit&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;nameField&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;setValue&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;orNull&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
+
+&lt;span class="k"&gt;val&lt;/span&gt; &lt;span class="n"&gt;surnameField&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;TextField&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nc"&gt;TextField&lt;/span&gt;
+
+&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;getSurnameFieldValue&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Option&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="kt"&gt;String&lt;/span&gt;&lt;span class="o"&gt;]&lt;/span&gt; &lt;span class="k"&gt;=&lt;/span&gt; &lt;span class="n"&gt;getTrimmedValue&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;surnameField&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
+
+&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;resetSurameFieldValue&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Unit&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;surnameField&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;setValue&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;surname&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;orNull&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
+
+&lt;span class="c1"&gt;// ...&lt;/span&gt;
+
+&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;reset&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Unit&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+	&lt;span class="n"&gt;resetNameFieldValue&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt;
+	&lt;span class="n"&gt;resetSurnameFieldValue&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt;
+	&lt;span class="c1"&gt;// ...&lt;/span&gt;
+&lt;span class="o"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Per see, the namespace of the class gets polluted as you add more fields. That
+is, in order to implement a form of 10 fields, you end up with at least
+3x10=30 class variables/methods. In order to mitigate this problem, I wrote a
+custom trait to group component accessors into a single field:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-scala"&gt;&lt;span class="k"&gt;trait&lt;/span&gt; &lt;span class="nc"&gt;CustomField&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="kt"&gt;ComponentType&lt;/span&gt; &lt;span class="k"&gt;&amp;lt;:&lt;/span&gt; &lt;span class="kt"&gt;Component&lt;/span&gt;, &lt;span class="kt"&gt;ValueType&lt;/span&gt;&lt;span class="o"&gt;]&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+
+  &lt;span class="k"&gt;val&lt;/span&gt; &lt;span class="n"&gt;component&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;ComponentType&lt;/span&gt;
+
+  &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;value&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;ValueType&lt;/span&gt;
+
+  &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;reset&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Unit&lt;/span&gt;
+
+&lt;span class="o"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Using &lt;code&gt;CustomField&lt;/code&gt;, the above code translates to this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-scala"&gt;&lt;span class="k"&gt;val&lt;/span&gt; &lt;span class="n"&gt;nameField&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;CustomField&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="kt"&gt;TextField&lt;/span&gt;, &lt;span class="kt"&gt;String&lt;/span&gt;&lt;span class="o"&gt;]&lt;/span&gt; &lt;span class="k"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nc"&gt;CustomField&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="kt"&gt;TextField&lt;/span&gt;, &lt;span class="kt"&gt;String&lt;/span&gt;&lt;span class="o"&gt;]&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+	
+  &lt;span class="k"&gt;val&lt;/span&gt; &lt;span class="n"&gt;component&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;TextField&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nc"&gt;TextField&lt;/span&gt;
+
+  &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;value&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;ComponentHelpers.getTrimmedValue&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="kt"&gt;component&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
+
+  &lt;span class="kt"&gt;def&lt;/span&gt; &lt;span class="kt"&gt;reset&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt;&lt;span class="kt"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Unit&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;nameField&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;setValue&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;orNull&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
+
+&lt;span class="o"&gt;}&lt;/span&gt;
+
+&lt;span class="k"&gt;val&lt;/span&gt; &lt;span class="n"&gt;surnameField&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;CustomField&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="kt"&gt;TextField&lt;/span&gt;, &lt;span class="kt"&gt;String&lt;/span&gt;&lt;span class="o"&gt;]&lt;/span&gt; &lt;span class="k"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nc"&gt;CustomField&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="kt"&gt;TextField&lt;/span&gt;, &lt;span class="kt"&gt;String&lt;/span&gt;&lt;span class="o"&gt;]&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+	
+  &lt;span class="k"&gt;val&lt;/span&gt; &lt;span class="n"&gt;component&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;TextField&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nc"&gt;TextField&lt;/span&gt;
+
+  &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;value&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;ComponentHelpers.getTrimmedValue&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="kt"&gt;component&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
+
+  &lt;span class="kt"&gt;def&lt;/span&gt; &lt;span class="kt"&gt;reset&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt;&lt;span class="kt"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Unit&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;surnameField&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;setValue&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;surname&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;orNull&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
+
+&lt;span class="o"&gt;}&lt;/span&gt;
+
+&lt;span class="c1"&gt;// ...&lt;/span&gt;
+
+&lt;span class="k"&gt;val&lt;/span&gt; &lt;span class="n"&gt;fields&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Seq&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="kt"&gt;CustomField&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="k"&gt;_&lt;/span&gt; &lt;span class="k"&gt;&amp;lt;:&lt;/span&gt; &lt;span class="kt"&gt;Component&lt;/span&gt;, &lt;span class="k"&gt;_&lt;/span&gt;&lt;span class="o"&gt;]]&lt;/span&gt; &lt;span class="k"&gt;=&lt;/span&gt; &lt;span class="nc"&gt;Seq&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;
+  &lt;span class="n"&gt;nameField&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt;
+  &lt;span class="n"&gt;surnameField&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt;
+  &lt;span class="c1"&gt;// ...&lt;/span&gt;
+&lt;span class="o"&gt;)&lt;/span&gt;
+
+&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;reset&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Unit&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;fields&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;foreach&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="k"&gt;_&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;reset&lt;/span&gt;&lt;span class="o"&gt;())&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h1 id="confirmation-dialogs"&gt;Confirmation Dialogs&lt;/h1&gt;
+
+&lt;p&gt;This one needs no introduction I guess. Here it is:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-scala"&gt;&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;confirmationDialog&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;title&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;String&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;content&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;String&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;ok&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="nc"&gt;Unit&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;cancel&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="nc"&gt;Unit&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Unit&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+  &lt;span class="k"&gt;lazy&lt;/span&gt; &lt;span class="k"&gt;val&lt;/span&gt; &lt;span class="n"&gt;dialog&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;ConfirmationDialog&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nc"&gt;ConfirmationDialog&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;
+    &lt;span class="n"&gt;title&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;content&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt;
+    &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nc"&gt;ClickButtonEventHandler&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+      &lt;span class="k"&gt;override&lt;/span&gt; &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;handleEvent&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;event&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;ClickEvent&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Unit&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+        &lt;span class="k"&gt;try&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="n"&gt;ok&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
+        &lt;span class="k"&gt;catch&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="k"&gt;case&lt;/span&gt; &lt;span class="k"&gt;_:&lt;/span&gt; &lt;span class="kt"&gt;Throwable&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;dialog&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;close&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
+      &lt;span class="o"&gt;}&lt;/span&gt;
+    &lt;span class="o"&gt;},&lt;/span&gt;
+    &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nc"&gt;ClickButtonEventHandler&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+      &lt;span class="k"&gt;override&lt;/span&gt; &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;handleEvent&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;event&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;ClickEvent&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Unit&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+        &lt;span class="k"&gt;try&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="n"&gt;cancel&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
+        &lt;span class="k"&gt;catch&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="k"&gt;case&lt;/span&gt; &lt;span class="k"&gt;_:&lt;/span&gt; &lt;span class="kt"&gt;Throwable&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;dialog&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;close&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
+      &lt;span class="o"&gt;}&lt;/span&gt;
+    &lt;span class="o"&gt;})&lt;/span&gt;
+  &lt;span class="nc"&gt;UI&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;getCurrent&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;addWindow&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;dialog&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
+&lt;span class="o"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And you use it as follows:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-scala"&gt;&lt;span class="k"&gt;override&lt;/span&gt; &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;uploadFinished&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;event&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;FinishedEvent&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Unit&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;
+  &lt;span class="n"&gt;confirmationDialog&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;
+    &lt;span class="s"&gt;"Deploy Shelf Plan"&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt;
+    &lt;span class="s"&gt;"""You are about to populate tables using the provided shelf plan.&amp;lt;br/&amp;gt;&lt;/span&gt;
+&lt;span class="s"&gt;      |Do you want to proceed?"""&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;stripMargin&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt;
+    &lt;span class="n"&gt;ok&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;cancel&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h1 id="escapeable-window"&gt;“Escapeable” Window&lt;/h1&gt;
+
+&lt;p&gt;So you have a &lt;code&gt;Window&lt;/code&gt;, that you want to be &lt;code&gt;closeable&lt;/code&gt; using the &lt;code&gt;ESCAPE&lt;/code&gt;
+key. Fine, just extend from &lt;code&gt;EscapeableWindow&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-scala"&gt;&lt;span class="k"&gt;trait&lt;/span&gt; &lt;span class="nc"&gt;EscapeableWindow&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="n"&gt;self&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Window&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt;
+
+  &lt;span class="k"&gt;protected&lt;/span&gt; &lt;span class="k"&gt;val&lt;/span&gt; &lt;span class="n"&gt;escapeActionHandler&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Handler&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nc"&gt;Handler&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+
+    &lt;span class="k"&gt;override&lt;/span&gt; &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;handleAction&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;action&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Action&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;sender&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;scala.Any&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;target&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;scala.Any&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Unit&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;
+      &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;action&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;equals&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="nc"&gt;EscapeableWindow&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;escapeAction&lt;/span&gt;&lt;span class="o"&gt;))&lt;/span&gt;
+        &lt;span class="n"&gt;close&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt;
+
+    &lt;span class="k"&gt;override&lt;/span&gt; &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;getActions&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;target&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;scala.Any&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;sender&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;scala.Any&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Array&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="kt"&gt;Action&lt;/span&gt;&lt;span class="o"&gt;]&lt;/span&gt; &lt;span class="k"&gt;=&lt;/span&gt;
+      &lt;span class="nc"&gt;Array&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="nc"&gt;EscapeableWindow&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;escapeAction&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
+
+  &lt;span class="o"&gt;}&lt;/span&gt;
+
+  &lt;span class="n"&gt;setClosable&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="kc"&gt;true&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
+  &lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;addActionHandler&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;escapeActionHandler&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
+
+&lt;span class="o"&gt;}&lt;/span&gt;
+
+&lt;span class="k"&gt;object&lt;/span&gt; &lt;span class="nc"&gt;EscapeableWindow&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+
+  &lt;span class="k"&gt;val&lt;/span&gt; &lt;span class="n"&gt;escapeAction&lt;/span&gt; &lt;span class="k"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nc"&gt;ShortcutAction&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="s"&gt;"ESCAPE"&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="nc"&gt;ShortcutAction&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="nc"&gt;KeyCode&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="nc"&gt;ESCAPE&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="kc"&gt;null&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
+
+&lt;span class="o"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h1 id="boolean-combo-box"&gt;Boolean Combo Box&lt;/h1&gt;
+
+&lt;p&gt;For plain boolean options, you can just simply go with a check box. But if you
+have a nullable boolean field, you need a representation to encapsulate three
+different states: 1) true, 2) false, and 3) null. For that purpose, I use a
+combo box as follows:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-scala"&gt;&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;createBooleanComboBox&lt;/span&gt;
+&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;id&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;String&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt;
+ &lt;span class="n"&gt;caption&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;String&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt;
+ &lt;span class="n"&gt;description&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Option&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="kt"&gt;String&lt;/span&gt;&lt;span class="o"&gt;]&lt;/span&gt; &lt;span class="k"&gt;=&lt;/span&gt; &lt;span class="nc"&gt;None&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt;
+ &lt;span class="n"&gt;nullSelectionAllowed&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Boolean&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="kc"&gt;false&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;ComboBox&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;
+  &lt;span class="nc"&gt;Commons&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;returning&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nc"&gt;ComboBox&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;id&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;caption&lt;/span&gt;&lt;span class="o"&gt;))&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+    &lt;span class="n"&gt;field&lt;/span&gt; &lt;span class="k"&gt;=&amp;gt;&lt;/span&gt;
+      &lt;span class="n"&gt;field&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;setNullSelectionAllowed&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;nullSelectionAllowed&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
+      &lt;span class="n"&gt;description&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;foreach&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;field&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;setDescription&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
+      &lt;span class="nc"&gt;Seq&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="kc"&gt;true&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="kc"&gt;false&lt;/span&gt;&lt;span class="o"&gt;).&lt;/span&gt;&lt;span class="n"&gt;foreach&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;field&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;addItem&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
+  &lt;span class="o"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And below you can find a field that uses &lt;code&gt;createBooleanComboBox&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-scala"&gt;&lt;span class="k"&gt;val&lt;/span&gt; &lt;span class="n"&gt;outputMultiValueField&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;ComboBox&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;
+  &lt;span class="n"&gt;createBooleanComboBox&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;
+    &lt;span class="s"&gt;"outputMultiValue"&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt;
+    &lt;span class="s"&gt;"Output Multi-Value"&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt;
+    &lt;span class="n"&gt;nullSelectionAllowed&lt;/span&gt; &lt;span class="k"&gt;=&lt;/span&gt; &lt;span class="kc"&gt;true&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+</content>
+  </entry>
   <entry>
     <id>tag:vy.github.io,2015-08-13://blog/post/2015/08/13/browsing-with-firefox/</id>
     <title type="html">Notes on Browsing the Web with Firefox</title>
@@ -836,114 +1064,6 @@ it useful too.&lt;/p&gt;
 </content>
   </entry>
   <entry>
-    <id>tag:vy.github.io,2015-01-08://blog/post/2015/01/08/smb-mount-troubleshoot/</id>
-    <title type="html">Troubleshooting a SMB/CIFS Mount Problem</title>
-    <published>2015-01-08T09:43:00Z</published>
-    <updated>2015-01-08T09:43:00Z</updated>
-    <link rel="alternate" href="https://vy.github.io//blog/post/2015/01/08/smb-mount-troubleshoot/"/>
-    <content type="html">
-&lt;p&gt;At every introduction to a new office environment, I spend (waste?) a certain
-period of time to connect to network shares through CIFS/SMB. This was not
-different at my new work place either. After spending almost two days to
-troubleshoot the problem, I figured out that the problem was due to the
-missing &lt;code&gt;/sbin/request-key&lt;/code&gt; binary provided by &lt;code&gt;keyutils&lt;/code&gt; package in Xubuntu
-14.04 LTS. So how did I really get it solved?&lt;/p&gt;
-
-&lt;h1 id="defining-the-problem"&gt;Defining the Problem&lt;/h1&gt;
-
-&lt;p&gt;It is really sick that &lt;code&gt;cifs&lt;/code&gt; kernel module which is responsible for loading
-CIFS/SMB filesystems returns &lt;code&gt;EINVAL&lt;/code&gt; (that is, &lt;code&gt;error(22): Invalid argument&lt;/code&gt;)
-for an entire family of errors and makes it impossible for the user to spot
-the problem. This was also the case for me.&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;$ sudo mount \
-	-t cifs //path/to/network/shares /local/mount/point \
-	-o credentials=$HOME/.smbcredentials,iocharset=utf8,rw,uid=$USER,serverino
-mount error(22): Invalid argument
-Refer to the mount.cifs(8) manual page (e.g. man mount.cifs)
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;So given that the UNC is correct, the local mount point does exist and
-accessible, and mount options are valid, &lt;code&gt;invalid argument&lt;/code&gt; error does not
-provide any context for the problem.&lt;/p&gt;
-
-&lt;p&gt;Further searching on the internet leaded me to &lt;a href="https://wiki.samba.org/index.php/LinuxCIFS_troubleshooting"&gt;LinuxCIFS
-troubleshooting&lt;/a&gt;
-at Samba Wiki. There it is told that I can enable debug messages for &lt;code&gt;cifs&lt;/code&gt;
-module by echoing a non-zero value to &lt;code&gt;/proc/fs/cifs/cifsFYI&lt;/code&gt;, hence I did so:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;$ echo 1 | sudo tee /proc/fs/cifs/cifsFYI
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;And tried to mount the network share again. And observed the following snippet
-in the &lt;code&gt;dmesg&lt;/code&gt; output:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;CIFS VFS: dns_resolve_server_name_to_ip: unable to resolve: path
-CIFS VFS: compose_mount_options: Failed to resolve server part of \\path\to\network\shares to IP
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;So &lt;code&gt;dns_resolve_server_name_to_ip&lt;/code&gt; could not resolve &lt;code&gt;path&lt;/code&gt; for some reason.&lt;/p&gt;
-
-&lt;h1 id="dns-at-the-kernel-level"&gt;DNS at the Kernel-Level&lt;/h1&gt;
-
-&lt;p&gt;So how does kernel really resolve domain names to IP addresses? After reading
-&lt;a href="http://linux.die.net/man/8/mount.cifs"&gt;&lt;code&gt;mount.cifs(8)&lt;/code&gt;&lt;/a&gt; a couple of times, I
-saw &lt;em&gt;See Also&lt;/em&gt; section telling that
-&lt;a href="https://www.kernel.org/doc/readme/Documentation-filesystems-cifs-README"&gt;&lt;code&gt;Documentation/filesystems/cifs.txt&lt;/code&gt;&lt;/a&gt;
-in the linux kernel source tree may contain additional options and
-information. I checked that too and spotted the following lines:&lt;/p&gt;
-
-&lt;blockquote&gt;
-  &lt;p&gt;DFS support allows transparent redirection to shares in an MS-DFS name
-space. In addition, DFS support for target shares which are specified as UNC
-names which begin with host names (rather than IP addresses) requires a user
-space helper (such as &lt;code&gt;cifs.upcall&lt;/code&gt;) to be present in order to translate
-host names to ip address, and the user space helper must also be configured
-in the file &lt;code&gt;/etc/request-key.conf&lt;/code&gt;.  Samba, Windows servers and many NAS
-appliances support DFS as a way of constructing a global name space to ease
-network configuration and improve reliability.&lt;/p&gt;
-
-  &lt;p&gt;To use cifs Kerberos and DFS support, the Linux &lt;code&gt;keyutils&lt;/code&gt; package should be
-installed and something like the following lines should be added to the
-&lt;code&gt;/etc/request-key.conf&lt;/code&gt; file:&lt;/p&gt;
-
-  &lt;pre&gt;&lt;code&gt;create cifs.spnego * * /usr/local/sbin/cifs.upcall %k
-create dns_resolver * * /usr/local/sbin/cifs.upcall %k
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/blockquote&gt;
-
-&lt;p&gt;This was getting interesting. I spotted the &lt;code&gt;dns_resolver&lt;/code&gt; keyword at the
-bottom and started reading
-&lt;a href="https://www.kernel.org/doc/Documentation/networking/dns_resolver.txt"&gt;&lt;code&gt;Documentation/networking/dns_resolver.txt&lt;/code&gt;&lt;/a&gt;
-as well.&lt;/p&gt;
-
-&lt;blockquote&gt;
-  &lt;p&gt;The DNS resolver module provides a way for kernel services to make DNS
-queries by way of requesting a key of key type &lt;code&gt;dns_resolver&lt;/code&gt;.  These
-queries are upcalled to userspace through &lt;code&gt;/sbin/request-key&lt;/code&gt;.&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;p&gt;The long story short, CIFS module employs DNS resolver module, which
-internally upcalls the queries to userspace through &lt;code&gt;/sbin/request-key&lt;/code&gt;. I got
-further curious and checked the &lt;code&gt;request-key(8)&lt;/code&gt;:&lt;/p&gt;
-
-&lt;blockquote&gt;
-  &lt;p&gt;This  program  is invoked by the kernel when the kernel is asked for a key
-that it doesn’t have immediately available. The kernel creates a partially
-set up key and then calls out to this program to instantiate it. It is not
-intended to be called directly.&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;h1 id="the-solution"&gt;The Solution&lt;/h1&gt;
-
-&lt;p&gt;Everything was pointing that something was wrong with my &lt;code&gt;/sbin/request-key&lt;/code&gt;.
-Ooops! The binary was not there at all. &lt;code&gt;apt-file search /sbin/request-key&lt;/code&gt;
-told that the binary was provided by &lt;code&gt;keyutils&lt;/code&gt; package, which was missing in
-my system. After installing &lt;code&gt;keyutils&lt;/code&gt;, I did not observe any DNS resolver
-issues in the &lt;code&gt;dmesg&lt;/code&gt; logs and &lt;code&gt;mount.cifs&lt;/code&gt; worked without a problem.&lt;/p&gt;
-</content>
-  </entry>
-  <entry>
     <id>tag:vy.github.io,2015-01-08://blog/post/2015/01/30/java-null-check/</id>
     <title type="html">Checking Null Arguments at Runtime Using Spring AOP</title>
     <published>2015-01-08T09:43:00Z</published>
@@ -1056,6 +1176,114 @@ done.&lt;/p&gt;
 &lt;p&gt;The source code is available in &lt;a href="https://github.com/vy/null-check"&gt;null-check&lt;/a&gt;
 project at GitHub with some unit tests and a little bit more detailed
 installation instructions.&lt;/p&gt;
+</content>
+  </entry>
+  <entry>
+    <id>tag:vy.github.io,2015-01-08://blog/post/2015/01/08/smb-mount-troubleshoot/</id>
+    <title type="html">Troubleshooting a SMB/CIFS Mount Problem</title>
+    <published>2015-01-08T09:43:00Z</published>
+    <updated>2015-01-08T09:43:00Z</updated>
+    <link rel="alternate" href="https://vy.github.io//blog/post/2015/01/08/smb-mount-troubleshoot/"/>
+    <content type="html">
+&lt;p&gt;At every introduction to a new office environment, I spend (waste?) a certain
+period of time to connect to network shares through CIFS/SMB. This was not
+different at my new work place either. After spending almost two days to
+troubleshoot the problem, I figured out that the problem was due to the
+missing &lt;code&gt;/sbin/request-key&lt;/code&gt; binary provided by &lt;code&gt;keyutils&lt;/code&gt; package in Xubuntu
+14.04 LTS. So how did I really get it solved?&lt;/p&gt;
+
+&lt;h1 id="defining-the-problem"&gt;Defining the Problem&lt;/h1&gt;
+
+&lt;p&gt;It is really sick that &lt;code&gt;cifs&lt;/code&gt; kernel module which is responsible for loading
+CIFS/SMB filesystems returns &lt;code&gt;EINVAL&lt;/code&gt; (that is, &lt;code&gt;error(22): Invalid argument&lt;/code&gt;)
+for an entire family of errors and makes it impossible for the user to spot
+the problem. This was also the case for me.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ sudo mount \
+	-t cifs //path/to/network/shares /local/mount/point \
+	-o credentials=$HOME/.smbcredentials,iocharset=utf8,rw,uid=$USER,serverino
+mount error(22): Invalid argument
+Refer to the mount.cifs(8) manual page (e.g. man mount.cifs)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;So given that the UNC is correct, the local mount point does exist and
+accessible, and mount options are valid, &lt;code&gt;invalid argument&lt;/code&gt; error does not
+provide any context for the problem.&lt;/p&gt;
+
+&lt;p&gt;Further searching on the internet leaded me to &lt;a href="https://wiki.samba.org/index.php/LinuxCIFS_troubleshooting"&gt;LinuxCIFS
+troubleshooting&lt;/a&gt;
+at Samba Wiki. There it is told that I can enable debug messages for &lt;code&gt;cifs&lt;/code&gt;
+module by echoing a non-zero value to &lt;code&gt;/proc/fs/cifs/cifsFYI&lt;/code&gt;, hence I did so:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ echo 1 | sudo tee /proc/fs/cifs/cifsFYI
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And tried to mount the network share again. And observed the following snippet
+in the &lt;code&gt;dmesg&lt;/code&gt; output:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;CIFS VFS: dns_resolve_server_name_to_ip: unable to resolve: path
+CIFS VFS: compose_mount_options: Failed to resolve server part of \\path\to\network\shares to IP
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;So &lt;code&gt;dns_resolve_server_name_to_ip&lt;/code&gt; could not resolve &lt;code&gt;path&lt;/code&gt; for some reason.&lt;/p&gt;
+
+&lt;h1 id="dns-at-the-kernel-level"&gt;DNS at the Kernel-Level&lt;/h1&gt;
+
+&lt;p&gt;So how does kernel really resolve domain names to IP addresses? After reading
+&lt;a href="http://linux.die.net/man/8/mount.cifs"&gt;&lt;code&gt;mount.cifs(8)&lt;/code&gt;&lt;/a&gt; a couple of times, I
+saw &lt;em&gt;See Also&lt;/em&gt; section telling that
+&lt;a href="https://www.kernel.org/doc/readme/Documentation-filesystems-cifs-README"&gt;&lt;code&gt;Documentation/filesystems/cifs.txt&lt;/code&gt;&lt;/a&gt;
+in the linux kernel source tree may contain additional options and
+information. I checked that too and spotted the following lines:&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;DFS support allows transparent redirection to shares in an MS-DFS name
+space. In addition, DFS support for target shares which are specified as UNC
+names which begin with host names (rather than IP addresses) requires a user
+space helper (such as &lt;code&gt;cifs.upcall&lt;/code&gt;) to be present in order to translate
+host names to ip address, and the user space helper must also be configured
+in the file &lt;code&gt;/etc/request-key.conf&lt;/code&gt;.  Samba, Windows servers and many NAS
+appliances support DFS as a way of constructing a global name space to ease
+network configuration and improve reliability.&lt;/p&gt;
+
+  &lt;p&gt;To use cifs Kerberos and DFS support, the Linux &lt;code&gt;keyutils&lt;/code&gt; package should be
+installed and something like the following lines should be added to the
+&lt;code&gt;/etc/request-key.conf&lt;/code&gt; file:&lt;/p&gt;
+
+  &lt;pre&gt;&lt;code&gt;create cifs.spnego * * /usr/local/sbin/cifs.upcall %k
+create dns_resolver * * /usr/local/sbin/cifs.upcall %k
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;This was getting interesting. I spotted the &lt;code&gt;dns_resolver&lt;/code&gt; keyword at the
+bottom and started reading
+&lt;a href="https://www.kernel.org/doc/Documentation/networking/dns_resolver.txt"&gt;&lt;code&gt;Documentation/networking/dns_resolver.txt&lt;/code&gt;&lt;/a&gt;
+as well.&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;The DNS resolver module provides a way for kernel services to make DNS
+queries by way of requesting a key of key type &lt;code&gt;dns_resolver&lt;/code&gt;.  These
+queries are upcalled to userspace through &lt;code&gt;/sbin/request-key&lt;/code&gt;.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;The long story short, CIFS module employs DNS resolver module, which
+internally upcalls the queries to userspace through &lt;code&gt;/sbin/request-key&lt;/code&gt;. I got
+further curious and checked the &lt;code&gt;request-key(8)&lt;/code&gt;:&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;This  program  is invoked by the kernel when the kernel is asked for a key
+that it doesn’t have immediately available. The kernel creates a partially
+set up key and then calls out to this program to instantiate it. It is not
+intended to be called directly.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h1 id="the-solution"&gt;The Solution&lt;/h1&gt;
+
+&lt;p&gt;Everything was pointing that something was wrong with my &lt;code&gt;/sbin/request-key&lt;/code&gt;.
+Ooops! The binary was not there at all. &lt;code&gt;apt-file search /sbin/request-key&lt;/code&gt;
+told that the binary was provided by &lt;code&gt;keyutils&lt;/code&gt; package, which was missing in
+my system. After installing &lt;code&gt;keyutils&lt;/code&gt;, I did not observe any DNS resolver
+issues in the &lt;code&gt;dmesg&lt;/code&gt; logs and &lt;code&gt;mount.cifs&lt;/code&gt; worked without a problem.&lt;/p&gt;
 </content>
   </entry>
   <entry>
@@ -1742,60 +1970,6 @@ DeviceMap. Further, we managed to increase its coverage up to 99% by
 introducing some entries manually to do the database. Indeed, we
 &lt;a href="https://issues.apache.org/jira/browse/DMAP-104?jql=reporter%20in%20(vy)"&gt;reported&lt;/a&gt;
 a majority of those enhancements back to the Apache DeviceMap project.&lt;/p&gt;
-</content>
-  </entry>
-  <entry>
-    <id>tag:vy.github.io,2014-09-08://blog/post/2014/09/08/wildcards-in-java-generics/</id>
-    <title type="html">Wildcards in Java Generics</title>
-    <published>2014-09-08T16:42:00Z</published>
-    <updated>2014-09-08T16:42:00Z</updated>
-    <link rel="alternate" href="https://vy.github.io//blog/post/2014/09/08/wildcards-in-java-generics/"/>
-    <content type="html">
-&lt;p&gt;I always had a hard time with understanding wildcarded generics in Java, as in
-&lt;code&gt;&amp;lt;? extends A&amp;gt;&lt;/code&gt; or &lt;code&gt;&amp;lt;? super A&amp;gt;&lt;/code&gt;. While &lt;a href="http://docs.oracle.com/javase/tutorial/extra/generics/morefun.html"&gt;More Fun with
-Wildcards&lt;/a&gt;
-is a good place for start, you come to a &lt;em&gt;TL;DR&lt;/em&gt; point after some time. Lucky
-for me, Heikki (fizzie) Kallasjoki provided me a succinct and complete code
-snippet that summarizes the entire issue on &lt;a href="http://freenode.net/"&gt;freenode&lt;/a&gt;
-&lt;code&gt;##java&lt;/code&gt; channel.&lt;/p&gt;
-
-&lt;p&gt;First, let’s assume we have two classes &lt;code&gt;A&lt;/code&gt; and &lt;code&gt;B&lt;/code&gt; as follows.&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="language-java"&gt;&lt;span class="kd"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;A&lt;/span&gt; &lt;span class="o"&gt;{}&lt;/span&gt;
-
-&lt;span class="kd"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;B&lt;/span&gt; &lt;span class="kd"&gt;extends&lt;/span&gt; &lt;span class="n"&gt;A&lt;/span&gt; &lt;span class="o"&gt;{}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;And here is the code snippet that summarizes the entire issue with wildcarded
-generics in Java.&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="language-java"&gt;&lt;span class="kd"&gt;static&lt;/span&gt; &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;f&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;List&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;?&lt;/span&gt; &lt;span class="kd"&gt;extends&lt;/span&gt; &lt;span class="n"&gt;A&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;l&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
-    &lt;span class="n"&gt;A&lt;/span&gt; &lt;span class="n"&gt;a&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;l&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;get&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt; &lt;span class="cm"&gt;/* okay */&lt;/span&gt;
-    &lt;span class="n"&gt;l&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;add&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nf"&gt;A&lt;/span&gt;&lt;span class="o"&gt;());&lt;/span&gt; &lt;span class="cm"&gt;/* not okay, l can be of type List&amp;lt;B&amp;gt; */&lt;/span&gt;
-&lt;span class="o"&gt;}&lt;/span&gt;
-
-&lt;span class="kd"&gt;static&lt;/span&gt; &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;g&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;List&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;A&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;l&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
-    &lt;span class="n"&gt;A&lt;/span&gt; &lt;span class="n"&gt;a&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;l&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;get&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt; &lt;span class="cm"&gt;/* okay */&lt;/span&gt;
-    &lt;span class="n"&gt;l&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;add&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nf"&gt;A&lt;/span&gt;&lt;span class="o"&gt;());&lt;/span&gt; &lt;span class="cm"&gt;/* okay */&lt;/span&gt;
-&lt;span class="o"&gt;}&lt;/span&gt;
-
-&lt;span class="kd"&gt;static&lt;/span&gt; &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;h&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;List&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;?&lt;/span&gt; &lt;span class="kd"&gt;super&lt;/span&gt; &lt;span class="n"&gt;A&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;l&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
-    &lt;span class="n"&gt;A&lt;/span&gt; &lt;span class="n"&gt;a&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;l&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;get&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt; &lt;span class="cm"&gt;/* not okay, l can be of type List&amp;lt;Object&amp;gt; */&lt;/span&gt;
-    &lt;span class="n"&gt;l&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;add&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nf"&gt;A&lt;/span&gt;&lt;span class="o"&gt;());&lt;/span&gt; &lt;span class="cm"&gt;/* okay */&lt;/span&gt;
-&lt;span class="o"&gt;}&lt;/span&gt;
-
-&lt;span class="kd"&gt;static&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
-    &lt;span class="n"&gt;List&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;B&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;l&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="n"&gt;ArrayList&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&amp;gt;();&lt;/span&gt;
-    &lt;span class="n"&gt;f&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;l&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;           &lt;span class="cm"&gt;/* okay */&lt;/span&gt;
-    &lt;span class="n"&gt;g&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;l&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;           &lt;span class="cm"&gt;/* not okay, List&amp;lt;B&amp;gt; is not of type List&amp;lt;A&amp;gt; */&lt;/span&gt;
-    &lt;span class="n"&gt;h&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;l&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;           &lt;span class="cm"&gt;/* not okay, List&amp;lt;B&amp;gt; is not of type List&amp;lt;? super A&amp;gt; */&lt;/span&gt;
-
-    &lt;span class="n"&gt;List&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;Object&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;l2&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="n"&gt;ArrayList&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&amp;gt;();&lt;/span&gt;
-    &lt;span class="n"&gt;f&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;l2&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;          &lt;span class="cm"&gt;/* not okay, List&amp;lt;Object&amp;gt; is not of type List&amp;lt;? extends A&amp;gt; */&lt;/span&gt;
-    &lt;span class="n"&gt;g&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;l2&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;          &lt;span class="cm"&gt;/* not okay, List&amp;lt;Object&amp;gt; is not of type List&amp;lt;A&amp;gt; */&lt;/span&gt;
-    &lt;span class="n"&gt;h&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;l2&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;          &lt;span class="cm"&gt;/* okay */&lt;/span&gt;
-&lt;span class="o"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Hope that helps.&lt;/p&gt;
 </content>
   </entry>
 </feed>
