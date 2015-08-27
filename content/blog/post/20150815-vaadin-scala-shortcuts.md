@@ -244,3 +244,174 @@ And below you can find a field that uses `createBooleanComboBox`:
         "outputMultiValue",
         "Output Multi-Value",
         nullSelectionAllowed = true)
+
+Tables
+======
+
+When I first started working with tables in Vaadin, I -- as probably everybody
+else in this business -- felt the urge to abstract away the repetitive
+patterns while creating a table. And I came up with the following
+`CustomTableHeader` and `TableHelpers` utility classes.
+
+    #!scala
+    import java.lang.{Boolean => JBoolean}
+    import java.lang.{Long => JLong}
+    import java.util.Locale
+    
+    import com.bol.vaadin.common.ui.StringToLongConverter
+    import com.vaadin.data.util.converter.{Converter => VConverter}
+    import com.vaadin.data.util.converter.StringToIntegerConverter
+    import com.vaadin.ui.Table
+    import com.vaadin.ui.Table.Align
+    
+    case class CustomTableHeader
+    (name: String,
+     clazz: Class[_],
+     configurations: Set[CustomTableHeader.Configuration]) {
+    
+      override def toString: String = name
+    
+    }
+    
+    object CustomTableHeader {
+    
+      def apply
+      (name: String,
+       clazz: Class[_],
+       configurations: CustomTableHeader.Configuration*): CustomTableHeader =
+        CustomTableHeader(name, clazz, configurations.toSet)
+    
+      sealed trait Configuration {
+    
+        def configure(table: Table, propertyId: AnyRef): Unit
+    
+      }
+    
+      object Configuration {
+    
+        case class ExpandRatio(expandRatio: Float) extends Configuration {
+    
+          override def configure(table: Table, propertyId: AnyRef): Unit =
+            table.setColumnExpandRatio(propertyId, expandRatio)
+    
+        }
+    
+        case class Alignment(alignment: Align) extends Configuration {
+    
+          override def configure(table: Table, propertyId: AnyRef): Unit =
+            table.setColumnAlignment(propertyId, alignment)
+    
+        }
+    
+        case class Converter(converter: VConverter[String, _]) extends Configuration {
+    
+          override def configure(table: Table, propertyId: AnyRef): Unit =
+            table.setConverter(propertyId, converter)
+    
+        }
+    
+        case class Collapsed(collapsed: Boolean) extends Configuration {
+    
+          override def configure(table: Table, propertyId: AnyRef): Unit =
+            if (table.isColumnCollapsingAllowed)
+              table.setColumnCollapsed(propertyId, collapsed)
+    
+        }
+    
+      }
+    
+      private lazy val longToStringConverter =
+        new StringToLongConverter {
+          override def convertToPresentation(value: JLong, locale: Locale): String =
+            Option(value).map(_.toString).orNull
+        }
+    
+      private lazy val intToStringConvert =
+        new StringToIntegerConverter {
+          override def convertToPresentation(value: Integer, locale: Locale): String =
+            Option(value).map(_.toString).orNull
+        }
+    
+      sealed case class Builder(private val headers: Seq[CustomTableHeader]) {
+    
+        def build(): Seq[CustomTableHeader] = headers
+    
+        def add(header: CustomTableHeader): Builder = Builder(headers :+ header)
+    
+        def addBoolean(name: String, configurations: CustomTableHeader.Configuration*): Builder =
+          add(CustomTableHeader(name, classOf[JBoolean], configurations: _*))
+    
+        def addInt(name: String, configurations: CustomTableHeader.Configuration*): Builder = {
+          val extendedConfigurations = configurations :+
+            Configuration.Alignment(Table.Align.RIGHT) :+
+            Configuration.Converter(intToStringConvert)
+          add(CustomTableHeader(name, classOf[Integer], extendedConfigurations: _*))
+        }
+    
+        def addLong(name: String, configurations: CustomTableHeader.Configuration*): Builder = {
+          val extendedConfigurations = configurations :+
+            Configuration.Alignment(Table.Align.RIGHT) :+
+            Configuration.Converter(longToStringConverter)
+          add(CustomTableHeader(name, classOf[Integer], extendedConfigurations: _*))
+        }
+    
+        def addString(name: String, configurations: CustomTableHeader.Configuration*): Builder =
+          add(CustomTableHeader(name, classOf[String], configurations: _*))
+    
+      }
+    
+      def builder(): Builder = Builder(Seq())
+    
+    }
+    
+    object TableHelpers {
+    
+      def setHeaders(table: Table, headers: Seq[CustomTableHeader]): Unit =
+        headers.foreach { header =>
+          table.addContainerProperty(header.name, header.clazz, null)
+          header.configurations.foreach(_.configure(table, header.name))
+        }
+    
+    }
+
+Then I enjoyed this abstraction throughout all the tables I created from then
+on:
+
+    #!scala
+    val table: TreeTable = {
+    
+      val headers: Seq[CustomTableHeader] = CustomTableHeader.builder()
+        .addString(
+          "Property Name",
+          CustomTableHeader.Configuration.ExpandRatio(6))
+        .add(CustomTableHeader(
+          "Shop Code",
+          classOf[MappingShopCode],
+          CustomTableHeader.Configuration.ExpandRatio(1)))
+        .addBoolean(
+          "Content?",
+          CustomTableHeader.Configuration.Collapsed(true),
+          CustomTableHeader.Configuration.ExpandRatio(1))
+        .addBoolean(
+          "Forge?",
+          CustomTableHeader.Configuration.Collapsed(true),
+          CustomTableHeader.Configuration.ExpandRatio(1))
+        .add(CustomTableHeader(
+          "Inp. Type",
+          classOf[MappingTypeCode],
+          CustomTableHeader.Configuration.Collapsed(true),
+          CustomTableHeader.Configuration.ExpandRatio(1)))
+        .build()
+    
+      def setBody(table: TreeTable): Unit = ???
+    
+      returning(new TreeTable) {
+        table =>
+          table.setSelectable(true)
+          table.setSortEnabled(true)
+          table.setColumnCollapsingAllowed(true)
+          TableHelpers.setHeaders(table, headers)
+          setBody(table)
+      }
+    
+    }
