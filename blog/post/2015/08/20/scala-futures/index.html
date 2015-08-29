@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Improving Performace Using Scala Futures</title>
+    <link rel="stylesheet" href="/css/bootstrap.css">
+    <link rel="stylesheet" href="/css/bootstrap-responsive.css">
+    <script src="/js/bootstrap.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="/css/common.css">
+    <meta name="generator" content="nanoc 3.8.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/post.css">
+    <script type="text/javascript">
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-40183531-1']);
+      _gaq.push(['_trackPageview']);
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="menu">
+      <div><a href="/">Home</a></div><div><a href="/about/">About</a></div><div><a href="/blog/">Blog</a></div><div><a href="/code/">Code</a></div><div><a href="/blog/feed/">Feed</a></div>
+    </div>
+    
+
+<div class="container">
+  <div class="row-fluid">
+    <div class="offset1 span10">
+      <div id="post" class="more-white-box rounded-corners">
+	<div class="head">
+	  <div class="title">Improving Performace Using Scala Futures</div>
+	  <div class="subtitle">posted at
+	    August 20, 2015
+	    with tags <a href="/blog/tag/concurrency">concurrency</a>, <a href="/blog/tag/scala">scala</a>
+	  </div>
+	  <div class="share">
+	    <div class="addthis_toolbox addthis_default_style ">
+	      <a class="addthis_button_preferred_1"></a>
+	      <a class="addthis_button_preferred_2"></a>
+	      <a class="addthis_button_preferred_3"></a>
+	      <a class="addthis_button_preferred_4"></a>
+	      <a class="addthis_button_compact"></a>
+	    </div>
+	    <script type="text/javascript">var addthis_config = {"data_track_addressbar":false};</script>
+	    <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-5144adf75211a62b"></script>
+	  </div>
+	</div>
+	<div class="body">
+
+	  
+<p>At <a href="http://bol.com/">bol.com</a>, we have a microservice-based software
+ecosystem. Every functionally grown enough monolithic software is split into
+its own microservice, which exposes a simple REST interface to the outside
+world. Fine-grained functional scope of the services helps to keep the code
+base clean and lets programmers just to stick to the point. Which implicitly
+also results in a coding style such that the <em>clean code</em> has a higher
+priority over performance. Optimizations are introduced whenever they are
+necessary and after careful profiling. For the rest, <a href="https://en.wikipedia.org/wiki/KISS_principle">KISS
+principle</a> is applied.</p>
+
+<h1 id="the-problem">The Problem</h1>
+
+<p>For a particular microservice, we are given the task of returning a snapshot
+of the current state of the data model. In this post, I will use the following
+simple model to demonstrate the problem at hand and the solution I came up
+with.</p>
+
+<p><img src="arch.png" alt="Sample service-layered architecture"></p>
+
+<p>In a nutshell, service basically encapsulates <code>User</code> and <code>Group</code> entities in
+the database. While doing so, database records are first interfaced via a
+<a href="https://en.wikipedia.org/wiki/Data_access_object">DAO</a> layer requiring a
+database connection to operate.</p>
+
+<pre><code class="language-scala"><span class="k">trait</span> <span class="nc">UserDao</span> <span class="o">{</span>
+
+  <span class="k">def</span> <span class="n">create</span><span class="o">(</span><span class="n">name</span><span class="k">:</span> <span class="kt">String</span><span class="o">,</span> <span class="n">groupId</span><span class="k">:</span> <span class="kt">Int</span><span class="o">)(</span><span class="k">implicit</span> <span class="n">connection</span><span class="k">:</span> <span class="kt">Connection</span><span class="o">)</span><span class="k">:</span> <span class="kt">Unit</span>
+
+  <span class="k">def</span> <span class="n">findAll</span><span class="o">()(</span><span class="k">implicit</span> <span class="n">connection</span><span class="k">:</span> <span class="kt">Connection</span><span class="o">)</span><span class="k">:</span> <span class="kt">Seq</span><span class="o">[</span><span class="kt">User</span><span class="o">]</span>
+
+<span class="o">}</span>
+
+<span class="k">trait</span> <span class="nc">GroupDao</span> <span class="o">{</span>
+
+  <span class="k">def</span> <span class="n">create</span><span class="o">(</span><span class="n">name</span><span class="k">:</span> <span class="kt">String</span><span class="o">)</span>
+
+  <span class="k">def</span> <span class="n">findAll</span><span class="o">()(</span><span class="k">implicit</span> <span class="n">connection</span><span class="k">:</span> <span class="kt">Connection</span><span class="o">)</span><span class="k">:</span> <span class="kt">Seq</span><span class="o">[</span><span class="kt">Group</span><span class="o">]</span>
+
+  <span class="k">def</span> <span class="n">findById</span><span class="o">(</span><span class="n">id</span><span class="k">:</span> <span class="kt">Int</span><span class="o">)(</span><span class="k">implicit</span> <span class="n">connection</span><span class="k">:</span> <span class="kt">Connection</span><span class="o">)</span><span class="k">:</span> <span class="kt">Option</span><span class="o">[</span><span class="kt">Group</span><span class="o">]</span>
+
+<span class="o">}</span></code></pre>
+
+<p>Next, DAO layers are interfaced by services
+such that they acquire a database connection from the JDBC pool and make
+relevant DAO calls.</p>
+
+<pre><code class="language-scala"><span class="k">trait</span> <span class="nc">UserService</span> <span class="o">{</span>
+
+  <span class="k">def</span> <span class="n">create</span><span class="o">(</span><span class="n">name</span><span class="k">:</span> <span class="kt">String</span><span class="o">,</span> <span class="n">groupId</span><span class="k">:</span> <span class="kt">Int</span><span class="o">)</span><span class="k">:</span> <span class="kt">Unit</span>
+
+  <span class="k">def</span> <span class="n">findAll</span><span class="o">()</span><span class="k">:</span> <span class="kt">Seq</span><span class="o">[</span><span class="kt">User</span><span class="o">]</span>
+
+<span class="o">}</span>
+
+<span class="nd">@Component</span>
+<span class="k">class</span> <span class="nc">UserServiceImpl</span> <span class="nd">@Autowired</span><span class="o">()</span>
+<span class="o">(</span><span class="n">userDao</span><span class="k">:</span> <span class="kt">UserDao</span><span class="o">,</span>
+ <span class="n">groupDao</span><span class="k">:</span> <span class="kt">GroupDao</span><span class="o">,</span>
+ <span class="n">connectionPool</span><span class="k">:</span> <span class="kt">ConnectionPool</span><span class="o">)</span>
+ <span class="k">extends</span> <span class="nc">UserService</span> <span class="o">{</span>
+
+  <span class="k">def</span> <span class="n">create</span><span class="o">(</span><span class="n">name</span><span class="k">:</span> <span class="kt">String</span><span class="o">,</span> <span class="n">groupId</span><span class="k">:</span> <span class="kt">Int</span><span class="o">)</span><span class="k">:</span> <span class="kt">Unit</span> <span class="o">=</span>
+    <span class="n">connectionPool</span><span class="o">.</span><span class="n">acquire</span> <span class="o">{</span> <span class="k">implicit</span> <span class="n">connection</span> <span class="k">=&gt;</span>
+      <span class="n">require</span><span class="o">(</span><span class="n">groupDao</span><span class="o">.</span><span class="n">findById</span><span class="o">(</span><span class="n">groupId</span><span class="o">).</span><span class="n">isDefined</span><span class="o">,</span> <span class="s">"non-existing group id"</span><span class="o">)</span>
+      <span class="n">userDao</span><span class="o">.</span><span class="n">create</span><span class="o">(</span><span class="n">user</span><span class="o">,</span> <span class="n">groupId</span><span class="o">)</span>
+    <span class="o">}</span>
+
+  <span class="k">def</span> <span class="n">findAll</span><span class="o">()</span><span class="k">:</span> <span class="kt">Seq</span><span class="o">[</span><span class="kt">User</span><span class="o">]</span> <span class="k">=</span>
+    <span class="n">connectionPool</span><span class="o">.</span><span class="n">acquire</span> <span class="o">{</span> <span class="k">implicit</span> <span class="n">connection</span> <span class="k">=&gt;</span>
+      <span class="n">userDao</span><span class="o">.</span><span class="n">findAll</span><span class="o">()</span>
+    <span class="o">}</span>
+
+<span class="o">}</span>
+
+<span class="c1">// GroupService and GroupServiceImpl are implemented likewise...</span></code></pre>
+
+<p>This also applies to <code>SnapshotService</code>, which accesses <code>UserDao</code> and
+<code>GroupDao</code> using a single database connection.</p>
+
+<pre><code class="language-scala"><span class="k">trait</span> <span class="nc">SnapshotService</span> <span class="o">{</span>
+
+  <span class="k">def</span> <span class="n">take</span><span class="o">()</span><span class="k">:</span> <span class="kt">Snapshot</span>
+
+<span class="o">}</span>
+
+<span class="nd">@Component</span>
+<span class="k">class</span> <span class="nc">SnapshotServiceImpl</span> <span class="nd">@Autowired</span><span class="o">()</span>
+<span class="o">(</span><span class="n">userDao</span><span class="k">:</span> <span class="kt">UserDao</span><span class="o">,</span>
+ <span class="n">groupDao</span><span class="k">:</span> <span class="kt">GroupDao</span><span class="o">,</span>
+ <span class="n">connectionPool</span><span class="k">:</span> <span class="kt">ConnectionPool</span><span class="o">)</span> <span class="o">{</span>
+
+  <span class="k">def</span> <span class="n">take</span><span class="o">()</span><span class="k">:</span> <span class="kt">Snapshot</span> <span class="o">=</span>
+    <span class="n">connectionPool</span><span class="o">.</span><span class="n">acquire</span> <span class="o">{</span> <span class="k">implicit</span> <span class="n">connection</span> <span class="k">=&gt;</span>
+      <span class="nc">Snapshot</span><span class="o">.</span><span class="n">from</span><span class="o">(</span>
+      	<span class="n">users</span> <span class="k">=</span> <span class="n">userDao</span><span class="o">.</span><span class="n">findAll</span><span class="o">(),</span>
+      	<span class="n">groups</span> <span class="k">=</span> <span class="n">groupDao</span><span class="o">.</span><span class="n">findAll</span><span class="o">())</span>
+    <span class="o">}</span>
+
+<span class="o">}</span></code></pre>
+
+<p>While this approach totally makes sense, as the user and group collections
+start to grow in size, calls to <code>SnapshotService.take()</code> started to take more
+and more time.</p>
+
+<h1 id="the-solution">The Solution</h1>
+
+<p>Given the fact that constructing a snapshot is a read-only operation, I
+anticipated querying <code>UserDao.findAll()</code> and <code>GroupDao.findAll()</code> in parallel
+will buy us quite some <code>SnapshotService.take()</code> time. That being said, it is
+crucial to note that querying DAOs via separate database connections in
+parallel  is going to violate the transactional safety, but in our case it has
+a negligible margin of error for fetching collections in parallel.</p>
+
+<p>I updated the existing <code>SnapshotService</code> to replace its <code>UserDao</code> and
+<code>GroupDao</code> calls to <code>UserService</code> and <code>GroupService</code> instead (to provide each
+DAO a dedicated connection) and perform these fetch operations in parallel
+through an <code>ExecutorService</code> as follows:</p>
+
+<p><img src="parallel-arch.png" alt="Sample service-layered architecture with parallelization"></p>
+
+<p>I implemented <code>ExecutorService</code> using Scala’s <code>Future</code>s:</p>
+
+<pre><code class="language-scala"><span class="k">trait</span> <span class="nc">ExecutorService</span> <span class="o">{</span>
+
+  <span class="k">implicit</span> <span class="k">val</span> <span class="n">executionContext</span><span class="k">:</span> <span class="kt">ExecutionContext</span>
+
+  <span class="k">val</span> <span class="n">awaitDuration</span><span class="k">:</span> <span class="kt">Duration</span>
+
+  <span class="k">def</span> <span class="n">await</span><span class="o">[</span><span class="kt">T</span><span class="o">](</span><span class="n">future</span><span class="k">:</span> <span class="kt">Future</span><span class="o">[</span><span class="kt">T</span><span class="o">])</span><span class="k">:</span> <span class="kt">T</span>
+
+  <span class="k">def</span> <span class="n">awaitAll</span><span class="o">(</span><span class="n">futures</span><span class="k">:</span> <span class="kt">Future</span><span class="o">[</span><span class="k">_</span><span class="o">]*)</span><span class="k">:</span> <span class="kt">Unit</span>
+
+  <span class="k">def</span> <span class="n">schedule</span><span class="o">[</span><span class="kt">T</span><span class="o">](</span><span class="n">body</span><span class="k">:</span> <span class="o">=&gt;</span> <span class="n">T</span><span class="o">)</span><span class="k">:</span> <span class="kt">Future</span><span class="o">[</span><span class="kt">T</span><span class="o">]</span>
+
+  <span class="k">def</span> <span class="n">scheduleAll</span><span class="o">(</span><span class="n">bodies</span><span class="k">:</span> <span class="o">(()</span> <span class="o">=&gt;</span> <span class="k">_</span><span class="o">)*)</span><span class="k">:</span> <span class="kt">Future</span><span class="o">[</span><span class="kt">Unit</span><span class="o">]</span>
+
+<span class="o">}</span>
+
+<span class="k">class</span> <span class="nc">ExecutorServiceImpl</span><span class="o">(</span><span class="n">awaitDurationSpec</span><span class="k">:</span> <span class="kt">String</span><span class="o">)</span> <span class="k">extends</span> <span class="nc">ExecutorService</span> <span class="o">{</span>
+
+  <span class="n">requireNotNull</span><span class="o">(</span><span class="s">"await duration specification"</span> <span class="o">-&gt;</span> <span class="n">awaitDurationSpec</span><span class="o">)</span>
+
+  <span class="k">override</span> <span class="k">implicit</span> <span class="k">val</span> <span class="n">executionContext</span><span class="k">:</span> <span class="kt">ExecutionContext</span> <span class="o">=</span> <span class="nc">ExecutionContext</span><span class="o">.</span><span class="nc">Implicits</span><span class="o">.</span><span class="n">global</span>
+
+  <span class="k">override</span> <span class="k">val</span> <span class="n">awaitDuration</span><span class="k">:</span> <span class="kt">Duration</span> <span class="o">=</span> <span class="nc">Duration</span><span class="o">(</span><span class="n">awaitDurationSpec</span><span class="o">)</span>
+
+  <span class="k">override</span> <span class="k">def</span> <span class="n">await</span><span class="o">[</span><span class="kt">T</span><span class="o">](</span><span class="n">future</span><span class="k">:</span> <span class="kt">Future</span><span class="o">[</span><span class="kt">T</span><span class="o">])</span><span class="k">:</span> <span class="kt">T</span> <span class="o">=</span> <span class="nc">Await</span><span class="o">.</span><span class="n">result</span><span class="o">(</span><span class="n">future</span><span class="o">,</span> <span class="n">awaitDuration</span><span class="o">)</span>
+
+  <span class="k">override</span> <span class="k">def</span> <span class="n">awaitAll</span><span class="o">(</span><span class="n">futures</span><span class="k">:</span> <span class="kt">Future</span><span class="o">[</span><span class="k">_</span><span class="o">]*)</span><span class="k">:</span> <span class="kt">Unit</span> <span class="o">=</span>
+    <span class="k">if</span> <span class="o">(</span><span class="n">futures</span><span class="o">.</span><span class="n">nonEmpty</span><span class="o">)</span>
+      <span class="n">await</span> <span class="o">{</span> <span class="n">futures</span><span class="o">.</span><span class="n">reduce</span> <span class="o">{</span> <span class="o">(</span><span class="n">prev</span><span class="o">,</span> <span class="n">next</span><span class="o">)</span> <span class="k">=&gt;</span> <span class="n">prev</span><span class="o">.</span><span class="n">flatMap</span><span class="o">(</span><span class="k">_</span> <span class="k">=&gt;</span> <span class="n">next</span><span class="o">)</span> <span class="o">}</span> <span class="o">}</span>
+
+  <span class="k">override</span> <span class="k">def</span> <span class="n">schedule</span><span class="o">[</span><span class="kt">T</span><span class="o">](</span><span class="n">body</span><span class="k">:</span> <span class="o">=&gt;</span> <span class="n">T</span><span class="o">)</span><span class="k">:</span> <span class="kt">Future</span><span class="o">[</span><span class="kt">T</span><span class="o">]</span> <span class="k">=</span> <span class="nc">Future</span> <span class="o">{</span> <span class="n">body</span> <span class="o">}</span>
+
+  <span class="k">override</span> <span class="k">def</span> <span class="n">scheduleAll</span><span class="o">(</span><span class="n">bodies</span><span class="k">:</span> <span class="o">(()</span> <span class="o">=&gt;</span> <span class="k">_</span><span class="o">)*)</span><span class="k">:</span> <span class="kt">Future</span><span class="o">[</span><span class="kt">Unit</span><span class="o">]</span> <span class="k">=</span>
+    <span class="k">if</span> <span class="o">(</span><span class="n">bodies</span><span class="o">.</span><span class="n">isEmpty</span><span class="o">)</span> <span class="nc">Future</span><span class="o">.</span><span class="n">successful</span><span class="o">(())</span>
+    <span class="k">else</span> <span class="n">schedule</span> <span class="o">{</span> <span class="n">bodies</span><span class="o">.</span><span class="n">map</span><span class="o">(</span><span class="n">body</span> <span class="k">=&gt;</span> <span class="n">schedule</span> <span class="o">{</span> <span class="n">body</span><span class="o">()</span> <span class="o">}).</span><span class="n">foreach</span><span class="o">(</span><span class="n">await</span><span class="o">)</span> <span class="o">}</span>
+
+<span class="o">}</span></code></pre>
+
+<p>And then employing <code>ExecutorService</code> in <code>SnapshotService</code> is a piece of cake:</p>
+
+<pre><code class="language-scala"><span class="nd">@Component</span>
+<span class="k">class</span> <span class="nc">SnapshotServiceImpl</span> <span class="nd">@Autowired</span><span class="o">()</span>
+<span class="o">(</span><span class="n">userService</span><span class="k">:</span> <span class="kt">UserService</span><span class="o">,</span>
+ <span class="n">groupService</span><span class="k">:</span> <span class="kt">GroupService</span><span class="o">,</span>
+ <span class="n">executorService</span><span class="k">:</span> <span class="kt">ExecutorService</span><span class="o">)</span> <span class="o">{</span>
+
+  <span class="k">import</span> <span class="nn">executorService._</span>
+
+  <span class="k">def</span> <span class="n">take</span><span class="o">()</span><span class="k">:</span> <span class="kt">Snapshot</span> <span class="o">=</span> <span class="o">{</span>
+    <span class="k">val</span> <span class="n">usersFuture</span> <span class="k">=</span> <span class="n">schedule</span> <span class="o">{</span> <span class="n">userService</span><span class="o">.</span><span class="n">findAll</span><span class="o">()</span> <span class="o">}</span>
+    <span class="k">val</span> <span class="n">groupsFuture</span> <span class="k">=</span> <span class="n">schedule</span> <span class="o">{</span> <span class="n">groupService</span><span class="o">.</span><span class="n">findAll</span><span class="o">()</span> <span class="o">}</span>
+    <span class="n">await</span> <span class="o">{</span>
+      <span class="k">for</span> <span class="o">{</span>
+        <span class="n">users</span> <span class="k">&lt;-</span> <span class="n">usersFuture</span>
+        <span class="n">groups</span> <span class="k">&lt;-</span> <span class="n">groupsFuture</span>
+      <span class="o">}</span> <span class="k">yield</span> <span class="nc">Snapshot</span><span class="o">.</span><span class="n">from</span><span class="o">(</span><span class="n">users</span><span class="o">,</span> <span class="n">groups</span><span class="o">)</span>
+    <span class="o">}</span>
+  <span class="o">}</span>
+
+<span class="o">}</span></code></pre>
+
+<h1 id="conclusion">Conclusion</h1>
+
+<p><a href="http://www.scala-lang.org/api/current/index.html#scala.concurrent.Future">Scala
+Future</a>s
+provide a powerful abstraction to run certain tasks in parallel using a thread
+pool in the back of the scenes. At the beginning I was afraid that it might
+necessitate too much boilerplate just to get a simple thing done, but luckily
+it turned out to be a quite easy task.</p>
+
+<p>In this example, I needed to trade off the transactional consistency of
+fetched collections for the sake of increasing performance using multiple
+threads to query the database. While this implied a negligible error margin
+for the particular problem at hand here, it is not something desirable at
+every microservice. But that is the discussion of another blog post.</p>
+
+
+	  <script type="text/javascript">
+	    $("#post table").attr("class", "table table-hover");
+	  </script>
+
+	  <div id="disqus_thread"></div>
+	  <script type="text/javascript">
+	  var disqus_shortname = 'vyazici';
+	  var disqus_identifier = '/blog/post/20150820-scala-futures/';
+	  var disqus_title = 'Improving Performace Using Scala Futures';
+	  (function() {
+	  	var dsq = document.createElement('script');
+	  	dsq.type = 'text/javascript';
+	  	dsq.async = true;
+	  	dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+	  	(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+	  })();
+	  </script>
+
+	</div>
+      </div>
+      <div id="bgauthor" class="narrow-font">
+	background image by
+	<a href="http://jenniferwetzel.com/">Jennifer Wetzel</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
+  </body>
+</html>
+
