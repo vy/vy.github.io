@@ -2,13 +2,190 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <id>https://vy.github.io//</id>
   <title>Volkan Yazıcı's Soap Co.</title>
-  <updated>2015-08-20T16:20:00Z</updated>
+  <updated>2015-09-09T18:56:00Z</updated>
   <link rel="alternate" href="https://vy.github.io//"/>
   <link rel="self" href="https://vy.github.io//blog/feed/"/>
   <author>
     <name>Volkan Yazıcı</name>
     <uri>https://vy.github.io/</uri>
   </author>
+  <entry>
+    <id>tag:vy.github.io,2015-09-09://blog/post/2015/09/09/enforce-locking/</id>
+    <title type="html">Enforcing a Locking Context on Variables in Scala</title>
+    <published>2015-09-09T18:56:00Z</published>
+    <updated>2015-09-09T18:56:00Z</updated>
+    <link rel="alternate" href="https://vy.github.io//blog/post/2015/09/09/enforce-locking/"/>
+    <content type="html">
+&lt;p&gt;Accessing variables that need synchronization necessitates book keeping by
+programmers. Since it is not something explicitly enforced by the language
+mechanics, programmer needs to make sure that such variables are not accessed
+out of a synchronization scope. Consider the following innocent user store:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-scala"&gt;&lt;span class="k"&gt;case&lt;/span&gt; &lt;span class="k"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;User&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;id&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Int&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;String&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
+
+&lt;span class="c1"&gt;// Use with caution! Can be accessed by multiple threads.&lt;/span&gt;
+&lt;span class="k"&gt;private&lt;/span&gt; &lt;span class="k"&gt;var&lt;/span&gt; &lt;span class="n"&gt;users&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Map&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="kt"&gt;Int&lt;/span&gt;, &lt;span class="kt"&gt;User&lt;/span&gt;&lt;span class="o"&gt;]&lt;/span&gt; &lt;span class="k"&gt;=&lt;/span&gt; &lt;span class="nc"&gt;Map&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="kt"&gt;Int&lt;/span&gt;, &lt;span class="kt"&gt;User&lt;/span&gt;&lt;span class="o"&gt;]()&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The safest approach would be encapsulating every access to &lt;code&gt;users&lt;/code&gt; variables
+in a &lt;code&gt;synchronized&lt;/code&gt; block:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-scala"&gt;&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;save&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;user&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;User&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Unit&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;synchronized&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="n"&gt;users&lt;/span&gt; &lt;span class="o"&gt;+=&lt;/span&gt; &lt;span class="n"&gt;user&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;id&lt;/span&gt; &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;user&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
+
+&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;findById&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;id&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Int&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Option&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="kt"&gt;User&lt;/span&gt;&lt;span class="o"&gt;]&lt;/span&gt; &lt;span class="k"&gt;=&lt;/span&gt; &lt;span class="n"&gt;synchronized&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="n"&gt;users&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;get&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;id&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;You can even go further and use a &lt;code&gt;ReadWriteLock&lt;/code&gt; to boost read-only queries:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-scala"&gt;&lt;span class="k"&gt;private&lt;/span&gt; &lt;span class="k"&gt;val&lt;/span&gt; &lt;span class="n"&gt;lock&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;ReadWriteLock&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nc"&gt;ReentrantReadWriteLock&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt;
+
+&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;save&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;user&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;User&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Unit&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+  &lt;span class="n"&gt;lock&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;writeLock&lt;/span&gt;&lt;span class="o"&gt;().&lt;/span&gt;&lt;span class="n"&gt;lock&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt;
+  &lt;span class="k"&gt;try&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="n"&gt;users&lt;/span&gt; &lt;span class="o"&gt;+=&lt;/span&gt; &lt;span class="n"&gt;user&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;id&lt;/span&gt; &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;user&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
+  &lt;span class="k"&gt;finally&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="n"&gt;lock&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;writeLock&lt;/span&gt;&lt;span class="o"&gt;().&lt;/span&gt;&lt;span class="n"&gt;unlock&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
+&lt;span class="o"&gt;}&lt;/span&gt;
+
+&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;findById&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;id&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Int&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Option&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="kt"&gt;User&lt;/span&gt;&lt;span class="o"&gt;]&lt;/span&gt; &lt;span class="k"&gt;=&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+  &lt;span class="n"&gt;lock&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;readLock&lt;/span&gt;&lt;span class="o"&gt;().&lt;/span&gt;&lt;span class="n"&gt;lock&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt;
+  &lt;span class="k"&gt;try&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="n"&gt;users&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;get&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;id&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
+  &lt;span class="k"&gt;finally&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="n"&gt;lock&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;readLock&lt;/span&gt;&lt;span class="o"&gt;().&lt;/span&gt;&lt;span class="n"&gt;unlock&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
+&lt;span class="o"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now you think you are safe. And it does not take a couple of VCS commits for
+somebody (most probably you) to mess up the entire synchronization scheme:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-scala"&gt;&lt;span class="c1"&gt;// Violating thread-safety on `users`.&lt;/span&gt;
+&lt;span class="k"&gt;override&lt;/span&gt; &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;toString&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;String&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;s&lt;/span&gt;&lt;span class="s"&gt;"There are ${users.size} user(s)."&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Oops! There can arise a lot more complicated subtle bugs. Shit can even hit
+the fan when you introduce multiple variables or make nested calls, that is,
+functions calling functions calling functions which are accessing &lt;code&gt;users&lt;/code&gt;. It
+is obvious that you are doomed. Now good luck with your chasing the
+&lt;a href="https://en.wikipedia.org/wiki/Heisenbug"&gt;Heisenbug&lt;/a&gt; journey!&lt;/p&gt;
+
+&lt;p&gt;Then it occured to me, can’t we make the compiler enforce a certain lock
+context while accessing to a particular set of variables? What if compiler
+would not allow you to read &lt;code&gt;users&lt;/code&gt; if your thread did not already acquire
+&lt;code&gt;lock.readLock()&lt;/code&gt;? Or similarly would not allow you to mutate it if you did
+not already acquire &lt;code&gt;lock.writeLock()&lt;/code&gt;? Here is the solution that I came up
+with to these questions:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-scala"&gt;&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;java.util.concurrent.locks.Lock&lt;/span&gt;
+&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;java.util.concurrent.locks.ReentrantReadWriteLock&lt;/span&gt;
+
+&lt;span class="k"&gt;trait&lt;/span&gt; &lt;span class="nc"&gt;SynchronizedAccess&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+
+  &lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;SynchronizedAccess._&lt;/span&gt;
+
+  &lt;span class="k"&gt;protected&lt;/span&gt; &lt;span class="k"&gt;val&lt;/span&gt; &lt;span class="n"&gt;instanceLock&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;ReentrantReadWriteLock&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;
+    &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nc"&gt;ReentrantReadWriteLock&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt;
+
+  &lt;span class="k"&gt;protected&lt;/span&gt; &lt;span class="k"&gt;val&lt;/span&gt; &lt;span class="n"&gt;instanceReadLock&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;ReadLock&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;
+    &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nc"&gt;ReadLock&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;instanceLock&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;readLock&lt;/span&gt;&lt;span class="o"&gt;())&lt;/span&gt;
+
+  &lt;span class="k"&gt;protected&lt;/span&gt; &lt;span class="k"&gt;val&lt;/span&gt; &lt;span class="n"&gt;instanceReadWriteLock&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;ReadWriteLock&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;
+    &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nc"&gt;ReadWriteLock&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;instanceLock&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;readLock&lt;/span&gt;&lt;span class="o"&gt;(),&lt;/span&gt; &lt;span class="n"&gt;instanceLock&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;writeLock&lt;/span&gt;&lt;span class="o"&gt;())&lt;/span&gt;
+
+  &lt;span class="k"&gt;protected&lt;/span&gt; &lt;span class="k"&gt;case&lt;/span&gt; &lt;span class="k"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;Synchronized&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="kt"&gt;T&lt;/span&gt;&lt;span class="o"&gt;](&lt;/span&gt;&lt;span class="k"&gt;private&lt;/span&gt; &lt;span class="k"&gt;var&lt;/span&gt; &lt;span class="n"&gt;value&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;T&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+
+    &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;apply&lt;/span&gt;&lt;span class="o"&gt;()(&lt;/span&gt;&lt;span class="k"&gt;implicit&lt;/span&gt; &lt;span class="n"&gt;readLock&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;ReadLock&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;T&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+      &lt;span class="n"&gt;validateLock&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;readLock&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;instanceReadLock&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;instanceReadWriteLock&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
+      &lt;span class="n"&gt;value&lt;/span&gt;
+    &lt;span class="o"&gt;}&lt;/span&gt;
+
+    &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;update&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;newValue&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;T&lt;/span&gt;&lt;span class="o"&gt;)(&lt;/span&gt;&lt;span class="k"&gt;implicit&lt;/span&gt; &lt;span class="n"&gt;readWriteLock&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;ReadWriteLock&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Unit&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+      &lt;span class="n"&gt;validateLock&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;readWriteLock&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;instanceReadWriteLock&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
+      &lt;span class="n"&gt;value&lt;/span&gt; &lt;span class="k"&gt;=&lt;/span&gt; &lt;span class="n"&gt;newValue&lt;/span&gt;
+    &lt;span class="o"&gt;}&lt;/span&gt;
+
+    &lt;span class="k"&gt;private&lt;/span&gt; &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;validateLock&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;lock&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;TypedLock&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;allowedLocks&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;TypedLock*&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Unit&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+      &lt;span class="n"&gt;require&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;allowedLocks&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;contains&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;lock&lt;/span&gt;&lt;span class="o"&gt;),&lt;/span&gt; &lt;span class="s"&gt;"cannot be accessed from another synchronization scope"&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
+      &lt;span class="n"&gt;require&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;lock&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;tryLock&lt;/span&gt;&lt;span class="o"&gt;(),&lt;/span&gt; &lt;span class="s"&gt;"cannot be accessed out of a synchronization scope"&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
+      &lt;span class="n"&gt;lock&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;unlock&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt;
+    &lt;span class="o"&gt;}&lt;/span&gt;
+
+  &lt;span class="o"&gt;}&lt;/span&gt;
+
+  &lt;span class="k"&gt;protected&lt;/span&gt; &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;synchronizeRead&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="kt"&gt;T&lt;/span&gt;&lt;span class="o"&gt;](&lt;/span&gt;&lt;span class="n"&gt;body&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;ReadLock&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;T&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;T&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;
+    &lt;span class="n"&gt;synchronizeOperation&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;instanceReadLock&lt;/span&gt;&lt;span class="o"&gt;)(&lt;/span&gt;&lt;span class="n"&gt;body&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
+
+  &lt;span class="k"&gt;protected&lt;/span&gt; &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;synchronizeReadWrite&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="kt"&gt;T&lt;/span&gt;&lt;span class="o"&gt;](&lt;/span&gt;&lt;span class="n"&gt;body&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;ReadWriteLock&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;T&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;T&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;
+    &lt;span class="n"&gt;synchronizeOperation&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;instanceReadWriteLock&lt;/span&gt;&lt;span class="o"&gt;)(&lt;/span&gt;&lt;span class="n"&gt;body&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
+
+  &lt;span class="k"&gt;protected&lt;/span&gt; &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;synchronizeOperation&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="kt"&gt;T&lt;/span&gt;, &lt;span class="kt"&gt;L&lt;/span&gt; &lt;span class="k"&gt;&amp;lt;:&lt;/span&gt; &lt;span class="kt"&gt;TypedLock&lt;/span&gt;&lt;span class="o"&gt;](&lt;/span&gt;&lt;span class="n"&gt;lock&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;L&lt;/span&gt;&lt;span class="o"&gt;)(&lt;/span&gt;&lt;span class="n"&gt;body&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;L&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;T&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;T&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+    &lt;span class="n"&gt;lock&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;lock&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt;
+    &lt;span class="k"&gt;try&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="n"&gt;body&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;lock&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
+    &lt;span class="k"&gt;finally&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="n"&gt;lock&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;unlock&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
+  &lt;span class="o"&gt;}&lt;/span&gt;
+
+&lt;span class="o"&gt;}&lt;/span&gt;
+
+&lt;span class="k"&gt;object&lt;/span&gt; &lt;span class="nc"&gt;SynchronizedAccess&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+
+  &lt;span class="k"&gt;sealed&lt;/span&gt; &lt;span class="k"&gt;trait&lt;/span&gt; &lt;span class="nc"&gt;TypedLock&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+
+    &lt;span class="k"&gt;protected&lt;/span&gt; &lt;span class="k"&gt;val&lt;/span&gt; &lt;span class="n"&gt;instance&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Lock&lt;/span&gt;
+
+    &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;lock&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Unit&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;instance&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;lock&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt;
+
+    &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;unlock&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Unit&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;instance&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;unlock&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt;
+
+    &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;tryLock&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Boolean&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;instance&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;tryLock&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt;
+
+  &lt;span class="o"&gt;}&lt;/span&gt;
+
+  &lt;span class="k"&gt;sealed&lt;/span&gt; &lt;span class="k"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;ReadLock&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;readLock&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;ReentrantReadWriteLock.ReadLock&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="k"&gt;extends&lt;/span&gt; &lt;span class="nc"&gt;TypedLock&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+
+    &lt;span class="k"&gt;override&lt;/span&gt; &lt;span class="k"&gt;protected&lt;/span&gt; &lt;span class="k"&gt;val&lt;/span&gt; &lt;span class="n"&gt;instance&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Lock&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;readLock&lt;/span&gt;
+
+  &lt;span class="o"&gt;}&lt;/span&gt;
+
+  &lt;span class="k"&gt;sealed&lt;/span&gt; &lt;span class="k"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;ReadWriteLock&lt;/span&gt;
+  &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;readLock&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;ReentrantReadWriteLock.ReadLock&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt;
+   &lt;span class="n"&gt;writeLock&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;ReentrantReadWriteLock.WriteLock&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
+    &lt;span class="k"&gt;extends&lt;/span&gt; &lt;span class="nc"&gt;ReadLock&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;readLock&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+
+    &lt;span class="k"&gt;override&lt;/span&gt; &lt;span class="k"&gt;protected&lt;/span&gt; &lt;span class="k"&gt;val&lt;/span&gt; &lt;span class="n"&gt;instance&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Lock&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;writeLock&lt;/span&gt;
+
+  &lt;span class="o"&gt;}&lt;/span&gt;
+
+&lt;span class="o"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Looks complicated? See me while I dance with it:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-scala"&gt;&lt;span class="k"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;UserService&lt;/span&gt; &lt;span class="k"&gt;extends&lt;/span&gt; &lt;span class="nc"&gt;SynchronizedAccess&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+
+  &lt;span class="k"&gt;private&lt;/span&gt; &lt;span class="k"&gt;val&lt;/span&gt; &lt;span class="n"&gt;users&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Synchronized&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="kt"&gt;Map&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="kt"&gt;Int&lt;/span&gt;, &lt;span class="kt"&gt;User&lt;/span&gt;&lt;span class="o"&gt;]]&lt;/span&gt; &lt;span class="k"&gt;=&lt;/span&gt; &lt;span class="nc"&gt;Synchronized&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="nc"&gt;Map&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="kt"&gt;Int&lt;/span&gt;, &lt;span class="kt"&gt;User&lt;/span&gt;&lt;span class="o"&gt;]())&lt;/span&gt;
+
+  &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;save&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;user&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;User&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Unit&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;
+    &lt;span class="n"&gt;synchronizeReadWrite&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="k"&gt;implicit&lt;/span&gt; &lt;span class="n"&gt;lock&lt;/span&gt; &lt;span class="k"&gt;=&amp;gt;&lt;/span&gt;
+      &lt;span class="n"&gt;users&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;+=&lt;/span&gt; &lt;span class="n"&gt;user&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;id&lt;/span&gt; &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;user&lt;/span&gt;
+    &lt;span class="o"&gt;}&lt;/span&gt;
+
+  &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;findById&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;id&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Int&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Option&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="kt"&gt;User&lt;/span&gt;&lt;span class="o"&gt;]&lt;/span&gt; &lt;span class="k"&gt;=&lt;/span&gt;
+    &lt;span class="n"&gt;synchronizeRead&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="k"&gt;implicit&lt;/span&gt; &lt;span class="n"&gt;lock&lt;/span&gt; &lt;span class="k"&gt;=&amp;gt;&lt;/span&gt;
+      &lt;span class="n"&gt;users&lt;/span&gt;&lt;span class="o"&gt;().&lt;/span&gt;&lt;span class="n"&gt;get&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;id&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
+    &lt;span class="o"&gt;}&lt;/span&gt;
+
+  &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;findAllNames&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Seq&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="kt"&gt;String&lt;/span&gt;&lt;span class="o"&gt;]&lt;/span&gt; &lt;span class="k"&gt;=&lt;/span&gt;
+    &lt;span class="n"&gt;synchronizeRead&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="k"&gt;implicit&lt;/span&gt; &lt;span class="n"&gt;lock&lt;/span&gt; &lt;span class="k"&gt;=&amp;gt;&lt;/span&gt;
+      &lt;span class="n"&gt;findAll&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;map&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="k"&gt;_&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
+    &lt;span class="o"&gt;}&lt;/span&gt;
+
+  &lt;span class="k"&gt;private&lt;/span&gt; &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;findAll&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="k"&gt;implicit&lt;/span&gt; &lt;span class="n"&gt;lock&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;ReadLock&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Seq&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="kt"&gt;User&lt;/span&gt;&lt;span class="o"&gt;]&lt;/span&gt; &lt;span class="k"&gt;=&lt;/span&gt;
+    &lt;span class="n"&gt;users&lt;/span&gt;&lt;span class="o"&gt;().&lt;/span&gt;&lt;span class="n"&gt;values&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;toSeq&lt;/span&gt;
+
+&lt;span class="o"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;In a nutshell, what did &lt;code&gt;SynchronizedAccess&lt;/code&gt; trait really bring us? &lt;em&gt;It
+enforces a &lt;strong&gt;typed&lt;/strong&gt; and &lt;strong&gt;unique&lt;/strong&gt; locking context on the variables of type
+&lt;code&gt;Synchronized[T]&lt;/code&gt;.&lt;/em&gt; It is &lt;em&gt;typed&lt;/em&gt; because read and read-write operations are
+distinct from each other in the function decleration via implicit &lt;code&gt;ReadLock&lt;/code&gt;
+and &lt;code&gt;ReadWriteLock&lt;/code&gt; parameters. It is &lt;em&gt;unique&lt;/em&gt; because &lt;code&gt;Synchronized&lt;/code&gt;
+variables can only be accessed by the instance lock inherited from
+&lt;code&gt;SynchronizedAccess&lt;/code&gt; trait.&lt;/p&gt;
+
+&lt;p&gt;Here is your free lunch. &lt;a href="https://translate.google.com/#nl/en/eet%20smakelijk"&gt;Eet smaaklijk!&lt;/a&gt;&lt;/p&gt;
+</content>
+  </entry>
   <entry>
     <id>tag:vy.github.io,2015-08-20://blog/post/2015/08/20/scala-futures/</id>
     <title type="html">Improving Performace Using Scala Futures</title>
@@ -1658,151 +1835,6 @@ Ooops! The binary was not there at all. &lt;code&gt;apt-file search /sbin/reques
 told that the binary was provided by &lt;code&gt;keyutils&lt;/code&gt; package, which was missing in
 my system. After installing &lt;code&gt;keyutils&lt;/code&gt;, I did not observe any DNS resolver
 issues in the &lt;code&gt;dmesg&lt;/code&gt; logs and &lt;code&gt;mount.cifs&lt;/code&gt; worked without a problem.&lt;/p&gt;
-</content>
-  </entry>
-  <entry>
-    <id>tag:vy.github.io,2015-01-01://blog/post/2015/01/01/xubuntu-on-macbookpro/</id>
-    <title type="html">The Joy of Ditching OSX for GNU/Linux</title>
-    <published>2015-01-01T17:22:00Z</published>
-    <updated>2015-01-01T17:22:00Z</updated>
-    <link rel="alternate" href="https://vy.github.io//blog/post/2015/01/01/xubuntu-on-macbookpro/"/>
-    <content type="html">
-&lt;p&gt;Two months ago I was given a shiny Apple Macbook Pro 11 as my development
-system at work. This was my first introduction to Apple – with the exception
-of using Macintosh Classic at my fathers printing office back in the early
-90s. After spending more than 15 years in the mazes of GNU/Linux ecosystem, it
-made a cold bath effect on me and I needed at least 2-3 days to get adapted to
-the system and start writing a couple of lines of useful code. I must admit
-that I was uncomfortable and, as a result of this, unhappy from the very first
-moment. The hardware was gorgeous; battery life, display resolution, quality,
-and colors were mind-blowing and of no match. That being said, I really could
-not get the feel of a &lt;em&gt;power-user&lt;/em&gt; that I used to have in my old GNU/Linux
-box. Having the menu shared between windows was almost made me puke. I have
-been using &lt;a href="http://en.wikipedia.org/wiki/Focus_%28compu%0Ating%29#Focus_follows_pointer"&gt;focus follows pointer&lt;/a&gt; feature for quite some time and it was out of
-question. I tried really hard for getting used to the UI interactions. I mean,
-it is not that I tried to modify the UI to adopt my old conventions. Instead,
-I tried to do it in the &lt;em&gt;OSX way&lt;/em&gt; of doing things. But the desktop was far
-from being usable compared to what I had at Xfce, Fluxbox, i3, etc. In
-addition to all these interface integration aches, I really got amazed to see
-how hard OSX users try to make it look like a GNU/Linux environment: I mean,
-you are expected to install a handful of garbage using a blend of tools
-varying from brew to DMG, gem to Xcode, etc. just to establish a decent
-development environment. The more I used the system, the more I get necessary
-confidence to replace OSX with a GNU/Linux distribution, which is Xubuntu for
-my case.&lt;/p&gt;
-
-&lt;h1 id="preparation"&gt;Preparation&lt;/h1&gt;
-
-&lt;p&gt;First, I checked the avalability of having a GNU/Linux on this hardware with
-ups and downs. &lt;a href="https://help.ubuntu.com/community/MacBookPro"&gt;Installing Ubuntu on a MacBook
-Pro&lt;/a&gt; page was really helpful in
-this context. There instructions were clean, to the point, and most of the
-time produced the expected output for me. Next, while I will keep OSX next
-to my GNU/Linux, I take a backup of my local files on OSX just for case of
-emergency.&lt;/p&gt;
-
-&lt;h1 id="installation"&gt;Installation&lt;/h1&gt;
-
-&lt;p&gt;As instructed, I first partitioned the current OSX disk into two using Disk
-Utility. Just to make sure everything still works, I verified the partition
-table and it was looking fine. Then I restarted the machine to make really
-sure that everything was fine. And… Boom!&lt;/p&gt;
-
-&lt;p&gt;&lt;img src="question-mark-folder.jpg" alt="OSX Question Mark Folder"&gt;&lt;/p&gt;
-
-&lt;p&gt;And I was introduced to the &lt;em&gt;OSX question mark folder&lt;/em&gt;. No error messages, no
-explanations, nothing! That was exactly the same situation that I was driven
-away from Microsoft Windows more than a decade ago. God! I did not even know
-how to search for this error, since there were no texts or anything on the
-screen. Anyway, I tried to describe the image I saw using words on Google and
-voila! After wasting a day on various theories related with the error, I
-figured out that the problem was caused by the lock on the partition that was
-put there by Help Desk guys who handed me the notebook. Damn! I restarted the
-system pressing &lt;code&gt;Command+R&lt;/code&gt; and logon to the system in rescue mode and removed
-the partition lock. (I needed to go to the Help Desk anyway to get the rescue
-mode password.) This time restarting the system led me into OSX without a
-glitch.&lt;/p&gt;
-
-&lt;p&gt;The rest of the installation was like taking a candy from a baby, if you know
-what I mean. I downloaded the Xubuntu 14.10 into a USB disk, rebooted the
-system by pressing &lt;code&gt;Option&lt;/code&gt; key, selected the boot drive and there Ubuntu
-installation screen greeted me. At the end of the installation, prior to
-restarting the system, I just needed to set the EFI boot order via &lt;code&gt;efibootmgr
--o 0,80&lt;/code&gt; and I was done. Now I could do the rest of the work (adding an entry
-for OSX to GRUB, appending &lt;code&gt;libata.force=noncq&lt;/code&gt; to the kernel boot parameters,
-etc.) when I logged into my brand new GNU/Linux system! I crossed my fingers
-and restarted it system…&lt;/p&gt;
-
-&lt;h1 id="home-sweet-home"&gt;Home! Sweet Home!&lt;/h1&gt;
-
-&lt;p&gt;After restart I directly got forwarded to the Xubuntu boot sequence, that is,
-GRUB display was missing. For a second that made me a little bit nervous, but
-later I figured out that I can still boot the OSX partition via opening the
-machine in rescue mode, hence no worries. After all, I want to get rid of OSX
-all together. And when I see the blue Xubuntu loading logo running on the
-screen I cannot express my relief and excitement. I installed GNU/Linux on
-hundreds of systems, but none gave a joy even close to ditching OSX away.&lt;/p&gt;
-
-&lt;p&gt;As a regular GNU/Linux user, I also am used to live with the fact that Linux
-kernel needs a little bit tweaking at each installation. So I started checking
-if everything was working.&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;Keyboard? Checked.&lt;/li&gt;
-  &lt;li&gt;Mousepad? Checked.&lt;/li&gt;
-  &lt;li&gt;USB mouse? Checked.&lt;/li&gt;
-  &lt;li&gt;Sound? Checked.&lt;/li&gt;
-  &lt;li&gt;Video card? Checked.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;As I get more positive checks my inclination to believe that something serious
-will get mess the whole thing up was increasing. I continued…&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;Wireless network driver? Nope. No worries. &lt;code&gt;aptitude install bcmwl-kernel-source&lt;/code&gt;
-did the necessary magic. (Time to time I needed to restart Network Manager
-service after getting back from suspend, but that does not hurt much.)&lt;/li&gt;
-  &lt;li&gt;Wired network driver? No! I got shocked. Then I further read the
-documentation and it’s been told that current Thunderbolt driver does not
-provide a plug-and-play support. It is further mentioned that the situation
-got better in the most recent kernel version, which I did not find a chance
-to try yet. Anyway, I restarted the system with ethernet cable and
-Ethernet-to-Thunderbolt adapter plugged in and now I got wired
-connection working too.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;I must admit that: &lt;em&gt;I had the most smooth GNU/Linux installation experience
-that I ever had since years!&lt;/em&gt; Almost everything was working out of the box.
-Looking back to days that I was going mad for my 33600 dial-up modem drivers,
-display resolution issues… This was really the best. And additionally, now I
-have the most poweful (display, processor, memory, storage, etc.) personal
-computer hardware under my hands that I have ever touched.&lt;/p&gt;
-
-&lt;p&gt;While I was enjoying my time like a 6 year old getting introduced to his first
-computer, I got my first hit: Suspend was not working. I mean, I was closing
-the lid, the Apple logo light was going off and coming back after a couple of
-seconds. I threw myself into the ocean of Google results again and found out a
-quick and dirty fix: Unplugging adapters (USB mouse, Thunderbolt, etc.) before
-suspend. It is also mentioned that the problem should have had fixed in newer
-kernel versions but I did not give it a try. It was not a major problem for
-me, at least not yet.&lt;/p&gt;
-
-&lt;p&gt;By default, the &lt;code&gt;F&lt;/code&gt; keys (&lt;code&gt;F1&lt;/code&gt;, &lt;code&gt;F2&lt;/code&gt;, etc.) serve their traditional function
-by pressing the &lt;code&gt;fn&lt;/code&gt; key. For example, by default the &lt;code&gt;F1&lt;/code&gt; key lowers display
-brightness and &lt;code&gt;fn+F1&lt;/code&gt; is the traditional &lt;code&gt;F1&lt;/code&gt;. I switched this behavior on all
-the &lt;code&gt;F&lt;/code&gt; keys by adding a &lt;code&gt;modprobe&lt;/code&gt; config file
-&lt;code&gt;etc/modprobe.d/hid-apple.conf&lt;/code&gt; written &lt;code&gt;options hid-apple fnmode=2&lt;/code&gt; in it.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src="result.jpg" alt="Xubuntu on Macbook Pro 11"&gt;&lt;/p&gt;
-
-&lt;h1 id="conclusion"&gt;Conclusion&lt;/h1&gt;
-
-&lt;p&gt;As you might have guessed, I wrote this blog post in the aforementioned
-Xubuntu running on a Macbook Pro 11. So far my experience was totally
-satisfying and I believe the issues arised will disappear with a newer kernel
-version, of which I do not have power and time to invest right now. In
-conclusion, Macbook Pro is certainly a powerful hardware as a GNU/Linux
-development platform and I can heartly recommend it to anybody.&lt;/p&gt;
 </content>
   </entry>
 </feed>

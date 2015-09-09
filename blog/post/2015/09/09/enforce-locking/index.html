@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Enforcing a Locking Context on Variables in Scala</title>
+    <link rel="stylesheet" href="/css/bootstrap.css">
+    <link rel="stylesheet" href="/css/bootstrap-responsive.css">
+    <script src="/js/bootstrap.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="/css/common.css">
+    <meta name="generator" content="nanoc 3.8.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/post.css">
+    <script type="text/javascript">
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-40183531-1']);
+      _gaq.push(['_trackPageview']);
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="menu">
+      <div><a href="/">Home</a></div><div><a href="/about/">About</a></div><div><a href="/blog/">Blog</a></div><div><a href="/code/">Code</a></div><div><a href="/blog/feed/">Feed</a></div>
+    </div>
+    
+
+<div class="container">
+  <div class="row-fluid">
+    <div class="offset1 span10">
+      <div id="post" class="more-white-box rounded-corners">
+	<div class="head">
+	  <div class="title">Enforcing a Locking Context on Variables in Scala</div>
+	  <div class="subtitle">posted at
+	    September 9, 2015
+	    with tags <a href="/blog/tag/concurrency">concurrency</a>, <a href="/blog/tag/scala">scala</a>
+	  </div>
+	  <div class="share">
+	    <div class="addthis_toolbox addthis_default_style ">
+	      <a class="addthis_button_preferred_1"></a>
+	      <a class="addthis_button_preferred_2"></a>
+	      <a class="addthis_button_preferred_3"></a>
+	      <a class="addthis_button_preferred_4"></a>
+	      <a class="addthis_button_compact"></a>
+	    </div>
+	    <script type="text/javascript">var addthis_config = {"data_track_addressbar":false};</script>
+	    <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-5144adf75211a62b"></script>
+	  </div>
+	</div>
+	<div class="body">
+
+	  
+<p>Accessing variables that need synchronization necessitates book keeping by
+programmers. Since it is not something explicitly enforced by the language
+mechanics, programmer needs to make sure that such variables are not accessed
+out of a synchronization scope. Consider the following innocent user store:</p>
+
+<pre><code class="language-scala"><span class="k">case</span> <span class="k">class</span> <span class="nc">User</span><span class="o">(</span><span class="n">id</span><span class="k">:</span> <span class="kt">Int</span><span class="o">,</span> <span class="n">name</span><span class="k">:</span> <span class="kt">String</span><span class="o">)</span>
+
+<span class="c1">// Use with caution! Can be accessed by multiple threads.</span>
+<span class="k">private</span> <span class="k">var</span> <span class="n">users</span><span class="k">:</span> <span class="kt">Map</span><span class="o">[</span><span class="kt">Int</span>, <span class="kt">User</span><span class="o">]</span> <span class="k">=</span> <span class="nc">Map</span><span class="o">[</span><span class="kt">Int</span>, <span class="kt">User</span><span class="o">]()</span></code></pre>
+
+<p>The safest approach would be encapsulating every access to <code>users</code> variables
+in a <code>synchronized</code> block:</p>
+
+<pre><code class="language-scala"><span class="k">def</span> <span class="n">save</span><span class="o">(</span><span class="n">user</span><span class="k">:</span> <span class="kt">User</span><span class="o">)</span><span class="k">:</span> <span class="kt">Unit</span> <span class="o">=</span> <span class="n">synchronized</span> <span class="o">{</span> <span class="n">users</span> <span class="o">+=</span> <span class="n">user</span><span class="o">.</span><span class="n">id</span> <span class="o">-&gt;</span> <span class="n">user</span> <span class="o">}</span>
+
+<span class="k">def</span> <span class="n">findById</span><span class="o">(</span><span class="n">id</span><span class="k">:</span> <span class="kt">Int</span><span class="o">)</span><span class="k">:</span> <span class="kt">Option</span><span class="o">[</span><span class="kt">User</span><span class="o">]</span> <span class="k">=</span> <span class="n">synchronized</span> <span class="o">{</span> <span class="n">users</span><span class="o">.</span><span class="n">get</span><span class="o">(</span><span class="n">id</span><span class="o">)</span> <span class="o">}</span></code></pre>
+
+<p>You can even go further and use a <code>ReadWriteLock</code> to boost read-only queries:</p>
+
+<pre><code class="language-scala"><span class="k">private</span> <span class="k">val</span> <span class="n">lock</span><span class="k">:</span> <span class="kt">ReadWriteLock</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">ReentrantReadWriteLock</span><span class="o">()</span>
+
+<span class="k">def</span> <span class="n">save</span><span class="o">(</span><span class="n">user</span><span class="k">:</span> <span class="kt">User</span><span class="o">)</span><span class="k">:</span> <span class="kt">Unit</span> <span class="o">=</span> <span class="o">{</span>
+  <span class="n">lock</span><span class="o">.</span><span class="n">writeLock</span><span class="o">().</span><span class="n">lock</span><span class="o">()</span>
+  <span class="k">try</span> <span class="o">{</span> <span class="n">users</span> <span class="o">+=</span> <span class="n">user</span><span class="o">.</span><span class="n">id</span> <span class="o">-&gt;</span> <span class="n">user</span> <span class="o">}</span>
+  <span class="k">finally</span> <span class="o">{</span> <span class="n">lock</span><span class="o">.</span><span class="n">writeLock</span><span class="o">().</span><span class="n">unlock</span><span class="o">()</span> <span class="o">}</span>
+<span class="o">}</span>
+
+<span class="k">def</span> <span class="n">findById</span><span class="o">(</span><span class="n">id</span><span class="k">:</span> <span class="kt">Int</span><span class="o">)</span><span class="k">:</span> <span class="kt">Option</span><span class="o">[</span><span class="kt">User</span><span class="o">]</span> <span class="k">=</span> <span class="o">{</span>
+  <span class="n">lock</span><span class="o">.</span><span class="n">readLock</span><span class="o">().</span><span class="n">lock</span><span class="o">()</span>
+  <span class="k">try</span> <span class="o">{</span> <span class="n">users</span><span class="o">.</span><span class="n">get</span><span class="o">(</span><span class="n">id</span><span class="o">)</span> <span class="o">}</span>
+  <span class="k">finally</span> <span class="o">{</span> <span class="n">lock</span><span class="o">.</span><span class="n">readLock</span><span class="o">().</span><span class="n">unlock</span><span class="o">()</span> <span class="o">}</span>
+<span class="o">}</span></code></pre>
+
+<p>Now you think you are safe. And it does not take a couple of VCS commits for
+somebody (most probably you) to mess up the entire synchronization scheme:</p>
+
+<pre><code class="language-scala"><span class="c1">// Violating thread-safety on `users`.</span>
+<span class="k">override</span> <span class="k">def</span> <span class="n">toString</span><span class="k">:</span> <span class="kt">String</span> <span class="o">=</span> <span class="n">s</span><span class="s">"There are ${users.size} user(s)."</span></code></pre>
+
+<p>Oops! There can arise a lot more complicated subtle bugs. Shit can even hit
+the fan when you introduce multiple variables or make nested calls, that is,
+functions calling functions calling functions which are accessing <code>users</code>. It
+is obvious that you are doomed. Now good luck with your chasing the
+<a href="https://en.wikipedia.org/wiki/Heisenbug">Heisenbug</a> journey!</p>
+
+<p>Then it occured to me, can’t we make the compiler enforce a certain lock
+context while accessing to a particular set of variables? What if compiler
+would not allow you to read <code>users</code> if your thread did not already acquire
+<code>lock.readLock()</code>? Or similarly would not allow you to mutate it if you did
+not already acquire <code>lock.writeLock()</code>? Here is the solution that I came up
+with to these questions:</p>
+
+<pre><code class="language-scala"><span class="k">import</span> <span class="nn">java.util.concurrent.locks.Lock</span>
+<span class="k">import</span> <span class="nn">java.util.concurrent.locks.ReentrantReadWriteLock</span>
+
+<span class="k">trait</span> <span class="nc">SynchronizedAccess</span> <span class="o">{</span>
+
+  <span class="k">import</span> <span class="nn">SynchronizedAccess._</span>
+
+  <span class="k">protected</span> <span class="k">val</span> <span class="n">instanceLock</span><span class="k">:</span> <span class="kt">ReentrantReadWriteLock</span> <span class="o">=</span>
+    <span class="k">new</span> <span class="nc">ReentrantReadWriteLock</span><span class="o">()</span>
+
+  <span class="k">protected</span> <span class="k">val</span> <span class="n">instanceReadLock</span><span class="k">:</span> <span class="kt">ReadLock</span> <span class="o">=</span>
+    <span class="k">new</span> <span class="nc">ReadLock</span><span class="o">(</span><span class="n">instanceLock</span><span class="o">.</span><span class="n">readLock</span><span class="o">())</span>
+
+  <span class="k">protected</span> <span class="k">val</span> <span class="n">instanceReadWriteLock</span><span class="k">:</span> <span class="kt">ReadWriteLock</span> <span class="o">=</span>
+    <span class="k">new</span> <span class="nc">ReadWriteLock</span><span class="o">(</span><span class="n">instanceLock</span><span class="o">.</span><span class="n">readLock</span><span class="o">(),</span> <span class="n">instanceLock</span><span class="o">.</span><span class="n">writeLock</span><span class="o">())</span>
+
+  <span class="k">protected</span> <span class="k">case</span> <span class="k">class</span> <span class="nc">Synchronized</span><span class="o">[</span><span class="kt">T</span><span class="o">](</span><span class="k">private</span> <span class="k">var</span> <span class="n">value</span><span class="k">:</span> <span class="kt">T</span><span class="o">)</span> <span class="o">{</span>
+
+    <span class="k">def</span> <span class="n">apply</span><span class="o">()(</span><span class="k">implicit</span> <span class="n">readLock</span><span class="k">:</span> <span class="kt">ReadLock</span><span class="o">)</span><span class="k">:</span> <span class="kt">T</span> <span class="o">=</span> <span class="o">{</span>
+      <span class="n">validateLock</span><span class="o">(</span><span class="n">readLock</span><span class="o">,</span> <span class="n">instanceReadLock</span><span class="o">,</span> <span class="n">instanceReadWriteLock</span><span class="o">)</span>
+      <span class="n">value</span>
+    <span class="o">}</span>
+
+    <span class="k">def</span> <span class="n">update</span><span class="o">(</span><span class="n">newValue</span><span class="k">:</span> <span class="kt">T</span><span class="o">)(</span><span class="k">implicit</span> <span class="n">readWriteLock</span><span class="k">:</span> <span class="kt">ReadWriteLock</span><span class="o">)</span><span class="k">:</span> <span class="kt">Unit</span> <span class="o">=</span> <span class="o">{</span>
+      <span class="n">validateLock</span><span class="o">(</span><span class="n">readWriteLock</span><span class="o">,</span> <span class="n">instanceReadWriteLock</span><span class="o">)</span>
+      <span class="n">value</span> <span class="k">=</span> <span class="n">newValue</span>
+    <span class="o">}</span>
+
+    <span class="k">private</span> <span class="k">def</span> <span class="n">validateLock</span><span class="o">(</span><span class="n">lock</span><span class="k">:</span> <span class="kt">TypedLock</span><span class="o">,</span> <span class="n">allowedLocks</span><span class="k">:</span> <span class="kt">TypedLock*</span><span class="o">)</span><span class="k">:</span> <span class="kt">Unit</span> <span class="o">=</span> <span class="o">{</span>
+      <span class="n">require</span><span class="o">(</span><span class="n">allowedLocks</span><span class="o">.</span><span class="n">contains</span><span class="o">(</span><span class="n">lock</span><span class="o">),</span> <span class="s">"cannot be accessed from another synchronization scope"</span><span class="o">)</span>
+      <span class="n">require</span><span class="o">(</span><span class="n">lock</span><span class="o">.</span><span class="n">tryLock</span><span class="o">(),</span> <span class="s">"cannot be accessed out of a synchronization scope"</span><span class="o">)</span>
+      <span class="n">lock</span><span class="o">.</span><span class="n">unlock</span><span class="o">()</span>
+    <span class="o">}</span>
+
+  <span class="o">}</span>
+
+  <span class="k">protected</span> <span class="k">def</span> <span class="n">synchronizeRead</span><span class="o">[</span><span class="kt">T</span><span class="o">](</span><span class="n">body</span><span class="k">:</span> <span class="kt">ReadLock</span> <span class="o">=&gt;</span> <span class="n">T</span><span class="o">)</span><span class="k">:</span> <span class="kt">T</span> <span class="o">=</span>
+    <span class="n">synchronizeOperation</span><span class="o">(</span><span class="n">instanceReadLock</span><span class="o">)(</span><span class="n">body</span><span class="o">)</span>
+
+  <span class="k">protected</span> <span class="k">def</span> <span class="n">synchronizeReadWrite</span><span class="o">[</span><span class="kt">T</span><span class="o">](</span><span class="n">body</span><span class="k">:</span> <span class="kt">ReadWriteLock</span> <span class="o">=&gt;</span> <span class="n">T</span><span class="o">)</span><span class="k">:</span> <span class="kt">T</span> <span class="o">=</span>
+    <span class="n">synchronizeOperation</span><span class="o">(</span><span class="n">instanceReadWriteLock</span><span class="o">)(</span><span class="n">body</span><span class="o">)</span>
+
+  <span class="k">protected</span> <span class="k">def</span> <span class="n">synchronizeOperation</span><span class="o">[</span><span class="kt">T</span>, <span class="kt">L</span> <span class="k">&lt;:</span> <span class="kt">TypedLock</span><span class="o">](</span><span class="n">lock</span><span class="k">:</span> <span class="kt">L</span><span class="o">)(</span><span class="n">body</span><span class="k">:</span> <span class="kt">L</span> <span class="o">=&gt;</span> <span class="n">T</span><span class="o">)</span><span class="k">:</span> <span class="kt">T</span> <span class="o">=</span> <span class="o">{</span>
+    <span class="n">lock</span><span class="o">.</span><span class="n">lock</span><span class="o">()</span>
+    <span class="k">try</span> <span class="o">{</span> <span class="n">body</span><span class="o">(</span><span class="n">lock</span><span class="o">)</span> <span class="o">}</span>
+    <span class="k">finally</span> <span class="o">{</span> <span class="n">lock</span><span class="o">.</span><span class="n">unlock</span><span class="o">()</span> <span class="o">}</span>
+  <span class="o">}</span>
+
+<span class="o">}</span>
+
+<span class="k">object</span> <span class="nc">SynchronizedAccess</span> <span class="o">{</span>
+
+  <span class="k">sealed</span> <span class="k">trait</span> <span class="nc">TypedLock</span> <span class="o">{</span>
+
+    <span class="k">protected</span> <span class="k">val</span> <span class="n">instance</span><span class="k">:</span> <span class="kt">Lock</span>
+
+    <span class="k">def</span> <span class="n">lock</span><span class="o">()</span><span class="k">:</span> <span class="kt">Unit</span> <span class="o">=</span> <span class="n">instance</span><span class="o">.</span><span class="n">lock</span><span class="o">()</span>
+
+    <span class="k">def</span> <span class="n">unlock</span><span class="o">()</span><span class="k">:</span> <span class="kt">Unit</span> <span class="o">=</span> <span class="n">instance</span><span class="o">.</span><span class="n">unlock</span><span class="o">()</span>
+
+    <span class="k">def</span> <span class="n">tryLock</span><span class="o">()</span><span class="k">:</span> <span class="kt">Boolean</span> <span class="o">=</span> <span class="n">instance</span><span class="o">.</span><span class="n">tryLock</span><span class="o">()</span>
+
+  <span class="o">}</span>
+
+  <span class="k">sealed</span> <span class="k">class</span> <span class="nc">ReadLock</span><span class="o">(</span><span class="n">readLock</span><span class="k">:</span> <span class="kt">ReentrantReadWriteLock.ReadLock</span><span class="o">)</span> <span class="k">extends</span> <span class="nc">TypedLock</span> <span class="o">{</span>
+
+    <span class="k">override</span> <span class="k">protected</span> <span class="k">val</span> <span class="n">instance</span><span class="k">:</span> <span class="kt">Lock</span> <span class="o">=</span> <span class="n">readLock</span>
+
+  <span class="o">}</span>
+
+  <span class="k">sealed</span> <span class="k">class</span> <span class="nc">ReadWriteLock</span>
+  <span class="o">(</span><span class="n">readLock</span><span class="k">:</span> <span class="kt">ReentrantReadWriteLock.ReadLock</span><span class="o">,</span>
+   <span class="n">writeLock</span><span class="k">:</span> <span class="kt">ReentrantReadWriteLock.WriteLock</span><span class="o">)</span>
+    <span class="k">extends</span> <span class="nc">ReadLock</span><span class="o">(</span><span class="n">readLock</span><span class="o">)</span> <span class="o">{</span>
+
+    <span class="k">override</span> <span class="k">protected</span> <span class="k">val</span> <span class="n">instance</span><span class="k">:</span> <span class="kt">Lock</span> <span class="o">=</span> <span class="n">writeLock</span>
+
+  <span class="o">}</span>
+
+<span class="o">}</span></code></pre>
+
+<p>Looks complicated? See me while I dance with it:</p>
+
+<pre><code class="language-scala"><span class="k">class</span> <span class="nc">UserService</span> <span class="k">extends</span> <span class="nc">SynchronizedAccess</span> <span class="o">{</span>
+
+  <span class="k">private</span> <span class="k">val</span> <span class="n">users</span><span class="k">:</span> <span class="kt">Synchronized</span><span class="o">[</span><span class="kt">Map</span><span class="o">[</span><span class="kt">Int</span>, <span class="kt">User</span><span class="o">]]</span> <span class="k">=</span> <span class="nc">Synchronized</span><span class="o">(</span><span class="nc">Map</span><span class="o">[</span><span class="kt">Int</span>, <span class="kt">User</span><span class="o">]())</span>
+
+  <span class="k">def</span> <span class="n">save</span><span class="o">(</span><span class="n">user</span><span class="k">:</span> <span class="kt">User</span><span class="o">)</span><span class="k">:</span> <span class="kt">Unit</span> <span class="o">=</span>
+    <span class="n">synchronizeReadWrite</span> <span class="o">{</span> <span class="k">implicit</span> <span class="n">lock</span> <span class="k">=&gt;</span>
+      <span class="n">users</span><span class="o">()</span> <span class="o">+=</span> <span class="n">user</span><span class="o">.</span><span class="n">id</span> <span class="o">-&gt;</span> <span class="n">user</span>
+    <span class="o">}</span>
+
+  <span class="k">def</span> <span class="n">findById</span><span class="o">(</span><span class="n">id</span><span class="k">:</span> <span class="kt">Int</span><span class="o">)</span><span class="k">:</span> <span class="kt">Option</span><span class="o">[</span><span class="kt">User</span><span class="o">]</span> <span class="k">=</span>
+    <span class="n">synchronizeRead</span> <span class="o">{</span> <span class="k">implicit</span> <span class="n">lock</span> <span class="k">=&gt;</span>
+      <span class="n">users</span><span class="o">().</span><span class="n">get</span><span class="o">(</span><span class="n">id</span><span class="o">)</span>
+    <span class="o">}</span>
+
+  <span class="k">def</span> <span class="n">findAllNames</span><span class="o">()</span><span class="k">:</span> <span class="kt">Seq</span><span class="o">[</span><span class="kt">String</span><span class="o">]</span> <span class="k">=</span>
+    <span class="n">synchronizeRead</span> <span class="o">{</span> <span class="k">implicit</span> <span class="n">lock</span> <span class="k">=&gt;</span>
+      <span class="n">findAll</span><span class="o">.</span><span class="n">map</span><span class="o">(</span><span class="k">_</span><span class="o">.</span><span class="n">name</span><span class="o">)</span>
+    <span class="o">}</span>
+
+  <span class="k">private</span> <span class="k">def</span> <span class="n">findAll</span><span class="o">(</span><span class="k">implicit</span> <span class="n">lock</span><span class="k">:</span> <span class="kt">ReadLock</span><span class="o">)</span><span class="k">:</span> <span class="kt">Seq</span><span class="o">[</span><span class="kt">User</span><span class="o">]</span> <span class="k">=</span>
+    <span class="n">users</span><span class="o">().</span><span class="n">values</span><span class="o">.</span><span class="n">toSeq</span>
+
+<span class="o">}</span></code></pre>
+
+<p>In a nutshell, what did <code>SynchronizedAccess</code> trait really bring us? <em>It
+enforces a <strong>typed</strong> and <strong>unique</strong> locking context on the variables of type
+<code>Synchronized[T]</code>.</em> It is <em>typed</em> because read and read-write operations are
+distinct from each other in the function decleration via implicit <code>ReadLock</code>
+and <code>ReadWriteLock</code> parameters. It is <em>unique</em> because <code>Synchronized</code>
+variables can only be accessed by the instance lock inherited from
+<code>SynchronizedAccess</code> trait.</p>
+
+<p>Here is your free lunch. <a href="https://translate.google.com/#nl/en/eet%20smakelijk">Eet smaaklijk!</a></p>
+
+
+	  <script type="text/javascript">
+	    $("#post table").attr("class", "table table-hover");
+	  </script>
+
+	  <div id="disqus_thread"></div>
+	  <script type="text/javascript">
+	  var disqus_shortname = 'vyazici';
+	  var disqus_identifier = '/blog/post/20150909-enforce-locking/';
+	  var disqus_title = 'Enforcing a Locking Context on Variables in Scala';
+	  (function() {
+	  	var dsq = document.createElement('script');
+	  	dsq.type = 'text/javascript';
+	  	dsq.async = true;
+	  	dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+	  	(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+	  })();
+	  </script>
+
+	</div>
+      </div>
+      <div id="bgauthor" class="narrow-font">
+	background image by
+	<a href="http://jenniferwetzel.com/">Jennifer Wetzel</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
+  </body>
+</html>
+
