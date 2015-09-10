@@ -13,7 +13,7 @@ mechanics, programmer needs to make sure that such variables are not accessed
 out of a synchronization scope. Consider the following innocent user store:
 
     #!scala
-    case class User(id: Int, name: String)
+    case class User(id: Int, name: String, manager: Boolean)
     
     // Use with caution! Can be accessed by multiple threads.
     private var users: Map[Int, User] = Map[Int, User]()
@@ -152,9 +152,15 @@ Looks complicated? See me while I dance with it:
     
       private val users: Synchronized[Map[Int, User]] = Synchronized(Map[Int, User]())
     
+      private val managerCount: Synchronized[Int] = Synchronized(0)
+    
       def save(user: User): Unit =
+        // Note that `users` and `managerCount` variables will be updated
+        // atomically while the rest waits for the `ReadWrite` lock.
         synchronizeReadWrite { implicit lock =>
           users() += user.id -> user
+          if (user.manager)
+            managerCount() += 1
         }
     
       def findById(id: Int): Option[User] =
@@ -167,8 +173,14 @@ Looks complicated? See me while I dance with it:
           findAll.map(_.name)
         }
     
+      // Note that findAll() requires a `ReadLock` context in order to access `users`.
       private def findAll(implicit lock: ReadLock): Seq[User] =
         users().values.toSeq
+    
+      def findManagerCount(): Int = 
+        synchronizeRead { implicit lock =>
+          managerCount()
+        }
     
     }
 
@@ -181,3 +193,18 @@ variables can only be accessed by the instance lock inherited from
 `SynchronizedAccess` trait.
 
 Here is your free lunch. [Eet smaaklijk!](https://translate.google.com/#nl/en/eet%20smakelijk)
+
+Common Confusions
+=================
+
+I sadly observed that there are some common confusions about `Synchronized[T]`
+type. Let me try to address them here.
+
+- **I could have used a `ConcurrentMap` instead!** `Map` usage in the examples
+  above is just there for demonstration purposes. It does not have to be a
+  collection at all. If you have just one variable and it is a collection,
+  then going with a synchronized/concurrent implementation is totally fine.
+
+- **I could have used a `ConcurrentMap` and an `AtomicInteger` instead!** No,
+  you cannot. Then you would totally spoil the *atomic* read-write operations.
+  You will still need a *transaction*-like mechanism ala in SQL.
