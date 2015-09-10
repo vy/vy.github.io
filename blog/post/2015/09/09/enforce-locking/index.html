@@ -58,7 +58,7 @@ programmers. Since it is not something explicitly enforced by the language
 mechanics, programmer needs to make sure that such variables are not accessed
 out of a synchronization scope. Consider the following innocent user store:</p>
 
-<pre><code class="language-scala"><span class="k">case</span> <span class="k">class</span> <span class="nc">User</span><span class="o">(</span><span class="n">id</span><span class="k">:</span> <span class="kt">Int</span><span class="o">,</span> <span class="n">name</span><span class="k">:</span> <span class="kt">String</span><span class="o">)</span>
+<pre><code class="language-scala"><span class="k">case</span> <span class="k">class</span> <span class="nc">User</span><span class="o">(</span><span class="n">id</span><span class="k">:</span> <span class="kt">Int</span><span class="o">,</span> <span class="n">name</span><span class="k">:</span> <span class="kt">String</span><span class="o">,</span> <span class="n">manager</span><span class="k">:</span> <span class="kt">Boolean</span><span class="o">)</span>
 
 <span class="c1">// Use with caution! Can be accessed by multiple threads.</span>
 <span class="k">private</span> <span class="k">var</span> <span class="n">users</span><span class="k">:</span> <span class="kt">Map</span><span class="o">[</span><span class="kt">Int</span>, <span class="kt">User</span><span class="o">]</span> <span class="k">=</span> <span class="nc">Map</span><span class="o">[</span><span class="kt">Int</span>, <span class="kt">User</span><span class="o">]()</span></code></pre>
@@ -192,9 +192,15 @@ with to these questions:</p>
 
   <span class="k">private</span> <span class="k">val</span> <span class="n">users</span><span class="k">:</span> <span class="kt">Synchronized</span><span class="o">[</span><span class="kt">Map</span><span class="o">[</span><span class="kt">Int</span>, <span class="kt">User</span><span class="o">]]</span> <span class="k">=</span> <span class="nc">Synchronized</span><span class="o">(</span><span class="nc">Map</span><span class="o">[</span><span class="kt">Int</span>, <span class="kt">User</span><span class="o">]())</span>
 
+  <span class="k">private</span> <span class="k">val</span> <span class="n">managerCount</span><span class="k">:</span> <span class="kt">Synchronized</span><span class="o">[</span><span class="kt">Int</span><span class="o">]</span> <span class="k">=</span> <span class="nc">Synchronized</span><span class="o">(</span><span class="mi">0</span><span class="o">)</span>
+
   <span class="k">def</span> <span class="n">save</span><span class="o">(</span><span class="n">user</span><span class="k">:</span> <span class="kt">User</span><span class="o">)</span><span class="k">:</span> <span class="kt">Unit</span> <span class="o">=</span>
+    <span class="c1">// Note that `users` and `managerCount` variables will be updated</span>
+    <span class="c1">// atomically while the rest waits for the `ReadWrite` lock.</span>
     <span class="n">synchronizeReadWrite</span> <span class="o">{</span> <span class="k">implicit</span> <span class="n">lock</span> <span class="k">=&gt;</span>
       <span class="n">users</span><span class="o">()</span> <span class="o">+=</span> <span class="n">user</span><span class="o">.</span><span class="n">id</span> <span class="o">-&gt;</span> <span class="n">user</span>
+      <span class="k">if</span> <span class="o">(</span><span class="n">user</span><span class="o">.</span><span class="n">manager</span><span class="o">)</span>
+        <span class="n">managerCount</span><span class="o">()</span> <span class="o">+=</span> <span class="mi">1</span>
     <span class="o">}</span>
 
   <span class="k">def</span> <span class="n">findById</span><span class="o">(</span><span class="n">id</span><span class="k">:</span> <span class="kt">Int</span><span class="o">)</span><span class="k">:</span> <span class="kt">Option</span><span class="o">[</span><span class="kt">User</span><span class="o">]</span> <span class="k">=</span>
@@ -207,8 +213,14 @@ with to these questions:</p>
       <span class="n">findAll</span><span class="o">.</span><span class="n">map</span><span class="o">(</span><span class="k">_</span><span class="o">.</span><span class="n">name</span><span class="o">)</span>
     <span class="o">}</span>
 
+  <span class="c1">// Note that findAll() requires a `ReadLock` context in order to access `users`.</span>
   <span class="k">private</span> <span class="k">def</span> <span class="n">findAll</span><span class="o">(</span><span class="k">implicit</span> <span class="n">lock</span><span class="k">:</span> <span class="kt">ReadLock</span><span class="o">)</span><span class="k">:</span> <span class="kt">Seq</span><span class="o">[</span><span class="kt">User</span><span class="o">]</span> <span class="k">=</span>
     <span class="n">users</span><span class="o">().</span><span class="n">values</span><span class="o">.</span><span class="n">toSeq</span>
+
+  <span class="k">def</span> <span class="n">findManagerCount</span><span class="o">()</span><span class="k">:</span> <span class="kt">Int</span> <span class="o">=</span> 
+    <span class="n">synchronizeRead</span> <span class="o">{</span> <span class="k">implicit</span> <span class="n">lock</span> <span class="k">=&gt;</span>
+      <span class="n">managerCount</span><span class="o">()</span>
+    <span class="o">}</span>
 
 <span class="o">}</span></code></pre>
 
@@ -221,6 +233,25 @@ variables can only be accessed by the instance lock inherited from
 <code>SynchronizedAccess</code> trait.</p>
 
 <p>Here is your free lunch. <a href="https://translate.google.com/#nl/en/eet%20smakelijk">Eet smaaklijk!</a></p>
+
+<h1 id="common-confusions">Common Confusions</h1>
+
+<p>I sadly observed that there are some common confusions about <code>Synchronized[T]</code>
+type. Let me try to address them here.</p>
+
+<ul>
+  <li>
+    <p><strong>I could have used a <code>ConcurrentMap</code> instead!</strong> <code>Map</code> usage in the examples
+above is just there for demonstration purposes. It does not have to be a
+collection at all. If you have just one variable and it is a collection,
+then going with a synchronized/concurrent implementation is totally fine.</p>
+  </li>
+  <li>
+    <p><strong>I could have used a <code>ConcurrentMap</code> and an <code>AtomicInteger</code> instead!</strong> No,
+you cannot. Then you would totally spoil the <em>atomic</em> read-write operations.
+You will still need a <em>transaction</em>-like mechanism ala in SQL.</p>
+  </li>
+</ul>
 
 
 	  <script type="text/javascript">

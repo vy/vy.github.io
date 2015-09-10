@@ -21,7 +21,7 @@ programmers. Since it is not something explicitly enforced by the language
 mechanics, programmer needs to make sure that such variables are not accessed
 out of a synchronization scope. Consider the following innocent user store:&lt;/p&gt;
 
-&lt;pre&gt;&lt;code class="language-scala"&gt;&lt;span class="k"&gt;case&lt;/span&gt; &lt;span class="k"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;User&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;id&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Int&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;String&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
+&lt;pre&gt;&lt;code class="language-scala"&gt;&lt;span class="k"&gt;case&lt;/span&gt; &lt;span class="k"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;User&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;id&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Int&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;String&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;manager&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Boolean&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
 
 &lt;span class="c1"&gt;// Use with caution! Can be accessed by multiple threads.&lt;/span&gt;
 &lt;span class="k"&gt;private&lt;/span&gt; &lt;span class="k"&gt;var&lt;/span&gt; &lt;span class="n"&gt;users&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Map&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="kt"&gt;Int&lt;/span&gt;, &lt;span class="kt"&gt;User&lt;/span&gt;&lt;span class="o"&gt;]&lt;/span&gt; &lt;span class="k"&gt;=&lt;/span&gt; &lt;span class="nc"&gt;Map&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="kt"&gt;Int&lt;/span&gt;, &lt;span class="kt"&gt;User&lt;/span&gt;&lt;span class="o"&gt;]()&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
@@ -155,9 +155,15 @@ with to these questions:&lt;/p&gt;
 
   &lt;span class="k"&gt;private&lt;/span&gt; &lt;span class="k"&gt;val&lt;/span&gt; &lt;span class="n"&gt;users&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Synchronized&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="kt"&gt;Map&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="kt"&gt;Int&lt;/span&gt;, &lt;span class="kt"&gt;User&lt;/span&gt;&lt;span class="o"&gt;]]&lt;/span&gt; &lt;span class="k"&gt;=&lt;/span&gt; &lt;span class="nc"&gt;Synchronized&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="nc"&gt;Map&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="kt"&gt;Int&lt;/span&gt;, &lt;span class="kt"&gt;User&lt;/span&gt;&lt;span class="o"&gt;]())&lt;/span&gt;
 
+  &lt;span class="k"&gt;private&lt;/span&gt; &lt;span class="k"&gt;val&lt;/span&gt; &lt;span class="n"&gt;managerCount&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Synchronized&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="kt"&gt;Int&lt;/span&gt;&lt;span class="o"&gt;]&lt;/span&gt; &lt;span class="k"&gt;=&lt;/span&gt; &lt;span class="nc"&gt;Synchronized&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
+
   &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;save&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;user&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;User&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Unit&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;
+    &lt;span class="c1"&gt;// Note that `users` and `managerCount` variables will be updated&lt;/span&gt;
+    &lt;span class="c1"&gt;// atomically while the rest waits for the `ReadWrite` lock.&lt;/span&gt;
     &lt;span class="n"&gt;synchronizeReadWrite&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="k"&gt;implicit&lt;/span&gt; &lt;span class="n"&gt;lock&lt;/span&gt; &lt;span class="k"&gt;=&amp;gt;&lt;/span&gt;
       &lt;span class="n"&gt;users&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;+=&lt;/span&gt; &lt;span class="n"&gt;user&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;id&lt;/span&gt; &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;user&lt;/span&gt;
+      &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;user&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;manager&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
+        &lt;span class="n"&gt;managerCount&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;+=&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt;
     &lt;span class="o"&gt;}&lt;/span&gt;
 
   &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;findById&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;id&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Int&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Option&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="kt"&gt;User&lt;/span&gt;&lt;span class="o"&gt;]&lt;/span&gt; &lt;span class="k"&gt;=&lt;/span&gt;
@@ -170,8 +176,14 @@ with to these questions:&lt;/p&gt;
       &lt;span class="n"&gt;findAll&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;map&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="k"&gt;_&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
     &lt;span class="o"&gt;}&lt;/span&gt;
 
+  &lt;span class="c1"&gt;// Note that findAll() requires a `ReadLock` context in order to access `users`.&lt;/span&gt;
   &lt;span class="k"&gt;private&lt;/span&gt; &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;findAll&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="k"&gt;implicit&lt;/span&gt; &lt;span class="n"&gt;lock&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;ReadLock&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Seq&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="kt"&gt;User&lt;/span&gt;&lt;span class="o"&gt;]&lt;/span&gt; &lt;span class="k"&gt;=&lt;/span&gt;
     &lt;span class="n"&gt;users&lt;/span&gt;&lt;span class="o"&gt;().&lt;/span&gt;&lt;span class="n"&gt;values&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;toSeq&lt;/span&gt;
+
+  &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;findManagerCount&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Int&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; 
+    &lt;span class="n"&gt;synchronizeRead&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="k"&gt;implicit&lt;/span&gt; &lt;span class="n"&gt;lock&lt;/span&gt; &lt;span class="k"&gt;=&amp;gt;&lt;/span&gt;
+      &lt;span class="n"&gt;managerCount&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt;
+    &lt;span class="o"&gt;}&lt;/span&gt;
 
 &lt;span class="o"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
 
@@ -184,6 +196,25 @@ variables can only be accessed by the instance lock inherited from
 &lt;code&gt;SynchronizedAccess&lt;/code&gt; trait.&lt;/p&gt;
 
 &lt;p&gt;Here is your free lunch. &lt;a href="https://translate.google.com/#nl/en/eet%20smakelijk"&gt;Eet smaaklijk!&lt;/a&gt;&lt;/p&gt;
+
+&lt;h1 id="common-confusions"&gt;Common Confusions&lt;/h1&gt;
+
+&lt;p&gt;I sadly observed that there are some common confusions about &lt;code&gt;Synchronized[T]&lt;/code&gt;
+type. Let me try to address them here.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;I could have used a &lt;code&gt;ConcurrentMap&lt;/code&gt; instead!&lt;/strong&gt; &lt;code&gt;Map&lt;/code&gt; usage in the examples
+above is just there for demonstration purposes. It does not have to be a
+collection at all. If you have just one variable and it is a collection,
+then going with a synchronized/concurrent implementation is totally fine.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;I could have used a &lt;code&gt;ConcurrentMap&lt;/code&gt; and an &lt;code&gt;AtomicInteger&lt;/code&gt; instead!&lt;/strong&gt; No,
+you cannot. Then you would totally spoil the &lt;em&gt;atomic&lt;/em&gt; read-write operations.
+You will still need a &lt;em&gt;transaction&lt;/em&gt;-like mechanism ala in SQL.&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
 </content>
   </entry>
   <entry>
