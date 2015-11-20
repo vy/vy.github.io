@@ -2,13 +2,71 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <id>https://vy.github.io//</id>
   <title>Volkan Yazıcı's Soap Co.</title>
-  <updated>2015-09-09T18:56:00Z</updated>
+  <updated>2015-11-20T07:00:00Z</updated>
   <link rel="alternate" href="https://vy.github.io//"/>
   <link rel="self" href="https://vy.github.io//blog/feed/"/>
   <author>
     <name>Volkan Yazıcı</name>
     <uri>https://vy.github.io/</uri>
   </author>
+  <entry>
+    <id>tag:vy.github.io,2015-11-20://blog/post/2015/11/20/scala-method-with-java-reserved-keyword/</id>
+    <title type="html">Calling a Scala Method with a Java Reserved Keyword</title>
+    <published>2015-11-20T07:00:00Z</published>
+    <updated>2015-11-20T07:00:00Z</updated>
+    <link rel="alternate" href="https://vy.github.io//blog/post/2015/11/20/scala-method-with-java-reserved-keyword/"/>
+    <content type="html">
+&lt;p&gt;At work, there are a couple of JAX-RS microservices I develop and maintain.
+Fortunately, all of these services and their consumers are written in Scala.
+Up until now, I have never needed to access the service APIs from Java. But
+some other team recently needed to do that! And that was where shit hit the
+fan. Consider the following &lt;code&gt;ScalaApi&lt;/code&gt; class:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-scala"&gt;&lt;span class="k"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;ScalaApi&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+
+  &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;default&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;String&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s"&gt;"test"&lt;/span&gt;
+
+&lt;span class="o"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Did you notice something wrong with the class methods? While it is perfectly
+legitimate to use &lt;code&gt;default&lt;/code&gt; as a keyword in the JVM byte code, it is not
+allowed by the &lt;a href="http://docs.oracle.com/javase/specs/jls/se8/html/jls-3.html#jls-3.9"&gt;Java Language Specification
+3.9&lt;/a&gt;.
+(Another slightly related discussion: &lt;a href="http://stackoverflow.com/questions/423994/reserved-words-as-variable-or-method-names"&gt;Reserved words as variable or method
+names&lt;/a&gt;.)
+Hence, you cannot access it via a simple &lt;code&gt;new ScalaApi().default()&lt;/code&gt; call in
+Java. To the best of my knowledge, your only safe bet becomes using Java’s
+Reflection API:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-java"&gt;&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;java.lang.reflect.Method&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+
+&lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kd"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;Consumer&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+
+    &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kd"&gt;static&lt;/span&gt; &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;main&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;String&lt;/span&gt;&lt;span class="o"&gt;[]&lt;/span&gt; &lt;span class="n"&gt;args&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+        &lt;span class="n"&gt;ScalaApi&lt;/span&gt; &lt;span class="n"&gt;scalaApi&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nf"&gt;ScalaApi&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
+        &lt;span class="n"&gt;String&lt;/span&gt; &lt;span class="n"&gt;scalaApiDefault&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;scalaApiDefault&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;scalaApi&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+        &lt;span class="n"&gt;System&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;out&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;println&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="s"&gt;"ScalaApi#default: "&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="n"&gt;scalaApiDefault&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+    &lt;span class="o"&gt;}&lt;/span&gt;
+
+    &lt;span class="kd"&gt;private&lt;/span&gt; &lt;span class="kd"&gt;static&lt;/span&gt; &lt;span class="n"&gt;String&lt;/span&gt; &lt;span class="nf"&gt;scalaApiDefault&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;ScalaApi&lt;/span&gt; &lt;span class="n"&gt;scalaApi&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+        &lt;span class="k"&gt;try&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+            &lt;span class="n"&gt;Method&lt;/span&gt; &lt;span class="n"&gt;method&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;scalaApi&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;getClass&lt;/span&gt;&lt;span class="o"&gt;().&lt;/span&gt;&lt;span class="na"&gt;getDeclaredMethod&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="s"&gt;"default"&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+            &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;String&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="n"&gt;method&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;invoke&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;scalaApi&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+        &lt;span class="o"&gt;}&lt;/span&gt; &lt;span class="k"&gt;catch&lt;/span&gt; &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;NoSuchMethodException&lt;/span&gt; &lt;span class="o"&gt;|&lt;/span&gt; &lt;span class="n"&gt;InvocationTargetException&lt;/span&gt; &lt;span class="o"&gt;|&lt;/span&gt; &lt;span class="n"&gt;IllegalAccessException&lt;/span&gt; &lt;span class="n"&gt;cause&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+            &lt;span class="k"&gt;throw&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nf"&gt;RuntimeException&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;cause&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+        &lt;span class="o"&gt;}&lt;/span&gt;
+    &lt;span class="o"&gt;}&lt;/span&gt;
+
+&lt;span class="o"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This issue raised the following question: &lt;em&gt;Where did I make a mistake?&lt;/em&gt; I
+believe, it is not possible to come up with a universally legitimate API
+targeting all available languages that compile to JVM byte code. I think that
+is one of the reasons why programming languages provide constructs to use
+reserved keywords in the source code, such as &lt;code&gt;reserved&lt;/code&gt; in Scala or
+&lt;code&gt;@reserved&lt;/code&gt; in C#, etc.&lt;/p&gt;
+</content>
+  </entry>
   <entry>
     <id>tag:vy.github.io,2015-09-09://blog/post/2015/09/09/enforce-locking/</id>
     <title type="html">Enforcing a Locking Context on Variables in Scala</title>
@@ -1758,114 +1816,6 @@ done.&lt;/p&gt;
 &lt;p&gt;The source code is available in &lt;a href="https://github.com/vy/null-check"&gt;null-check&lt;/a&gt;
 project at GitHub with some unit tests and a little bit more detailed
 installation instructions.&lt;/p&gt;
-</content>
-  </entry>
-  <entry>
-    <id>tag:vy.github.io,2015-01-08://blog/post/2015/01/08/smb-mount-troubleshoot/</id>
-    <title type="html">Troubleshooting a SMB/CIFS Mount Problem</title>
-    <published>2015-01-08T09:43:00Z</published>
-    <updated>2015-01-08T09:43:00Z</updated>
-    <link rel="alternate" href="https://vy.github.io//blog/post/2015/01/08/smb-mount-troubleshoot/"/>
-    <content type="html">
-&lt;p&gt;At every introduction to a new office environment, I spend (waste?) a certain
-period of time to connect to network shares through CIFS/SMB. This was not
-different at my new work place either. After spending almost two days to
-troubleshoot the problem, I figured out that the problem was due to the
-missing &lt;code&gt;/sbin/request-key&lt;/code&gt; binary provided by &lt;code&gt;keyutils&lt;/code&gt; package in Xubuntu
-14.04 LTS. So how did I really get it solved?&lt;/p&gt;
-
-&lt;h1 id="defining-the-problem"&gt;Defining the Problem&lt;/h1&gt;
-
-&lt;p&gt;It is really sick that &lt;code&gt;cifs&lt;/code&gt; kernel module which is responsible for loading
-CIFS/SMB filesystems returns &lt;code&gt;EINVAL&lt;/code&gt; (that is, &lt;code&gt;error(22): Invalid argument&lt;/code&gt;)
-for an entire family of errors and makes it impossible for the user to spot
-the problem. This was also the case for me.&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;$ sudo mount \
-	-t cifs //path/to/network/shares /local/mount/point \
-	-o credentials=$HOME/.smbcredentials,iocharset=utf8,rw,uid=$USER,serverino
-mount error(22): Invalid argument
-Refer to the mount.cifs(8) manual page (e.g. man mount.cifs)
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;So given that the UNC is correct, the local mount point does exist and
-accessible, and mount options are valid, &lt;code&gt;invalid argument&lt;/code&gt; error does not
-provide any context for the problem.&lt;/p&gt;
-
-&lt;p&gt;Further searching on the internet leaded me to &lt;a href="https://wiki.samba.org/index.php/LinuxCIFS_troubleshooting"&gt;LinuxCIFS
-troubleshooting&lt;/a&gt;
-at Samba Wiki. There it is told that I can enable debug messages for &lt;code&gt;cifs&lt;/code&gt;
-module by echoing a non-zero value to &lt;code&gt;/proc/fs/cifs/cifsFYI&lt;/code&gt;, hence I did so:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;$ echo 1 | sudo tee /proc/fs/cifs/cifsFYI
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;And tried to mount the network share again. And observed the following snippet
-in the &lt;code&gt;dmesg&lt;/code&gt; output:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;CIFS VFS: dns_resolve_server_name_to_ip: unable to resolve: path
-CIFS VFS: compose_mount_options: Failed to resolve server part of \\path\to\network\shares to IP
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;So &lt;code&gt;dns_resolve_server_name_to_ip&lt;/code&gt; could not resolve &lt;code&gt;path&lt;/code&gt; for some reason.&lt;/p&gt;
-
-&lt;h1 id="dns-at-the-kernel-level"&gt;DNS at the Kernel-Level&lt;/h1&gt;
-
-&lt;p&gt;So how does kernel really resolve domain names to IP addresses? After reading
-&lt;a href="http://linux.die.net/man/8/mount.cifs"&gt;&lt;code&gt;mount.cifs(8)&lt;/code&gt;&lt;/a&gt; a couple of times, I
-saw &lt;em&gt;See Also&lt;/em&gt; section telling that
-&lt;a href="https://www.kernel.org/doc/readme/Documentation-filesystems-cifs-README"&gt;&lt;code&gt;Documentation/filesystems/cifs.txt&lt;/code&gt;&lt;/a&gt;
-in the linux kernel source tree may contain additional options and
-information. I checked that too and spotted the following lines:&lt;/p&gt;
-
-&lt;blockquote&gt;
-  &lt;p&gt;DFS support allows transparent redirection to shares in an MS-DFS name
-space. In addition, DFS support for target shares which are specified as UNC
-names which begin with host names (rather than IP addresses) requires a user
-space helper (such as &lt;code&gt;cifs.upcall&lt;/code&gt;) to be present in order to translate
-host names to ip address, and the user space helper must also be configured
-in the file &lt;code&gt;/etc/request-key.conf&lt;/code&gt;.  Samba, Windows servers and many NAS
-appliances support DFS as a way of constructing a global name space to ease
-network configuration and improve reliability.&lt;/p&gt;
-
-  &lt;p&gt;To use cifs Kerberos and DFS support, the Linux &lt;code&gt;keyutils&lt;/code&gt; package should be
-installed and something like the following lines should be added to the
-&lt;code&gt;/etc/request-key.conf&lt;/code&gt; file:&lt;/p&gt;
-
-  &lt;pre&gt;&lt;code&gt;create cifs.spnego * * /usr/local/sbin/cifs.upcall %k
-create dns_resolver * * /usr/local/sbin/cifs.upcall %k
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/blockquote&gt;
-
-&lt;p&gt;This was getting interesting. I spotted the &lt;code&gt;dns_resolver&lt;/code&gt; keyword at the
-bottom and started reading
-&lt;a href="https://www.kernel.org/doc/Documentation/networking/dns_resolver.txt"&gt;&lt;code&gt;Documentation/networking/dns_resolver.txt&lt;/code&gt;&lt;/a&gt;
-as well.&lt;/p&gt;
-
-&lt;blockquote&gt;
-  &lt;p&gt;The DNS resolver module provides a way for kernel services to make DNS
-queries by way of requesting a key of key type &lt;code&gt;dns_resolver&lt;/code&gt;.  These
-queries are upcalled to userspace through &lt;code&gt;/sbin/request-key&lt;/code&gt;.&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;p&gt;The long story short, CIFS module employs DNS resolver module, which
-internally upcalls the queries to userspace through &lt;code&gt;/sbin/request-key&lt;/code&gt;. I got
-further curious and checked the &lt;code&gt;request-key(8)&lt;/code&gt;:&lt;/p&gt;
-
-&lt;blockquote&gt;
-  &lt;p&gt;This  program  is invoked by the kernel when the kernel is asked for a key
-that it doesn’t have immediately available. The kernel creates a partially
-set up key and then calls out to this program to instantiate it. It is not
-intended to be called directly.&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;h1 id="the-solution"&gt;The Solution&lt;/h1&gt;
-
-&lt;p&gt;Everything was pointing that something was wrong with my &lt;code&gt;/sbin/request-key&lt;/code&gt;.
-Ooops! The binary was not there at all. &lt;code&gt;apt-file search /sbin/request-key&lt;/code&gt;
-told that the binary was provided by &lt;code&gt;keyutils&lt;/code&gt; package, which was missing in
-my system. After installing &lt;code&gt;keyutils&lt;/code&gt;, I did not observe any DNS resolver
-issues in the &lt;code&gt;dmesg&lt;/code&gt; logs and &lt;code&gt;mount.cifs&lt;/code&gt; worked without a problem.&lt;/p&gt;
 </content>
   </entry>
 </feed>
