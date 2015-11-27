@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Compiling Protocol Buffers Sources in Maven</title>
+    <link rel="stylesheet" href="/css/bootstrap.css">
+    <link rel="stylesheet" href="/css/bootstrap-responsive.css">
+    <script src="/js/bootstrap.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="/css/common.css">
+    <meta name="generator" content="nanoc 3.8.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/post.css">
+    <script type="text/javascript">
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-40183531-1']);
+      _gaq.push(['_trackPageview']);
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="menu">
+      <div><a href="/">Home</a></div><div><a href="/about/">About</a></div><div><a href="/blog/">Blog</a></div><div><a href="/code/">Code</a></div><div><a href="/blog/feed/">Feed</a></div>
+    </div>
+    
+
+<div class="container">
+  <div class="row-fluid">
+    <div class="offset1 span10">
+      <div id="post" class="more-white-box rounded-corners">
+	<div class="head">
+	  <div class="title">Compiling Protocol Buffers Sources in Maven</div>
+	  <div class="subtitle">posted at
+	    November 27, 2015
+	    with tags <a href="/blog/tag/java">java</a>, <a href="/blog/tag/maven">maven</a>
+	  </div>
+	  <div class="share">
+	    <div class="addthis_toolbox addthis_default_style ">
+	      <a class="addthis_button_preferred_1"></a>
+	      <a class="addthis_button_preferred_2"></a>
+	      <a class="addthis_button_preferred_3"></a>
+	      <a class="addthis_button_preferred_4"></a>
+	      <a class="addthis_button_compact"></a>
+	    </div>
+	    <script type="text/javascript">var addthis_config = {"data_track_addressbar":false};</script>
+	    <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-5144adf75211a62b"></script>
+	  </div>
+	</div>
+	<div class="body">
+
+	  
+<p>Java build systems have always been a second class citizen for <a href="https://developers.google.com/protocol-buffers">Protocol
+Buffers</a>. As is the case for
+many other Java serialization frameworks (e.g., <a href="https://capnproto.org/">Cap’n
+Proto</a>,
+<a href="http://google.github.io/flatbuffers/">FlatBuffers</a>), Protocol Buffers does
+not provide a native Java compiler which you can inject into Maven
+dependencies and invoke a plugin to compile <code>.proto</code> files into <code>.java</code>
+sources. Hence, programmers needed to have <code>protoc</code> (Proto Buffers Compiler)
+binary on their development machine and call this platform-dependent binary
+during Maven build. This totally violates the environment independent build of
+a project. Fortunately, Google releases platform-specific <code>protoc</code> binaries in
+the form of Maven artifacts.</p>
+
+<p><img src="protoc-artifacts.png" alt="Maven Artifacts for Proto Buffers Compiler Binary"></p>
+
+<p>We can add these artifacts as a compile-time dependency to our Maven project
+and invoke the platform-dependent binary to compile <code>.proto</code> sources.</p>
+
+<h1 id="preliminaries">Preliminaries</h1>
+
+<p>Let’s start with defining certain properties for library versions and
+input/output directories for the Protocol Buffers compiler.</p>
+
+<pre><code class="language-xml"><span class="nt">&lt;properties&gt;</span>
+
+    <span class="c">&lt;!-- protobuf paths --&gt;</span>
+    <span class="nt">&lt;protobuf.input.directory&gt;</span>${project.basedir}/src/main/proto<span class="nt">&lt;/protobuf.input.directory&gt;</span>
+    <span class="nt">&lt;protobuf.output.directory&gt;</span>${project.build.directory}/generated-sources<span class="nt">&lt;/protobuf.output.directory&gt;</span>
+
+    <span class="c">&lt;!-- library versions --&gt;</span>
+    <span class="nt">&lt;build-helper-maven-plugin.version&gt;</span>1.9.1<span class="nt">&lt;/build-helper-maven-plugin.version&gt;</span>
+    <span class="nt">&lt;maven-dependency-plugin.version&gt;</span>2.10<span class="nt">&lt;/maven-dependency-plugin.version&gt;</span>
+    <span class="nt">&lt;maven-antrun-plugin.version&gt;</span>1.8<span class="nt">&lt;/maven-antrun-plugin.version&gt;</span>
+    <span class="nt">&lt;os-maven-plugin.version&gt;</span>1.4.1.Final<span class="nt">&lt;/os-maven-plugin.version&gt;</span>
+    <span class="nt">&lt;protobuf.version&gt;</span>3.0.0-beta-1<span class="nt">&lt;/protobuf.version&gt;</span>
+
+<span class="nt">&lt;/properties&gt;</span></code></pre>
+
+<h1 id="protocol-buffers-java-api">Protocol Buffers Java API</h1>
+
+<p><code>protoc</code> compiles <code>.proto</code> files into <code>.java</code> files such that the generated
+sources rely on certain common classes. These classes are provided by
+<code>protobuf-java</code> artifact:</p>
+
+<pre><code class="language-xml"><span class="nt">&lt;dependency&gt;</span>
+    <span class="nt">&lt;groupId&gt;</span>com.google.protobuf<span class="nt">&lt;/groupId&gt;</span>
+    <span class="nt">&lt;artifactId&gt;</span>protobuf-java<span class="nt">&lt;/artifactId&gt;</span>
+    <span class="nt">&lt;version&gt;</span>${protobuf.version}<span class="nt">&lt;/version&gt;</span>
+<span class="nt">&lt;/dependency&gt;</span></code></pre>
+
+<h1 id="detecting-operating-system">Detecting Operating System</h1>
+
+<p><code>protoc</code> Maven artifact is provided in various platform-specific
+<em>classifications</em>: <code>linux-x86_32</code>, <code>linux-x86_64</code>, <code>osx-x86_32</code>, <code>osx-x86_64</code>,
+<code>windows-x86_32</code>, <code>windows-x86_64</code>. In order to pick the right artifact, we
+will employ <code>os.detected.classifier</code> property exposed by <code>os-maven-plugin</code>:</p>
+
+<pre><code class="language-xml"><span class="nt">&lt;build&gt;</span>
+    <span class="nt">&lt;extensions&gt;</span>
+        <span class="c">&lt;!-- provides os.detected.classifier (i.e. linux-x86_64, osx-x86_64) property --&gt;</span>
+        <span class="nt">&lt;extension&gt;</span>
+            <span class="nt">&lt;groupId&gt;</span>kr.motd.maven<span class="nt">&lt;/groupId&gt;</span>
+            <span class="nt">&lt;artifactId&gt;</span>os-maven-plugin<span class="nt">&lt;/artifactId&gt;</span>
+            <span class="nt">&lt;version&gt;</span>${os-maven-plugin.version}<span class="nt">&lt;/version&gt;</span>
+        <span class="nt">&lt;/extension&gt;</span>
+    <span class="nt">&lt;/extensions&gt;</span>
+
+    <span class="c">&lt;!-- ... --&gt;</span>
+<span class="nt">&lt;/build&gt;</span></code></pre>
+
+<h1 id="downloading-platform-specific-protocol-buffers-compiler">Downloading Platform-Specific Protocol Buffers Compiler</h1>
+
+<p>We will use <code>maven-dependency-plugin</code> to download the platform-specific
+<code>protoc</code> binary suitable for the current build platform and copy it into
+<code>project.build.directory</code>.</p>
+
+<pre><code class="language-xml"><span class="c">&lt;!-- copy protoc binary into build directory --&gt;</span>
+<span class="nt">&lt;plugin&gt;</span>
+    <span class="nt">&lt;groupId&gt;</span>org.apache.maven.plugins<span class="nt">&lt;/groupId&gt;</span>
+    <span class="nt">&lt;artifactId&gt;</span>maven-dependency-plugin<span class="nt">&lt;/artifactId&gt;</span>
+    <span class="nt">&lt;version&gt;</span>${maven-dependency-plugin.version}<span class="nt">&lt;/version&gt;</span>
+    <span class="nt">&lt;executions&gt;</span>
+        <span class="nt">&lt;execution&gt;</span>
+            <span class="nt">&lt;id&gt;</span>copy-protoc<span class="nt">&lt;/id&gt;</span>
+            <span class="nt">&lt;phase&gt;</span>generate-sources<span class="nt">&lt;/phase&gt;</span>
+            <span class="nt">&lt;goals&gt;</span>
+                <span class="nt">&lt;goal&gt;</span>copy<span class="nt">&lt;/goal&gt;</span>
+            <span class="nt">&lt;/goals&gt;</span>
+            <span class="nt">&lt;configuration&gt;</span>
+                <span class="nt">&lt;artifactItems&gt;</span>
+                    <span class="nt">&lt;artifactItem&gt;</span>
+                        <span class="nt">&lt;groupId&gt;</span>com.google.protobuf<span class="nt">&lt;/groupId&gt;</span>
+                        <span class="nt">&lt;artifactId&gt;</span>protoc<span class="nt">&lt;/artifactId&gt;</span>
+                        <span class="nt">&lt;version&gt;</span>${protobuf.version}<span class="nt">&lt;/version&gt;</span>
+                        <span class="nt">&lt;classifier&gt;</span>${os.detected.classifier}<span class="nt">&lt;/classifier&gt;</span>
+                        <span class="nt">&lt;type&gt;</span>exe<span class="nt">&lt;/type&gt;</span>
+                        <span class="nt">&lt;overWrite&gt;</span>true<span class="nt">&lt;/overWrite&gt;</span>
+                        <span class="nt">&lt;outputDirectory&gt;</span>${project.build.directory}<span class="nt">&lt;/outputDirectory&gt;</span>
+                    <span class="nt">&lt;/artifactItem&gt;</span>
+                <span class="nt">&lt;/artifactItems&gt;</span>
+            <span class="nt">&lt;/configuration&gt;</span>
+        <span class="nt">&lt;/execution&gt;</span>
+    <span class="nt">&lt;/executions&gt;</span>
+<span class="nt">&lt;/plugin&gt;</span></code></pre>
+
+<p>Note how we employed <code>os.detected.classifier</code> variable provided by
+<code>os-maven-plugin</code> to inject the platform-specific binary dependency.</p>
+
+<h1 id="generating-protocol-buffers-java-sources">Generating Protocol Buffers Java Sources</h1>
+
+<p>Now we have our <code>protoc</code> binary in <code>project.build.directory</code>. We can use
+<code>maven-antrun-plugin</code> plugin to execute <code>protoc</code> for compiling <code>.proto</code> files
+into <code>.java</code> sources.</p>
+
+<pre><code class="language-xml"><span class="c">&lt;!-- compile proto buffer files using copied protoc binary --&gt;</span>
+<span class="nt">&lt;plugin&gt;</span>
+    <span class="nt">&lt;groupId&gt;</span>org.apache.maven.plugins<span class="nt">&lt;/groupId&gt;</span>
+    <span class="nt">&lt;artifactId&gt;</span>maven-antrun-plugin<span class="nt">&lt;/artifactId&gt;</span>
+    <span class="nt">&lt;version&gt;</span>${maven-antrun-plugin.version}<span class="nt">&lt;/version&gt;</span>
+    <span class="nt">&lt;executions&gt;</span>
+        <span class="nt">&lt;execution&gt;</span>
+            <span class="nt">&lt;id&gt;</span>exec-protoc<span class="nt">&lt;/id&gt;</span>
+            <span class="nt">&lt;phase&gt;</span>generate-sources<span class="nt">&lt;/phase&gt;</span>
+            <span class="nt">&lt;configuration&gt;</span>
+                <span class="nt">&lt;target&gt;</span>
+                    <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">"protoc.filename"</span> <span class="na">value=</span><span class="s">"protoc-${protobuf.version}-${os.detected.classifier}.exe"</span><span class="nt">/&gt;</span>
+                    <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">"protoc.filepath"</span> <span class="na">value=</span><span class="s">"${project.build.directory}/${protoc.filename}"</span><span class="nt">/&gt;</span>
+                    <span class="nt">&lt;chmod</span> <span class="na">file=</span><span class="s">"${protoc.filepath}"</span> <span class="na">perm=</span><span class="s">"ugo+rx"</span><span class="nt">/&gt;</span>
+                    <span class="nt">&lt;mkdir</span> <span class="na">dir=</span><span class="s">"${protobuf.output.directory}"</span> <span class="nt">/&gt;</span>
+                    <span class="nt">&lt;path</span> <span class="na">id=</span><span class="s">"protobuf.input.filepaths.path"</span><span class="nt">&gt;</span>
+                        <span class="nt">&lt;fileset</span> <span class="na">dir=</span><span class="s">"${protobuf.input.directory}"</span><span class="nt">&gt;</span>
+                            <span class="nt">&lt;include</span> <span class="na">name=</span><span class="s">"**/*.proto"</span><span class="nt">/&gt;</span>
+                        <span class="nt">&lt;/fileset&gt;</span>
+                    <span class="nt">&lt;/path&gt;</span>
+                    <span class="nt">&lt;pathconvert</span> <span class="na">pathsep=</span><span class="s">" "</span> <span class="na">property=</span><span class="s">"protobuf.input.filepaths"</span> <span class="na">refid=</span><span class="s">"protobuf.input.filepaths.path"</span><span class="nt">/&gt;</span>
+                    <span class="nt">&lt;exec</span> <span class="na">executable=</span><span class="s">"${protoc.filepath}"</span> <span class="na">failonerror=</span><span class="s">"true"</span><span class="nt">&gt;</span>
+                        <span class="nt">&lt;arg</span> <span class="na">value=</span><span class="s">"-I"</span><span class="nt">/&gt;</span>
+                        <span class="nt">&lt;arg</span> <span class="na">value=</span><span class="s">"${protobuf.input.directory}"</span><span class="nt">/&gt;</span>
+                        <span class="nt">&lt;arg</span> <span class="na">value=</span><span class="s">"--java_out"</span><span class="nt">/&gt;</span>
+                        <span class="nt">&lt;arg</span> <span class="na">value=</span><span class="s">"${protobuf.output.directory}"</span><span class="nt">/&gt;</span>
+                        <span class="nt">&lt;arg</span> <span class="na">line=</span><span class="s">"${protobuf.input.filepaths}"</span><span class="nt">/&gt;</span>
+                    <span class="nt">&lt;/exec&gt;</span>
+                <span class="nt">&lt;/target&gt;</span>
+            <span class="nt">&lt;/configuration&gt;</span>
+            <span class="nt">&lt;goals&gt;</span>
+                <span class="nt">&lt;goal&gt;</span>run<span class="nt">&lt;/goal&gt;</span>
+            <span class="nt">&lt;/goals&gt;</span>
+        <span class="nt">&lt;/execution&gt;</span>
+    <span class="nt">&lt;/executions&gt;</span>
+<span class="nt">&lt;/plugin&gt;</span></code></pre>
+
+<h1 id="adding-generated-sources-into-the-package">Adding Generated Sources into the Package</h1>
+
+<p><code>protoc</code> compiler placed the generated Java sources into
+<code>protobuf.output.directory</code>. We need to add the sources in this directory to
+the package:</p>
+
+<pre><code class="language-xml"><span class="c">&lt;!-- add generated proto buffer classes into the package --&gt;</span>
+<span class="nt">&lt;plugin&gt;</span>
+    <span class="nt">&lt;groupId&gt;</span>org.codehaus.mojo<span class="nt">&lt;/groupId&gt;</span>
+    <span class="nt">&lt;artifactId&gt;</span>build-helper-maven-plugin<span class="nt">&lt;/artifactId&gt;</span>
+    <span class="nt">&lt;version&gt;</span>${build-helper-maven-plugin.version}<span class="nt">&lt;/version&gt;</span>
+    <span class="nt">&lt;executions&gt;</span>
+        <span class="nt">&lt;execution&gt;</span>
+            <span class="nt">&lt;id&gt;</span>add-classes<span class="nt">&lt;/id&gt;</span>
+            <span class="nt">&lt;phase&gt;</span>generate-sources<span class="nt">&lt;/phase&gt;</span>
+            <span class="nt">&lt;goals&gt;</span>
+                <span class="nt">&lt;goal&gt;</span>add-source<span class="nt">&lt;/goal&gt;</span>
+            <span class="nt">&lt;/goals&gt;</span>
+            <span class="nt">&lt;configuration&gt;</span>
+                <span class="nt">&lt;sources&gt;</span>
+                    <span class="nt">&lt;source&gt;</span>${protobuf.output.directory}<span class="nt">&lt;/source&gt;</span>
+                <span class="nt">&lt;/sources&gt;</span>
+            <span class="nt">&lt;/configuration&gt;</span>
+        <span class="nt">&lt;/execution&gt;</span>
+    <span class="nt">&lt;/executions&gt;</span>
+<span class="nt">&lt;/plugin&gt;</span></code></pre>
+
+<h1 id="conclusion">Conclusion</h1>
+
+<p>In this post, I tried to summarize the necessary set of steps to compile
+Protocol Buffers schema into Java classes using plain Maven magic. This is
+important to get a platform-independent build for a project.</p>
+
+<p>The absence of a proper Maven plugin to handle all these steps for us causes
+quite a bit of <code>pom.xml</code> pollution. Nevertheless, (de)serializers for the
+messaging medium are generally distributed in a separate artifact, hence this
+will probably end up being the entire content of your <code>pom.xml</code>.</p>
+
+
+	  <script type="text/javascript">
+	    $("#post table").attr("class", "table table-hover");
+	  </script>
+
+	  <div id="disqus_thread"></div>
+	  <script type="text/javascript">
+	  var disqus_shortname = 'vyazici';
+	  var disqus_identifier = '/blog/post/20151127-maven-protobuf/';
+	  var disqus_title = 'Compiling Protocol Buffers Sources in Maven';
+	  (function() {
+	  	var dsq = document.createElement('script');
+	  	dsq.type = 'text/javascript';
+	  	dsq.async = true;
+	  	dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+	  	(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+	  })();
+	  </script>
+
+	</div>
+      </div>
+      <div id="bgauthor" class="narrow-font">
+	background image by
+	<a href="http://jenniferwetzel.com/">Jennifer Wetzel</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
+  </body>
+</html>
+

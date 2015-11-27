@@ -2,13 +2,210 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <id>https://vy.github.io//</id>
   <title>Volkan Yazıcı's Soap Co.</title>
-  <updated>2015-11-20T07:00:00Z</updated>
+  <updated>2015-11-27T08:49:00Z</updated>
   <link rel="alternate" href="https://vy.github.io//"/>
   <link rel="self" href="https://vy.github.io//blog/feed/"/>
   <author>
     <name>Volkan Yazıcı</name>
     <uri>https://vy.github.io/</uri>
   </author>
+  <entry>
+    <id>tag:vy.github.io,2015-11-27://blog/post/2015/11/27/maven-protobuf/</id>
+    <title type="html">Compiling Protocol Buffers Sources in Maven</title>
+    <published>2015-11-27T08:49:00Z</published>
+    <updated>2015-11-27T08:49:00Z</updated>
+    <link rel="alternate" href="https://vy.github.io//blog/post/2015/11/27/maven-protobuf/"/>
+    <content type="html">
+&lt;p&gt;Java build systems have always been a second class citizen for &lt;a href="https://developers.google.com/protocol-buffers"&gt;Protocol
+Buffers&lt;/a&gt;. As is the case for
+many other Java serialization frameworks (e.g., &lt;a href="https://capnproto.org/"&gt;Cap’n
+Proto&lt;/a&gt;,
+&lt;a href="http://google.github.io/flatbuffers/"&gt;FlatBuffers&lt;/a&gt;), Protocol Buffers does
+not provide a native Java compiler which you can inject into Maven
+dependencies and invoke a plugin to compile &lt;code&gt;.proto&lt;/code&gt; files into &lt;code&gt;.java&lt;/code&gt;
+sources. Hence, programmers needed to have &lt;code&gt;protoc&lt;/code&gt; (Proto Buffers Compiler)
+binary on their development machine and call this platform-dependent binary
+during Maven build. This totally violates the environment independent build of
+a project. Fortunately, Google releases platform-specific &lt;code&gt;protoc&lt;/code&gt; binaries in
+the form of Maven artifacts.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src="protoc-artifacts.png" alt="Maven Artifacts for Proto Buffers Compiler Binary"&gt;&lt;/p&gt;
+
+&lt;p&gt;We can add these artifacts as a compile-time dependency to our Maven project
+and invoke the platform-dependent binary to compile &lt;code&gt;.proto&lt;/code&gt; sources.&lt;/p&gt;
+
+&lt;h1 id="preliminaries"&gt;Preliminaries&lt;/h1&gt;
+
+&lt;p&gt;Let’s start with defining certain properties for library versions and
+input/output directories for the Protocol Buffers compiler.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-xml"&gt;&lt;span class="nt"&gt;&amp;lt;properties&amp;gt;&lt;/span&gt;
+
+    &lt;span class="c"&gt;&amp;lt;!-- protobuf paths --&amp;gt;&lt;/span&gt;
+    &lt;span class="nt"&gt;&amp;lt;protobuf.input.directory&amp;gt;&lt;/span&gt;${project.basedir}/src/main/proto&lt;span class="nt"&gt;&amp;lt;/protobuf.input.directory&amp;gt;&lt;/span&gt;
+    &lt;span class="nt"&gt;&amp;lt;protobuf.output.directory&amp;gt;&lt;/span&gt;${project.build.directory}/generated-sources&lt;span class="nt"&gt;&amp;lt;/protobuf.output.directory&amp;gt;&lt;/span&gt;
+
+    &lt;span class="c"&gt;&amp;lt;!-- library versions --&amp;gt;&lt;/span&gt;
+    &lt;span class="nt"&gt;&amp;lt;build-helper-maven-plugin.version&amp;gt;&lt;/span&gt;1.9.1&lt;span class="nt"&gt;&amp;lt;/build-helper-maven-plugin.version&amp;gt;&lt;/span&gt;
+    &lt;span class="nt"&gt;&amp;lt;maven-dependency-plugin.version&amp;gt;&lt;/span&gt;2.10&lt;span class="nt"&gt;&amp;lt;/maven-dependency-plugin.version&amp;gt;&lt;/span&gt;
+    &lt;span class="nt"&gt;&amp;lt;maven-antrun-plugin.version&amp;gt;&lt;/span&gt;1.8&lt;span class="nt"&gt;&amp;lt;/maven-antrun-plugin.version&amp;gt;&lt;/span&gt;
+    &lt;span class="nt"&gt;&amp;lt;os-maven-plugin.version&amp;gt;&lt;/span&gt;1.4.1.Final&lt;span class="nt"&gt;&amp;lt;/os-maven-plugin.version&amp;gt;&lt;/span&gt;
+    &lt;span class="nt"&gt;&amp;lt;protobuf.version&amp;gt;&lt;/span&gt;3.0.0-beta-1&lt;span class="nt"&gt;&amp;lt;/protobuf.version&amp;gt;&lt;/span&gt;
+
+&lt;span class="nt"&gt;&amp;lt;/properties&amp;gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h1 id="protocol-buffers-java-api"&gt;Protocol Buffers Java API&lt;/h1&gt;
+
+&lt;p&gt;&lt;code&gt;protoc&lt;/code&gt; compiles &lt;code&gt;.proto&lt;/code&gt; files into &lt;code&gt;.java&lt;/code&gt; files such that the generated
+sources rely on certain common classes. These classes are provided by
+&lt;code&gt;protobuf-java&lt;/code&gt; artifact:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-xml"&gt;&lt;span class="nt"&gt;&amp;lt;dependency&amp;gt;&lt;/span&gt;
+    &lt;span class="nt"&gt;&amp;lt;groupId&amp;gt;&lt;/span&gt;com.google.protobuf&lt;span class="nt"&gt;&amp;lt;/groupId&amp;gt;&lt;/span&gt;
+    &lt;span class="nt"&gt;&amp;lt;artifactId&amp;gt;&lt;/span&gt;protobuf-java&lt;span class="nt"&gt;&amp;lt;/artifactId&amp;gt;&lt;/span&gt;
+    &lt;span class="nt"&gt;&amp;lt;version&amp;gt;&lt;/span&gt;${protobuf.version}&lt;span class="nt"&gt;&amp;lt;/version&amp;gt;&lt;/span&gt;
+&lt;span class="nt"&gt;&amp;lt;/dependency&amp;gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h1 id="detecting-operating-system"&gt;Detecting Operating System&lt;/h1&gt;
+
+&lt;p&gt;&lt;code&gt;protoc&lt;/code&gt; Maven artifact is provided in various platform-specific
+&lt;em&gt;classifications&lt;/em&gt;: &lt;code&gt;linux-x86_32&lt;/code&gt;, &lt;code&gt;linux-x86_64&lt;/code&gt;, &lt;code&gt;osx-x86_32&lt;/code&gt;, &lt;code&gt;osx-x86_64&lt;/code&gt;,
+&lt;code&gt;windows-x86_32&lt;/code&gt;, &lt;code&gt;windows-x86_64&lt;/code&gt;. In order to pick the right artifact, we
+will employ &lt;code&gt;os.detected.classifier&lt;/code&gt; property exposed by &lt;code&gt;os-maven-plugin&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-xml"&gt;&lt;span class="nt"&gt;&amp;lt;build&amp;gt;&lt;/span&gt;
+    &lt;span class="nt"&gt;&amp;lt;extensions&amp;gt;&lt;/span&gt;
+        &lt;span class="c"&gt;&amp;lt;!-- provides os.detected.classifier (i.e. linux-x86_64, osx-x86_64) property --&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;extension&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;groupId&amp;gt;&lt;/span&gt;kr.motd.maven&lt;span class="nt"&gt;&amp;lt;/groupId&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;artifactId&amp;gt;&lt;/span&gt;os-maven-plugin&lt;span class="nt"&gt;&amp;lt;/artifactId&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;version&amp;gt;&lt;/span&gt;${os-maven-plugin.version}&lt;span class="nt"&gt;&amp;lt;/version&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;/extension&amp;gt;&lt;/span&gt;
+    &lt;span class="nt"&gt;&amp;lt;/extensions&amp;gt;&lt;/span&gt;
+
+    &lt;span class="c"&gt;&amp;lt;!-- ... --&amp;gt;&lt;/span&gt;
+&lt;span class="nt"&gt;&amp;lt;/build&amp;gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h1 id="downloading-platform-specific-protocol-buffers-compiler"&gt;Downloading Platform-Specific Protocol Buffers Compiler&lt;/h1&gt;
+
+&lt;p&gt;We will use &lt;code&gt;maven-dependency-plugin&lt;/code&gt; to download the platform-specific
+&lt;code&gt;protoc&lt;/code&gt; binary suitable for the current build platform and copy it into
+&lt;code&gt;project.build.directory&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-xml"&gt;&lt;span class="c"&gt;&amp;lt;!-- copy protoc binary into build directory --&amp;gt;&lt;/span&gt;
+&lt;span class="nt"&gt;&amp;lt;plugin&amp;gt;&lt;/span&gt;
+    &lt;span class="nt"&gt;&amp;lt;groupId&amp;gt;&lt;/span&gt;org.apache.maven.plugins&lt;span class="nt"&gt;&amp;lt;/groupId&amp;gt;&lt;/span&gt;
+    &lt;span class="nt"&gt;&amp;lt;artifactId&amp;gt;&lt;/span&gt;maven-dependency-plugin&lt;span class="nt"&gt;&amp;lt;/artifactId&amp;gt;&lt;/span&gt;
+    &lt;span class="nt"&gt;&amp;lt;version&amp;gt;&lt;/span&gt;${maven-dependency-plugin.version}&lt;span class="nt"&gt;&amp;lt;/version&amp;gt;&lt;/span&gt;
+    &lt;span class="nt"&gt;&amp;lt;executions&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;execution&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;id&amp;gt;&lt;/span&gt;copy-protoc&lt;span class="nt"&gt;&amp;lt;/id&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;phase&amp;gt;&lt;/span&gt;generate-sources&lt;span class="nt"&gt;&amp;lt;/phase&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;goals&amp;gt;&lt;/span&gt;
+                &lt;span class="nt"&gt;&amp;lt;goal&amp;gt;&lt;/span&gt;copy&lt;span class="nt"&gt;&amp;lt;/goal&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;/goals&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;configuration&amp;gt;&lt;/span&gt;
+                &lt;span class="nt"&gt;&amp;lt;artifactItems&amp;gt;&lt;/span&gt;
+                    &lt;span class="nt"&gt;&amp;lt;artifactItem&amp;gt;&lt;/span&gt;
+                        &lt;span class="nt"&gt;&amp;lt;groupId&amp;gt;&lt;/span&gt;com.google.protobuf&lt;span class="nt"&gt;&amp;lt;/groupId&amp;gt;&lt;/span&gt;
+                        &lt;span class="nt"&gt;&amp;lt;artifactId&amp;gt;&lt;/span&gt;protoc&lt;span class="nt"&gt;&amp;lt;/artifactId&amp;gt;&lt;/span&gt;
+                        &lt;span class="nt"&gt;&amp;lt;version&amp;gt;&lt;/span&gt;${protobuf.version}&lt;span class="nt"&gt;&amp;lt;/version&amp;gt;&lt;/span&gt;
+                        &lt;span class="nt"&gt;&amp;lt;classifier&amp;gt;&lt;/span&gt;${os.detected.classifier}&lt;span class="nt"&gt;&amp;lt;/classifier&amp;gt;&lt;/span&gt;
+                        &lt;span class="nt"&gt;&amp;lt;type&amp;gt;&lt;/span&gt;exe&lt;span class="nt"&gt;&amp;lt;/type&amp;gt;&lt;/span&gt;
+                        &lt;span class="nt"&gt;&amp;lt;overWrite&amp;gt;&lt;/span&gt;true&lt;span class="nt"&gt;&amp;lt;/overWrite&amp;gt;&lt;/span&gt;
+                        &lt;span class="nt"&gt;&amp;lt;outputDirectory&amp;gt;&lt;/span&gt;${project.build.directory}&lt;span class="nt"&gt;&amp;lt;/outputDirectory&amp;gt;&lt;/span&gt;
+                    &lt;span class="nt"&gt;&amp;lt;/artifactItem&amp;gt;&lt;/span&gt;
+                &lt;span class="nt"&gt;&amp;lt;/artifactItems&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;/configuration&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;/execution&amp;gt;&lt;/span&gt;
+    &lt;span class="nt"&gt;&amp;lt;/executions&amp;gt;&lt;/span&gt;
+&lt;span class="nt"&gt;&amp;lt;/plugin&amp;gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Note how we employed &lt;code&gt;os.detected.classifier&lt;/code&gt; variable provided by
+&lt;code&gt;os-maven-plugin&lt;/code&gt; to inject the platform-specific binary dependency.&lt;/p&gt;
+
+&lt;h1 id="generating-protocol-buffers-java-sources"&gt;Generating Protocol Buffers Java Sources&lt;/h1&gt;
+
+&lt;p&gt;Now we have our &lt;code&gt;protoc&lt;/code&gt; binary in &lt;code&gt;project.build.directory&lt;/code&gt;. We can use
+&lt;code&gt;maven-antrun-plugin&lt;/code&gt; plugin to execute &lt;code&gt;protoc&lt;/code&gt; for compiling &lt;code&gt;.proto&lt;/code&gt; files
+into &lt;code&gt;.java&lt;/code&gt; sources.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-xml"&gt;&lt;span class="c"&gt;&amp;lt;!-- compile proto buffer files using copied protoc binary --&amp;gt;&lt;/span&gt;
+&lt;span class="nt"&gt;&amp;lt;plugin&amp;gt;&lt;/span&gt;
+    &lt;span class="nt"&gt;&amp;lt;groupId&amp;gt;&lt;/span&gt;org.apache.maven.plugins&lt;span class="nt"&gt;&amp;lt;/groupId&amp;gt;&lt;/span&gt;
+    &lt;span class="nt"&gt;&amp;lt;artifactId&amp;gt;&lt;/span&gt;maven-antrun-plugin&lt;span class="nt"&gt;&amp;lt;/artifactId&amp;gt;&lt;/span&gt;
+    &lt;span class="nt"&gt;&amp;lt;version&amp;gt;&lt;/span&gt;${maven-antrun-plugin.version}&lt;span class="nt"&gt;&amp;lt;/version&amp;gt;&lt;/span&gt;
+    &lt;span class="nt"&gt;&amp;lt;executions&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;execution&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;id&amp;gt;&lt;/span&gt;exec-protoc&lt;span class="nt"&gt;&amp;lt;/id&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;phase&amp;gt;&lt;/span&gt;generate-sources&lt;span class="nt"&gt;&amp;lt;/phase&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;configuration&amp;gt;&lt;/span&gt;
+                &lt;span class="nt"&gt;&amp;lt;target&amp;gt;&lt;/span&gt;
+                    &lt;span class="nt"&gt;&amp;lt;property&lt;/span&gt; &lt;span class="na"&gt;name=&lt;/span&gt;&lt;span class="s"&gt;"protoc.filename"&lt;/span&gt; &lt;span class="na"&gt;value=&lt;/span&gt;&lt;span class="s"&gt;"protoc-${protobuf.version}-${os.detected.classifier}.exe"&lt;/span&gt;&lt;span class="nt"&gt;/&amp;gt;&lt;/span&gt;
+                    &lt;span class="nt"&gt;&amp;lt;property&lt;/span&gt; &lt;span class="na"&gt;name=&lt;/span&gt;&lt;span class="s"&gt;"protoc.filepath"&lt;/span&gt; &lt;span class="na"&gt;value=&lt;/span&gt;&lt;span class="s"&gt;"${project.build.directory}/${protoc.filename}"&lt;/span&gt;&lt;span class="nt"&gt;/&amp;gt;&lt;/span&gt;
+                    &lt;span class="nt"&gt;&amp;lt;chmod&lt;/span&gt; &lt;span class="na"&gt;file=&lt;/span&gt;&lt;span class="s"&gt;"${protoc.filepath}"&lt;/span&gt; &lt;span class="na"&gt;perm=&lt;/span&gt;&lt;span class="s"&gt;"ugo+rx"&lt;/span&gt;&lt;span class="nt"&gt;/&amp;gt;&lt;/span&gt;
+                    &lt;span class="nt"&gt;&amp;lt;mkdir&lt;/span&gt; &lt;span class="na"&gt;dir=&lt;/span&gt;&lt;span class="s"&gt;"${protobuf.output.directory}"&lt;/span&gt; &lt;span class="nt"&gt;/&amp;gt;&lt;/span&gt;
+                    &lt;span class="nt"&gt;&amp;lt;path&lt;/span&gt; &lt;span class="na"&gt;id=&lt;/span&gt;&lt;span class="s"&gt;"protobuf.input.filepaths.path"&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;
+                        &lt;span class="nt"&gt;&amp;lt;fileset&lt;/span&gt; &lt;span class="na"&gt;dir=&lt;/span&gt;&lt;span class="s"&gt;"${protobuf.input.directory}"&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;
+                            &lt;span class="nt"&gt;&amp;lt;include&lt;/span&gt; &lt;span class="na"&gt;name=&lt;/span&gt;&lt;span class="s"&gt;"**/*.proto"&lt;/span&gt;&lt;span class="nt"&gt;/&amp;gt;&lt;/span&gt;
+                        &lt;span class="nt"&gt;&amp;lt;/fileset&amp;gt;&lt;/span&gt;
+                    &lt;span class="nt"&gt;&amp;lt;/path&amp;gt;&lt;/span&gt;
+                    &lt;span class="nt"&gt;&amp;lt;pathconvert&lt;/span&gt; &lt;span class="na"&gt;pathsep=&lt;/span&gt;&lt;span class="s"&gt;" "&lt;/span&gt; &lt;span class="na"&gt;property=&lt;/span&gt;&lt;span class="s"&gt;"protobuf.input.filepaths"&lt;/span&gt; &lt;span class="na"&gt;refid=&lt;/span&gt;&lt;span class="s"&gt;"protobuf.input.filepaths.path"&lt;/span&gt;&lt;span class="nt"&gt;/&amp;gt;&lt;/span&gt;
+                    &lt;span class="nt"&gt;&amp;lt;exec&lt;/span&gt; &lt;span class="na"&gt;executable=&lt;/span&gt;&lt;span class="s"&gt;"${protoc.filepath}"&lt;/span&gt; &lt;span class="na"&gt;failonerror=&lt;/span&gt;&lt;span class="s"&gt;"true"&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;
+                        &lt;span class="nt"&gt;&amp;lt;arg&lt;/span&gt; &lt;span class="na"&gt;value=&lt;/span&gt;&lt;span class="s"&gt;"-I"&lt;/span&gt;&lt;span class="nt"&gt;/&amp;gt;&lt;/span&gt;
+                        &lt;span class="nt"&gt;&amp;lt;arg&lt;/span&gt; &lt;span class="na"&gt;value=&lt;/span&gt;&lt;span class="s"&gt;"${protobuf.input.directory}"&lt;/span&gt;&lt;span class="nt"&gt;/&amp;gt;&lt;/span&gt;
+                        &lt;span class="nt"&gt;&amp;lt;arg&lt;/span&gt; &lt;span class="na"&gt;value=&lt;/span&gt;&lt;span class="s"&gt;"--java_out"&lt;/span&gt;&lt;span class="nt"&gt;/&amp;gt;&lt;/span&gt;
+                        &lt;span class="nt"&gt;&amp;lt;arg&lt;/span&gt; &lt;span class="na"&gt;value=&lt;/span&gt;&lt;span class="s"&gt;"${protobuf.output.directory}"&lt;/span&gt;&lt;span class="nt"&gt;/&amp;gt;&lt;/span&gt;
+                        &lt;span class="nt"&gt;&amp;lt;arg&lt;/span&gt; &lt;span class="na"&gt;line=&lt;/span&gt;&lt;span class="s"&gt;"${protobuf.input.filepaths}"&lt;/span&gt;&lt;span class="nt"&gt;/&amp;gt;&lt;/span&gt;
+                    &lt;span class="nt"&gt;&amp;lt;/exec&amp;gt;&lt;/span&gt;
+                &lt;span class="nt"&gt;&amp;lt;/target&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;/configuration&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;goals&amp;gt;&lt;/span&gt;
+                &lt;span class="nt"&gt;&amp;lt;goal&amp;gt;&lt;/span&gt;run&lt;span class="nt"&gt;&amp;lt;/goal&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;/goals&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;/execution&amp;gt;&lt;/span&gt;
+    &lt;span class="nt"&gt;&amp;lt;/executions&amp;gt;&lt;/span&gt;
+&lt;span class="nt"&gt;&amp;lt;/plugin&amp;gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h1 id="adding-generated-sources-into-the-package"&gt;Adding Generated Sources into the Package&lt;/h1&gt;
+
+&lt;p&gt;&lt;code&gt;protoc&lt;/code&gt; compiler placed the generated Java sources into
+&lt;code&gt;protobuf.output.directory&lt;/code&gt;. We need to add the sources in this directory to
+the package:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-xml"&gt;&lt;span class="c"&gt;&amp;lt;!-- add generated proto buffer classes into the package --&amp;gt;&lt;/span&gt;
+&lt;span class="nt"&gt;&amp;lt;plugin&amp;gt;&lt;/span&gt;
+    &lt;span class="nt"&gt;&amp;lt;groupId&amp;gt;&lt;/span&gt;org.codehaus.mojo&lt;span class="nt"&gt;&amp;lt;/groupId&amp;gt;&lt;/span&gt;
+    &lt;span class="nt"&gt;&amp;lt;artifactId&amp;gt;&lt;/span&gt;build-helper-maven-plugin&lt;span class="nt"&gt;&amp;lt;/artifactId&amp;gt;&lt;/span&gt;
+    &lt;span class="nt"&gt;&amp;lt;version&amp;gt;&lt;/span&gt;${build-helper-maven-plugin.version}&lt;span class="nt"&gt;&amp;lt;/version&amp;gt;&lt;/span&gt;
+    &lt;span class="nt"&gt;&amp;lt;executions&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;execution&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;id&amp;gt;&lt;/span&gt;add-classes&lt;span class="nt"&gt;&amp;lt;/id&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;phase&amp;gt;&lt;/span&gt;generate-sources&lt;span class="nt"&gt;&amp;lt;/phase&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;goals&amp;gt;&lt;/span&gt;
+                &lt;span class="nt"&gt;&amp;lt;goal&amp;gt;&lt;/span&gt;add-source&lt;span class="nt"&gt;&amp;lt;/goal&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;/goals&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;configuration&amp;gt;&lt;/span&gt;
+                &lt;span class="nt"&gt;&amp;lt;sources&amp;gt;&lt;/span&gt;
+                    &lt;span class="nt"&gt;&amp;lt;source&amp;gt;&lt;/span&gt;${protobuf.output.directory}&lt;span class="nt"&gt;&amp;lt;/source&amp;gt;&lt;/span&gt;
+                &lt;span class="nt"&gt;&amp;lt;/sources&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;/configuration&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;/execution&amp;gt;&lt;/span&gt;
+    &lt;span class="nt"&gt;&amp;lt;/executions&amp;gt;&lt;/span&gt;
+&lt;span class="nt"&gt;&amp;lt;/plugin&amp;gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h1 id="conclusion"&gt;Conclusion&lt;/h1&gt;
+
+&lt;p&gt;In this post, I tried to summarize the necessary set of steps to compile
+Protocol Buffers schema into Java classes using plain Maven magic. This is
+important to get a platform-independent build for a project.&lt;/p&gt;
+
+&lt;p&gt;The absence of a proper Maven plugin to handle all these steps for us causes
+quite a bit of &lt;code&gt;pom.xml&lt;/code&gt; pollution. Nevertheless, (de)serializers for the
+messaging medium are generally distributed in a separate artifact, hence this
+will probably end up being the entire content of your &lt;code&gt;pom.xml&lt;/code&gt;.&lt;/p&gt;
+</content>
+  </entry>
   <entry>
     <id>tag:vy.github.io,2015-11-20://blog/post/2015/11/20/scala-method-with-java-reserved-keyword/</id>
     <title type="html">Calling a Scala Method with a Java Reserved Keyword</title>
@@ -1701,121 +1898,6 @@ whether the approach described in this post is something that was already
 addressed in the literature or not, but I came up with this idea a couple of
 months ago and totally benefitted from it in a project. I hope you would find
 it useful too.&lt;/p&gt;
-</content>
-  </entry>
-  <entry>
-    <id>tag:vy.github.io,2015-01-08://blog/post/2015/01/30/java-null-check/</id>
-    <title type="html">Checking Null Arguments at Runtime Using Spring AOP</title>
-    <published>2015-01-08T09:43:00Z</published>
-    <updated>2015-01-08T09:43:00Z</updated>
-    <link rel="alternate" href="https://vy.github.io//blog/post/2015/01/30/java-null-check/"/>
-    <content type="html">
-&lt;p&gt;For almost every function I wrote in Java, I add null checks to the method
-header as follows:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="language-java"&gt;&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;javax.annotation.Nonnull&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
-&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;static&lt;/span&gt; &lt;span class="n"&gt;com&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;google&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;common&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;base&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;Preconditions&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;checkNotNull&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
-
-&lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;foo&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="nd"&gt;@Nonnull&lt;/span&gt; &lt;span class="n"&gt;String&lt;/span&gt; &lt;span class="n"&gt;bar&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="nd"&gt;@Nonnull&lt;/span&gt; &lt;span class="n"&gt;String&lt;/span&gt; &lt;span class="n"&gt;baz&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
-    &lt;span class="n"&gt;checkNotNull&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;bar&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="s"&gt;"bar == NULL"&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
-    &lt;span class="n"&gt;checkNotNull&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;baz&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="s"&gt;"baz == NULL"&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
-    &lt;span class="c1"&gt;// ...&lt;/span&gt;
-&lt;span class="o"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;When the code is examined, &lt;code&gt;checkNotNull&lt;/code&gt; calls look totally redundant given
-that the parameters are already annotated with &lt;code&gt;@Nonnull&lt;/code&gt;. However, &lt;code&gt;@Nonnull&lt;/code&gt;
-just provides an insight to the static code analysis tools and does not have
-an effect at runtime, which makes &lt;code&gt;checkNotNull&lt;/code&gt; calls necessary. I thought as
-programmers we should be able to do better than this and found myself working
-on a way to intercept methods with one or more &lt;code&gt;@Nonnull&lt;/code&gt; annotated parameters
-and check if they are null at runtime. Finally, I managed to find a solution
-using &lt;a href="http://docs.spring.io/spring/docs/current/spring-framework-reference/html/aop.html"&gt;Spring AOP&lt;/a&gt;.
-All you have to do is it include &lt;code&gt;spring-boot-starter-aop&lt;/code&gt; artifact in your
-dependencies, add the following Spring aspect to your project, and you are
-done.&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="language-java"&gt;&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;org.aspectj.lang.JoinPoint&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
-&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;org.aspectj.lang.annotation.Aspect&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
-&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;org.aspectj.lang.annotation.Before&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
-&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;org.aspectj.lang.reflect.CodeSignature&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
-&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;org.aspectj.lang.reflect.MethodSignature&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
-&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;org.springframework.stereotype.Component&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
-
-&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;javax.annotation.Nonnull&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
-&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;java.lang.annotation.Annotation&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
-&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;java.util.ArrayList&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
-&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;java.util.Arrays&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
-&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;java.util.Collections&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
-&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;java.util.List&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
-
-&lt;span class="nd"&gt;@Aspect&lt;/span&gt;
-&lt;span class="nd"&gt;@Component&lt;/span&gt;
-&lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kd"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;NullMonitor&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
-
-    &lt;span class="kd"&gt;private&lt;/span&gt; &lt;span class="kd"&gt;static&lt;/span&gt; &lt;span class="kd"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;MethodArgument&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
-
-        &lt;span class="kd"&gt;private&lt;/span&gt; &lt;span class="kd"&gt;final&lt;/span&gt; &lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="n"&gt;index&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
-        &lt;span class="kd"&gt;private&lt;/span&gt; &lt;span class="kd"&gt;final&lt;/span&gt; &lt;span class="n"&gt;String&lt;/span&gt; &lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
-        &lt;span class="kd"&gt;private&lt;/span&gt; &lt;span class="kd"&gt;final&lt;/span&gt; &lt;span class="n"&gt;List&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;Annotation&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;annotations&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
-        &lt;span class="kd"&gt;private&lt;/span&gt; &lt;span class="kd"&gt;final&lt;/span&gt; &lt;span class="n"&gt;Object&lt;/span&gt; &lt;span class="n"&gt;value&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
-
-        &lt;span class="kd"&gt;private&lt;/span&gt; &lt;span class="nf"&gt;MethodArgument&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;
-                &lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="n"&gt;index&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt;
-                &lt;span class="n"&gt;String&lt;/span&gt; &lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt;
-                &lt;span class="n"&gt;List&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;Annotation&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;annotations&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt;
-                &lt;span class="n"&gt;Object&lt;/span&gt; &lt;span class="n"&gt;value&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
-            &lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;index&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;index&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
-            &lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;name&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
-            &lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;annotations&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;Collections&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;unmodifiableList&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;annotations&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
-            &lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;value&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;value&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
-        &lt;span class="o"&gt;}&lt;/span&gt;
-
-        &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="nf"&gt;getIndex&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;index&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
-
-        &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="n"&gt;String&lt;/span&gt; &lt;span class="nf"&gt;getName&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
-
-        &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="n"&gt;List&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;Annotation&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="nf"&gt;getAnnotations&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;annotations&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
-
-        &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kt"&gt;boolean&lt;/span&gt; &lt;span class="nf"&gt;hasAnnotation&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;Class&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;?&lt;/span&gt; &lt;span class="kd"&gt;extends&lt;/span&gt; &lt;span class="n"&gt;Annotation&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;type&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
-            &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;Annotation&lt;/span&gt; &lt;span class="n"&gt;annotation&lt;/span&gt; &lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="n"&gt;annotations&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
-                &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;annotation&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;annotationType&lt;/span&gt;&lt;span class="o"&gt;().&lt;/span&gt;&lt;span class="na"&gt;equals&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;type&lt;/span&gt;&lt;span class="o"&gt;))&lt;/span&gt;
-                    &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="kc"&gt;true&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
-            &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="kc"&gt;false&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
-        &lt;span class="o"&gt;}&lt;/span&gt;
-
-        &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="n"&gt;Object&lt;/span&gt; &lt;span class="nf"&gt;getValue&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;value&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
-
-        &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kd"&gt;static&lt;/span&gt; &lt;span class="n"&gt;List&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;MethodArgument&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="nf"&gt;of&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;JoinPoint&lt;/span&gt; &lt;span class="n"&gt;joinPoint&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
-            &lt;span class="n"&gt;List&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;MethodArgument&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;arguments&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="n"&gt;ArrayList&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&amp;gt;();&lt;/span&gt;
-            &lt;span class="n"&gt;CodeSignature&lt;/span&gt; &lt;span class="n"&gt;codeSignature&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;CodeSignature&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="n"&gt;joinPoint&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;getSignature&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt; 
-            &lt;span class="n"&gt;String&lt;/span&gt;&lt;span class="o"&gt;[]&lt;/span&gt; &lt;span class="n"&gt;names&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;codeSignature&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;getParameterNames&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
-            &lt;span class="n"&gt;MethodSignature&lt;/span&gt; &lt;span class="n"&gt;methodSignature&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;
-                    &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;MethodSignature&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="n"&gt;joinPoint&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;getStaticPart&lt;/span&gt;&lt;span class="o"&gt;().&lt;/span&gt;&lt;span class="na"&gt;getSignature&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
-            &lt;span class="n"&gt;Annotation&lt;/span&gt;&lt;span class="o"&gt;[][]&lt;/span&gt; &lt;span class="n"&gt;annotations&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;methodSignature&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;getMethod&lt;/span&gt;&lt;span class="o"&gt;().&lt;/span&gt;&lt;span class="na"&gt;getParameterAnnotations&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
-            &lt;span class="n"&gt;Object&lt;/span&gt;&lt;span class="o"&gt;[]&lt;/span&gt; &lt;span class="n"&gt;values&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;joinPoint&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;getArgs&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
-            &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="n"&gt;i&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt; &lt;span class="n"&gt;i&lt;/span&gt; &lt;span class="o"&gt;&amp;lt;&lt;/span&gt; &lt;span class="n"&gt;values&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;length&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt; &lt;span class="n"&gt;i&lt;/span&gt;&lt;span class="o"&gt;++)&lt;/span&gt;
-                &lt;span class="n"&gt;arguments&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;add&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nf"&gt;MethodArgument&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;
-                        &lt;span class="n"&gt;i&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;names&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="n"&gt;i&lt;/span&gt;&lt;span class="o"&gt;],&lt;/span&gt; &lt;span class="n"&gt;Arrays&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;asList&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;annotations&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="n"&gt;i&lt;/span&gt;&lt;span class="o"&gt;]),&lt;/span&gt; &lt;span class="n"&gt;values&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="n"&gt;i&lt;/span&gt;&lt;span class="o"&gt;]));&lt;/span&gt;
-            &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;Collections&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;unmodifiableList&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;arguments&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
-        &lt;span class="o"&gt;}&lt;/span&gt;
-
-    &lt;span class="o"&gt;}&lt;/span&gt;
-
-    &lt;span class="nd"&gt;@Before&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="s"&gt;"execution(* *(.., @javax.annotation.Nonnull (*), ..))"&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
-    &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;nullCheck&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;JoinPoint&lt;/span&gt; &lt;span class="n"&gt;joinPoint&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
-        &lt;span class="n"&gt;MethodSignature&lt;/span&gt; &lt;span class="n"&gt;methodSignature&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;MethodSignature&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="n"&gt;joinPoint&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;getSignature&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
-        &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;MethodArgument&lt;/span&gt; &lt;span class="n"&gt;argument&lt;/span&gt; &lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="n"&gt;MethodArgument&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;of&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;joinPoint&lt;/span&gt;&lt;span class="o"&gt;))&lt;/span&gt;
-            &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;argument&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;hasAnnotation&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;Nonnull&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;class&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; &lt;span class="n"&gt;argument&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;getValue&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="kc"&gt;null&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
-                &lt;span class="k"&gt;throw&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nf"&gt;NullPointerException&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;String&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;format&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;
-                        &lt;span class="s"&gt;"%s: argument \"%s\" (at position %d) cannot be null"&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt;
-                        &lt;span class="n"&gt;methodSignature&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;getMethod&lt;/span&gt;&lt;span class="o"&gt;(),&lt;/span&gt; &lt;span class="n"&gt;argument&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;getName&lt;/span&gt;&lt;span class="o"&gt;(),&lt;/span&gt; &lt;span class="n"&gt;argument&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;getIndex&lt;/span&gt;&lt;span class="o"&gt;()));&lt;/span&gt;
-    &lt;span class="o"&gt;}&lt;/span&gt;
-
-&lt;span class="o"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;The source code is available in &lt;a href="https://github.com/vy/null-check"&gt;null-check&lt;/a&gt;
-project at GitHub with some unit tests and a little bit more detailed
-installation instructions.&lt;/p&gt;
 </content>
   </entry>
 </feed>
