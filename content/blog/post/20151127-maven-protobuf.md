@@ -40,8 +40,9 @@ input/output directories for the Protocol Buffers compiler.
 
         <!-- library versions -->
         <build-helper-maven-plugin.version>1.9.1</build-helper-maven-plugin.version>
-        <maven-dependency-plugin.version>2.10</maven-dependency-plugin.version>
         <maven-antrun-plugin.version>1.8</maven-antrun-plugin.version>
+        <maven-dependency-plugin.version>2.10</maven-dependency-plugin.version>
+        <maven-shade-plugin.version>2.4.2</maven-shade-plugin.version>
         <os-maven-plugin.version>1.4.1.Final</os-maven-plugin.version>
         <protobuf.version>3.0.0-beta-1</protobuf.version>
 
@@ -196,6 +197,56 @@ the package:
             </execution>
         </executions>
     </plugin>
+
+Shading Protocol Buffers Package
+================================
+
+Say you are done with your project, which includes `protobuf-java` version
+3.0.0-beta-1 as a dependency. What if there is another package that is
+included as a direct or transitive Maven dependency and injects
+`protobuf-java` version 2.5.0? Then you are doomed; you will get a package
+version conflict. In order to avoid this problem, you can leverage
+`maven-shade-plugin` to *relocate* `com.google.protobuf` package contents to a
+private package within your project:
+
+    #!xml
+    <!--  shade protobuf to avoid version conflicts -->
+    <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <version>${maven-shade-plugin.version}</version>
+        <executions>
+            <execution>
+                <phase>package</phase>
+                <goals>
+                    <goal>shade</goal>
+                </goals>
+                <configuration>
+                    <relocations>
+                        <relocation>
+                            <pattern>com.google.protobuf</pattern>
+                            <shadedPattern>${project.groupId}.${project.artifactId}.shaded.protobuf</shadedPattern>
+                        </relocation>
+                    </relocations>
+                </configuration>
+            </execution>
+        </executions>
+    </plugin>
+
+This will relocate the contents of `com.google.protobuf` package to
+`${project.groupId}.${project.artifactId}.shaded.protobuf` and make the
+classes accessible under this namespace. That is, instead of using
+
+    #!java
+    import com.google.protobuf.*;
+
+in your project, you should use the new relocated package name:
+
+    #!java
+    import groupId.artifactId.shaded.protobuf.*;
+
+(Note that you need to replace `groupId` and `artifactId` literals in the Java
+code.)
 
 Conclusion
 ==========
