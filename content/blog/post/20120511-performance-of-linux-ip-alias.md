@@ -20,7 +20,7 @@ But obviously there is a price (overhead) to pay for this at kernel level. To sh
 
 ![Test Network](network.jpg)
 
-First, I setup two identical Linux boxes with gigabit ethernet cards (RTL-8169 Gigabit Ethernet [10ec:8169] rev 10) connected through a Huawei gigabit switch. (Cable is CAT6 262M of length 1 meter.) Then, I started creating [iperf](http://iperf.sourceforge.net/) instances binded to particular IP aliased interfaces. That is, first iperf instance is bind to `192.168.2.1` at `eth1:1`, second is bind to `192.168.2.2` at `eth1:2`, and so on. In other words, `N`th iperf instance is bind to `192.168.2.N` at `eth1:N`.
+First, I setup two identical Linux boxes with gigabit ethernet cards (RTL-8169 Gigabit Ethernet \[10ec:8169\] rev 10) connected through a Huawei gigabit switch. (Cable is CAT6 262M of length 1 meter.) Then, I started creating [iperf](http://iperf.sourceforge.net/) instances binded to particular IP aliased interfaces. That is, first iperf instance is bind to `192.168.2.1` at `eth1:1`, second is bind to `192.168.2.2` at `eth1:2`, and so on. In other words, `N`th iperf instance is bind to `192.168.2.N` at `eth1:N`.
 
 To ease the workflow, I put together a `server.sh` script as follows.
 

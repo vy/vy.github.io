@@ -9,7 +9,7 @@ tags:
 
 I have just finished reading [Java Concurrency in Practice](http://jcip.net/) yesterday and would like to share some excerpts from the book on safe object publication in Java. Before stepping into the details, I would like to state that I found every single page of the book quite useful and found numerous places that I can enhance my existing code base during my daily coding routine. Thanks to [@BrianGoetz](https://twitter.com/BrianGoetz) et al for such a comprehensive and practical guide. (For those who want to go further up to its extremes, I strongly recommend you to check [Aleksey Shipilёv](http://shipilev.net/)'s [Safe Publication and Safe Initialization in Java](http://shipilev.net/blog/2014/safe-public-construction/) article -- a must read on the subject.)
 
-*[Presented excerpts are copied directly, sometimes with slight changes, from [Java Concurrency in Practice](http://jcip.net/).]*
+*(Presented excerpts are copied directly, sometimes with slight changes, from [Java Concurrency in Practice](http://jcip.net/).)*
 
 Safe Construction Practices
 ===========================
@@ -90,7 +90,7 @@ The `Resource` constructor changes the fields of the freshly allocated `Resource
 
 Because the code path through the `getInstance` is fairly short (a test and a predicted branch), if `getInstance` is not called frequently by many threads, there is a little enough contention for the `SafeLazyInitialization` lock that this approach offers adequate performance.
 
-The treatment of static fields with initializers (or fields whose value is initialized in a static initialization block [JPL 2.2.1 and 2.5.3]) is somewhat special and offers additional thread-safety guarantees. Static initializers are run by the JVM at class initialization time, after class loading but before the class is used by any thread. Because the JVM acquires a lock during initialization [JSL 12.4.2] and this lock is acquired by each thread at least once to ensure that the class has been loaded, memory writes made during static initialization are automatically visible to all threads. Thus statically initialized objects require no explicit synchronization either during construction or when being referenced. However, this applies only to the *as-constructed* state -- if the object is mutable, synchronization is still required by both readers and writers to make subsequent modifications visible to avoid data corruption.
+The treatment of static fields with initializers (or fields whose value is initialized in a static initialization block \[JPL 2.2.1 and 2.5.3\]) is somewhat special and offers additional thread-safety guarantees. Static initializers are run by the JVM at class initialization time, after class loading but before the class is used by any thread. Because the JVM acquires a lock during initialization \[JSL 12.4.2\] and this lock is acquired by each thread at least once to ensure that the class has been loaded, memory writes made during static initialization are automatically visible to all threads. Thus statically initialized objects require no explicit synchronization either during construction or when being referenced. However, this applies only to the *as-constructed* state -- if the object is mutable, synchronization is still required by both readers and writers to make subsequent modifications visible to avoid data corruption.
 
     #!java
     @ThreadSafe
@@ -100,7 +100,7 @@ The treatment of static fields with initializers (or fields whose value is initi
         public static Resource getResource() { return resource; }
     }
 
-Using eager initialization eliminates the synchronization cost incurred on each call to `getInstace` in `SafeLazyInitialization`. This technique can be combined with the JVM's lazy class loading to create a lazy initialization technique that does not require synchronization on the common code path. The *lazy initialization holder class* idiom [EJ Item 48] presented below uses a class whose only purpose is to initialize the `Resource`.
+Using eager initialization eliminates the synchronization cost incurred on each call to `getInstace` in `SafeLazyInitialization`. This technique can be combined with the JVM's lazy class loading to create a lazy initialization technique that does not require synchronization on the common code path. The *lazy initialization holder class* idiom \[EJ Item 48\] presented below uses a class whose only purpose is to initialize the `Resource`.
 
     #!java
     @ThreadSafe
@@ -114,4 +114,4 @@ Using eager initialization eliminates the synchronization cost incurred on each 
         }
     }
 
-Here the JVM defers initializing the `ResourceHolder` class until it is actually used [JLS 12.4.1], and because the `Resource` is initialized with a static initializer, no additional synchronization is needed. The first call to `getResource` by any thread causes `ResourceHolder` to be loaded and initialized, at which time the initialization of the `Resource` happens through the static initializer.
+Here the JVM defers initializing the `ResourceHolder` class until it is actually used \[JLS 12.4.1\], and because the `Resource` is initialized with a static initializer, no additional synchronization is needed. The first call to `getResource` by any thread causes `ResourceHolder` to be loaded and initialized, at which time the initialization of the `Resource` happens through the static initializer.
