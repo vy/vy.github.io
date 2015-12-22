@@ -47,8 +47,9 @@ input/output directories for the Protocol Buffers compiler.&lt;/p&gt;
 
     &lt;span class="c"&gt;&amp;lt;!-- library versions --&amp;gt;&lt;/span&gt;
     &lt;span class="nt"&gt;&amp;lt;build-helper-maven-plugin.version&amp;gt;&lt;/span&gt;1.9.1&lt;span class="nt"&gt;&amp;lt;/build-helper-maven-plugin.version&amp;gt;&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;lt;maven-dependency-plugin.version&amp;gt;&lt;/span&gt;2.10&lt;span class="nt"&gt;&amp;lt;/maven-dependency-plugin.version&amp;gt;&lt;/span&gt;
     &lt;span class="nt"&gt;&amp;lt;maven-antrun-plugin.version&amp;gt;&lt;/span&gt;1.8&lt;span class="nt"&gt;&amp;lt;/maven-antrun-plugin.version&amp;gt;&lt;/span&gt;
+    &lt;span class="nt"&gt;&amp;lt;maven-dependency-plugin.version&amp;gt;&lt;/span&gt;2.10&lt;span class="nt"&gt;&amp;lt;/maven-dependency-plugin.version&amp;gt;&lt;/span&gt;
+    &lt;span class="nt"&gt;&amp;lt;maven-shade-plugin.version&amp;gt;&lt;/span&gt;2.4.2&lt;span class="nt"&gt;&amp;lt;/maven-shade-plugin.version&amp;gt;&lt;/span&gt;
     &lt;span class="nt"&gt;&amp;lt;os-maven-plugin.version&amp;gt;&lt;/span&gt;1.4.1.Final&lt;span class="nt"&gt;&amp;lt;/os-maven-plugin.version&amp;gt;&lt;/span&gt;
     &lt;span class="nt"&gt;&amp;lt;protobuf.version&amp;gt;&lt;/span&gt;3.0.0-beta-1&lt;span class="nt"&gt;&amp;lt;/protobuf.version&amp;gt;&lt;/span&gt;
 
@@ -193,6 +194,52 @@ the package:&lt;/p&gt;
         &lt;span class="nt"&gt;&amp;lt;/execution&amp;gt;&lt;/span&gt;
     &lt;span class="nt"&gt;&amp;lt;/executions&amp;gt;&lt;/span&gt;
 &lt;span class="nt"&gt;&amp;lt;/plugin&amp;gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h1 id="shading-protocol-buffers-package"&gt;Shading Protocol Buffers Package&lt;/h1&gt;
+
+&lt;p&gt;Say you are done with your project, which includes &lt;code&gt;protobuf-java&lt;/code&gt; version
+3.0.0-beta-1 as a dependency. What if there is another package that is
+included as a direct or transitive Maven dependency and injects
+&lt;code&gt;protobuf-java&lt;/code&gt; version 2.5.0? Then you are doomed; you will get a package
+version conflict. In order to avoid this problem, you can leverage
+&lt;code&gt;maven-shade-plugin&lt;/code&gt; to &lt;em&gt;relocate&lt;/em&gt; &lt;code&gt;com.google.protobuf&lt;/code&gt; package contents to a
+private package within your project:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-xml"&gt;&lt;span class="c"&gt;&amp;lt;!--  shade protobuf to avoid version conflicts --&amp;gt;&lt;/span&gt;
+&lt;span class="nt"&gt;&amp;lt;plugin&amp;gt;&lt;/span&gt;
+    &lt;span class="nt"&gt;&amp;lt;groupId&amp;gt;&lt;/span&gt;org.apache.maven.plugins&lt;span class="nt"&gt;&amp;lt;/groupId&amp;gt;&lt;/span&gt;
+    &lt;span class="nt"&gt;&amp;lt;artifactId&amp;gt;&lt;/span&gt;maven-shade-plugin&lt;span class="nt"&gt;&amp;lt;/artifactId&amp;gt;&lt;/span&gt;
+    &lt;span class="nt"&gt;&amp;lt;version&amp;gt;&lt;/span&gt;${maven-shade-plugin.version}&lt;span class="nt"&gt;&amp;lt;/version&amp;gt;&lt;/span&gt;
+    &lt;span class="nt"&gt;&amp;lt;executions&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;execution&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;phase&amp;gt;&lt;/span&gt;package&lt;span class="nt"&gt;&amp;lt;/phase&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;goals&amp;gt;&lt;/span&gt;
+                &lt;span class="nt"&gt;&amp;lt;goal&amp;gt;&lt;/span&gt;shade&lt;span class="nt"&gt;&amp;lt;/goal&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;/goals&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;configuration&amp;gt;&lt;/span&gt;
+                &lt;span class="nt"&gt;&amp;lt;relocations&amp;gt;&lt;/span&gt;
+                    &lt;span class="nt"&gt;&amp;lt;relocation&amp;gt;&lt;/span&gt;
+                        &lt;span class="nt"&gt;&amp;lt;pattern&amp;gt;&lt;/span&gt;com.google.protobuf&lt;span class="nt"&gt;&amp;lt;/pattern&amp;gt;&lt;/span&gt;
+                        &lt;span class="nt"&gt;&amp;lt;shadedPattern&amp;gt;&lt;/span&gt;${project.groupId}.${project.artifactId}.shaded.protobuf&lt;span class="nt"&gt;&amp;lt;/shadedPattern&amp;gt;&lt;/span&gt;
+                    &lt;span class="nt"&gt;&amp;lt;/relocation&amp;gt;&lt;/span&gt;
+                &lt;span class="nt"&gt;&amp;lt;/relocations&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;/configuration&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;/execution&amp;gt;&lt;/span&gt;
+    &lt;span class="nt"&gt;&amp;lt;/executions&amp;gt;&lt;/span&gt;
+&lt;span class="nt"&gt;&amp;lt;/plugin&amp;gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This will relocate the contents of &lt;code&gt;com.google.protobuf&lt;/code&gt; package to
+&lt;code&gt;${project.groupId}.${project.artifactId}.shaded.protobuf&lt;/code&gt; and make the
+classes accessible under this namespace. That is, instead of using&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-java"&gt;&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;com.google.protobuf.*&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;in your project, you should use the new relocated package name:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-java"&gt;&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;groupId.artifactId.shaded.protobuf.*&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;(Note that you need to replace &lt;code&gt;groupId&lt;/code&gt; and &lt;code&gt;artifactId&lt;/code&gt; literals in the Java
+code.)&lt;/p&gt;
 
 &lt;h1 id="conclusion"&gt;Conclusion&lt;/h1&gt;
 

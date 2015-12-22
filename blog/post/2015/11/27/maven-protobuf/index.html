@@ -84,8 +84,9 @@ input/output directories for the Protocol Buffers compiler.</p>
 
     <span class="c">&lt;!-- library versions --&gt;</span>
     <span class="nt">&lt;build-helper-maven-plugin.version&gt;</span>1.9.1<span class="nt">&lt;/build-helper-maven-plugin.version&gt;</span>
-    <span class="nt">&lt;maven-dependency-plugin.version&gt;</span>2.10<span class="nt">&lt;/maven-dependency-plugin.version&gt;</span>
     <span class="nt">&lt;maven-antrun-plugin.version&gt;</span>1.8<span class="nt">&lt;/maven-antrun-plugin.version&gt;</span>
+    <span class="nt">&lt;maven-dependency-plugin.version&gt;</span>2.10<span class="nt">&lt;/maven-dependency-plugin.version&gt;</span>
+    <span class="nt">&lt;maven-shade-plugin.version&gt;</span>2.4.2<span class="nt">&lt;/maven-shade-plugin.version&gt;</span>
     <span class="nt">&lt;os-maven-plugin.version&gt;</span>1.4.1.Final<span class="nt">&lt;/os-maven-plugin.version&gt;</span>
     <span class="nt">&lt;protobuf.version&gt;</span>3.0.0-beta-1<span class="nt">&lt;/protobuf.version&gt;</span>
 
@@ -230,6 +231,52 @@ the package:</p>
         <span class="nt">&lt;/execution&gt;</span>
     <span class="nt">&lt;/executions&gt;</span>
 <span class="nt">&lt;/plugin&gt;</span></code></pre>
+
+<h1 id="shading-protocol-buffers-package">Shading Protocol Buffers Package</h1>
+
+<p>Say you are done with your project, which includes <code>protobuf-java</code> version
+3.0.0-beta-1 as a dependency. What if there is another package that is
+included as a direct or transitive Maven dependency and injects
+<code>protobuf-java</code> version 2.5.0? Then you are doomed; you will get a package
+version conflict. In order to avoid this problem, you can leverage
+<code>maven-shade-plugin</code> to <em>relocate</em> <code>com.google.protobuf</code> package contents to a
+private package within your project:</p>
+
+<pre><code class="language-xml"><span class="c">&lt;!--  shade protobuf to avoid version conflicts --&gt;</span>
+<span class="nt">&lt;plugin&gt;</span>
+    <span class="nt">&lt;groupId&gt;</span>org.apache.maven.plugins<span class="nt">&lt;/groupId&gt;</span>
+    <span class="nt">&lt;artifactId&gt;</span>maven-shade-plugin<span class="nt">&lt;/artifactId&gt;</span>
+    <span class="nt">&lt;version&gt;</span>${maven-shade-plugin.version}<span class="nt">&lt;/version&gt;</span>
+    <span class="nt">&lt;executions&gt;</span>
+        <span class="nt">&lt;execution&gt;</span>
+            <span class="nt">&lt;phase&gt;</span>package<span class="nt">&lt;/phase&gt;</span>
+            <span class="nt">&lt;goals&gt;</span>
+                <span class="nt">&lt;goal&gt;</span>shade<span class="nt">&lt;/goal&gt;</span>
+            <span class="nt">&lt;/goals&gt;</span>
+            <span class="nt">&lt;configuration&gt;</span>
+                <span class="nt">&lt;relocations&gt;</span>
+                    <span class="nt">&lt;relocation&gt;</span>
+                        <span class="nt">&lt;pattern&gt;</span>com.google.protobuf<span class="nt">&lt;/pattern&gt;</span>
+                        <span class="nt">&lt;shadedPattern&gt;</span>${project.groupId}.${project.artifactId}.shaded.protobuf<span class="nt">&lt;/shadedPattern&gt;</span>
+                    <span class="nt">&lt;/relocation&gt;</span>
+                <span class="nt">&lt;/relocations&gt;</span>
+            <span class="nt">&lt;/configuration&gt;</span>
+        <span class="nt">&lt;/execution&gt;</span>
+    <span class="nt">&lt;/executions&gt;</span>
+<span class="nt">&lt;/plugin&gt;</span></code></pre>
+
+<p>This will relocate the contents of <code>com.google.protobuf</code> package to
+<code>${project.groupId}.${project.artifactId}.shaded.protobuf</code> and make the
+classes accessible under this namespace. That is, instead of using</p>
+
+<pre><code class="language-java"><span class="kn">import</span> <span class="nn">com.google.protobuf.*</span><span class="o">;</span></code></pre>
+
+<p>in your project, you should use the new relocated package name:</p>
+
+<pre><code class="language-java"><span class="kn">import</span> <span class="nn">groupId.artifactId.shaded.protobuf.*</span><span class="o">;</span></code></pre>
+
+<p>(Note that you need to replace <code>groupId</code> and <code>artifactId</code> literals in the Java
+code.)</p>
 
 <h1 id="conclusion">Conclusion</h1>
 
