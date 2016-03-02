@@ -2,13 +2,252 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <id>https://vy.github.io//</id>
   <title>Volkan Yazıcı's Soap Co.</title>
-  <updated>2015-11-27T08:49:00Z</updated>
+  <updated>2016-03-02T19:32:00Z</updated>
   <link rel="alternate" href="https://vy.github.io//"/>
   <link rel="self" href="https://vy.github.io//blog/feed/"/>
   <author>
     <name>Volkan Yazıcı</name>
     <uri>https://vy.github.io/</uri>
   </author>
+  <entry>
+    <id>tag:vy.github.io,2016-03-02://blog/post/2016/03/02/optimize-dc/</id>
+    <title type="html">Optimizing a Data Center Using Integer Programming</title>
+    <published>2016-03-02T19:32:00Z</published>
+    <updated>2016-03-02T19:32:00Z</updated>
+    <link rel="alternate" href="https://vy.github.io//blog/post/2016/03/02/optimize-dc/"/>
+    <content type="html">
+&lt;p&gt;&lt;a href="https://hashcode.withgoogle.com/2015/tasks/hashcode2015_qualification_task.pdf"&gt;Optimize a Data
+Center&lt;/a&gt;
+is a &lt;strong&gt;challenging&lt;/strong&gt; programming problem presented in the Qualification Round
+of the &lt;a href="https://hashcode.withgoogle.com/past_editions.html"&gt;Hash Code 2015&lt;/a&gt;.
+Among 230 teams, &lt;em&gt;What’s in a name?&lt;/em&gt; from &lt;a href="http://www.ens.fr/"&gt;École normale
+supérieure&lt;/a&gt; ranked first in the qualification, but third
+in the final round. By challenging, I mean it is not possible to come up with
+a deterministic polynomial-time optimal answer. I am not in a position to
+either provide a rigor proof of its complexity or its reduction to a known
+NP-hard problem. But in this blog post I will investigate the following
+question: Can we provide an optimal solution using &lt;a href="https://en.wikipedia.org/wiki/Integer_programming"&gt;integer
+programming&lt;/a&gt;? In practice,
+that would allow us to come up with an optimal solution to small-sized
+problems. Without further ado, let’s start with the problem definition.&lt;/p&gt;
+
+&lt;h1 id="the-problem"&gt;The Problem&lt;/h1&gt;
+
+&lt;p&gt;Here, I will present a brief summary of &lt;a href="https://hashcode.withgoogle.com/2015/tasks/hashcode2015_qualification_task.pdf"&gt;the actual
+problem&lt;/a&gt;.
+A data center is modeled as &lt;strong&gt;rows​&lt;/strong&gt; of &lt;strong&gt;slots&lt;/strong&gt; ​in which servers can be
+placed. And some of the slots are known to be &lt;strong&gt;unavailable&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src="rows.jpg" alt="Data center rows"&gt;&lt;/p&gt;
+
+&lt;p&gt;Each &lt;strong&gt;server&lt;/strong&gt; is characterized by its &lt;strong&gt;size&lt;/strong&gt; and &lt;strong&gt;capacity​&lt;/strong&gt;. Size is
+the number of consecutive slots occupied by the machine. Capacity is the total
+amount of CPU resources of the machine (an integer value).&lt;/p&gt;
+
+&lt;p&gt;&lt;img src="servers.jpg" alt="Data center servers"&gt;&lt;/p&gt;
+
+&lt;p&gt;Servers in a data center are also logically divided into &lt;strong&gt;pools&lt;/strong&gt;. ​Each
+server belongs to exactly one pool. The capacity of a pool is the sum of the
+capacities of the available ​servers in that pool.&lt;/p&gt;
+
+&lt;p&gt;The &lt;strong&gt;guaranteed capacity&lt;/strong&gt; ​of a pool is the minimum capacity it will have
+when at most one data center row goes down. Given a schema of a data center
+and a list of available servers, the goal is to assign servers to slots within
+the rows​ and to logical pools ​so that the lowest guaranteed capacity​ of all
+pools is maximized.&lt;/p&gt;
+
+&lt;p&gt;Consider the following data center schema and a list of available servers. For
+simplicity, it is assumed that server capacities are equal to server sizes.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src="example-prob.jpg" alt="Example problem"&gt;&lt;/p&gt;
+
+&lt;p&gt;Following layout is a solution to the above given problem. Here different
+pools are denoted in distinct colors.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src="example-soln.jpg" alt="Example solution"&gt;&lt;/p&gt;
+
+&lt;h1 id="preliminaries"&gt;Preliminaries&lt;/h1&gt;
+
+&lt;p&gt;Before modeling the IP (Integer Program), I will start with stating the
+problem input.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+&lt;script type="math/tex"&gt;R&lt;/script&gt; ​denotes the number of rows in the data center&lt;/li&gt;
+  &lt;li&gt;
+&lt;script type="math/tex"&gt;S&lt;/script&gt; denotes the number of slots in each row of the data center&lt;/li&gt;
+  &lt;li&gt;
+&lt;script type="math/tex"&gt;U \leq RS&lt;/script&gt; denotes the number of unavailable slots&lt;/li&gt;
+  &lt;li&gt;
+&lt;script type="math/tex"&gt;P&lt;/script&gt; denotes the number of pools to be created&lt;/li&gt;
+  &lt;li&gt;
+&lt;script type="math/tex"&gt;M \leq RS&lt;/script&gt; denotes the number of servers to be allocated&lt;/li&gt;
+  &lt;li&gt;
+&lt;script type="math/tex"&gt;z_k&lt;/script&gt; and &lt;script type="math/tex"&gt;c_k&lt;/script&gt; denote &lt;script type="math/tex"&gt;k&lt;/script&gt;th server’s respectively size and capacity&lt;/li&gt;
+  &lt;li&gt;
+&lt;script type="math/tex"&gt;r_i&lt;/script&gt; and &lt;script type="math/tex"&gt;s_i&lt;/script&gt; denote &lt;script type="math/tex"&gt;i&lt;/script&gt;th unavailable slot’s respectively row and
+slot indices&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;While modeling the formulation, I will need to provide constraints to avoid
+placing servers to unavailable slots. Rather than doing that, &lt;a href="http://kaygun.tumblr.com/"&gt;Atabey
+Kaygun&lt;/a&gt; hinted me to represent the data in
+&lt;strong&gt;blocks&lt;/strong&gt;. That is, instead of &lt;script type="math/tex"&gt;U&lt;/script&gt;, &lt;script type="math/tex"&gt;r_i&lt;/script&gt;, and &lt;script type="math/tex"&gt;s_i&lt;/script&gt;, I will transform
+this data into a single lookup table called &lt;script type="math/tex"&gt;z(i, j)&lt;/script&gt; that denotes the size
+of the available slots at &lt;script type="math/tex"&gt;i&lt;/script&gt;th row and &lt;script type="math/tex"&gt;j&lt;/script&gt;th block. For instance,
+consider the following layout:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src="blocks.jpg" alt="Example blocks"&gt;&lt;/p&gt;
+
+&lt;p&gt;Here blocks will look as follows:&lt;/p&gt;
+
+&lt;script type="math/tex; mode=display"&gt;z(0, 0) = 10 \\
+z(1, 0) = 5,\, z(1, 1) = 3 \\
+z(2, 0) = 3,\, z(2, 1) = 4,\, z(2, 2) = 1 \\
+z(3, 0) = 6&lt;/script&gt;
+
+&lt;h1 id="the-integer-programming-model"&gt;The Integer Programming Model&lt;/h1&gt;
+
+&lt;p&gt;For simplicity, I will adopt the following index notation:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+&lt;script type="math/tex"&gt;i&lt;/script&gt; denotes row indices (&lt;script type="math/tex"&gt;0 \leq i \leq R&lt;/script&gt;)&lt;/li&gt;
+  &lt;li&gt;
+&lt;script type="math/tex"&gt;j&lt;/script&gt; denotes block (not slot!) indices (varies per row)&lt;/li&gt;
+  &lt;li&gt;
+&lt;script type="math/tex"&gt;k&lt;/script&gt; denotes server indices (&lt;script type="math/tex"&gt;0 \leq k \leq M&lt;/script&gt;)&lt;/li&gt;
+  &lt;li&gt;
+&lt;script type="math/tex"&gt;\ell&lt;/script&gt; denotes pool indices (&lt;script type="math/tex"&gt;0 \leq \ell \leq P&lt;/script&gt;)&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Given that &lt;script type="math/tex"&gt;z(i, j)&lt;/script&gt; denotes the available blocks, the IP model can be
+defined as follows:&lt;/p&gt;
+
+&lt;script type="math/tex; mode=display"&gt;% &lt;![CDATA[
+\begin{align}
+
+\text{maximize}
+&amp; \quad
+\min_\ell g(\ell)
+\quad \text{(minimum of pool guaranteed capacities)} \\
+
+\text{subject to}
+
+&amp; \quad
+\sum_\ell p(k, l) \leq 1, \, \forall k
+\quad \text{(a server can be assigned to at most 1 pool)} \\
+
+&amp; \quad
+\sum_i \sum_j b(i, j, k) \leq 1, \, \forall k
+\quad \text{(a server can be assigned to at most 1 block)} \\
+
+&amp; \quad
+\sum_k z_k \, b(i, j, k) \leq z(i, j), \, \forall i, j
+\quad \text{(total size of servers within a block cannot exceed block's size)} \\
+
+&amp; \quad
+p(k, l) \leq \sum_i \sum_j b(i, j, k), \, \forall k, \ell
+\quad \text{(a server can be assigned to a pool if the server is assigned to a block)} \\
+
+\text{where}
+&amp; \quad
+b(i, j, k) =
+\begin{cases}
+    1       &amp; \quad \text{if block } (i, j) \text{ contains } k\text{th server} \\
+    0  &amp; \quad \text{otherwise} \\
+  \end{cases} \\
+
+&amp; \quad
+p(k, l) =
+\begin{cases}
+    1       &amp; \quad \text{if } \ell \text{th pool contains } k\text{th server} \\
+    0  &amp; \quad \text{otherwise} \\
+  \end{cases} \\
+
+&amp; \quad
+g(\ell) = \min_i g(\ell, i)
+\quad \text{(guaranteed capacity of } \ell \text{th pool)} \\
+
+&amp; \quad
+g(\ell, i) = \sum_k c_k \, p(k, \ell) - \sum_k \sum_j c_k \, p(k, \ell) \, b(i, j, k)
+\quad \text{(guaranteed capacity of } \ell \text{th pool for } i \text{th row)} \\
+
+\end{align} %]]&gt;&lt;/script&gt;
+
+&lt;h1 id="avoiding-minimax-constraint"&gt;Avoiding Minimax Constraint&lt;/h1&gt;
+
+&lt;p&gt;The presented IP model contains a minimax objective, which to the best of my
+knowledge is not tractable by popular linear programming optimizers, such as
+&lt;a href="http://www-01.ibm.com/software/commerce/optimization/cplex-optimizer/"&gt;CPLEX&lt;/a&gt;
+or &lt;a href="http://lpsolve.sourceforge.net/"&gt;lpsolve&lt;/a&gt;. But I have a trick in my pocket
+to tackle that. Let’s assume that we know the optimal objective, say &lt;script type="math/tex"&gt;g^*&lt;/script&gt;.
+Then we can model the entire IP as follows:&lt;/p&gt;
+
+&lt;script type="math/tex; mode=display"&gt;% &lt;![CDATA[
+\begin{align}
+
+\text{maximize}
+&amp; \quad
+1
+\quad \text{(a dummy objective)} \\
+
+\text{subject to}
+
+&amp; \quad
+\sum_\ell p(k, l) \leq 1, \, \forall k \\
+
+&amp; \quad
+\sum_i \sum_j b(i, j, k) \leq 1, \, \forall k \\
+
+&amp; \quad
+\sum_k z_k \, b(i, j, k) \leq z(i, j), \, \forall i, j \\
+
+&amp; \quad
+p(k, l) \leq \sum_i \sum_j b(i, j, k), \, \forall k, \ell \\
+
+&amp; \quad
+g(\ell, i) \geq g^*, \, \forall \ell, i
+\quad \text{(guaranteed capacity must be greater than or equal to } g^* \text{)} \\
+
+\end{align} %]]&gt;&lt;/script&gt;
+
+&lt;p&gt;What this model states is this: I am not interested in the optimization
+objective, return me the first found feasible solution. That is, the optimizer
+will return us the first &lt;script type="math/tex"&gt;b(i, j, k)&lt;/script&gt; variable set the moment it finds a
+feasible solution satisfying &lt;script type="math/tex"&gt;g(\ell, i) \geq g^*, \, \forall \ell, i&lt;/script&gt;
+constraints.&lt;/p&gt;
+
+&lt;p&gt;Now things are getting interesting. If we can find bounds to &lt;script type="math/tex"&gt;g^*&lt;/script&gt;, than we
+can use these bounds to bisect the optimal &lt;script type="math/tex"&gt;g^*&lt;/script&gt;! For the lower bound, we
+know that &lt;script type="math/tex"&gt;g_i = 0 \leq g^*&lt;/script&gt;. The upper bound is a little bit tricky, but we
+can come up with a quite loose bound: &lt;script type="math/tex"&gt;g_f = \frac{1}{P} \sum_k c_k \gg
+g^*&lt;/script&gt;. (I will not go into details of how to come up with a stricter upper
+bound.) So by picking &lt;script type="math/tex"&gt;g^* \in (g_i, g_f)&lt;/script&gt; we can bisect &lt;strong&gt;the optimal
+guaranteed capacity&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;h1 id="avoiding-non-linear-constraints"&gt;Avoiding Non-Linear Constraints&lt;/h1&gt;
+
+&lt;p&gt;Note that due to &lt;script type="math/tex"&gt;p(k, \ell) \, b(i, j, k)&lt;/script&gt; multiplication, the following
+constraint in the model is non-linear:&lt;/p&gt;
+
+&lt;script type="math/tex; mode=display"&gt;g^* \leq g(\ell, i) = \sum_k c_k \, p(k, \ell) - \sum_k \sum_j c_k \, p(k, \ell) \, b(i, j, k), \, \forall \ell, i&lt;/script&gt;
+
+&lt;p&gt;Non-linear constraints are as well not allowed by CPLEX and lpsolve. Luckily,
+we can &lt;a href="http://www.leandro-coelho.com/linearization-product-variables/"&gt;linearize this binary
+multiplication&lt;/a&gt;
+by introducing a temporary binary variable &lt;script type="math/tex"&gt;t(i, j, k, \ell) = p(k, \ell) \,
+b(i, j, k)&lt;/script&gt;:&lt;/p&gt;
+
+&lt;script type="math/tex; mode=display"&gt;% &lt;![CDATA[
+\begin{align}
+g(\ell, i) &amp; = \sum_k c_k \, p(k, \ell) - \sum_k \sum_j c_k \, t(i, j, k, \ell), \, \forall \ell, i \\
+t(i, j, k, \ell) &amp; \leq p(k, l), \, \forall i, j, k, \ell \\
+t(i, j, k, \ell) &amp; \leq b(i, j, k), \, \forall i, j, k, \ell \\
+t(i, j, k, \ell) &amp; \geq p(k, l) + b(i, j, k) - 1, \, \forall i, j, k, \ell \\
+\end{align} %]]&gt;&lt;/script&gt;
+</content>
+  </entry>
   <entry>
     <id>tag:vy.github.io,2015-11-27://blog/post/2015/11/27/maven-protobuf/</id>
     <title type="html">Compiling Protocol Buffers Sources in Maven</title>
@@ -1646,305 +1885,6 @@ commit-test-review cycles. But those would not add much to my previous
 knowledge and not affect my decision, I believe. Additionally, I would have
 surely made a more in-depth investigation on how much will I spend for
 housing, where despite all my efforts, my estimations were way off.&lt;/p&gt;
-</content>
-  </entry>
-  <entry>
-    <id>tag:vy.github.io,2015-03-21://blog/post/2015/03/21/immutable-persistence/</id>
-    <title type="html">Using Immutable Objects for Persistence in Java</title>
-    <published>2015-03-21T13:39:00Z</published>
-    <updated>2015-03-21T13:39:00Z</updated>
-    <link rel="alternate" href="https://vy.github.io//blog/post/2015/03/21/immutable-persistence/"/>
-    <content type="html">
-&lt;p&gt;&lt;strong&gt;TL;DR&lt;/strong&gt; – A software design pattern to employ immutable classes for
-persisting data models in Java. That is, you do not need to ruin your
-immutable classes because of uncertain &lt;code&gt;id&lt;/code&gt; fields.&lt;/p&gt;
-
-&lt;p&gt;When you want store a plain Java model in a data store, you are expected to
-deliver an &lt;code&gt;@Id&lt;/code&gt; field to the underlying persistence framework.&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="language-java"&gt;&lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kd"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;Employee&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
-
-    &lt;span class="nd"&gt;@Id&lt;/span&gt;
-    &lt;span class="kd"&gt;private&lt;/span&gt; &lt;span class="kt"&gt;long&lt;/span&gt; &lt;span class="n"&gt;id&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
-
-    &lt;span class="c1"&gt;// ...&lt;/span&gt;
-
-&lt;span class="o"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;This single &lt;em&gt;mutable&lt;/em&gt; field ruins all your immutable data structure model.
-Why? You cannot add a &lt;code&gt;final&lt;/code&gt; modifier to an &lt;code&gt;id&lt;/code&gt; field, because you do not
-know the &lt;code&gt;id&lt;/code&gt; yet before persisiting it to the data store.&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="language-java"&gt;&lt;span class="n"&gt;Employee&lt;/span&gt; &lt;span class="n"&gt;employee&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nf"&gt;Employee&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="s"&gt;"bob"&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;    &lt;span class="c1"&gt;// id = null&lt;/span&gt;
-&lt;span class="n"&gt;employeeService&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;save&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;employee&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;             &lt;span class="c1"&gt;// id = 84357...&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;And this dirty bit propagates through all your code base and pollutes the
-model space with mutable &lt;code&gt;id&lt;/code&gt; fields. Further, it becomes almost impossible to
-differentiate whether a given &lt;code&gt;Employee&lt;/code&gt; instance actually represents a record
-retrieved from the data store or just a temporal instance created by
-application itself at some point in time. Actually, the entire deficiency is a
-side effect of a misunderstanding: you are using the very same model to
-encapsulate two different type of entities. One is a model draft, that is yet
-to be saved. And the other one is an object that is associated with an
-actually persisted object at the data store.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src="mutable.svg" alt="Mutable POJO Persistence Architecture"&gt;&lt;/p&gt;
-
-&lt;h1 id="defining-the-problem-and-its-requirements"&gt;Defining the Problem and its Requirements&lt;/h1&gt;
-
-&lt;p&gt;Before trying to come up with a practical solution to the problem at hand,
-lets determine the set of constraints that needs to be satisfied in order to
-use immutable data entities throughout the entire code base.&lt;/p&gt;
-
-&lt;ol&gt;
-  &lt;li&gt;
-    &lt;p&gt;An entity cannot be mutated by any means.&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;An entity can only be instantiated by the data store service.&lt;/p&gt;
-  &lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;p&gt;The first constraint ensures that the application cannot modify an entity,
-hence you can freely pass it to around and enjoy the safety of your immutable
-data structure. But the most important outcome of this scheme, which is
-addressed in the second constraint, is that: You are guaranteed that an entity
-&lt;em&gt;always&lt;/em&gt; represents a record retrived from the data store at some point in
-time. That is, you know that it is not an artificially generated instance
-created out of blue.&lt;/p&gt;
-
-&lt;h1 id="the-proposal"&gt;The Proposal&lt;/h1&gt;
-
-&lt;p&gt;After defining what we are looking for, we are ready to come up with a
-practical solution. The solution I propose for this problem is a scheme such
-that each &lt;code&gt;Employee&lt;/code&gt; entity is represented by two different encapsulations
-throughout their entire lifetime:&lt;/p&gt;
-
-&lt;ol&gt;
-  &lt;li&gt;
-    &lt;p&gt;&lt;code&gt;Employee&lt;/code&gt;: An immutable representation of a record retrieved from the data
-store. Hence, it has an &lt;code&gt;id&lt;/code&gt; field as expected.&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;&lt;code&gt;EmployeeDraft&lt;/code&gt;: A yet to be persisted &lt;code&gt;Employee&lt;/code&gt; instance (&lt;em&gt;draft&lt;/em&gt;)
-created either from scratch by the application or by updating an &lt;code&gt;Employee&lt;/code&gt;
-instance. Since entity is still in the draft stage, it has no &lt;code&gt;id&lt;/code&gt; field.&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;&lt;code&gt;EmployeeService&lt;/code&gt;: The one and only one entry point that can create an
-&lt;code&gt;Employee&lt;/code&gt; service.&lt;/p&gt;
-  &lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;p&gt;&lt;img src="immutable.svg" alt="Immutable POJO Persistence Architecture"&gt;&lt;/p&gt;
-
-&lt;h1 id="the-code"&gt;The Code&lt;/h1&gt;
-
-&lt;p&gt;I will start by implementing the &lt;code&gt;EmployeeDraft&lt;/code&gt; class:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="language-java"&gt;&lt;span class="kn"&gt;package&lt;/span&gt; &lt;span class="n"&gt;com&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;vlkan&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;immutableentity&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;repository&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;employee&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
-
-&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;static&lt;/span&gt; &lt;span class="n"&gt;com&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;google&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;common&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;base&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;Preconditions&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;checkArgument&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
-&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;static&lt;/span&gt; &lt;span class="n"&gt;com&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;google&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;common&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;base&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;Preconditions&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;checkNotNull&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
-
-&lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kd"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;EmployeeDraft&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
-
-    &lt;span class="kd"&gt;protected&lt;/span&gt; &lt;span class="kd"&gt;final&lt;/span&gt; &lt;span class="n"&gt;String&lt;/span&gt; &lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
-
-    &lt;span class="kd"&gt;protected&lt;/span&gt; &lt;span class="kd"&gt;final&lt;/span&gt; &lt;span class="n"&gt;String&lt;/span&gt; &lt;span class="n"&gt;surname&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
-
-    &lt;span class="kd"&gt;protected&lt;/span&gt; &lt;span class="kd"&gt;final&lt;/span&gt; &lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="n"&gt;salary&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
-
-    &lt;span class="cm"&gt;/** Can only be instantiated through a builder. */&lt;/span&gt;
-    &lt;span class="kd"&gt;protected&lt;/span&gt; &lt;span class="nf"&gt;EmployeeDraft&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;String&lt;/span&gt; &lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;String&lt;/span&gt; &lt;span class="n"&gt;surname&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="n"&gt;salary&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
-        &lt;span class="n"&gt;checkNotNull&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="s"&gt;"name cannot be null"&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
-        &lt;span class="n"&gt;checkArgument&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;salary&lt;/span&gt; &lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="s"&gt;"salary cannot be negative, found: %d"&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;salary&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
-        &lt;span class="n"&gt;checkNotNull&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;surname&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="s"&gt;"surname cannot be null"&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
-        &lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;name&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
-        &lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;surname&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;surname&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
-        &lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;salary&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;salary&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
-    &lt;span class="o"&gt;}&lt;/span&gt;
-
-    &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="n"&gt;String&lt;/span&gt; &lt;span class="nf"&gt;getName&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
-
-    &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="n"&gt;String&lt;/span&gt; &lt;span class="nf"&gt;getSurname&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;surname&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
-
-    &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="nf"&gt;getSalary&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;salary&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
-
-    &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="n"&gt;Builder&lt;/span&gt; &lt;span class="nf"&gt;draft&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nf"&gt;Builder&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
-
-    &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kd"&gt;static&lt;/span&gt; &lt;span class="kd"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;Builder&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
-
-        &lt;span class="kd"&gt;protected&lt;/span&gt; &lt;span class="n"&gt;String&lt;/span&gt; &lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
-
-        &lt;span class="kd"&gt;protected&lt;/span&gt; &lt;span class="n"&gt;String&lt;/span&gt; &lt;span class="n"&gt;surname&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
-
-        &lt;span class="kd"&gt;protected&lt;/span&gt; &lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="n"&gt;salary&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
-
-        &lt;span class="cm"&gt;/** Note that the default constructor is only visible to the package classes. */&lt;/span&gt;
-        &lt;span class="n"&gt;Builder&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;{}&lt;/span&gt;
-
-        &lt;span class="kd"&gt;protected&lt;/span&gt; &lt;span class="nf"&gt;Builder&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;EmployeeDraft&lt;/span&gt; &lt;span class="n"&gt;draft&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
-            &lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;name&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;draft&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;name&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
-            &lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;surname&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;draft&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;surname&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
-            &lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;salary&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;draft&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;salary&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
-        &lt;span class="o"&gt;}&lt;/span&gt;
-
-        &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="n"&gt;Builder&lt;/span&gt; &lt;span class="nf"&gt;name&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;String&lt;/span&gt; &lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;name&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt; &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
-
-        &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="n"&gt;Builder&lt;/span&gt; &lt;span class="nf"&gt;surname&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;String&lt;/span&gt; &lt;span class="n"&gt;surname&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;surname&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;surname&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt; &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
-
-        &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="n"&gt;Builder&lt;/span&gt; &lt;span class="nf"&gt;salary&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="n"&gt;salary&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;salary&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;salary&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt; &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
-
-        &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="n"&gt;EmployeeDraft&lt;/span&gt; &lt;span class="nf"&gt;build&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nf"&gt;EmployeeDraft&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;surname&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;salary&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
-
-    &lt;span class="o"&gt;}&lt;/span&gt;
-
-&lt;span class="o"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Note that in order to isolate certain fields and methods which are expected to
-be only accessed by the &lt;code&gt;Employee&lt;/code&gt; ecosystem, the classes are put into a
-separate &lt;code&gt;c.v.i.r.employee&lt;/code&gt; package and internals are exposed to just package
-members. Per see, non-package classes are not allowed to instantiate either
-&lt;code&gt;EmployeeDraft&lt;/code&gt; or &lt;code&gt;EmployeeDraft.Builder&lt;/code&gt;.&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="language-java"&gt;&lt;span class="kn"&gt;package&lt;/span&gt; &lt;span class="n"&gt;com&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;vlkan&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;immutableentity&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;repository&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;employee&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
-
-&lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kd"&gt;final&lt;/span&gt; &lt;span class="kd"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;Employee&lt;/span&gt; &lt;span class="kd"&gt;extends&lt;/span&gt; &lt;span class="n"&gt;EmployeeDraft&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
-
-    &lt;span class="kd"&gt;private&lt;/span&gt; &lt;span class="kd"&gt;final&lt;/span&gt; &lt;span class="kt"&gt;long&lt;/span&gt; &lt;span class="n"&gt;id&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
-
-    &lt;span class="cm"&gt;/** Note that the default constructor is only visible to the package classes. */&lt;/span&gt;
-    &lt;span class="n"&gt;Employee&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;String&lt;/span&gt; &lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;String&lt;/span&gt; &lt;span class="n"&gt;surname&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="n"&gt;salary&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="kt"&gt;long&lt;/span&gt; &lt;span class="n"&gt;id&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
-        &lt;span class="kd"&gt;super&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;surname&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;salary&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
-        &lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;id&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;id&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
-    &lt;span class="o"&gt;}&lt;/span&gt;
-
-    &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kt"&gt;long&lt;/span&gt; &lt;span class="nf"&gt;getId&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;id&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
-
-    &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="n"&gt;Builder&lt;/span&gt; &lt;span class="nf"&gt;draft&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nf"&gt;Builder&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
-
-&lt;span class="o"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;&lt;code&gt;Employee&lt;/code&gt; merely wraps &lt;code&gt;EmployeeDraft&lt;/code&gt; by just adding new &lt;code&gt;id&lt;/code&gt; field. Note
-that non-package classes are not again allowed to instantiate &lt;code&gt;Employee&lt;/code&gt;.
-Additionally, calling &lt;code&gt;draft()&lt;/code&gt; either from an &lt;code&gt;Employee&lt;/code&gt; or an
-&lt;code&gt;EmployeeDraft&lt;/code&gt; always creates a new &lt;code&gt;EmployeeDraft&lt;/code&gt;, which also make sense
-since the new drafted changes are not persisted yet.&lt;/p&gt;
-
-&lt;p&gt;To glue the last piece of the puzzle, here comes the &lt;code&gt;EmployeeService&lt;/code&gt;. To
-keep things simple, I purposed a &lt;code&gt;Map&amp;lt;Long, Employee&amp;gt;&lt;/code&gt; together with an
-&lt;code&gt;AtomicLong&lt;/code&gt; as a repository.&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="language-java"&gt;&lt;span class="kn"&gt;package&lt;/span&gt; &lt;span class="n"&gt;com&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;vlkan&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;immutableentity&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;repository&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;employee&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
-
-&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;java.util.Map&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
-&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;java.util.Optional&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
-&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;java.util.concurrent.ConcurrentHashMap&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
-&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;java.util.concurrent.atomic.AtomicLong&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
-&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;java.util.stream.Stream&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
-
-&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;static&lt;/span&gt; &lt;span class="n"&gt;com&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;google&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;common&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;base&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;Preconditions&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;checkNotNull&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
-
-&lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kd"&gt;final&lt;/span&gt; &lt;span class="kd"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;EmployeeService&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
-
-    &lt;span class="kd"&gt;private&lt;/span&gt; &lt;span class="kd"&gt;final&lt;/span&gt; &lt;span class="n"&gt;AtomicLong&lt;/span&gt; &lt;span class="n"&gt;dataCounter&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nf"&gt;AtomicLong&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
-
-    &lt;span class="kd"&gt;private&lt;/span&gt; &lt;span class="kd"&gt;final&lt;/span&gt; &lt;span class="n"&gt;Map&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;Long&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;Employee&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;dataStore&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="n"&gt;ConcurrentHashMap&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&amp;gt;();&lt;/span&gt;
-
-    &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="n"&gt;EmployeeDraft&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;Builder&lt;/span&gt; &lt;span class="nf"&gt;draft&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="n"&gt;EmployeeDraft&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;Builder&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
-
-    &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="n"&gt;Employee&lt;/span&gt; &lt;span class="nf"&gt;save&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;EmployeeDraft&lt;/span&gt; &lt;span class="n"&gt;draft&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="nf"&gt;save&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;draft&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;dataCounter&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;getAndIncrement&lt;/span&gt;&lt;span class="o"&gt;());&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
-
-    &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="n"&gt;Employee&lt;/span&gt; &lt;span class="nf"&gt;save&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;EmployeeDraft&lt;/span&gt; &lt;span class="n"&gt;draft&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="kt"&gt;long&lt;/span&gt; &lt;span class="n"&gt;id&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
-        &lt;span class="n"&gt;checkNotNull&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;draft&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="s"&gt;"draft cannot be null"&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
-        &lt;span class="n"&gt;Employee&lt;/span&gt; &lt;span class="n"&gt;employee&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nf"&gt;Employee&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;draft&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;getName&lt;/span&gt;&lt;span class="o"&gt;(),&lt;/span&gt; &lt;span class="n"&gt;draft&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;getSurname&lt;/span&gt;&lt;span class="o"&gt;(),&lt;/span&gt; &lt;span class="n"&gt;draft&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;getSalary&lt;/span&gt;&lt;span class="o"&gt;(),&lt;/span&gt; &lt;span class="n"&gt;id&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
-        &lt;span class="n"&gt;dataStore&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;put&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;id&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;employee&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
-        &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;employee&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
-    &lt;span class="o"&gt;}&lt;/span&gt;
-
-    &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="n"&gt;Stream&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;Employee&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="nf"&gt;findAll&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;dataStore&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;values&lt;/span&gt;&lt;span class="o"&gt;().&lt;/span&gt;&lt;span class="na"&gt;stream&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
-
-    &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="n"&gt;Optional&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;Employee&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="nf"&gt;findById&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="kt"&gt;long&lt;/span&gt; &lt;span class="n"&gt;id&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;Optional&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;ofNullable&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;dataStore&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;get&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;id&lt;/span&gt;&lt;span class="o"&gt;));&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
-
-&lt;span class="o"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Below you can find an example code snippet that uses the introduced classes.&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="language-java"&gt;&lt;span class="n"&gt;EmployeeService&lt;/span&gt; &lt;span class="n"&gt;service&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nf"&gt;EmployeeService&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
-
-&lt;span class="c1"&gt;// Create a draft from scratch using the service interface.&lt;/span&gt;
-&lt;span class="n"&gt;EmployeeDraft&lt;/span&gt; &lt;span class="n"&gt;draft&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;service&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;draft&lt;/span&gt;&lt;span class="o"&gt;().&lt;/span&gt;&lt;span class="na"&gt;name&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="s"&gt;"Volkan"&lt;/span&gt;&lt;span class="o"&gt;).&lt;/span&gt;&lt;span class="na"&gt;surname&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="s"&gt;"Yazici"&lt;/span&gt;&lt;span class="o"&gt;).&lt;/span&gt;&lt;span class="na"&gt;salary&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;1000&lt;/span&gt;&lt;span class="o"&gt;).&lt;/span&gt;&lt;span class="na"&gt;build&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
-
-&lt;span class="cm"&gt;/*&lt;/span&gt;
-&lt;span class="cm"&gt; *         Drafts&lt;/span&gt;
-&lt;span class="cm"&gt; * -------------------------&lt;/span&gt;
-&lt;span class="cm"&gt; *  draft:&lt;/span&gt;
-&lt;span class="cm"&gt; *    "Volkan Yazici" $1000&lt;/span&gt;
-&lt;span class="cm"&gt; */&lt;/span&gt;
-
-&lt;span class="c1"&gt;// Persist the draft into the data store and obtain an actual employee.&lt;/span&gt;
-&lt;span class="n"&gt;Employee&lt;/span&gt; &lt;span class="n"&gt;employee&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;service&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;save&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;draft&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
-
-&lt;span class="cm"&gt;/*&lt;/span&gt;
-&lt;span class="cm"&gt; *           Drafts         |    Persisted Employees&lt;/span&gt;
-&lt;span class="cm"&gt; * -------------------------+----------------------------&lt;/span&gt;
-&lt;span class="cm"&gt; *  draft:                  | employee:&lt;/span&gt;
-&lt;span class="cm"&gt; *    "Volkan Yazici" $1000 |   #0 "Volkan Yazici" $1000&lt;/span&gt;
-&lt;span class="cm"&gt; */&lt;/span&gt;
-
-&lt;span class="c1"&gt;// Modify the persisted employee and save it again.&lt;/span&gt;
-&lt;span class="n"&gt;EmployeeDraft&lt;/span&gt; &lt;span class="n"&gt;updatedDraft&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;employee&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;draft&lt;/span&gt;&lt;span class="o"&gt;().&lt;/span&gt;&lt;span class="na"&gt;salary&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;2000&lt;/span&gt;&lt;span class="o"&gt;).&lt;/span&gt;&lt;span class="na"&gt;build&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
-&lt;span class="n"&gt;Employee&lt;/span&gt; &lt;span class="n"&gt;updatedEmployee&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;service&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;save&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;updatedDraft&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;employee&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;getId&lt;/span&gt;&lt;span class="o"&gt;());&lt;/span&gt;
-
-&lt;span class="cm"&gt;/*&lt;/span&gt;
-&lt;span class="cm"&gt; *           Drafts         |    Persisted Employees&lt;/span&gt;
-&lt;span class="cm"&gt; * -------------------------+----------------------------&lt;/span&gt;
-&lt;span class="cm"&gt; *  draft:                  | employee:&lt;/span&gt;
-&lt;span class="cm"&gt; *    "Volkan Yazici" $1000 |   #0 "Volkan Yazici" $1000&lt;/span&gt;
-&lt;span class="cm"&gt; *                          |&lt;/span&gt;
-&lt;span class="cm"&gt; *  updatedDraft:           | updatedEmployee&lt;/span&gt;
-&lt;span class="cm"&gt; *    "Volkan Yazici" $2000 |   #0 "Volkan Yazici" $2000&lt;/span&gt;
-&lt;span class="cm"&gt; */&lt;/span&gt;
-
-&lt;span class="c1"&gt;// Create a new employee with the same amount of salary using the most recent draft.&lt;/span&gt;
-&lt;span class="n"&gt;EmployeeDraft&lt;/span&gt; &lt;span class="n"&gt;forkedDraft&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;updatedDraft&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;draft&lt;/span&gt;&lt;span class="o"&gt;().&lt;/span&gt;&lt;span class="na"&gt;name&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="s"&gt;"Bob"&lt;/span&gt;&lt;span class="o"&gt;).&lt;/span&gt;&lt;span class="na"&gt;surname&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="s"&gt;"Ross"&lt;/span&gt;&lt;span class="o"&gt;).&lt;/span&gt;&lt;span class="na"&gt;build&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
-&lt;span class="n"&gt;Employee&lt;/span&gt; &lt;span class="n"&gt;forkedEmployee&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;service&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;save&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;forkedDraft&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
-
-&lt;span class="cm"&gt;/*&lt;/span&gt;
-&lt;span class="cm"&gt; *           Drafts         |    Persisted Employees&lt;/span&gt;
-&lt;span class="cm"&gt; * -------------------------+----------------------------&lt;/span&gt;
-&lt;span class="cm"&gt; *  draft:                  | employee:&lt;/span&gt;
-&lt;span class="cm"&gt; *    "Volkan Yazici" $1000 |   #0 "Volkan Yazici" $1000&lt;/span&gt;
-&lt;span class="cm"&gt; *                          |&lt;/span&gt;
-&lt;span class="cm"&gt; *  updatedDraft:           | updatedEmployee&lt;/span&gt;
-&lt;span class="cm"&gt; *    "Volkan Yazici" $2000 |   #0 "Volkan Yazici" $2000&lt;/span&gt;
-&lt;span class="cm"&gt; *                          |&lt;/span&gt;
-&lt;span class="cm"&gt; *  forkedDraft:            | forkedEmployee:&lt;/span&gt;
-&lt;span class="cm"&gt; *    "Bob Ross" $2000      |   #1 "Bob Ross" $2000&lt;/span&gt;
-&lt;span class="cm"&gt; */&lt;/span&gt;
-
-&lt;span class="n"&gt;System&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;out&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;println&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="s"&gt;"Persisted Employees:\n"&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="n"&gt;service&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;findAll&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt;
-        &lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;map&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;e&lt;/span&gt; &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;String&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;format&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="s"&gt;"#%d \"%s %s\" $%d"&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt;
-                &lt;span class="n"&gt;e&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;getId&lt;/span&gt;&lt;span class="o"&gt;(),&lt;/span&gt; &lt;span class="n"&gt;e&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;getName&lt;/span&gt;&lt;span class="o"&gt;(),&lt;/span&gt; &lt;span class="n"&gt;e&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;getSurname&lt;/span&gt;&lt;span class="o"&gt;(),&lt;/span&gt; &lt;span class="n"&gt;e&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;getSalary&lt;/span&gt;&lt;span class="o"&gt;()))&lt;/span&gt;
-        &lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;collect&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;joining&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="s"&gt;"\n"&lt;/span&gt;&lt;span class="o"&gt;)));&lt;/span&gt;
-&lt;span class="cm"&gt;/*&lt;/span&gt;
-&lt;span class="cm"&gt; * Persisted Employees:&lt;/span&gt;
-&lt;span class="cm"&gt; * #0 "Volkan Yazici" $2000&lt;/span&gt;
-&lt;span class="cm"&gt; * #1 "Bob Ross" $2000&lt;/span&gt;
-&lt;span class="cm"&gt; */&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
-
-&lt;h1 id="the-conclusion"&gt;The Conclusion&lt;/h1&gt;
-
-&lt;p&gt;I had always found it puzzling to work with mutable objects when I needed to
-work with persistence frameworks; JPA, Hibernate, Spring Data, etc. In the
-lifetime of almost every project that I start, after a certain period of time,
-I always find myself implementing my own service layer on top of the used
-persistence framework using my custom immutable entities. I really do not know
-whether the approach described in this post is something that was already
-addressed in the literature or not, but I came up with this idea a couple of
-months ago and totally benefitted from it in a project. I hope you would find
-it useful too.&lt;/p&gt;
 </content>
   </entry>
 </feed>
