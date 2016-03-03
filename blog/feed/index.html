@@ -101,10 +101,13 @@ consider the following layout:&lt;/p&gt;
 
 &lt;p&gt;Here blocks will look as follows:&lt;/p&gt;
 
-&lt;script type="math/tex; mode=display"&gt;z(0, 0) = 10 \\
-z(1, 0) = 5,\, z(1, 1) = 3 \\
-z(2, 0) = 3,\, z(2, 1) = 4,\, z(2, 2) = 1 \\
-z(3, 0) = 6&lt;/script&gt;
+&lt;script type="math/tex; mode=display"&gt;% &lt;![CDATA[
+\begin{align}
+[z(0, 0)] &amp;= [10] \\
+[z(1, 0), z(1, 1)] &amp;= [5,3] \\
+[z(2, 0), z(2, 1), z(2, 2)] &amp;= [3, 4, 1] \\
+[z(3, 0)] &amp;= [6]
+\end{align} %]]&gt;&lt;/script&gt;
 
 &lt;h1 id="the-integer-programming-model"&gt;The Integer Programming Model&lt;/h1&gt;
 
@@ -246,6 +249,51 @@ t(i, j, k, \ell) &amp; \leq p(k, l), \, \forall i, j, k, \ell \\
 t(i, j, k, \ell) &amp; \leq b(i, j, k), \, \forall i, j, k, \ell \\
 t(i, j, k, \ell) &amp; \geq p(k, l) + b(i, j, k) - 1, \, \forall i, j, k, \ell \\
 \end{align} %]]&gt;&lt;/script&gt;
+
+&lt;h1 id="the-solver"&gt;The Solver&lt;/h1&gt;
+
+&lt;p&gt;For testing purposes, I wrote a simple &lt;a href="https://gist.github.com/vy/9689cb122a84be22d454"&gt;Python
+script&lt;/a&gt; that reads an input
+problem file and calls CPLEX iteratively. A sample output of the script is as
+follows:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ ./dc.py ./cplex.sh prob/dc-min.in soln/dc-min 0
+2016-03-03 08:35:25 DEBUG    reading setup: prob/dc-min.in
+2016-03-03 08:35:25 DEBUG    R=2, S=5, U=1, P=2, M=5
+2016-03-03 08:35:25 INFO     solving for 0 &amp;lt;= g=8 &amp;lt; 16
+2016-03-03 08:35:25 DEBUG    writing problem: soln/dc-min-8.lp
+2016-03-03 08:35:25 DEBUG    running solver
+2016-03-03 08:35:25 DEBUG    writing cplex output: soln/dc-min-8.out
+2016-03-03 08:35:25 DEBUG    not integer feasible solution
+2016-03-03 08:35:25 DEBUG    no solution
+2016-03-03 08:35:25 DEBUG    stepping back
+2016-03-03 08:35:25 INFO     solving for 0 &amp;lt;= g=4 &amp;lt; 8
+2016-03-03 08:35:25 DEBUG    writing problem: soln/dc-min-4.lp
+2016-03-03 08:35:25 DEBUG    running solver
+2016-03-03 08:35:25 DEBUG    writing cplex output: soln/dc-min-4.out
+2016-03-03 08:35:25 DEBUG    solution score: 5
+2016-03-03 08:35:25 DEBUG    writing solution: soln/dc-min-4.soln
+2016-03-03 08:35:25 DEBUG    stepping forward
+2016-03-03 08:35:25 INFO     solving for 5 &amp;lt;= g=6 &amp;lt; 8
+2016-03-03 08:35:25 DEBUG    writing problem: soln/dc-min-6.lp
+2016-03-03 08:35:25 DEBUG    running solver
+2016-03-03 08:35:25 DEBUG    writing cplex output: soln/dc-min-6.out
+2016-03-03 08:35:25 DEBUG    not integer feasible solution
+2016-03-03 08:35:25 DEBUG    no solution
+2016-03-03 08:35:25 DEBUG    stepping back
+2016-03-03 08:35:25 INFO     solving for 5 &amp;lt;= g=5 &amp;lt; 6
+2016-03-03 08:35:25 DEBUG    writing problem: soln/dc-min-5.lp
+2016-03-03 08:35:25 DEBUG    running solver
+2016-03-03 08:35:25 DEBUG    writing cplex output: soln/dc-min-5.out
+2016-03-03 08:35:25 DEBUG    solution score: 5
+2016-03-03 08:35:25 DEBUG    writing solution: soln/dc-min-5.soln
+2016-03-03 08:35:25 DEBUG    stepping forward
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It also outputs intermediate IP formulation files, CPLEX output, and solution
+file. The format of the problem and solution files are detailed in &lt;a href="https://hashcode.withgoogle.com/2015/tasks/hashcode2015_qualification_task.pdf"&gt;the
+official problem
+description&lt;/a&gt;.&lt;/p&gt;
 </content>
   </entry>
   <entry>
