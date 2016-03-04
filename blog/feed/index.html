@@ -24,7 +24,7 @@ Among 230 teams, &lt;em&gt;What’s in a name?&lt;/em&gt; from &lt;a href="http:
 supérieure&lt;/a&gt; ranked first in the qualification, but third
 in the final round. By challenging, I mean it is not possible to come up with
 a deterministic polynomial-time optimal answer. I am not in a position to
-either provide a rigor proof of its complexity or its reduction to a known
+either provide a rigorous proof of its complexity or its reduction to a known
 NP-hard problem. But in this blog post I will investigate the following
 question: Can we provide an optimal solution using &lt;a href="https://en.wikipedia.org/wiki/Integer_programming"&gt;integer
 programming&lt;/a&gt;? In practice,
@@ -138,33 +138,18 @@ defined as follows:&lt;/p&gt;
 \text{subject to}
 
 &amp; \quad
-\sum_\ell p(k, l) \leq 1, \, \forall k
-\quad \text{(a server can be assigned to at most 1 pool)} \\
+\sum_\ell a(i, j, k, \ell) \leq 1, \, \forall k
+\quad \text{(a server can be assigned to at most 1 pool and block)} \\
 
 &amp; \quad
-\sum_i \sum_j b(i, j, k) \leq 1, \, \forall k
-\quad \text{(a server can be assigned to at most 1 block)} \\
-
-&amp; \quad
-\sum_k z_k \, b(i, j, k) \leq z(i, j), \, \forall i, j
+\sum_{k,\ell} z_k \, a(i, j, k, \ell) \leq z(i, j), \, \forall i, j
 \quad \text{(total size of servers within a block cannot exceed block's size)} \\
-
-&amp; \quad
-p(k, l) \leq \sum_i \sum_j b(i, j, k), \, \forall k, \ell
-\quad \text{(a server can be assigned to a pool if the server is assigned to a block)} \\
 
 \text{where}
 &amp; \quad
-b(i, j, k) =
+a(i, j, k, \ell) =
 \begin{cases}
-    1       &amp; \quad \text{if block } (i, j) \text{ contains } k\text{th server} \\
-    0  &amp; \quad \text{otherwise} \\
-  \end{cases} \\
-
-&amp; \quad
-p(k, l) =
-\begin{cases}
-    1       &amp; \quad \text{if } \ell \text{th pool contains } k\text{th server} \\
+    1       &amp; \quad \text{if } k \text{th server is assigned to } (i, j) \text{th block and } \ell \text{th pool} \\
     0  &amp; \quad \text{otherwise} \\
   \end{cases} \\
 
@@ -173,7 +158,7 @@ g(\ell) = \min_i g(\ell, i)
 \quad \text{(guaranteed capacity of } \ell \text{th pool)} \\
 
 &amp; \quad
-g(\ell, i) = \sum_k c_k \, p(k, \ell) - \sum_k \sum_j c_k \, p(k, \ell) \, b(i, j, k)
+g(\ell, i) = \sum_{i', j, k} c_k \, a(i', j, k, \ell) - \sum_{j, k} c_k \, a(i, j, k, \ell)
 \quad \text{(guaranteed capacity of } \ell \text{th pool for } i \text{th row)} \\
 
 \end{align} %]]&gt;&lt;/script&gt;
@@ -195,19 +180,11 @@ Then we can model the entire IP as follows:&lt;/p&gt;
 1
 \quad \text{(a dummy objective)} \\
 
-\text{subject to}
+&amp; \quad
+\sum_\ell a(i, j, k, \ell) \leq 1, \, \forall k \\
 
 &amp; \quad
-\sum_\ell p(k, l) \leq 1, \, \forall k \\
-
-&amp; \quad
-\sum_i \sum_j b(i, j, k) \leq 1, \, \forall k \\
-
-&amp; \quad
-\sum_k z_k \, b(i, j, k) \leq z(i, j), \, \forall i, j \\
-
-&amp; \quad
-p(k, l) \leq \sum_i \sum_j b(i, j, k), \, \forall k, \ell \\
+\sum_{k,\ell} z_k \, a(i, j, k, \ell) \leq z(i, j), \, \forall i, j \\
 
 &amp; \quad
 g(\ell, i) \geq g^*, \, \forall \ell, i
@@ -217,8 +194,8 @@ g(\ell, i) \geq g^*, \, \forall \ell, i
 
 &lt;p&gt;What this model states is this: I am not interested in the optimization
 objective, return me the first found feasible solution. That is, the optimizer
-will return us the first &lt;script type="math/tex"&gt;b(i, j, k)&lt;/script&gt; variable set the moment it finds a
-feasible solution satisfying &lt;script type="math/tex"&gt;g(\ell, i) \geq g^*, \, \forall \ell, i&lt;/script&gt;
+will return us the first &lt;script type="math/tex"&gt;a(i, j, k, \ell)&lt;/script&gt; variable set the moment it finds
+a feasible solution satisfying &lt;script type="math/tex"&gt;g(\ell, i) \geq g^*, \, \forall \ell, i&lt;/script&gt;
 constraints.&lt;/p&gt;
 
 &lt;p&gt;Now things are getting interesting. If we can find bounds to &lt;script type="math/tex"&gt;g^*&lt;/script&gt;, than we
@@ -228,27 +205,6 @@ can come up with a quite loose bound: &lt;script type="math/tex"&gt;g_f = \frac{
 g^*&lt;/script&gt;. (I will not go into details of how to come up with a stricter upper
 bound.) So by picking &lt;script type="math/tex"&gt;g^* \in (g_i, g_f)&lt;/script&gt; we can bisect &lt;strong&gt;the optimal
 guaranteed capacity&lt;/strong&gt;.&lt;/p&gt;
-
-&lt;h1 id="avoiding-non-linear-constraints"&gt;Avoiding Non-Linear Constraints&lt;/h1&gt;
-
-&lt;p&gt;Note that due to &lt;script type="math/tex"&gt;p(k, \ell) \, b(i, j, k)&lt;/script&gt; multiplication, the following
-constraint in the model is non-linear:&lt;/p&gt;
-
-&lt;script type="math/tex; mode=display"&gt;g^* \leq g(\ell, i) = \sum_k c_k \, p(k, \ell) - \sum_k \sum_j c_k \, p(k, \ell) \, b(i, j, k), \, \forall \ell, i&lt;/script&gt;
-
-&lt;p&gt;Non-linear constraints are as well not allowed by CPLEX and lpsolve. Luckily,
-we can &lt;a href="http://www.leandro-coelho.com/linearization-product-variables/"&gt;linearize this binary
-multiplication&lt;/a&gt;
-by introducing a temporary binary variable &lt;script type="math/tex"&gt;t(i, j, k, \ell) = p(k, \ell) \,
-b(i, j, k)&lt;/script&gt;:&lt;/p&gt;
-
-&lt;script type="math/tex; mode=display"&gt;% &lt;![CDATA[
-\begin{align}
-g(\ell, i) &amp; = \sum_k c_k \, p(k, \ell) - \sum_k \sum_j c_k \, t(i, j, k, \ell), \, \forall \ell, i \\
-t(i, j, k, \ell) &amp; \leq p(k, l), \, \forall i, j, k, \ell \\
-t(i, j, k, \ell) &amp; \leq b(i, j, k), \, \forall i, j, k, \ell \\
-t(i, j, k, \ell) &amp; \geq p(k, l) + b(i, j, k) - 1, \, \forall i, j, k, \ell \\
-\end{align} %]]&gt;&lt;/script&gt;
 
 &lt;h1 id="the-solver"&gt;The Solver&lt;/h1&gt;
 
@@ -264,7 +220,6 @@ follows:&lt;/p&gt;
 2016-03-03 08:35:25 DEBUG    writing problem: soln/dc-min-8.lp
 2016-03-03 08:35:25 DEBUG    running solver
 2016-03-03 08:35:25 DEBUG    writing cplex output: soln/dc-min-8.out
-2016-03-03 08:35:25 DEBUG    not integer feasible solution
 2016-03-03 08:35:25 DEBUG    no solution
 2016-03-03 08:35:25 DEBUG    stepping back
 2016-03-03 08:35:25 INFO     solving for 0 &amp;lt;= g=4 &amp;lt; 8
@@ -278,7 +233,6 @@ follows:&lt;/p&gt;
 2016-03-03 08:35:25 DEBUG    writing problem: soln/dc-min-6.lp
 2016-03-03 08:35:25 DEBUG    running solver
 2016-03-03 08:35:25 DEBUG    writing cplex output: soln/dc-min-6.out
-2016-03-03 08:35:25 DEBUG    not integer feasible solution
 2016-03-03 08:35:25 DEBUG    no solution
 2016-03-03 08:35:25 DEBUG    stepping back
 2016-03-03 08:35:25 INFO     solving for 5 &amp;lt;= g=5 &amp;lt; 6

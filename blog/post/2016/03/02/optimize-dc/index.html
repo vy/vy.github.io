@@ -61,7 +61,7 @@ Among 230 teams, <em>What’s in a name?</em> from <a href="http://www.ens.fr/">
 supérieure</a> ranked first in the qualification, but third
 in the final round. By challenging, I mean it is not possible to come up with
 a deterministic polynomial-time optimal answer. I am not in a position to
-either provide a rigor proof of its complexity or its reduction to a known
+either provide a rigorous proof of its complexity or its reduction to a known
 NP-hard problem. But in this blog post I will investigate the following
 question: Can we provide an optimal solution using <a href="https://en.wikipedia.org/wiki/Integer_programming">integer
 programming</a>? In practice,
@@ -175,33 +175,18 @@ defined as follows:</p>
 \text{subject to}
 
 & \quad
-\sum_\ell p(k, l) \leq 1, \, \forall k
-\quad \text{(a server can be assigned to at most 1 pool)} \\
+\sum_\ell a(i, j, k, \ell) \leq 1, \, \forall k
+\quad \text{(a server can be assigned to at most 1 pool and block)} \\
 
 & \quad
-\sum_i \sum_j b(i, j, k) \leq 1, \, \forall k
-\quad \text{(a server can be assigned to at most 1 block)} \\
-
-& \quad
-\sum_k z_k \, b(i, j, k) \leq z(i, j), \, \forall i, j
+\sum_{k,\ell} z_k \, a(i, j, k, \ell) \leq z(i, j), \, \forall i, j
 \quad \text{(total size of servers within a block cannot exceed block's size)} \\
-
-& \quad
-p(k, l) \leq \sum_i \sum_j b(i, j, k), \, \forall k, \ell
-\quad \text{(a server can be assigned to a pool if the server is assigned to a block)} \\
 
 \text{where}
 & \quad
-b(i, j, k) =
+a(i, j, k, \ell) =
 \begin{cases}
-    1       & \quad \text{if block } (i, j) \text{ contains } k\text{th server} \\
-    0  & \quad \text{otherwise} \\
-  \end{cases} \\
-
-& \quad
-p(k, l) =
-\begin{cases}
-    1       & \quad \text{if } \ell \text{th pool contains } k\text{th server} \\
+    1       & \quad \text{if } k \text{th server is assigned to } (i, j) \text{th block and } \ell \text{th pool} \\
     0  & \quad \text{otherwise} \\
   \end{cases} \\
 
@@ -210,7 +195,7 @@ g(\ell) = \min_i g(\ell, i)
 \quad \text{(guaranteed capacity of } \ell \text{th pool)} \\
 
 & \quad
-g(\ell, i) = \sum_k c_k \, p(k, \ell) - \sum_k \sum_j c_k \, p(k, \ell) \, b(i, j, k)
+g(\ell, i) = \sum_{i', j, k} c_k \, a(i', j, k, \ell) - \sum_{j, k} c_k \, a(i, j, k, \ell)
 \quad \text{(guaranteed capacity of } \ell \text{th pool for } i \text{th row)} \\
 
 \end{align} %]]></script>
@@ -232,19 +217,11 @@ Then we can model the entire IP as follows:</p>
 1
 \quad \text{(a dummy objective)} \\
 
-\text{subject to}
+& \quad
+\sum_\ell a(i, j, k, \ell) \leq 1, \, \forall k \\
 
 & \quad
-\sum_\ell p(k, l) \leq 1, \, \forall k \\
-
-& \quad
-\sum_i \sum_j b(i, j, k) \leq 1, \, \forall k \\
-
-& \quad
-\sum_k z_k \, b(i, j, k) \leq z(i, j), \, \forall i, j \\
-
-& \quad
-p(k, l) \leq \sum_i \sum_j b(i, j, k), \, \forall k, \ell \\
+\sum_{k,\ell} z_k \, a(i, j, k, \ell) \leq z(i, j), \, \forall i, j \\
 
 & \quad
 g(\ell, i) \geq g^*, \, \forall \ell, i
@@ -254,8 +231,8 @@ g(\ell, i) \geq g^*, \, \forall \ell, i
 
 <p>What this model states is this: I am not interested in the optimization
 objective, return me the first found feasible solution. That is, the optimizer
-will return us the first <script type="math/tex">b(i, j, k)</script> variable set the moment it finds a
-feasible solution satisfying <script type="math/tex">g(\ell, i) \geq g^*, \, \forall \ell, i</script>
+will return us the first <script type="math/tex">a(i, j, k, \ell)</script> variable set the moment it finds
+a feasible solution satisfying <script type="math/tex">g(\ell, i) \geq g^*, \, \forall \ell, i</script>
 constraints.</p>
 
 <p>Now things are getting interesting. If we can find bounds to <script type="math/tex">g^*</script>, than we
@@ -265,27 +242,6 @@ can come up with a quite loose bound: <script type="math/tex">g_f = \frac{1}{P} 
 g^*</script>. (I will not go into details of how to come up with a stricter upper
 bound.) So by picking <script type="math/tex">g^* \in (g_i, g_f)</script> we can bisect <strong>the optimal
 guaranteed capacity</strong>.</p>
-
-<h1 id="avoiding-non-linear-constraints">Avoiding Non-Linear Constraints</h1>
-
-<p>Note that due to <script type="math/tex">p(k, \ell) \, b(i, j, k)</script> multiplication, the following
-constraint in the model is non-linear:</p>
-
-<script type="math/tex; mode=display">g^* \leq g(\ell, i) = \sum_k c_k \, p(k, \ell) - \sum_k \sum_j c_k \, p(k, \ell) \, b(i, j, k), \, \forall \ell, i</script>
-
-<p>Non-linear constraints are as well not allowed by CPLEX and lpsolve. Luckily,
-we can <a href="http://www.leandro-coelho.com/linearization-product-variables/">linearize this binary
-multiplication</a>
-by introducing a temporary binary variable <script type="math/tex">t(i, j, k, \ell) = p(k, \ell) \,
-b(i, j, k)</script>:</p>
-
-<script type="math/tex; mode=display">% <![CDATA[
-\begin{align}
-g(\ell, i) & = \sum_k c_k \, p(k, \ell) - \sum_k \sum_j c_k \, t(i, j, k, \ell), \, \forall \ell, i \\
-t(i, j, k, \ell) & \leq p(k, l), \, \forall i, j, k, \ell \\
-t(i, j, k, \ell) & \leq b(i, j, k), \, \forall i, j, k, \ell \\
-t(i, j, k, \ell) & \geq p(k, l) + b(i, j, k) - 1, \, \forall i, j, k, \ell \\
-\end{align} %]]></script>
 
 <h1 id="the-solver">The Solver</h1>
 
@@ -301,7 +257,6 @@ follows:</p>
 2016-03-03 08:35:25 DEBUG    writing problem: soln/dc-min-8.lp
 2016-03-03 08:35:25 DEBUG    running solver
 2016-03-03 08:35:25 DEBUG    writing cplex output: soln/dc-min-8.out
-2016-03-03 08:35:25 DEBUG    not integer feasible solution
 2016-03-03 08:35:25 DEBUG    no solution
 2016-03-03 08:35:25 DEBUG    stepping back
 2016-03-03 08:35:25 INFO     solving for 0 &lt;= g=4 &lt; 8
@@ -315,7 +270,6 @@ follows:</p>
 2016-03-03 08:35:25 DEBUG    writing problem: soln/dc-min-6.lp
 2016-03-03 08:35:25 DEBUG    running solver
 2016-03-03 08:35:25 DEBUG    writing cplex output: soln/dc-min-6.out
-2016-03-03 08:35:25 DEBUG    not integer feasible solution
 2016-03-03 08:35:25 DEBUG    no solution
 2016-03-03 08:35:25 DEBUG    stepping back
 2016-03-03 08:35:25 INFO     solving for 5 &lt;= g=5 &lt; 6
