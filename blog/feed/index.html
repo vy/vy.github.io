@@ -257,6 +257,13 @@ description&lt;/a&gt;.&lt;/p&gt;
     <updated>2015-11-27T08:49:00Z</updated>
     <link rel="alternate" href="https://vy.github.io//blog/post/2015/11/27/maven-protobuf/"/>
     <content type="html">
+&lt;p&gt;&lt;strong&gt;TL;DR&lt;/strong&gt; – This post explains how to compile Protocol Buffers schemas into
+Java sources in Maven. Over the course of time, there appeared plugins like
+&lt;a href="https://github.com/os72/protoc-jar-maven-plugin"&gt;protoc-jar-maven-plugin&lt;/a&gt;.
+Nevertheless, the steps below still present a value to understand the
+necessary plumbing and some best practices (e.g., shading) that are not
+covered by the plugins.&lt;/p&gt;
+
 &lt;p&gt;Java build systems have always been a second class citizen for &lt;a href="https://developers.google.com/protocol-buffers"&gt;Protocol
 Buffers&lt;/a&gt;. As is the case for
 many other Java serialization frameworks (e.g., &lt;a href="https://capnproto.org/"&gt;Cap’n

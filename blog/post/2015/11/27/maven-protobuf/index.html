@@ -53,6 +53,13 @@
 	<div class="body">
 
 	  
+<p><strong>TL;DR</strong> – This post explains how to compile Protocol Buffers schemas into
+Java sources in Maven. Over the course of time, there appeared plugins like
+<a href="https://github.com/os72/protoc-jar-maven-plugin">protoc-jar-maven-plugin</a>.
+Nevertheless, the steps below still present a value to understand the
+necessary plumbing and some best practices (e.g., shading) that are not
+covered by the plugins.</p>
+
 <p>Java build systems have always been a second class citizen for <a href="https://developers.google.com/protocol-buffers">Protocol
 Buffers</a>. As is the case for
 many other Java serialization frameworks (e.g., <a href="https://capnproto.org/">Cap’n
