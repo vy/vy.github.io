@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Implementing Back Pressure in RxJava</title>
+    <link rel="stylesheet" href="/css/bootstrap.css">
+    <link rel="stylesheet" href="/css/bootstrap-responsive.css">
+    <script src="/js/bootstrap.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="/css/common.css">
+    <meta name="generator" content="nanoc 3.8.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/post.css">
+    <script type="text/javascript">
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-40183531-1']);
+      _gaq.push(['_trackPageview']);
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="menu">
+      <div><a href="/">Home</a></div><div><a href="/about/">About</a></div><div><a href="/blog/">Blog</a></div><div><a href="/code/">Code</a></div><div><a href="/blog/feed/">Feed</a></div>
+    </div>
+    
+
+<div class="container">
+  <div class="row-fluid">
+    <div class="offset1 span10">
+      <div id="post" class="more-white-box rounded-corners">
+	<div class="head">
+	  <div class="title">Implementing Back Pressure in RxJava</div>
+	  <div class="subtitle">posted at
+	    July 20, 2016
+	    with tags <a href="/blog/tag/concurrency">concurrency</a>, <a href="/blog/tag/java">java</a>, <a href="/blog/tag/rx">rx</a>
+	  </div>
+	  <div class="share">
+	    <div class="addthis_toolbox addthis_default_style ">
+	      <a class="addthis_button_preferred_1"></a>
+	      <a class="addthis_button_preferred_2"></a>
+	      <a class="addthis_button_preferred_3"></a>
+	      <a class="addthis_button_preferred_4"></a>
+	      <a class="addthis_button_compact"></a>
+	    </div>
+	    <script type="text/javascript">var addthis_config = {"data_track_addressbar":false};</script>
+	    <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-5144adf75211a62b"></script>
+	  </div>
+	</div>
+	<div class="body">
+
+	  
+<p>In a reactive application, you don’t necessarily have control over the
+production and/or consumption rate of certain streams. This speed mismatch can
+cause severe and hard to find bugs, which might be overlooked in development
+environments while bringing in the entire system down in production.</p>
+
+<h1 id="life-without-back-pressure">Life Without Back-Pressure</h1>
+
+<p>Consider the following example:</p>
+
+<pre><code class="language-java"><span class="kn">import</span> <span class="nn">com.google.common.base.Throwables</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">rx.Observable</span><span class="o">;</span>
+
+<span class="kn">import</span> <span class="nn">java.util.concurrent.atomic.AtomicInteger</span><span class="o">;</span>
+
+<span class="kd">public</span> <span class="kd">enum</span> <span class="n">NoBackPressure</span> <span class="o">{;</span>
+
+    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="n">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="o">{</span>
+
+        <span class="kt">long</span> <span class="n">producePeriod</span> <span class="o">=</span> <span class="mi">100</span><span class="o">;</span>
+        <span class="kt">long</span> <span class="n">consumePeriod</span> <span class="o">=</span> <span class="mi">300</span><span class="o">;</span>
+        <span class="n">AtomicInteger</span> <span class="n">pendingTaskCount</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">AtomicInteger</span><span class="o">();</span>
+
+        <span class="c1">// Create a fast producer.</span>
+        <span class="n">createStream</span><span class="o">(</span><span class="n">producePeriod</span><span class="o">,</span> <span class="kc">true</span><span class="o">,</span> <span class="nl">pendingTaskCount:</span><span class="o">:</span><span class="n">incrementAndGet</span><span class="o">)</span>
+                <span class="o">.</span><span class="na">flatMap</span><span class="o">(</span><span class="n">ignored</span> <span class="o">-&gt;</span>
+                        <span class="c1">// Bind to a slow consumer.</span>
+                        <span class="n">createStream</span><span class="o">(</span><span class="n">consumePeriod</span><span class="o">,</span> <span class="kc">false</span><span class="o">,</span> <span class="nl">pendingTaskCount:</span><span class="o">:</span><span class="n">decrementAndGet</span><span class="o">))</span>
+                <span class="o">.</span><span class="na">take</span><span class="o">(</span><span class="mi">5</span><span class="o">)</span>
+                <span class="o">.</span><span class="na">toBlocking</span><span class="o">()</span>
+                <span class="o">.</span><span class="na">last</span><span class="o">();</span>
+
+        <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">format</span><span class="o">(</span><span class="s">"pending task count: %d\n"</span><span class="o">,</span> <span class="n">pendingTaskCount</span><span class="o">.</span><span class="na">get</span><span class="o">());</span>
+
+    <span class="o">}</span>
+
+    <span class="kd">private</span> <span class="kd">static</span> <span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">Observable</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="nf">createStream</span><span class="o">(</span><span class="kt">long</span> <span class="n">pausePeriodMillis</span><span class="o">,</span> <span class="kt">boolean</span> <span class="n">infinitely</span><span class="o">,</span> <span class="n">Supplier</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">body</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="n">Observable</span><span class="o">.</span><span class="na">create</span><span class="o">(</span><span class="n">subscriber</span> <span class="o">-&gt;</span> <span class="o">{</span>
+            <span class="k">new</span> <span class="nf">Thread</span><span class="o">()</span> <span class="o">{</span>
+                <span class="nd">@Override</span>
+                <span class="kd">public</span> <span class="kt">void</span> <span class="nf">run</span><span class="o">()</span> <span class="o">{</span>
+                    <span class="k">do</span> <span class="o">{</span>
+                        <span class="n">pause</span><span class="o">(</span><span class="n">pausePeriodMillis</span><span class="o">);</span>
+                        <span class="n">T</span> <span class="n">next</span> <span class="o">=</span> <span class="n">body</span><span class="o">.</span><span class="na">get</span><span class="o">();</span>
+                        <span class="n">subscriber</span><span class="o">.</span><span class="na">onNext</span><span class="o">(</span><span class="n">next</span><span class="o">);</span>
+                    <span class="o">}</span> <span class="k">while</span> <span class="o">(</span><span class="n">infinitely</span> <span class="o">&amp;&amp;</span> <span class="o">!</span><span class="n">subscriber</span><span class="o">.</span><span class="na">isUnsubscribed</span><span class="o">());</span>
+                <span class="o">}</span>
+            <span class="o">}.</span><span class="na">start</span><span class="o">();</span>
+        <span class="o">});</span>
+    <span class="o">}</span>
+
+    <span class="kd">private</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">pause</span><span class="o">(</span><span class="kt">long</span> <span class="n">millis</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">try</span> <span class="o">{</span> <span class="n">Thread</span><span class="o">.</span><span class="na">sleep</span><span class="o">(</span><span class="n">millis</span><span class="o">);</span> <span class="o">}</span>
+        <span class="k">catch</span> <span class="o">(</span><span class="n">InterruptedException</span> <span class="n">error</span><span class="o">)</span> <span class="o">{</span> <span class="n">Throwables</span><span class="o">.</span><span class="na">propagate</span><span class="o">(</span><span class="n">error</span><span class="o">);</span> <span class="o">}</span>
+    <span class="o">}</span>
+
+<span class="o">}</span></code></pre>
+
+<p>What’s going on really here? The fast producer is an observable emitting an
+item every 100ms and then incrementing the <code>pendingTaskCount</code>. Subsequently,
+the emitted item is <code>flatMap</code>ed into another consumer observable emitting an
+item every 300ms and then decrementing the <code>pendingTaskCount</code>. That is, yet
+another simple producer-consumer pipeline. Finally, we ask for the first 5
+items emitted out of the pipeline. Can you guess the program output? Or let me
+rephrase the question: Do you expect <code>pendingTaskCount</code> to be non-zero?
+Unfortunately, yes. It is 3 in this case. Let’s shed some more light into it:</p>
+
+<p><img src="prod-cons-pipeline.jpg" alt="Producer-Consumer Pipeline"></p>
+
+<p>As my spectular drawing skills depict above, during the completion of the
+final 5th item, the producer generates 3 other items which later on get
+processed by the slow consumer. So you have 3 extra threads lingering in the
+background hogging both memory and processing resources. (Why 3? Because
+<code>consumePeriod / producePeriod = 3</code>.) While 3 seems like an innocent and hence
+negligible magnitude, this speed unalignment can get a lot more worse once you
+deploy the application to production. (Yes, it did in our case at work.) What
+do I exactly mean by worse? <em>If we would set <code>consumePeriod</code> to 10s, and
+<code>producePeriod</code> to 10ms, then there will be 1000 threads running in the
+background at any particular point in time!</em></p>
+
+<h1 id="creating-your-own-back-pressure">Creating Your Own Back-Pressure</h1>
+
+<p>Can we implement a mechanism where production is allowed as long as
+consumption keeps up with the pace? For this purpose, we need to implement a
+way of informing the producer about the number of emitted items that can be
+consumed at a certain time. Let me introduce you to the poor man’s
+back-pressure queue.</p>
+
+<pre><code class="language-java"><span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="n">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="o">{</span>
+
+    <span class="kt">long</span> <span class="n">producePeriod</span> <span class="o">=</span> <span class="mi">100</span><span class="o">;</span>
+    <span class="kt">long</span> <span class="n">consumePeriod</span> <span class="o">=</span> <span class="mi">300</span><span class="o">;</span>
+    <span class="n">AtomicInteger</span> <span class="n">pendingTaskCount</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">AtomicInteger</span><span class="o">();</span>
+
+    <span class="c1">// The token queue for producer-consumer pipeline.</span>
+    <span class="n">BlockingQueue</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">&gt;</span> <span class="n">tokens</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ArrayBlockingQueue</span><span class="o">&lt;&gt;(</span>
+            <span class="mi">1</span><span class="o">,</span>                          <span class="c1">// Number of tokens allowed.</span>
+            <span class="kc">false</span><span class="o">,</span>                      <span class="c1">// fair? (preserve the FIFO order?)</span>
+            <span class="n">Collections</span><span class="o">.</span><span class="na">singleton</span><span class="o">(</span><span class="mi">1</span><span class="o">));</span>  <span class="c1">// Initial tokens.</span>
+
+    <span class="c1">// Create a slow producer.</span>
+    <span class="n">createStream</span><span class="o">(</span><span class="n">producePeriod</span><span class="o">,</span> <span class="kc">true</span><span class="o">,</span> <span class="o">()</span> <span class="o">-&gt;</span> <span class="o">{</span>
+        <span class="n">pendingTaskCount</span><span class="o">.</span><span class="na">incrementAndGet</span><span class="o">();</span>
+        <span class="c1">// Try to acquire a token from the queue.</span>
+        <span class="k">try</span> <span class="o">{</span> <span class="k">return</span> <span class="n">tokens</span><span class="o">.</span><span class="na">take</span><span class="o">();</span> <span class="o">}</span>
+        <span class="k">catch</span> <span class="o">(</span><span class="n">InterruptedException</span> <span class="n">error</span><span class="o">)</span> <span class="o">{</span> <span class="k">throw</span> <span class="n">Throwables</span><span class="o">.</span><span class="na">propagate</span><span class="o">(</span><span class="n">error</span><span class="o">);</span> <span class="o">}</span>
+    <span class="o">})</span>
+            <span class="o">.</span><span class="na">flatMap</span><span class="o">(</span><span class="n">token</span> <span class="o">-&gt;</span>
+                    <span class="c1">// Bind to a slow consumer.</span>
+                    <span class="n">createStream</span><span class="o">(</span><span class="n">consumePeriod</span><span class="o">,</span> <span class="kc">false</span><span class="o">,</span> <span class="o">()</span> <span class="o">-&gt;</span> <span class="o">{</span>
+                        <span class="n">pendingTaskCount</span><span class="o">.</span><span class="na">decrementAndGet</span><span class="o">();</span>
+                        <span class="c1">// Push the token back into the queue.</span>
+                        <span class="k">try</span> <span class="o">{</span> <span class="n">tokens</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="n">token</span><span class="o">);</span> <span class="o">}</span>
+                        <span class="k">catch</span> <span class="o">(</span><span class="n">InterruptedException</span> <span class="n">error</span><span class="o">)</span> <span class="o">{</span> <span class="k">throw</span> <span class="n">Throwables</span><span class="o">.</span><span class="na">propagate</span><span class="o">(</span><span class="n">error</span><span class="o">);</span> <span class="o">}</span>
+                        <span class="k">return</span> <span class="kc">null</span><span class="o">;</span>
+                    <span class="o">}))</span>
+            <span class="o">.</span><span class="na">take</span><span class="o">(</span><span class="mi">5</span><span class="o">)</span>
+            <span class="o">.</span><span class="na">toBlocking</span><span class="o">()</span>
+            <span class="o">.</span><span class="na">last</span><span class="o">();</span>
+
+    <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">format</span><span class="o">(</span><span class="s">"pending task count: %d\n"</span><span class="o">,</span> <span class="n">pendingTaskCount</span><span class="o">.</span><span class="na">get</span><span class="o">());</span>
+
+<span class="o">}</span></code></pre>
+
+<p>Here we use a blocking queue to implement a token storage where producers
+acquire from and consumers release to. This way we create a way to communicate
+the back-pressure onto the producer from consumers. Initially there is just a
+single token. Producer acquires this token and emits an item. Note that the
+upcoming producer call of the thread will block since there are no tokens left
+in the queue. Next, consumer emits an item and releases the token back into
+the queue. Now the blocked thread can proceed and emit a new item and so on.
+By limiting the number of tokens initially available within the queue, we put
+an upper limit on the number of concurrent consumptions. This version of our
+producer-consumer pipeline reports that <code>pendingTaskCount</code> is 1, which is
+independent of the producer/consumer speed mismatch.</p>
+
+<h1 id="back-pressure-for-the-masses">Back-Pressure for the Masses</h1>
+
+<p>Can we avoid having a global reference to the token storage and make it
+explicit in the return type of the observable signature? Consider the
+following two interfaces:</p>
+
+<pre><code class="language-java"><span class="kd">public</span> <span class="kd">interface</span> <span class="nc">BackPressuredFactory</span> <span class="o">{</span>
+
+    <span class="nd">@Nonnull</span> <span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">BackPressured</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="nf">acquire</span><span class="o">(</span><span class="nd">@Nullable</span> <span class="n">T</span> <span class="n">instance</span><span class="o">);</span>
+
+<span class="o">}</span>
+
+<span class="kd">public</span> <span class="kd">interface</span> <span class="nc">BackPressured</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="o">{</span>
+
+    <span class="nd">@Nullable</span> <span class="n">T</span> <span class="nf">getValue</span><span class="o">();</span>
+
+    <span class="kt">void</span> <span class="nf">release</span><span class="o">();</span>
+
+<span class="o">}</span></code></pre>
+
+<p>A factory for creating instances of <code>BackPressured&lt;T&gt;</code>, which encapsulates a
+value associated with a certain token that is supposed to be released. Let’s
+try to put them into use:</p>
+
+<pre><code class="language-java"><span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="n">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="o">{</span>
+
+    <span class="kt">long</span> <span class="n">producePeriod</span> <span class="o">=</span> <span class="mi">100</span><span class="o">;</span>
+    <span class="kt">long</span> <span class="n">consumePeriod</span> <span class="o">=</span> <span class="mi">300</span><span class="o">;</span>
+    <span class="n">AtomicInteger</span> <span class="n">pendingTaskCount</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">AtomicInteger</span><span class="o">();</span>
+
+    <span class="n">BackPressuredFactory</span> <span class="n">backPressuredFactory</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">BackPressuredFactoryImpl</span><span class="o">(</span>
+            <span class="mi">1</span><span class="o">,</span>          <span class="c1">// Number of concurrent tokens allowed.</span>
+            <span class="mi">5000</span><span class="o">);</span>      <span class="c1">// Max. acquire/release timeout in milliseconds.</span>
+
+    <span class="n">createStream</span><span class="o">(</span><span class="n">producePeriod</span><span class="o">,</span> <span class="kc">true</span><span class="o">,</span> <span class="o">()</span> <span class="o">-&gt;</span> <span class="o">{</span>
+        <span class="n">pendingTaskCount</span><span class="o">.</span><span class="na">incrementAndGet</span><span class="o">();</span>
+        <span class="c1">// Put the next item into a BackPressured&lt;T&gt; instance.</span>
+        <span class="n">BackPressured</span><span class="o">&lt;</span><span class="n">Void</span><span class="o">&gt;</span> <span class="n">next</span> <span class="o">=</span> <span class="n">backPressuredFactory</span><span class="o">.</span><span class="na">acquire</span><span class="o">(</span><span class="kc">null</span><span class="o">);</span>
+        <span class="k">return</span> <span class="n">next</span><span class="o">;</span>
+    <span class="o">})</span>
+            <span class="o">.</span><span class="na">flatMap</span><span class="o">(</span><span class="n">backPressuredToken</span> <span class="o">-&gt;</span>
+                    <span class="n">createStream</span><span class="o">(</span><span class="n">consumePeriod</span><span class="o">,</span> <span class="kc">false</span><span class="o">,</span> <span class="o">()</span> <span class="o">-&gt;</span> <span class="o">{</span>
+                        <span class="k">try</span> <span class="o">{</span>
+                            <span class="n">pendingTaskCount</span><span class="o">.</span><span class="na">decrementAndGet</span><span class="o">();</span>
+                            <span class="k">return</span> <span class="n">backPressuredToken</span><span class="o">.</span><span class="na">getValue</span><span class="o">();</span>
+                        <span class="o">}</span> <span class="k">finally</span> <span class="o">{</span>
+                            <span class="c1">// Release the token.</span>
+                            <span class="n">backPressuredToken</span><span class="o">.</span><span class="na">release</span><span class="o">();</span>
+                        <span class="o">}</span>
+                    <span class="o">}))</span>
+            <span class="o">.</span><span class="na">take</span><span class="o">(</span><span class="mi">5</span><span class="o">)</span>
+            <span class="o">.</span><span class="na">toBlocking</span><span class="o">()</span>
+            <span class="o">.</span><span class="na">last</span><span class="o">();</span>
+
+    <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">format</span><span class="o">(</span><span class="s">"pending task count: %d\n"</span><span class="o">,</span> <span class="n">pendingTaskCount</span><span class="o">.</span><span class="na">get</span><span class="o">());</span>
+
+<span class="o">}</span></code></pre>
+
+<p>In a nutshell, we encapsulate every item of type <code>T</code> that producer emits into
+a <code>BackPressured&lt;T&gt;</code> instance. <code>BackPressuredFactory</code> contains the token
+storage. Given these requirements a sample implementation of these interfaces
+can be given as follows:</p>
+
+<pre><code class="language-java"><span class="kn">import</span> <span class="nn">org.slf4j.Logger</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">org.slf4j.LoggerFactory</span><span class="o">;</span>
+
+<span class="kn">import</span> <span class="nn">java.util.List</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">java.util.concurrent.ArrayBlockingQueue</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">java.util.concurrent.BlockingQueue</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">java.util.concurrent.TimeUnit</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">java.util.stream.Collectors</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">java.util.stream.IntStream</span><span class="o">;</span>
+
+<span class="kn">import</span> <span class="nn">static</span> <span class="n">com</span><span class="o">.</span><span class="na">google</span><span class="o">.</span><span class="na">common</span><span class="o">.</span><span class="na">base</span><span class="o">.</span><span class="na">Preconditions</span><span class="o">.</span><span class="na">checkArgument</span><span class="o">;</span>
+
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">BackPressuredFactoryImpl</span> <span class="kd">implements</span> <span class="n">BackPressuredFactory</span> <span class="o">{</span>
+
+    <span class="kd">private</span> <span class="kd">static</span> <span class="kd">final</span> <span class="n">Logger</span> <span class="n">LOGGER</span> <span class="o">=</span> <span class="n">LoggerFactory</span><span class="o">.</span><span class="na">getLogger</span><span class="o">(</span><span class="n">BackPressuredFactoryImpl</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+
+    <span class="kd">private</span> <span class="kd">final</span> <span class="n">BlockingQueue</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">&gt;</span> <span class="n">tokens</span><span class="o">;</span>
+
+    <span class="kd">private</span> <span class="kd">final</span> <span class="kt">long</span> <span class="n">timeoutMillis</span><span class="o">;</span>
+
+    <span class="kd">public</span> <span class="nf">BackPressuredFactoryImpl</span><span class="o">(</span><span class="kt">int</span> <span class="n">bufferSize</span><span class="o">,</span> <span class="kt">long</span> <span class="n">timeoutMillis</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">checkArgument</span><span class="o">(</span><span class="n">bufferSize</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="o">,</span> <span class="s">"bufferSize &gt; 0, found: %d"</span><span class="o">,</span> <span class="n">bufferSize</span><span class="o">);</span>
+        <span class="n">checkArgument</span><span class="o">(</span><span class="n">timeoutMillis</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="o">,</span> <span class="s">"timeoutMillis &gt; 0, found: %d"</span><span class="o">,</span> <span class="n">timeoutMillis</span><span class="o">);</span>
+        <span class="n">List</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">&gt;</span> <span class="n">initialTokens</span> <span class="o">=</span> <span class="n">IntStream</span><span class="o">.</span><span class="na">range</span><span class="o">(</span><span class="mi">0</span><span class="o">,</span> <span class="n">bufferSize</span><span class="o">).</span><span class="na">boxed</span><span class="o">().</span><span class="na">collect</span><span class="o">(</span><span class="n">Collectors</span><span class="o">.</span><span class="na">toList</span><span class="o">());</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">tokens</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ArrayBlockingQueue</span><span class="o">&lt;&gt;(</span><span class="n">bufferSize</span><span class="o">,</span> <span class="kc">false</span><span class="o">,</span> <span class="n">initialTokens</span><span class="o">);</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">timeoutMillis</span> <span class="o">=</span> <span class="n">timeoutMillis</span><span class="o">;</span>
+        <span class="n">LOGGER</span><span class="o">.</span><span class="na">trace</span><span class="o">(</span><span class="s">"initialized (bufferSize={}, timeoutMillis={})"</span><span class="o">,</span> <span class="n">bufferSize</span><span class="o">,</span> <span class="n">timeoutMillis</span><span class="o">);</span>
+    <span class="o">}</span>
+
+    <span class="nd">@Nonnull</span>
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">BackPressured</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="nf">acquire</span><span class="o">(</span><span class="nd">@Nullable</span> <span class="n">T</span> <span class="n">value</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">LOGGER</span><span class="o">.</span><span class="na">trace</span><span class="o">(</span><span class="s">"acquiring (peekedToken={})"</span><span class="o">,</span> <span class="n">tokens</span><span class="o">.</span><span class="na">peek</span><span class="o">());</span>
+        <span class="k">try</span> <span class="o">{</span>
+            <span class="n">Integer</span> <span class="n">token</span> <span class="o">=</span> <span class="n">tokens</span><span class="o">.</span><span class="na">poll</span><span class="o">(</span><span class="n">timeoutMillis</span><span class="o">,</span> <span class="n">TimeUnit</span><span class="o">.</span><span class="na">MILLISECONDS</span><span class="o">);</span>
+            <span class="k">if</span> <span class="o">(</span><span class="n">token</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="k">throw</span> <span class="k">new</span> <span class="nf">RuntimeException</span><span class="o">(</span><span class="s">"token acquisition timeout"</span><span class="o">);</span>
+            <span class="k">return</span> <span class="k">new</span> <span class="n">BackPressuredImpl</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;(</span><span class="n">tokens</span><span class="o">,</span> <span class="n">timeoutMillis</span><span class="o">,</span> <span class="n">token</span><span class="o">,</span> <span class="n">value</span><span class="o">);</span>
+        <span class="o">}</span>
+        <span class="k">catch</span> <span class="o">(</span><span class="n">InterruptedException</span> <span class="n">error</span><span class="o">)</span> <span class="o">{</span>
+            <span class="k">throw</span> <span class="k">new</span> <span class="nf">RuntimeException</span><span class="o">(</span><span class="s">"token acquisition failure"</span><span class="o">,</span> <span class="n">error</span><span class="o">);</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+
+<span class="o">}</span></code></pre>
+
+<p>And here is <code>BackPressured&lt;T&gt;</code>:</p>
+
+<pre><code class="language-java"><span class="kn">import</span> <span class="nn">org.slf4j.Logger</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">org.slf4j.LoggerFactory</span><span class="o">;</span>
+
+<span class="kn">import</span> <span class="nn">java.util.concurrent.BlockingQueue</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">java.util.concurrent.TimeUnit</span><span class="o">;</span>
+
+<span class="kn">import</span> <span class="nn">static</span> <span class="n">com</span><span class="o">.</span><span class="na">google</span><span class="o">.</span><span class="na">common</span><span class="o">.</span><span class="na">base</span><span class="o">.</span><span class="na">Preconditions</span><span class="o">.</span><span class="na">checkArgument</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">static</span> <span class="n">com</span><span class="o">.</span><span class="na">google</span><span class="o">.</span><span class="na">common</span><span class="o">.</span><span class="na">base</span><span class="o">.</span><span class="na">Preconditions</span><span class="o">.</span><span class="na">checkNotNull</span><span class="o">;</span>
+
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">BackPressuredImpl</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="kd">implements</span> <span class="n">BackPressured</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="o">{</span>
+
+    <span class="kd">private</span> <span class="kd">static</span> <span class="kd">final</span> <span class="n">Logger</span> <span class="n">LOGGER</span> <span class="o">=</span> <span class="n">LoggerFactory</span><span class="o">.</span><span class="na">getLogger</span><span class="o">(</span><span class="n">BackPressuredImpl</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+
+    <span class="kd">private</span> <span class="kd">final</span> <span class="n">BlockingQueue</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">&gt;</span> <span class="n">tokens</span><span class="o">;</span>
+
+    <span class="kd">private</span> <span class="kd">final</span> <span class="kt">long</span> <span class="n">timeoutMillis</span><span class="o">;</span>
+
+    <span class="kd">private</span> <span class="kd">final</span> <span class="kt">int</span> <span class="n">token</span><span class="o">;</span>
+
+    <span class="kd">private</span> <span class="kd">final</span> <span class="n">T</span> <span class="n">value</span><span class="o">;</span>
+
+    <span class="kd">public</span> <span class="nf">BackPressuredImpl</span><span class="o">(</span><span class="nd">@Nonnull</span> <span class="n">BlockingQueue</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">&gt;</span> <span class="n">tokens</span><span class="o">,</span> <span class="kt">long</span> <span class="n">timeoutMillis</span><span class="o">,</span> <span class="kt">int</span> <span class="n">token</span><span class="o">,</span> <span class="nd">@Nullable</span> <span class="n">T</span> <span class="n">value</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">checkArgument</span><span class="o">(</span><span class="n">timeoutMillis</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="o">,</span> <span class="s">"timeoutMillis &gt; 0, found: %d"</span><span class="o">,</span> <span class="n">timeoutMillis</span><span class="o">);</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">tokens</span> <span class="o">=</span> <span class="n">checkNotNull</span><span class="o">(</span><span class="n">tokens</span><span class="o">,</span> <span class="s">"null tokens"</span><span class="o">);</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">timeoutMillis</span> <span class="o">=</span> <span class="n">timeoutMillis</span><span class="o">;</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">token</span> <span class="o">=</span> <span class="n">token</span><span class="o">;</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">value</span> <span class="o">=</span> <span class="n">value</span><span class="o">;</span>
+        <span class="n">LOGGER</span><span class="o">.</span><span class="na">trace</span><span class="o">(</span><span class="s">"initialized (token={})"</span><span class="o">,</span> <span class="n">token</span><span class="o">,</span> <span class="n">value</span><span class="o">);</span>
+    <span class="o">}</span>
+
+    <span class="nd">@Nullable</span>
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="n">T</span> <span class="nf">getValue</span><span class="o">()</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="n">value</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">release</span><span class="o">()</span> <span class="o">{</span>
+        <span class="n">LOGGER</span><span class="o">.</span><span class="na">trace</span><span class="o">(</span><span class="s">"releasing (token={})"</span><span class="o">,</span> <span class="n">token</span><span class="o">);</span>
+        <span class="k">try</span> <span class="o">{</span>
+            <span class="k">if</span> <span class="o">(!</span><span class="n">tokens</span><span class="o">.</span><span class="na">offer</span><span class="o">(</span><span class="n">token</span><span class="o">,</span> <span class="n">timeoutMillis</span><span class="o">,</span> <span class="n">TimeUnit</span><span class="o">.</span><span class="na">MILLISECONDS</span><span class="o">))</span> <span class="o">{</span>
+                <span class="n">String</span> <span class="n">message</span> <span class="o">=</span> <span class="n">String</span><span class="o">.</span><span class="na">format</span><span class="o">(</span><span class="s">"token release timeout (timeoutMillis=%d, token=%d)"</span><span class="o">,</span> <span class="n">timeoutMillis</span><span class="o">,</span> <span class="n">token</span><span class="o">);</span>
+                <span class="k">throw</span> <span class="k">new</span> <span class="nf">RuntimeException</span><span class="o">(</span><span class="n">message</span><span class="o">);</span>
+            <span class="o">}</span>
+            <span class="n">LOGGER</span><span class="o">.</span><span class="na">trace</span><span class="o">(</span><span class="s">"released (token={})"</span><span class="o">,</span> <span class="n">token</span><span class="o">);</span>
+        <span class="o">}</span>
+        <span class="k">catch</span> <span class="o">(</span><span class="n">InterruptedException</span> <span class="n">error</span><span class="o">)</span> <span class="o">{</span>
+            <span class="n">String</span> <span class="n">message</span> <span class="o">=</span> <span class="n">String</span><span class="o">.</span><span class="na">format</span><span class="o">(</span><span class="s">"token release failure (timeoutMillis=%d, token=%d)"</span><span class="o">,</span> <span class="n">timeoutMillis</span><span class="o">,</span> <span class="n">token</span><span class="o">);</span>
+            <span class="k">throw</span> <span class="k">new</span> <span class="nf">RuntimeException</span><span class="o">(</span><span class="n">message</span><span class="o">,</span> <span class="n">error</span><span class="o">);</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+
+<span class="o">}</span></code></pre>
+
+<h1 id="conclusion">Conclusion</h1>
+
+<p>Back-pressure is a significant aspect in every producer-consumer pipeline. It
+can be easily overlooked and holds a potential to break the system depending
+on the speed mismatch of the involved actors. In this post, I examined the
+problem in a sample RxJava application and provided a solution that can be
+employed in almost any domain where the back-pressure needs to communicated. I
+hope you find it useful as well.</p>
+
+
+	  <script type="text/javascript">
+	    $("#post table").attr("class", "table table-hover");
+	  </script>
+
+	  <div id="disqus_thread"></div>
+	  <script type="text/javascript">
+	  var disqus_shortname = 'vyazici';
+	  var disqus_identifier = '/blog/post/20160720-rxjava-backpressure/';
+	  var disqus_title = 'Implementing Back Pressure in RxJava';
+	  (function() {
+	  	var dsq = document.createElement('script');
+	  	dsq.type = 'text/javascript';
+	  	dsq.async = true;
+	  	dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+	  	(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+	  })();
+	  </script>
+
+	</div>
+      </div>
+      <div id="bgauthor" class="narrow-font">
+	background image by
+	<a href="http://jenniferwetzel.com/">Jennifer Wetzel</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
+  </body>
+</html>
+
