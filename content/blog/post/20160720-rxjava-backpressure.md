@@ -32,10 +32,10 @@ Consider the following example:
 	        long consumePeriod = 300;
 	        AtomicInteger pendingTaskCount = new AtomicInteger();
 
-	        // Create a fast producer.
+	        // Create a fast producer emitting an infinite number of items.
 	        createStream(producePeriod, true, pendingTaskCount::incrementAndGet)
 	                .flatMap(ignored ->
-	                        // Bind to a slow consumer.
+	                        // Create a slow consumer emitting just one item.
 	                        createStream(consumePeriod, false, pendingTaskCount::decrementAndGet))
 	                .take(5)
 	                .toBlocking()
@@ -45,7 +45,7 @@ Consider the following example:
 
 	    }
 
-	    private static <T> Observable<T> createStream(long pausePeriodMillis, boolean infinitely, Supplier<T> body) {
+	    private static <T> Observable<T> createStream(long pausePeriodMillis, boolean infinite, Supplier<T> body) {
 	        return Observable.create(subscriber -> {
 	            new Thread() {
 	                @Override
@@ -54,7 +54,7 @@ Consider the following example:
 	                        pause(pausePeriodMillis);
 	                        T next = body.get();
 	                        subscriber.onNext(next);
-	                    } while (infinitely && !subscriber.isUnsubscribed());
+	                    } while (infinite && !subscriber.isUnsubscribed());
 	                }
 	            }.start();
 	        });
@@ -111,7 +111,6 @@ back-pressure queue.
                 false,                      // fair? (preserve the FIFO order?)
                 Collections.singleton(1));  // Initial tokens.
 
-        // Create a slow producer.
         createStream(producePeriod, true, () -> {
             pendingTaskCount.incrementAndGet();
             // Try to acquire a token from the queue.
@@ -119,7 +118,6 @@ back-pressure queue.
             catch (InterruptedException error) { throw Throwables.propagate(error); }
         })
                 .flatMap(token ->
-                        // Bind to a slow consumer.
                         createStream(consumePeriod, false, () -> {
                             pendingTaskCount.decrementAndGet();
                             // Push the token back into the queue.
@@ -186,7 +184,7 @@ try to put them into use:
 
         createStream(producePeriod, true, () -> {
             pendingTaskCount.incrementAndGet();
-            // Put the next item into a BackPressured<T> instance.
+            // Wrap the next item with a BackPressured<T> instance.
             BackPressured<Void> next = backPressuredFactory.acquire(null);
             return next;
         })
@@ -194,6 +192,7 @@ try to put them into use:
                         createStream(consumePeriod, false, () -> {
                             try {
                                 pendingTaskCount.decrementAndGet();
+                                // Getting the value out of the back-pressured token.
                                 return backPressuredToken.getValue();
                             } finally {
                                 // Release the token.
