@@ -178,7 +178,7 @@ back-pressure queue.</p>
 
 <p>Here we use a blocking queue to implement a token storage where producers
 acquire from and consumers release to. This way we create a way to communicate
-the back-pressure onto the producer from consumers. Initially there is just a
+the back-pressure from consumers to the producer. Initially there is just a
 single token. Producer acquires this token and emits an item. Note that the
 upcoming producer call of the thread will block since there are no tokens left
 in the queue. Next, consumer emits an item and releases the token back into
@@ -351,6 +351,15 @@ can be given as follows:</p>
     <span class="o">}</span>
 
 <span class="o">}</span></code></pre>
+
+<h1 id="back-pressure-and-rxjava">Back-Pressure and RxJava</h1>
+
+<p>RxJava has <a href="https://github.com/ReactiveX/RxJava/wiki/Backpressure">quite some
+material</a> on certain
+aspects of back-pressure and available methods for mitigation. While
+<code>BackPressured&lt;T&gt;</code> is analogous to <code>Observable#onBackpressureBlock(int)</code>
+method (experimental, not in RxJava 1.0), it is not constrained to RxJava
+observables and can be employed at any domain.</p>
 
 <h1 id="conclusion">Conclusion</h1>
 
