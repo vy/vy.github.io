@@ -316,6 +316,16 @@ And here is `BackPressured<T>`:
 
 	}
 
+Back-Pressure and RxJava
+========================
+
+RxJava has [quite some
+material](https://github.com/ReactiveX/RxJava/wiki/Backpressure) on certain
+aspects of back-pressure and available methods for mitigation. While
+`BackPressured<T>` is analogous to `Observable#onBackpressureBlock(int)`
+method (experimental, not in RxJava 1.0), it is not constrained to RxJava
+observables and can be employed at any domain.
+
 Conclusion
 ==========
 
