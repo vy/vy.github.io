@@ -75,10 +75,10 @@ environments while bringing in the entire system down in production.</p>
         <span class="kt">long</span> <span class="n">consumePeriod</span> <span class="o">=</span> <span class="mi">300</span><span class="o">;</span>
         <span class="n">AtomicInteger</span> <span class="n">pendingTaskCount</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">AtomicInteger</span><span class="o">();</span>
 
-        <span class="c1">// Create a fast producer.</span>
+        <span class="c1">// Create a fast producer emitting an infinite number of items.</span>
         <span class="n">createStream</span><span class="o">(</span><span class="n">producePeriod</span><span class="o">,</span> <span class="kc">true</span><span class="o">,</span> <span class="nl">pendingTaskCount:</span><span class="o">:</span><span class="n">incrementAndGet</span><span class="o">)</span>
                 <span class="o">.</span><span class="na">flatMap</span><span class="o">(</span><span class="n">ignored</span> <span class="o">-&gt;</span>
-                        <span class="c1">// Bind to a slow consumer.</span>
+                        <span class="c1">// Create a slow consumer emitting just one item.</span>
                         <span class="n">createStream</span><span class="o">(</span><span class="n">consumePeriod</span><span class="o">,</span> <span class="kc">false</span><span class="o">,</span> <span class="nl">pendingTaskCount:</span><span class="o">:</span><span class="n">decrementAndGet</span><span class="o">))</span>
                 <span class="o">.</span><span class="na">take</span><span class="o">(</span><span class="mi">5</span><span class="o">)</span>
                 <span class="o">.</span><span class="na">toBlocking</span><span class="o">()</span>
@@ -88,7 +88,7 @@ environments while bringing in the entire system down in production.</p>
 
     <span class="o">}</span>
 
-    <span class="kd">private</span> <span class="kd">static</span> <span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">Observable</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="nf">createStream</span><span class="o">(</span><span class="kt">long</span> <span class="n">pausePeriodMillis</span><span class="o">,</span> <span class="kt">boolean</span> <span class="n">infinitely</span><span class="o">,</span> <span class="n">Supplier</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">body</span><span class="o">)</span> <span class="o">{</span>
+    <span class="kd">private</span> <span class="kd">static</span> <span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">Observable</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="nf">createStream</span><span class="o">(</span><span class="kt">long</span> <span class="n">pausePeriodMillis</span><span class="o">,</span> <span class="kt">boolean</span> <span class="n">infinite</span><span class="o">,</span> <span class="n">Supplier</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">body</span><span class="o">)</span> <span class="o">{</span>
         <span class="k">return</span> <span class="n">Observable</span><span class="o">.</span><span class="na">create</span><span class="o">(</span><span class="n">subscriber</span> <span class="o">-&gt;</span> <span class="o">{</span>
             <span class="k">new</span> <span class="nf">Thread</span><span class="o">()</span> <span class="o">{</span>
                 <span class="nd">@Override</span>
@@ -97,7 +97,7 @@ environments while bringing in the entire system down in production.</p>
                         <span class="n">pause</span><span class="o">(</span><span class="n">pausePeriodMillis</span><span class="o">);</span>
                         <span class="n">T</span> <span class="n">next</span> <span class="o">=</span> <span class="n">body</span><span class="o">.</span><span class="na">get</span><span class="o">();</span>
                         <span class="n">subscriber</span><span class="o">.</span><span class="na">onNext</span><span class="o">(</span><span class="n">next</span><span class="o">);</span>
-                    <span class="o">}</span> <span class="k">while</span> <span class="o">(</span><span class="n">infinitely</span> <span class="o">&amp;&amp;</span> <span class="o">!</span><span class="n">subscriber</span><span class="o">.</span><span class="na">isUnsubscribed</span><span class="o">());</span>
+                    <span class="o">}</span> <span class="k">while</span> <span class="o">(</span><span class="n">infinite</span> <span class="o">&amp;&amp;</span> <span class="o">!</span><span class="n">subscriber</span><span class="o">.</span><span class="na">isUnsubscribed</span><span class="o">());</span>
                 <span class="o">}</span>
             <span class="o">}.</span><span class="na">start</span><span class="o">();</span>
         <span class="o">});</span>
@@ -152,7 +152,6 @@ back-pressure queue.</p>
             <span class="kc">false</span><span class="o">,</span>                      <span class="c1">// fair? (preserve the FIFO order?)</span>
             <span class="n">Collections</span><span class="o">.</span><span class="na">singleton</span><span class="o">(</span><span class="mi">1</span><span class="o">));</span>  <span class="c1">// Initial tokens.</span>
 
-    <span class="c1">// Create a slow producer.</span>
     <span class="n">createStream</span><span class="o">(</span><span class="n">producePeriod</span><span class="o">,</span> <span class="kc">true</span><span class="o">,</span> <span class="o">()</span> <span class="o">-&gt;</span> <span class="o">{</span>
         <span class="n">pendingTaskCount</span><span class="o">.</span><span class="na">incrementAndGet</span><span class="o">();</span>
         <span class="c1">// Try to acquire a token from the queue.</span>
@@ -160,7 +159,6 @@ back-pressure queue.</p>
         <span class="k">catch</span> <span class="o">(</span><span class="n">InterruptedException</span> <span class="n">error</span><span class="o">)</span> <span class="o">{</span> <span class="k">throw</span> <span class="n">Throwables</span><span class="o">.</span><span class="na">propagate</span><span class="o">(</span><span class="n">error</span><span class="o">);</span> <span class="o">}</span>
     <span class="o">})</span>
             <span class="o">.</span><span class="na">flatMap</span><span class="o">(</span><span class="n">token</span> <span class="o">-&gt;</span>
-                    <span class="c1">// Bind to a slow consumer.</span>
                     <span class="n">createStream</span><span class="o">(</span><span class="n">consumePeriod</span><span class="o">,</span> <span class="kc">false</span><span class="o">,</span> <span class="o">()</span> <span class="o">-&gt;</span> <span class="o">{</span>
                         <span class="n">pendingTaskCount</span><span class="o">.</span><span class="na">decrementAndGet</span><span class="o">();</span>
                         <span class="c1">// Push the token back into the queue.</span>
@@ -224,7 +222,7 @@ try to put them into use:</p>
 
     <span class="n">createStream</span><span class="o">(</span><span class="n">producePeriod</span><span class="o">,</span> <span class="kc">true</span><span class="o">,</span> <span class="o">()</span> <span class="o">-&gt;</span> <span class="o">{</span>
         <span class="n">pendingTaskCount</span><span class="o">.</span><span class="na">incrementAndGet</span><span class="o">();</span>
-        <span class="c1">// Put the next item into a BackPressured&lt;T&gt; instance.</span>
+        <span class="c1">// Wrap the next item with a BackPressured&lt;T&gt; instance.</span>
         <span class="n">BackPressured</span><span class="o">&lt;</span><span class="n">Void</span><span class="o">&gt;</span> <span class="n">next</span> <span class="o">=</span> <span class="n">backPressuredFactory</span><span class="o">.</span><span class="na">acquire</span><span class="o">(</span><span class="kc">null</span><span class="o">);</span>
         <span class="k">return</span> <span class="n">next</span><span class="o">;</span>
     <span class="o">})</span>
@@ -232,6 +230,7 @@ try to put them into use:</p>
                     <span class="n">createStream</span><span class="o">(</span><span class="n">consumePeriod</span><span class="o">,</span> <span class="kc">false</span><span class="o">,</span> <span class="o">()</span> <span class="o">-&gt;</span> <span class="o">{</span>
                         <span class="k">try</span> <span class="o">{</span>
                             <span class="n">pendingTaskCount</span><span class="o">.</span><span class="na">decrementAndGet</span><span class="o">();</span>
+                            <span class="c1">// Getting the value out of the back-pressured token.</span>
                             <span class="k">return</span> <span class="n">backPressuredToken</span><span class="o">.</span><span class="na">getValue</span><span class="o">();</span>
                         <span class="o">}</span> <span class="k">finally</span> <span class="o">{</span>
                             <span class="c1">// Release the token.</span>

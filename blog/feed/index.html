@@ -38,10 +38,10 @@ environments while bringing in the entire system down in production.&lt;/p&gt;
         &lt;span class="kt"&gt;long&lt;/span&gt; &lt;span class="n"&gt;consumePeriod&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;300&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
         &lt;span class="n"&gt;AtomicInteger&lt;/span&gt; &lt;span class="n"&gt;pendingTaskCount&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nf"&gt;AtomicInteger&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
 
-        &lt;span class="c1"&gt;// Create a fast producer.&lt;/span&gt;
+        &lt;span class="c1"&gt;// Create a fast producer emitting an infinite number of items.&lt;/span&gt;
         &lt;span class="n"&gt;createStream&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;producePeriod&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="kc"&gt;true&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="nl"&gt;pendingTaskCount:&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt;&lt;span class="n"&gt;incrementAndGet&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
                 &lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;flatMap&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;ignored&lt;/span&gt; &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;
-                        &lt;span class="c1"&gt;// Bind to a slow consumer.&lt;/span&gt;
+                        &lt;span class="c1"&gt;// Create a slow consumer emitting just one item.&lt;/span&gt;
                         &lt;span class="n"&gt;createStream&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;consumePeriod&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="kc"&gt;false&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="nl"&gt;pendingTaskCount:&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt;&lt;span class="n"&gt;decrementAndGet&lt;/span&gt;&lt;span class="o"&gt;))&lt;/span&gt;
                 &lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;take&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;5&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
                 &lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;toBlocking&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt;
@@ -51,7 +51,7 @@ environments while bringing in the entire system down in production.&lt;/p&gt;
 
     &lt;span class="o"&gt;}&lt;/span&gt;
 
-    &lt;span class="kd"&gt;private&lt;/span&gt; &lt;span class="kd"&gt;static&lt;/span&gt; &lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;T&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;Observable&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;T&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="nf"&gt;createStream&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="kt"&gt;long&lt;/span&gt; &lt;span class="n"&gt;pausePeriodMillis&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="kt"&gt;boolean&lt;/span&gt; &lt;span class="n"&gt;infinitely&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;Supplier&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;T&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;body&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+    &lt;span class="kd"&gt;private&lt;/span&gt; &lt;span class="kd"&gt;static&lt;/span&gt; &lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;T&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;Observable&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;T&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="nf"&gt;createStream&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="kt"&gt;long&lt;/span&gt; &lt;span class="n"&gt;pausePeriodMillis&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="kt"&gt;boolean&lt;/span&gt; &lt;span class="n"&gt;infinite&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;Supplier&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;T&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;body&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
         &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;Observable&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;create&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;subscriber&lt;/span&gt; &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
             &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nf"&gt;Thread&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
                 &lt;span class="nd"&gt;@Override&lt;/span&gt;
@@ -60,7 +60,7 @@ environments while bringing in the entire system down in production.&lt;/p&gt;
                         &lt;span class="n"&gt;pause&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;pausePeriodMillis&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
                         &lt;span class="n"&gt;T&lt;/span&gt; &lt;span class="n"&gt;next&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;body&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;get&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
                         &lt;span class="n"&gt;subscriber&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;onNext&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;next&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
-                    &lt;span class="o"&gt;}&lt;/span&gt; &lt;span class="k"&gt;while&lt;/span&gt; &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;infinitely&lt;/span&gt; &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; &lt;span class="o"&gt;!&lt;/span&gt;&lt;span class="n"&gt;subscriber&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;isUnsubscribed&lt;/span&gt;&lt;span class="o"&gt;());&lt;/span&gt;
+                    &lt;span class="o"&gt;}&lt;/span&gt; &lt;span class="k"&gt;while&lt;/span&gt; &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;infinite&lt;/span&gt; &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; &lt;span class="o"&gt;!&lt;/span&gt;&lt;span class="n"&gt;subscriber&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;isUnsubscribed&lt;/span&gt;&lt;span class="o"&gt;());&lt;/span&gt;
                 &lt;span class="o"&gt;}&lt;/span&gt;
             &lt;span class="o"&gt;}.&lt;/span&gt;&lt;span class="na"&gt;start&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
         &lt;span class="o"&gt;});&lt;/span&gt;
@@ -115,7 +115,6 @@ back-pressure queue.&lt;/p&gt;
             &lt;span class="kc"&gt;false&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt;                      &lt;span class="c1"&gt;// fair? (preserve the FIFO order?)&lt;/span&gt;
             &lt;span class="n"&gt;Collections&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;singleton&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="o"&gt;));&lt;/span&gt;  &lt;span class="c1"&gt;// Initial tokens.&lt;/span&gt;
 
-    &lt;span class="c1"&gt;// Create a slow producer.&lt;/span&gt;
     &lt;span class="n"&gt;createStream&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;producePeriod&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="kc"&gt;true&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
         &lt;span class="n"&gt;pendingTaskCount&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;incrementAndGet&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
         &lt;span class="c1"&gt;// Try to acquire a token from the queue.&lt;/span&gt;
@@ -123,7 +122,6 @@ back-pressure queue.&lt;/p&gt;
         &lt;span class="k"&gt;catch&lt;/span&gt; &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;InterruptedException&lt;/span&gt; &lt;span class="n"&gt;error&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="k"&gt;throw&lt;/span&gt; &lt;span class="n"&gt;Throwables&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;propagate&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;error&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
     &lt;span class="o"&gt;})&lt;/span&gt;
             &lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;flatMap&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;token&lt;/span&gt; &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;
-                    &lt;span class="c1"&gt;// Bind to a slow consumer.&lt;/span&gt;
                     &lt;span class="n"&gt;createStream&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;consumePeriod&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="kc"&gt;false&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
                         &lt;span class="n"&gt;pendingTaskCount&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;decrementAndGet&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
                         &lt;span class="c1"&gt;// Push the token back into the queue.&lt;/span&gt;
@@ -187,7 +185,7 @@ try to put them into use:&lt;/p&gt;
 
     &lt;span class="n"&gt;createStream&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;producePeriod&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="kc"&gt;true&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
         &lt;span class="n"&gt;pendingTaskCount&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;incrementAndGet&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
-        &lt;span class="c1"&gt;// Put the next item into a BackPressured&amp;lt;T&amp;gt; instance.&lt;/span&gt;
+        &lt;span class="c1"&gt;// Wrap the next item with a BackPressured&amp;lt;T&amp;gt; instance.&lt;/span&gt;
         &lt;span class="n"&gt;BackPressured&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;Void&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;next&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;backPressuredFactory&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;acquire&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="kc"&gt;null&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
         &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;next&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
     &lt;span class="o"&gt;})&lt;/span&gt;
@@ -195,6 +193,7 @@ try to put them into use:&lt;/p&gt;
                     &lt;span class="n"&gt;createStream&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;consumePeriod&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="kc"&gt;false&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
                         &lt;span class="k"&gt;try&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
                             &lt;span class="n"&gt;pendingTaskCount&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;decrementAndGet&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
+                            &lt;span class="c1"&gt;// Getting the value out of the back-pressured token.&lt;/span&gt;
                             &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;backPressuredToken&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;getValue&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
                         &lt;span class="o"&gt;}&lt;/span&gt; &lt;span class="k"&gt;finally&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
                             &lt;span class="c1"&gt;// Release the token.&lt;/span&gt;
@@ -332,6 +331,24 @@ on the speed mismatch of the involved actors. In this post, I examined the
 problem in a sample RxJava application and provided a solution that can be
 employed in almost any domain where the back-pressure needs to communicated. I
 hope you find it useful as well.&lt;/p&gt;
+</content>
+  </entry>
+  <entry>
+    <id>tag:vy.github.io,2016-07-20://blog/post/2016/07/20/java-heapdump-threaddump/</id>
+    <title type="html">Programmatically Creating Heap and Thread Dumps in Java</title>
+    <published>2016-07-20T20:32:00Z</published>
+    <updated>2016-07-20T20:32:00Z</updated>
+    <link rel="alternate" href="https://vy.github.io//blog/post/2016/07/20/java-heapdump-threaddump/"/>
+    <content type="html">
+&lt;p&gt;Many Java devolopers are familiar to JVM heap and thread dumps created via
+IDEs or other diagnosis tools (e.g., VisualVM, JProfiler, YourKit). But
+sometimes you need to implement these functionalities in your own application
+programmatically and expose them by other means like REST endpoints. And that
+is where things start to get messy.&lt;/p&gt;
+
+&lt;h1 id="heap-dumps"&gt;Heap Dumps&lt;/h1&gt;
+
+&lt;p&gt;Taking a heap dump using a&lt;/p&gt;
 </content>
   </entry>
   <entry>
@@ -1949,23 +1966,6 @@ JSON-passing approach (where each microservice needs to implement its own
 reader/writer) not solid enough and I did not buy his facts on rationale
 behind this. Further, relating the microservice architectures with a
 particular language or tool was absolutely awkward, to say the least.&lt;/p&gt;
-</content>
-  </entry>
-  <entry>
-    <id>tag:vy.github.io,2015-06-09://blog/post/2015/06/09/fibers-in-jvm/</id>
-    <title type="html">Presentation: Fibers in Java Virtual Machine</title>
-    <published>2015-06-09T20:32:00Z</published>
-    <updated>2015-06-09T20:32:00Z</updated>
-    <link rel="alternate" href="https://vy.github.io//blog/post/2015/06/09/fibers-in-jvm/"/>
-    <content type="html">
-&lt;p&gt;A couple of months ago, I made a presentation in one of
-&lt;a href="http://bol.com"&gt;bol.com&lt;/a&gt; Brown Bag Sessions on the &lt;em&gt;Fiber Implementations in
-Java Virtual Machine&lt;/em&gt;. With the hope that others might find it useful, I share
-it here. (Slides are also available in &lt;a href="fibers-in-jvm.pdf"&gt;PDF&lt;/a&gt; and
-&lt;a href="fibers-in-jvm-org.odp"&gt;ODP&lt;/a&gt; formats.)&lt;/p&gt;
-
-&lt;iframe src="https://www.slideshare.net/slideshow/embed_code/key/CdpM73pq92heMk" width="476" height="400" frameborder="0" marginwidth="0" marginheight="0" scrolling="no"&gt;
-&lt;/iframe&gt;
 </content>
   </entry>
 </feed>
