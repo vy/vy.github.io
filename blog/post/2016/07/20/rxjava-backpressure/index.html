@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <title>Implementing Back Pressure in RxJava</title>
+    <title>Callback Blocking for Back-Pressure in RxJava</title>
     <link rel="stylesheet" href="/css/bootstrap.css">
     <link rel="stylesheet" href="/css/bootstrap-responsive.css">
     <script src="/js/bootstrap.js"></script>
@@ -33,7 +33,7 @@
     <div class="offset1 span10">
       <div id="post" class="more-white-box rounded-corners">
 	<div class="head">
-	  <div class="title">Implementing Back Pressure in RxJava</div>
+	  <div class="title">Callback Blocking for Back-Pressure in RxJava</div>
 	  <div class="subtitle">posted at
 	    July 20, 2016
 	    with tags <a href="/blog/tag/concurrency">concurrency</a>, <a href="/blog/tag/java">java</a>, <a href="/blog/tag/rx">rx</a>
@@ -132,13 +132,124 @@ do I exactly mean by worse? <em>If we would set <code>consumePeriod</code> to 10
 <code>producePeriod</code> to 10ms, then there will be 1000 threads running in the
 background at any particular point in time!</em></p>
 
-<h1 id="creating-your-own-back-pressure">Creating Your Own Back-Pressure</h1>
+<h1 id="rx-has-a-word-to-say">Rx Has a Word To Say!</h1>
 
-<p>Can we implement a mechanism where production is allowed as long as
-consumption keeps up with the pace? For this purpose, we need to implement a
-way of informing the producer about the number of emitted items that can be
-consumed at a certain time. Let me introduce you to the poor man’s
-back-pressure queue.</p>
+<p>In a nutshell, we need to come up with a way to regulate the production pace
+in line with the consumption. We can either do this by an on-demand producer
+(<em>reactive pull</em>) or blocking the producer itself (<em>callstack blocking</em>).
+(Both in its <a href="https://github.com/ReactiveX/RxJava/wiki/Backpressure">official
+wiki</a> and <a href="http://stackoverflow.com/documentation/rx-java/2341/backpressure">Stack Overflow
+Documentation</a>,
+RxJava has quite some juice on the subject.)</p>
+
+<h2 id="discarding-the-over-production">Discarding the Over-Production</h2>
+
+<p>Three common methods provided out of the box by RxJava for dealing with
+back-pressure are <code>onBackpressureBuffer</code>, <code>onBackpressureDrop</code>, and
+<code>onBackpressureLatest</code>. While they definitely do the trick, rather than
+regulating the production speed, they just discard emitted items by the
+producer under certain back-pressure circumstances. (I am keeping experimental
+RxJava &gt;1.0 feature <code>onBackpressureBlock</code> out of this discussion due to its
+ambiguous future and known track record of holding a potential to introduce
+dead-locks.)</p>
+
+<h2 id="reactive-pull">Reactive Pull</h2>
+
+<p>RxJava has one more bullet in the hand though:
+<a href="http://stackoverflow.com/documentation/rxjava/2341/backpressure">SyncOnSubscribe</a>.
+This almost orphan, totally undocumented prodigy, provides the necessary
+harness to create <em>stateful</em> and <em>on-demand</em> producers:</p>
+
+<pre><code class="language-java"><span class="n">SyncOnSubscribe</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">,</span> <span class="n">InputStream</span><span class="o">&gt;</span> <span class="n">binaryReader</span> <span class="o">=</span> <span class="n">SyncOnSubscribe</span><span class="o">.</span><span class="na">createStateful</span><span class="o">(</span>
+
+	<span class="c1">// Create the initial state. (Invoked per subscriber.)</span>
+	<span class="o">()</span> <span class="o">-&gt;</span> <span class="k">new</span> <span class="nf">FileInputStream</span><span class="o">(</span><span class="s">"data.bin"</span><span class="o">),</span>
+
+	<span class="c1">// Upon request, emit a new item and return the new state.</span>
+	<span class="o">(</span><span class="n">inputStream</span><span class="o">,</span> <span class="n">output</span><span class="o">)</span> <span class="o">-&gt;</span> <span class="o">{</span>
+		<span class="k">try</span> <span class="o">{</span>
+			<span class="kt">int</span> <span class="kt">byte</span> <span class="o">=</span> <span class="n">inputStream</span><span class="o">.</span><span class="na">read</span><span class="o">();</span>
+			<span class="k">if</span> <span class="o">(</span><span class="kt">byte</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="o">)</span> <span class="n">output</span><span class="o">.</span><span class="na">onCompleted</span><span class="o">()</span>
+			<span class="k">else</span> <span class="n">output</span><span class="o">.</span><span class="na">onNext</span><span class="o">(</span><span class="kt">byte</span><span class="o">);</span>
+		<span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">IOException</span> <span class="n">ex</span><span class="o">)</span> <span class="o">{</span>
+			<span class="n">output</span><span class="o">.</span><span class="na">onError</span><span class="o">(</span><span class="n">ex</span><span class="o">);</span>
+		<span class="o">}</span>
+		<span class="k">return</span> <span class="n">inputStream</span><span class="o">;</span>
+	<span class="o">},</span>
+
+	<span class="c1">// Perform final clean-up using the state. (Invoked upon unsubscription.)</span>
+	<span class="n">inputStream</span> <span class="o">-&gt;</span> <span class="o">{</span>
+		<span class="k">try</span> <span class="o">{</span> <span class="n">inputStream</span><span class="o">.</span><span class="na">close</span><span class="o">();</span> <span class="o">}</span>
+		<span class="k">catch</span> <span class="o">(</span><span class="n">IOException</span> <span class="n">error</span><span class="o">)</span> <span class="o">{</span> <span class="n">RxJavaHooks</span><span class="o">.</span><span class="na">onError</span><span class="o">(</span><span class="n">error</span><span class="o">);</span> <span class="o">}</span>
+	<span class="o">}</span> 
+
+<span class="o">);</span>
+
+<span class="n">Observable</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">&gt;</span> <span class="n">observableBinaryReader</span> <span class="o">=</span> <span class="n">Observable</span><span class="o">.</span><span class="na">create</span><span class="o">(</span><span class="n">binaryReader</span><span class="o">);</span></code></pre>
+
+<p>Awesome! We are done, right? Unfortunately not. In RxJava, unless you specify
+otherwise, <a href="http://reactivex.io/RxJava/javadoc/rx/Subscriber.html#request(long)">every consumer tries to pull <code>Long.MAX_VALUE</code> items from the
+observable it is subscribed
+to</a>. You
+can change this beaviour by overriding this value:</p>
+
+<pre><code class="language-java"><span class="n">observableBinaryReader</span><span class="o">.</span><span class="na">subscribe</span><span class="o">(</span><span class="k">new</span> <span class="n">Subscriber</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">&gt;()</span> <span class="o">{</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onStart</span><span class="o">()</span> <span class="o">{</span>
+        <span class="n">request</span><span class="o">(</span><span class="mi">1</span><span class="o">);</span>    <span class="c1">// Request 1 item on start up.</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onNext</span><span class="o">(</span><span class="n">Integer</span> <span class="n">v</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">compute</span><span class="o">(</span><span class="n">v</span><span class="o">);</span>
+        <span class="n">request</span><span class="o">(</span><span class="mi">1</span><span class="o">);</span>    <span class="c1">// Request a new item after consuming one.</span>
+    <span class="o">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onError</span><span class="o">(</span><span class="n">Throwable</span> <span class="n">error</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">error</span><span class="o">.</span><span class="na">printStackTrace</span><span class="o">();</span>
+    <span class="o">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onCompleted</span><span class="o">()</span> <span class="o">{</span>
+        <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">"Done!"</span><span class="o">);</span>
+    <span class="o">}</span>
+
+<span class="o">});</span></code></pre>
+
+<p>In other words, the subscriber needs to be aware of the producer-consumer pace
+mismatch and align them explicitly by limiting the number of requested items.
+To the best of my knowledge, it is not possible to enforce the subscriber to
+specify the number of requested items. You just need to hope that the next
+programmer consuming your <code>Observable&lt;T&gt;</code> will be able to figure out the
+back-pressure problem and override the <code>request(Long.MAX_VALUE)</code> behaviour.
+(But you know that he won’t, right?)</p>
+
+<p>As a matter of fact, <em>reactive pull</em> does not provide a solution for our
+over-productive observable example, which just blindly emits items by ignoring
+the consumer pace. We need a way to block the production according to the
+consumption rate. And Rx literature has already got a term for this approach:
+<em>Callstack Blocking</em>.</p>
+
+<h2 id="callstack-blocking">Callstack Blocking</h2>
+
+<p>Shamelessly copying from the <a href="https://github.com/ReactiveX/RxJava/wiki/Backpressure#callstack-blocking-as-a-flow-control-alternative-to-backpressure">RxJava wiki</a>:</p>
+
+<blockquote>
+  <p>Another way of handling an over-productive <code>Observable</code> is to block the
+callstack (parking the thread that governs the over-productive
+<code>Observable</code>). This has the disadvantage of going against the <em>reactive</em> and
+non-blocking model of Rx. However this can be a viable option if the
+problematic <code>Observable</code> is on a thread that can be blocked safely.
+Currently RxJava does not expose any operators to facilitate this.</p>
+</blockquote>
+
+<p>But the good news is, you can implement this yourself. Let me walk-through you
+how to do it.</p>
+
+<h1 id="stack-your-own-back-pressure">Stack Your Own Back-Pressure</h1>
+
+<p>Let me introduce you to the poor man’s back-pressure queue.</p>
 
 <pre><code class="language-java"><span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="n">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="o">{</span>
 
@@ -351,23 +462,14 @@ can be given as follows:</p>
 
 <span class="o">}</span></code></pre>
 
-<h1 id="back-pressure-and-rxjava">Back-Pressure and RxJava</h1>
-
-<p>RxJava has <a href="https://github.com/ReactiveX/RxJava/wiki/Backpressure">quite some
-material</a> on certain
-aspects of back-pressure and available methods for mitigation. While
-<code>BackPressured&lt;T&gt;</code> is analogous to <code>Observable#onBackpressureBlock(int)</code>
-method (experimental, not in RxJava 1.0), it is not constrained to RxJava
-observables and can be employed at any domain.</p>
-
 <h1 id="conclusion">Conclusion</h1>
 
 <p>Back-pressure is a significant aspect in every producer-consumer pipeline. It
 can be easily overlooked and holds a potential to break the system depending
 on the speed mismatch of the involved actors. In this post, I examined the
-problem in a sample RxJava application and provided a solution that can be
-employed in almost any domain where the back-pressure needs to communicated. I
-hope you find it useful as well.</p>
+problem in a sample RxJava application and provided a solution leveraging
+<em>callback blocking</em> approach that can be employed in almost any domain where
+the back-pressure needs to communicated. I hope you find it useful as well.</p>
 
 
 	  <script type="text/javascript">
@@ -378,7 +480,7 @@ hope you find it useful as well.</p>
 	  <script type="text/javascript">
 	  var disqus_shortname = 'vyazici';
 	  var disqus_identifier = '/blog/post/20160720-rxjava-backpressure/';
-	  var disqus_title = 'Implementing Back Pressure in RxJava';
+	  var disqus_title = 'Callback Blocking for Back-Pressure in RxJava';
 	  (function() {
 	  	var dsq = document.createElement('script');
 	  	dsq.type = 'text/javascript';

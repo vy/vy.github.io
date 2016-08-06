@@ -11,7 +11,7 @@
   </author>
   <entry>
     <id>tag:vy.github.io,2016-07-20://blog/post/2016/07/20/rxjava-backpressure/</id>
-    <title type="html">Implementing Back Pressure in RxJava</title>
+    <title type="html">Callback Blocking for Back-Pressure in RxJava</title>
     <published>2016-07-20T20:32:00Z</published>
     <updated>2016-07-20T20:32:00Z</updated>
     <link rel="alternate" href="https://vy.github.io//blog/post/2016/07/20/rxjava-backpressure/"/>
@@ -95,13 +95,124 @@ do I exactly mean by worse? &lt;em&gt;If we would set &lt;code&gt;consumePeriod&
 &lt;code&gt;producePeriod&lt;/code&gt; to 10ms, then there will be 1000 threads running in the
 background at any particular point in time!&lt;/em&gt;&lt;/p&gt;
 
-&lt;h1 id="creating-your-own-back-pressure"&gt;Creating Your Own Back-Pressure&lt;/h1&gt;
+&lt;h1 id="rx-has-a-word-to-say"&gt;Rx Has a Word To Say!&lt;/h1&gt;
 
-&lt;p&gt;Can we implement a mechanism where production is allowed as long as
-consumption keeps up with the pace? For this purpose, we need to implement a
-way of informing the producer about the number of emitted items that can be
-consumed at a certain time. Let me introduce you to the poor man’s
-back-pressure queue.&lt;/p&gt;
+&lt;p&gt;In a nutshell, we need to come up with a way to regulate the production pace
+in line with the consumption. We can either do this by an on-demand producer
+(&lt;em&gt;reactive pull&lt;/em&gt;) or blocking the producer itself (&lt;em&gt;callstack blocking&lt;/em&gt;).
+(Both in its &lt;a href="https://github.com/ReactiveX/RxJava/wiki/Backpressure"&gt;official
+wiki&lt;/a&gt; and &lt;a href="http://stackoverflow.com/documentation/rx-java/2341/backpressure"&gt;Stack Overflow
+Documentation&lt;/a&gt;,
+RxJava has quite some juice on the subject.)&lt;/p&gt;
+
+&lt;h2 id="discarding-the-over-production"&gt;Discarding the Over-Production&lt;/h2&gt;
+
+&lt;p&gt;Three common methods provided out of the box by RxJava for dealing with
+back-pressure are &lt;code&gt;onBackpressureBuffer&lt;/code&gt;, &lt;code&gt;onBackpressureDrop&lt;/code&gt;, and
+&lt;code&gt;onBackpressureLatest&lt;/code&gt;. While they definitely do the trick, rather than
+regulating the production speed, they just discard emitted items by the
+producer under certain back-pressure circumstances. (I am keeping experimental
+RxJava &amp;gt;1.0 feature &lt;code&gt;onBackpressureBlock&lt;/code&gt; out of this discussion due to its
+ambiguous future and known track record of holding a potential to introduce
+dead-locks.)&lt;/p&gt;
+
+&lt;h2 id="reactive-pull"&gt;Reactive Pull&lt;/h2&gt;
+
+&lt;p&gt;RxJava has one more bullet in the hand though:
+&lt;a href="http://stackoverflow.com/documentation/rxjava/2341/backpressure"&gt;SyncOnSubscribe&lt;/a&gt;.
+This almost orphan, totally undocumented prodigy, provides the necessary
+harness to create &lt;em&gt;stateful&lt;/em&gt; and &lt;em&gt;on-demand&lt;/em&gt; producers:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-java"&gt;&lt;span class="n"&gt;SyncOnSubscribe&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;Integer&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;InputStream&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;binaryReader&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;SyncOnSubscribe&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;createStateful&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;
+
+	&lt;span class="c1"&gt;// Create the initial state. (Invoked per subscriber.)&lt;/span&gt;
+	&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nf"&gt;FileInputStream&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="s"&gt;"data.bin"&lt;/span&gt;&lt;span class="o"&gt;),&lt;/span&gt;
+
+	&lt;span class="c1"&gt;// Upon request, emit a new item and return the new state.&lt;/span&gt;
+	&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;inputStream&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;output&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+		&lt;span class="k"&gt;try&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+			&lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="kt"&gt;byte&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;inputStream&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;read&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
+			&lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="kt"&gt;byte&lt;/span&gt; &lt;span class="o"&gt;&amp;lt;&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="n"&gt;output&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;onCompleted&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt;
+			&lt;span class="k"&gt;else&lt;/span&gt; &lt;span class="n"&gt;output&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;onNext&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="kt"&gt;byte&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+		&lt;span class="o"&gt;}&lt;/span&gt; &lt;span class="k"&gt;catch&lt;/span&gt; &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;IOException&lt;/span&gt; &lt;span class="n"&gt;ex&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+			&lt;span class="n"&gt;output&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;onError&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;ex&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+		&lt;span class="o"&gt;}&lt;/span&gt;
+		&lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;inputStream&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+	&lt;span class="o"&gt;},&lt;/span&gt;
+
+	&lt;span class="c1"&gt;// Perform final clean-up using the state. (Invoked upon unsubscription.)&lt;/span&gt;
+	&lt;span class="n"&gt;inputStream&lt;/span&gt; &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+		&lt;span class="k"&gt;try&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="n"&gt;inputStream&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;close&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
+		&lt;span class="k"&gt;catch&lt;/span&gt; &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;IOException&lt;/span&gt; &lt;span class="n"&gt;error&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="n"&gt;RxJavaHooks&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;onError&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;error&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
+	&lt;span class="o"&gt;}&lt;/span&gt; 
+
+&lt;span class="o"&gt;);&lt;/span&gt;
+
+&lt;span class="n"&gt;Observable&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;Integer&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;observableBinaryReader&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;Observable&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;create&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;binaryReader&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Awesome! We are done, right? Unfortunately not. In RxJava, unless you specify
+otherwise, &lt;a href="http://reactivex.io/RxJava/javadoc/rx/Subscriber.html#request(long)"&gt;every consumer tries to pull &lt;code&gt;Long.MAX_VALUE&lt;/code&gt; items from the
+observable it is subscribed
+to&lt;/a&gt;. You
+can change this beaviour by overriding this value:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-java"&gt;&lt;span class="n"&gt;observableBinaryReader&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;subscribe&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="n"&gt;Subscriber&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;Integer&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;()&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+
+    &lt;span class="nd"&gt;@Override&lt;/span&gt;
+    &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;onStart&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+        &lt;span class="n"&gt;request&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;    &lt;span class="c1"&gt;// Request 1 item on start up.&lt;/span&gt;
+    &lt;span class="o"&gt;}&lt;/span&gt;
+
+    &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;onNext&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;Integer&lt;/span&gt; &lt;span class="n"&gt;v&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+        &lt;span class="n"&gt;compute&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;v&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+        &lt;span class="n"&gt;request&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;    &lt;span class="c1"&gt;// Request a new item after consuming one.&lt;/span&gt;
+    &lt;span class="o"&gt;}&lt;/span&gt;
+
+    &lt;span class="nd"&gt;@Override&lt;/span&gt;
+    &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;onError&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;Throwable&lt;/span&gt; &lt;span class="n"&gt;error&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+        &lt;span class="n"&gt;error&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;printStackTrace&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
+    &lt;span class="o"&gt;}&lt;/span&gt;
+
+    &lt;span class="nd"&gt;@Override&lt;/span&gt;
+    &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;onCompleted&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+        &lt;span class="n"&gt;System&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;out&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;println&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="s"&gt;"Done!"&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+    &lt;span class="o"&gt;}&lt;/span&gt;
+
+&lt;span class="o"&gt;});&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;In other words, the subscriber needs to be aware of the producer-consumer pace
+mismatch and align them explicitly by limiting the number of requested items.
+To the best of my knowledge, it is not possible to enforce the subscriber to
+specify the number of requested items. You just need to hope that the next
+programmer consuming your &lt;code&gt;Observable&amp;lt;T&amp;gt;&lt;/code&gt; will be able to figure out the
+back-pressure problem and override the &lt;code&gt;request(Long.MAX_VALUE)&lt;/code&gt; behaviour.
+(But you know that he won’t, right?)&lt;/p&gt;
+
+&lt;p&gt;As a matter of fact, &lt;em&gt;reactive pull&lt;/em&gt; does not provide a solution for our
+over-productive observable example, which just blindly emits items by ignoring
+the consumer pace. We need a way to block the production according to the
+consumption rate. And Rx literature has already got a term for this approach:
+&lt;em&gt;Callstack Blocking&lt;/em&gt;.&lt;/p&gt;
+
+&lt;h2 id="callstack-blocking"&gt;Callstack Blocking&lt;/h2&gt;
+
+&lt;p&gt;Shamelessly copying from the &lt;a href="https://github.com/ReactiveX/RxJava/wiki/Backpressure#callstack-blocking-as-a-flow-control-alternative-to-backpressure"&gt;RxJava wiki&lt;/a&gt;:&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;Another way of handling an over-productive &lt;code&gt;Observable&lt;/code&gt; is to block the
+callstack (parking the thread that governs the over-productive
+&lt;code&gt;Observable&lt;/code&gt;). This has the disadvantage of going against the &lt;em&gt;reactive&lt;/em&gt; and
+non-blocking model of Rx. However this can be a viable option if the
+problematic &lt;code&gt;Observable&lt;/code&gt; is on a thread that can be blocked safely.
+Currently RxJava does not expose any operators to facilitate this.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;But the good news is, you can implement this yourself. Let me walk-through you
+how to do it.&lt;/p&gt;
+
+&lt;h1 id="stack-your-own-back-pressure"&gt;Stack Your Own Back-Pressure&lt;/h1&gt;
+
+&lt;p&gt;Let me introduce you to the poor man’s back-pressure queue.&lt;/p&gt;
 
 &lt;pre&gt;&lt;code class="language-java"&gt;&lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kd"&gt;static&lt;/span&gt; &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;main&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;String&lt;/span&gt;&lt;span class="o"&gt;[]&lt;/span&gt; &lt;span class="n"&gt;args&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
 
@@ -314,41 +425,14 @@ can be given as follows:&lt;/p&gt;
 
 &lt;span class="o"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
 
-&lt;h1 id="back-pressure-and-rxjava"&gt;Back-Pressure and RxJava&lt;/h1&gt;
-
-&lt;p&gt;RxJava has &lt;a href="https://github.com/ReactiveX/RxJava/wiki/Backpressure"&gt;quite some
-material&lt;/a&gt; on certain
-aspects of back-pressure and available methods for mitigation. While
-&lt;code&gt;BackPressured&amp;lt;T&amp;gt;&lt;/code&gt; is analogous to &lt;code&gt;Observable#onBackpressureBlock(int)&lt;/code&gt;
-method (experimental, not in RxJava 1.0), it is not constrained to RxJava
-observables and can be employed at any domain.&lt;/p&gt;
-
 &lt;h1 id="conclusion"&gt;Conclusion&lt;/h1&gt;
 
 &lt;p&gt;Back-pressure is a significant aspect in every producer-consumer pipeline. It
 can be easily overlooked and holds a potential to break the system depending
 on the speed mismatch of the involved actors. In this post, I examined the
-problem in a sample RxJava application and provided a solution that can be
-employed in almost any domain where the back-pressure needs to communicated. I
-hope you find it useful as well.&lt;/p&gt;
-</content>
-  </entry>
-  <entry>
-    <id>tag:vy.github.io,2016-07-20://blog/post/2016/07/20/java-heapdump-threaddump/</id>
-    <title type="html">Programmatically Creating Heap and Thread Dumps in Java</title>
-    <published>2016-07-20T20:32:00Z</published>
-    <updated>2016-07-20T20:32:00Z</updated>
-    <link rel="alternate" href="https://vy.github.io//blog/post/2016/07/20/java-heapdump-threaddump/"/>
-    <content type="html">
-&lt;p&gt;Many Java devolopers are familiar to JVM heap and thread dumps created via
-IDEs or other diagnosis tools (e.g., VisualVM, JProfiler, YourKit). But
-sometimes you need to implement these functionalities in your own application
-programmatically and expose them by other means like REST endpoints. And that
-is where things start to get messy.&lt;/p&gt;
-
-&lt;h1 id="heap-dumps"&gt;Heap Dumps&lt;/h1&gt;
-
-&lt;p&gt;Taking a heap dump using a&lt;/p&gt;
+problem in a sample RxJava application and provided a solution leveraging
+&lt;em&gt;callback blocking&lt;/em&gt; approach that can be employed in almost any domain where
+the back-pressure needs to communicated. I hope you find it useful as well.&lt;/p&gt;
 </content>
   </entry>
   <entry>
@@ -1966,6 +2050,23 @@ JSON-passing approach (where each microservice needs to implement its own
 reader/writer) not solid enough and I did not buy his facts on rationale
 behind this. Further, relating the microservice architectures with a
 particular language or tool was absolutely awkward, to say the least.&lt;/p&gt;
+</content>
+  </entry>
+  <entry>
+    <id>tag:vy.github.io,2015-06-09://blog/post/2015/06/09/fibers-in-jvm/</id>
+    <title type="html">Presentation: Fibers in Java Virtual Machine</title>
+    <published>2015-06-09T20:32:00Z</published>
+    <updated>2015-06-09T20:32:00Z</updated>
+    <link rel="alternate" href="https://vy.github.io//blog/post/2015/06/09/fibers-in-jvm/"/>
+    <content type="html">
+&lt;p&gt;A couple of months ago, I made a presentation in one of
+&lt;a href="http://bol.com"&gt;bol.com&lt;/a&gt; Brown Bag Sessions on the &lt;em&gt;Fiber Implementations in
+Java Virtual Machine&lt;/em&gt;. With the hope that others might find it useful, I share
+it here. (Slides are also available in &lt;a href="fibers-in-jvm.pdf"&gt;PDF&lt;/a&gt; and
+&lt;a href="fibers-in-jvm-org.odp"&gt;ODP&lt;/a&gt; formats.)&lt;/p&gt;
+
+&lt;iframe src="https://www.slideshare.net/slideshow/embed_code/key/CdpM73pq92heMk" width="476" height="400" frameborder="0" marginwidth="0" marginheight="0" scrolling="no"&gt;
+&lt;/iframe&gt;
 </content>
   </entry>
 </feed>
