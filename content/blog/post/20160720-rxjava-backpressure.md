@@ -1,7 +1,7 @@
 ---
 kind: article
 created_at: 2016-07-20 20:32 CET
-title: Implementing Back Pressure in RxJava
+title: Callback Blocking for Back-Pressure in RxJava
 tags:
   - concurrency
   - java
@@ -89,14 +89,129 @@ do I exactly mean by worse? *If we would set `consumePeriod` to 10s, and
 `producePeriod` to 10ms, then there will be 1000 threads running in the
 background at any particular point in time!*
 
-Creating Your Own Back-Pressure
-===============================
+Rx Has a Word To Say!
+=====================
 
-Can we implement a mechanism where production is allowed as long as
-consumption keeps up with the pace? For this purpose, we need to implement a
-way of informing the producer about the number of emitted items that can be
-consumed at a certain time. Let me introduce you to the poor man's
-back-pressure queue.
+In a nutshell, we need to come up with a way to regulate the production pace
+in line with the consumption. We can either do this by an on-demand producer
+(*reactive pull*) or blocking the producer itself (*callstack blocking*).
+(Both in its [official
+wiki](https://github.com/ReactiveX/RxJava/wiki/Backpressure) and [Stack Overflow
+Documentation](http://stackoverflow.com/documentation/rx-java/2341/backpressure),
+RxJava has quite some juice on the subject.)
+
+Discarding the Over-Production
+------------------------------
+
+Three common methods provided out of the box by RxJava for dealing with
+back-pressure are `onBackpressureBuffer`, `onBackpressureDrop`, and
+`onBackpressureLatest`. While they definitely do the trick, rather than
+regulating the production speed, they just discard emitted items by the
+producer under certain back-pressure circumstances. (I am keeping experimental
+RxJava >1.0 feature `onBackpressureBlock` out of this discussion due to its
+ambiguous future and known track record of holding a potential to introduce
+dead-locks.)
+
+Reactive Pull
+-------------
+
+RxJava has one more bullet in the hand though:
+[SyncOnSubscribe](http://stackoverflow.com/documentation/rxjava/2341/backpressure).
+This almost orphan, totally undocumented prodigy, provides the necessary
+harness to create *stateful* and *on-demand* producers:
+
+	#!java
+	SyncOnSubscribe<Integer, InputStream> binaryReader = SyncOnSubscribe.createStateful(
+
+		// Create the initial state. (Invoked per subscriber.)
+		() -> new FileInputStream("data.bin"),
+
+		// Upon request, emit a new item and return the new state.
+		(inputStream, output) -> {
+			try {
+				int byte = inputStream.read();
+				if (byte < 0) output.onCompleted()
+				else output.onNext(byte);
+			} catch (IOException ex) {
+				output.onError(ex);
+			}
+			return inputStream;
+		},
+
+		// Perform final clean-up using the state. (Invoked upon unsubscription.)
+		inputStream -> {
+			try { inputStream.close(); }
+			catch (IOException error) { RxJavaHooks.onError(error); }
+		} 
+
+	);
+
+	Observable<Integer> observableBinaryReader = Observable.create(binaryReader);
+
+Awesome! We are done, right? Unfortunately not. In RxJava, unless you specify
+otherwise, [every consumer tries to pull `Long.MAX_VALUE` items from the
+observable it is subscribed
+to](http://reactivex.io/RxJava/javadoc/rx/Subscriber.html#request(long)). You
+can change this beaviour by overriding this value:
+
+	#!java
+	observableBinaryReader.subscribe(new Subscriber<Integer>() {
+
+	    @Override
+	    public void onStart() {
+	        request(1);    // Request 1 item on start up.
+	    }
+
+	    public void onNext(Integer v) {
+	        compute(v);
+	        request(1);    // Request a new item after consuming one.
+	    }
+
+	    @Override
+	    public void onError(Throwable error) {
+	        error.printStackTrace();
+	    }
+
+	    @Override
+	    public void onCompleted() {
+	        System.out.println("Done!");
+	    }
+
+	});
+
+In other words, the subscriber needs to be aware of the producer-consumer pace
+mismatch and align them explicitly by limiting the number of requested items.
+To the best of my knowledge, it is not possible to enforce the subscriber to
+specify the number of requested items. You just need to hope that the next
+programmer consuming your `Observable<T>` will be able to figure out the
+back-pressure problem and override the `request(Long.MAX_VALUE)` behaviour.
+(But you know that he won't, right?)
+
+As a matter of fact, *reactive pull* does not provide a solution for our
+over-productive observable example, which just blindly emits items by ignoring
+the consumer pace. We need a way to block the production according to the
+consumption rate. And Rx literature has already got a term for this approach:
+*Callstack Blocking*.
+
+Callstack Blocking
+------------------
+
+Shamelessly copying from the [RxJava wiki](https://github.com/ReactiveX/RxJava/wiki/Backpressure#callstack-blocking-as-a-flow-control-alternative-to-backpressure):
+
+> Another way of handling an over-productive `Observable` is to block the
+> callstack (parking the thread that governs the over-productive
+> `Observable`). This has the disadvantage of going against the *reactive* and
+> non-blocking model of Rx. However this can be a viable option if the
+> problematic `Observable` is on a thread that can be blocked safely.
+> Currently RxJava does not expose any operators to facilitate this.
+
+But the good news is, you can implement this yourself. Let me walk-through you
+how to do it.
+
+Stack Your Own Back-Pressure
+============================
+
+Let me introduce you to the poor man's back-pressure queue.
 
 	#!java
     public static void main(String[] args) {
@@ -315,22 +430,12 @@ And here is `BackPressured<T>`:
 
 	}
 
-Back-Pressure and RxJava
-========================
-
-RxJava has [quite some
-material](https://github.com/ReactiveX/RxJava/wiki/Backpressure) on certain
-aspects of back-pressure and available methods for mitigation. While
-`BackPressured<T>` is analogous to `Observable#onBackpressureBlock(int)`
-method (experimental, not in RxJava 1.0), it is not constrained to RxJava
-observables and can be employed at any domain.
-
 Conclusion
 ==========
 
 Back-pressure is a significant aspect in every producer-consumer pipeline. It
 can be easily overlooked and holds a potential to break the system depending
 on the speed mismatch of the involved actors. In this post, I examined the
-problem in a sample RxJava application and provided a solution that can be
-employed in almost any domain where the back-pressure needs to communicated. I
-hope you find it useful as well.
+problem in a sample RxJava application and provided a solution leveraging
+*callback blocking* approach that can be employed in almost any domain where
+the back-pressure needs to communicated. I hope you find it useful as well.
