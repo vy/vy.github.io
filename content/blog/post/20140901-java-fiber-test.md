@@ -97,7 +97,7 @@ Ron Pressler's
 > Quasar and Akka provide completely different abstractions. Quasar provides
 > fibers while Akka provides an asynchronous-programming framework based on
 > callbacks. Both libraries then implement actors using their respective
-> abstractions. [...] fibers are lightweight threads, which
+> abstractions. \[...\] fibers are lightweight threads, which
 > means that their most important property -- even before being light-weight --
 > is being threads. The thread abstraction is a series of sequential
 > computations with the ability to block -- on IO or synchronization. Callbacks,
