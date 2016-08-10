@@ -7,31 +7,9 @@
     color: #ff0000
   a
     text-decoration: none
-  $size: 1em
-  $coef: 0.2em
   span
     vertical-align: middle
     line-height: 95%
-  .size-0
-    font-size: $size + $coef * 0
-  .size-1
-    font-size: $size + $coef * 1
-  .size-2
-    font-size: $size + $coef * 2
-  .size-3
-    font-size: $size + $coef * 3
-  .size-4
-    font-size: $size + $coef * 4
-  .size-5
-    font-size: $size + $coef * 5
-  .size-6
-    font-size: $size + $coef * 6
-  .size-7
-    font-size: $size + $coef * 7
-  .size-8
-    font-size: $size + $coef * 8
-  .size-9
-    font-size: $size + $coef * 9
 
 #posts
   margin-left: 4%
@@ -41,17 +19,15 @@
     line-height: 1.5em
     margin-bottom: 0.6em
     .info
-      font-size: 0.8em
+      font-size: 1em
       a
         text-decoration: none
         border-bottom: 1px dotted
       a:hover
         border-bottom: 1px solid
   h2
-    font-size: 1em
     border-bottom: 1px dotted
 
-<%= config[:mobile_media_query] %>
-  #tags, #posts
-    display: block
-    width: 100%
+@media (max-width: 50rem)
+  #tags
+    display: none

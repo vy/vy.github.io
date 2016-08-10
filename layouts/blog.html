@@ -8,15 +8,12 @@
         freqs[tag] += 1
         end
      end
-     min_freq = freqs.values.min
-     max_freq = freqs.values.max
-     dif_freq = max_freq - min_freq
      freqs.keys.sort.map { |tag|
-        size = (9.0 * (freqs[tag] - min_freq) / dif_freq).to_i
+        freq = freqs[tag]
         extra_class = "highlight" if tag == @tag
-        link_to("<span class='size-#{size} #{extra_class}'>#{tag}</span>",
-          tag_identifier(tag))
-     } .join(", ")
+        link = link_to(tag == @tag ? "<span class='highlight'>#{tag}</span>" : tag, tag_identifier(tag))
+        "<div>#{link}&nbsp;(#{freqs[tag]})</div>"
+     } .join("\n")
   %>
 </div>
 

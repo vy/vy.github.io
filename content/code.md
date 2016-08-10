@@ -43,7 +43,8 @@ css: code
   wireless network interfaces in GNU/Linux systems.
 
 * [jPaToH](https://github.com/vy/jpatoh) is a library that provides Java
-  bindings for [PaToH](http://bmi.osu.edu/~umit/software.html).
+  bindings for [PaToH](http://bmi.osu.edu/~umit/software.html) hypergraph
+  partitioning tool.
 
 2009
 ----

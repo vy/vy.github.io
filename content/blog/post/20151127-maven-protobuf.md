@@ -7,12 +7,12 @@ tags:
   - maven
 ---
 
-**TL;DR** -- This post explains how to compile Protocol Buffers schemas into
-Java sources in Maven. Over the course of time, there appeared plugins like
-[protoc-jar-maven-plugin](https://github.com/os72/protoc-jar-maven-plugin).
-Nevertheless, the steps below still present a value to understand the
-necessary plumbing and some best practices (e.g., shading) that are not
-covered by the plugins.
+> **TL;DR** -- This post explains how to compile Protocol Buffers schemas into
+> Java sources in Maven. Over the course of time, there appeared plugins like
+> [protoc-jar-maven-plugin](https://github.com/os72/protoc-jar-maven-plugin).
+> Nevertheless, the steps below still present a value to understand the
+> necessary plumbing and some best practices (e.g., shading) that are not
+> covered by the plugins.
 
 Java build systems have always been a second class citizen for [Protocol
 Buffers](https://developers.google.com/protocol-buffers). As is the case for

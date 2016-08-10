@@ -11,7 +11,8 @@ tags:
   - sdn
 ---
 
-**TL;DR** -- Use Floodlight (Pythonistas might want to give POX a try) and keep an eye on OpenDaylight.
+> **TL;DR** -- Use Floodlight (Pythonistas might want to give POX a try) and
+> keep an eye on OpenDaylight.
 
 There has always been a confusion on which controller to start with for newcomers in the OpenFlow ecosystem. Should one prefer the classic [NOX](http://www.nox-repo.org/)? Or go with a more modern choice like [Beacon](http://www.beaconcontroller.net/) or its successor [Floodlight](http://www.projectfloodlight.org/)? What about [Ryu](http://www.osrg.net/ryu/), [Trema](http://trema.github.com/trema/), and a dozen of [other controllers](http://yuba.stanford.edu/~casado/of-sw.html) in the wild? Ohh! I was just forgetting about [OpenDaylight](http://www.opendaylight.org/), which is backed by industry giants such as Cisco, Juniper, Brocade, IBM, etc. After all you just want to push a set of simple OpenFlow commands to the forwarding plane and observe the result. On the other hand, you are also concerned with the maturity of the environment that you will work with. Nobody wants to find himself scratching his head for a bug in the controller core. And I am pretty sure you will also question whether there is an ongoing *active development* and supportive *community* in the project or not. Lucky for you, I have volunteered to share my two cents on the issue. After two years of fighting in this mud up to my neck, I have something to say!
 

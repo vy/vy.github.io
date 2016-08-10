@@ -183,8 +183,6 @@ to the Netherlands.
   a professional expat agency hired by the company.
 - I spent a fortune for the housing, almost 5-6x more than I anticipated.
 - Commuting is quite expensive and problematic than I was expecting.
-<<<<<<< HEAD
-=======
 
 The Aftermath
 =============
@@ -254,4 +252,3 @@ commit-test-review cycles. But those would not add much to my previous
 knowledge and not affect my decision, I believe. Additionally, I would have
 surely made a more in-depth investigation on how much will I spend for
 housing, where despite all my efforts, my estimations were way off.
->>>>>>> source

@@ -1,8 +1,6 @@
 #!/usr/bin/env ruby
 # -*- coding: utf-8 -*-
 
-@config[:mobile_media_query] = "@media (max-width: 767px)"
-
 preprocess do
   # Remove private items.
   @items.reject! { |item|

@@ -1,8 +1,6 @@
 @import url("http://fonts.googleapis.com/css?family=PT+Serif:400,400italic")
 
 body
-  margin: 0
-  padding: 0
   font-family: "PT Serif", serif
 
 p, li
@@ -29,15 +27,8 @@ p, li
       color: #f00
 
 #container
-  padding: 10px
-  position: absolute
-  left: 25%
-  right: 25%
-
-<%= config[:mobile_media_query] %>
-  #container
-    left: 0
-    right: 0
+  margin: 0 auto
+  max-width: 50rem
 
 .arrow-list
   margin: 0
