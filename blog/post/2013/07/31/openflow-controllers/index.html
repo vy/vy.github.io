@@ -3,10 +3,6 @@
   <head>
     <meta charset="utf-8">
     <title>On the OpenFlow Controllers</title>
-    <link rel="stylesheet" href="/css/bootstrap.css">
-    <link rel="stylesheet" href="/css/bootstrap-responsive.css">
-    <script src="/js/bootstrap.js"></script>
-    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
     <link rel="stylesheet" href="/css/common.css">
     <meta name="generator" content="nanoc 3.8.0">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -23,37 +19,43 @@
     </script>
   </head>
   <body>
-    <div id="menu">
-      <div><a href="/">Home</a></div><div><a href="/about/">About</a></div><div><a href="/blog/">Blog</a></div><div><a href="/code/">Code</a></div><div><a href="/blog/feed/">Feed</a></div>
-    </div>
+    <div id="container">
+
+      <ul id="menu">
+        <li><a href="/">Home</a></li><li><a href="/blog/">Blog</a></li><li><a href="/code/">Code</a></li><li><a href="/blog/feed/">Feed</a></li>
+      </ul>
+
     
 
-<div class="container">
-  <div class="row-fluid">
-    <div class="offset1 span10">
-      <div id="post" class="more-white-box rounded-corners">
+
+<div id="post">
+
 	<div class="head">
-	  <div class="title">On the OpenFlow Controllers</div>
-	  <div class="subtitle">posted at
-	    July 31, 2013
-	    with tags <a href="/blog/tag/cpp">cpp</a>, <a href="/blog/tag/java">java</a>, <a href="/blog/tag/networking">networking</a>, <a href="/blog/tag/openflow">openflow</a>, <a href="/blog/tag/python">python</a>, <a href="/blog/tag/sdn">sdn</a>
-	  </div>
-	  <div class="share">
-	    <div class="addthis_toolbox addthis_default_style ">
-	      <a class="addthis_button_preferred_1"></a>
-	      <a class="addthis_button_preferred_2"></a>
-	      <a class="addthis_button_preferred_3"></a>
-	      <a class="addthis_button_preferred_4"></a>
-	      <a class="addthis_button_compact"></a>
+		<div class="title">On the OpenFlow Controllers</div>
+		<div class="subtitle">posted at
+			July 31, 2013
+			with tags <a href="/blog/tag/cpp">cpp</a>, <a href="/blog/tag/java">java</a>, <a href="/blog/tag/networking">networking</a>, <a href="/blog/tag/openflow">openflow</a>, <a href="/blog/tag/python">python</a>, <a href="/blog/tag/sdn">sdn</a>
+		</div>
+	  	<div class="share">
+	      	<div class="addthis_toolbox addthis_default_style ">
+	      		<a class="addthis_button_preferred_1"></a>
+	      		<a class="addthis_button_preferred_2"></a>
+	      		<a class="addthis_button_preferred_3"></a>
+	      		<a class="addthis_button_preferred_4"></a>
+	      		<a class="addthis_button_compact"></a>
+	    	</div>
+	    	<script type="text/javascript">var addthis_config = {"data_track_addressbar":false};</script>
+	        <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-5144adf75211a62b"></script>
 	    </div>
-	    <script type="text/javascript">var addthis_config = {"data_track_addressbar":false};</script>
-	    <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-5144adf75211a62b"></script>
-	  </div>
 	</div>
+
 	<div class="body">
 
 	  
-<p><strong>TL;DR</strong> – Use Floodlight (Pythonistas might want to give POX a try) and keep an eye on OpenDaylight.</p>
+<blockquote>
+  <p><strong>TL;DR</strong> – Use Floodlight (Pythonistas might want to give POX a try) and
+keep an eye on OpenDaylight.</p>
+</blockquote>
 
 <p>There has always been a confusion on which controller to start with for newcomers in the OpenFlow ecosystem. Should one prefer the classic <a href="http://www.nox-repo.org/">NOX</a>? Or go with a more modern choice like <a href="http://www.beaconcontroller.net/">Beacon</a> or its successor <a href="http://www.projectfloodlight.org/">Floodlight</a>? What about <a href="http://www.osrg.net/ryu/">Ryu</a>, <a href="http://trema.github.com/trema/">Trema</a>, and a dozen of <a href="http://yuba.stanford.edu/~casado/of-sw.html">other controllers</a> in the wild? Ohh! I was just forgetting about <a href="http://www.opendaylight.org/">OpenDaylight</a>, which is backed by industry giants such as Cisco, Juniper, Brocade, IBM, etc. After all you just want to push a set of simple OpenFlow commands to the forwarding plane and observe the result. On the other hand, you are also concerned with the maturity of the environment that you will work with. Nobody wants to find himself scratching his head for a bug in the controller core. And I am pretty sure you will also question whether there is an ongoing <em>active development</em> and supportive <em>community</em> in the project or not. Lucky for you, I have volunteered to share my two cents on the issue. After two years of fighting in this mud up to my neck, I have something to say!</p>
 
@@ -293,18 +295,14 @@ In addition, while I have never been in need of one, I must admit that Floodligh
 	  </script>
 
 	</div>
-      </div>
-      <div id="bgauthor" class="narrow-font">
-	background image by
-	<a href="http://jenniferwetzel.com/">Jennifer Wetzel</a>
-      </div>
-    </div>
-  </div>
+
 </div>
 
 
 
 
+
+    </div>
   </body>
 </html>
 

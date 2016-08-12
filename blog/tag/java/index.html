@@ -3,10 +3,6 @@
   <head>
     <meta charset="utf-8">
     <title>Blog/java</title>
-    <link rel="stylesheet" href="/css/bootstrap.css">
-    <link rel="stylesheet" href="/css/bootstrap-responsive.css">
-    <script src="/js/bootstrap.js"></script>
-    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
     <link rel="stylesheet" href="/css/common.css">
     <meta name="generator" content="nanoc 3.8.0">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -23,346 +19,390 @@
     </script>
   </head>
   <body>
-    <div id="menu">
-      <div><a href="/">Home</a></div><div><a href="/about/">About</a></div><div><a href="/blog/">Blog</a></div><div><a href="/code/">Code</a></div><div><a href="/blog/feed/">Feed</a></div>
-    </div>
+    <div id="container">
+
+      <ul id="menu">
+        <li><a href="/">Home</a></li><li><a href="/blog/">Blog</a></li><li><a href="/code/">Code</a></li><li><a href="/blog/feed/">Feed</a></li>
+      </ul>
+
     
 
-<div class="container">
-  <div class="row-fluid">
-    <div class="offset1 span10">
-      <div id="blog" class="more-white-box rounded-corners narrow-font">
-        <div class="row-fluid">
-          <div id="tags" class="span2">
-            <a href="/blog/tag/akka"><span class='size-0 '>akka</span></a>, <a href="/blog/tag/algorithm"><span class='size-0 '>algorithm</span></a>, <a href="/blog/tag/angularjs"><span class='size-0 '>angularjs</span></a>, <a href="/blog/tag/aop"><span class='size-0 '>aop</span></a>, <a href="/blog/tag/bitcoin"><span class='size-0 '>bitcoin</span></a>, <a href="/blog/tag/blog"><span class='size-0 '>blog</span></a>, <a href="/blog/tag/chrome"><span class='size-0 '>chrome</span></a>, <a href="/blog/tag/cifs"><span class='size-0 '>cifs</span></a>, <a href="/blog/tag/coffeescript"><span class='size-0 '>coffeescript</span></a>, <a href="/blog/tag/concurrency"><span class='size-1 '>concurrency</span></a>, <a href="/blog/tag/cpp"><span class='size-0 '>cpp</span></a>, <a href="/blog/tag/economy"><span class='size-0 '>economy</span></a>, <a href="/blog/tag/expressjs"><span class='size-0 '>expressjs</span></a>, <a href="/blog/tag/facebook"><span class='size-0 '>facebook</span></a>, <a href="/blog/tag/firefox"><span class='size-0 '>firefox</span></a>, <a href="/blog/tag/google"><span class='size-0 '>google</span></a>, <a href="/blog/tag/groups"><span class='size-0 '>groups</span></a>, <a href="/blog/tag/hazelcast"><span class='size-0 '>hazelcast</span></a>, <a href="/blog/tag/industry"><span class='size-0 '>industry</span></a>, <a href="/blog/tag/intellij"><span class='size-0 '>intellij</span></a>, <a href="/blog/tag/internet"><span class='size-0 '>internet</span></a>, <a href="/blog/tag/java"><span class='size-9 highlight'>java</span></a>, <a href="/blog/tag/javascript"><span class='size-1 '>javascript</span></a>, <a href="/blog/tag/jgroups"><span class='size-0 '>jgroups</span></a>, <a href="/blog/tag/kernel"><span class='size-0 '>kernel</span></a>, <a href="/blog/tag/knockoutjs"><span class='size-0 '>knockoutjs</span></a>, <a href="/blog/tag/latex"><span class='size-0 '>latex</span></a>, <a href="/blog/tag/link"><span class='size-0 '>link</span></a>, <a href="/blog/tag/linux"><span class='size-1 '>linux</span></a>, <a href="/blog/tag/literature"><span class='size-0 '>literature</span></a>, <a href="/blog/tag/macbook"><span class='size-0 '>macbook</span></a>, <a href="/blog/tag/maven"><span class='size-0 '>maven</span></a>, <a href="/blog/tag/microservice"><span class='size-0 '>microservice</span></a>, <a href="/blog/tag/mininet"><span class='size-0 '>mininet</span></a>, <a href="/blog/tag/nanoc"><span class='size-0 '>nanoc</span></a>, <a href="/blog/tag/networking"><span class='size-2 '>networking</span></a>, <a href="/blog/tag/nodejs"><span class='size-0 '>nodejs</span></a>, <a href="/blog/tag/openflow"><span class='size-1 '>openflow</span></a>, <a href="/blog/tag/openvswitch"><span class='size-0 '>openvswitch</span></a>, <a href="/blog/tag/osx"><span class='size-0 '>osx</span></a>, <a href="/blog/tag/play-framework"><span class='size-0 '>play framework</span></a>, <a href="/blog/tag/politics"><span class='size-0 '>politics</span></a>, <a href="/blog/tag/programming"><span class='size-0 '>programming</span></a>, <a href="/blog/tag/python"><span class='size-0 '>python</span></a>, <a href="/blog/tag/quasar"><span class='size-0 '>quasar</span></a>, <a href="/blog/tag/railwayjs"><span class='size-0 '>railwayjs</span></a>, <a href="/blog/tag/rx"><span class='size-0 '>rx</span></a>, <a href="/blog/tag/samba"><span class='size-0 '>samba</span></a>, <a href="/blog/tag/sbt"><span class='size-0 '>sbt</span></a>, <a href="/blog/tag/scala"><span class='size-1 '>scala</span></a>, <a href="/blog/tag/sdn"><span class='size-1 '>sdn</span></a>, <a href="/blog/tag/spring"><span class='size-0 '>spring</span></a>, <a href="/blog/tag/turkey"><span class='size-0 '>turkey</span></a>, <a href="/blog/tag/vaadin"><span class='size-0 '>vaadin</span></a>, <a href="/blog/tag/websocket"><span class='size-0 '>websocket</span></a>
-          </div>
-          <div class="span10">
-            <div id="posts">
-              
-              <h2>2016</h2>
-              <ul class="arrow-list">
-                
-                <li>
-                  <span class="title">
-                    <a href="/blog/post/2016/07/20/rxjava-backpressure/">Callback Blocking for Back-Pressure in RxJava</a>
-                  </span><br/>
-                  <span class="info">
-                    posted at
-                    07/20
-                    with tags <a href="/blog/tag/concurrency">concurrency</a>, <a href="/blog/tag/java">java</a>, <a href="/blog/tag/rx">rx</a>
-                  </span>
-                </li>
-                
-              </ul>
-              
-              <h2>2015</h2>
-              <ul class="arrow-list">
-                
-                <li>
-                  <span class="title">
-                    <a href="/blog/post/2015/11/27/maven-protobuf/">Compiling Protocol Buffers Sources in Maven</a>
-                  </span><br/>
-                  <span class="info">
-                    posted at
-                    11/27
-                    with tags <a href="/blog/tag/java">java</a>, <a href="/blog/tag/maven">maven</a>
-                  </span>
-                </li>
-                
-                <li>
-                  <span class="title">
-                    <a href="/blog/post/2015/11/20/scala-method-with-java-reserved-keyword/">Calling a Scala Method with a Java Reserved Keyword</a>
-                  </span><br/>
-                  <span class="info">
-                    posted at
-                    11/20
-                    with tags <a href="/blog/tag/java">java</a>, <a href="/blog/tag/scala">scala</a>
-                  </span>
-                </li>
-                
-                <li>
-                  <span class="title">
-                    <a href="/blog/post/2015/06/17/goto2015-microservices-workshop/">GOTO 2015 Microservices Workshop</a>
-                  </span><br/>
-                  <span class="info">
-                    posted at
-                    06/17
-                    with tags <a href="/blog/tag/java">java</a>, <a href="/blog/tag/microservice">microservice</a>, <a href="/blog/tag/programming">programming</a>
-                  </span>
-                </li>
-                
-                <li>
-                  <span class="title">
-                    <a href="/blog/post/2015/06/09/fibers-in-jvm/">Presentation: Fibers in Java Virtual Machine</a>
-                  </span><br/>
-                  <span class="info">
-                    posted at
-                    06/09
-                    with tags <a href="/blog/tag/akka">akka</a>, <a href="/blog/tag/java">java</a>, <a href="/blog/tag/quasar">quasar</a>
-                  </span>
-                </li>
-                
-                <li>
-                  <span class="title">
-                    <a href="/blog/post/2015/03/21/immutable-persistence/">Using Immutable Objects for Persistence in Java</a>
-                  </span><br/>
-                  <span class="info">
-                    posted at
-                    03/21
-                    with tags <a href="/blog/tag/java">java</a>
-                  </span>
-                </li>
-                
-                <li>
-                  <span class="title">
-                    <a href="/blog/post/2015/01/30/java-null-check/">Checking Null Arguments at Runtime Using Spring AOP</a>
-                  </span><br/>
-                  <span class="info">
-                    posted at
-                    01/08
-                    with tags <a href="/blog/tag/java">java</a>, <a href="/blog/tag/spring">spring</a>, <a href="/blog/tag/aop">aop</a>
-                  </span>
-                </li>
-                
-              </ul>
-              
-              <h2>2014</h2>
-              <ul class="arrow-list">
-                
-                <li>
-                  <span class="title">
-                    <a href="/blog/post/2014/12/05/apache-devicemap/">Parsing User-Agent Strings with Apache DeviceMap</a>
-                  </span><br/>
-                  <span class="info">
-                    posted at
-                    12/05
-                    with tags <a href="/blog/tag/java">java</a>
-                  </span>
-                </li>
-                
-                <li>
-                  <span class="title">
-                    <a href="/blog/post/2014/09/08/wildcards-in-java-generics/">Wildcards in Java Generics</a>
-                  </span><br/>
-                  <span class="info">
-                    posted at
-                    09/08
-                    with tags <a href="/blog/tag/java">java</a>
-                  </span>
-                </li>
-                
-                <li>
-                  <span class="title">
-                    <a href="/blog/post/2014/09/01/java-fiber-test/">Testing Fiber Implementations in JVM</a>
-                  </span><br/>
-                  <span class="info">
-                    posted at
-                    08/07
-                    with tags <a href="/blog/tag/akka">akka</a>, <a href="/blog/tag/java">java</a>, <a href="/blog/tag/quasar">quasar</a>
-                  </span>
-                </li>
-                
-                <li>
-                  <span class="title">
-                    <a href="/blog/post/2014/08/07/testing-websockets-in-play/">Testing WebSockets in Play Framework</a>
-                  </span><br/>
-                  <span class="info">
-                    posted at
-                    08/07
-                    with tags <a href="/blog/tag/java">java</a>, <a href="/blog/tag/play-framework">play framework</a>, <a href="/blog/tag/websocket">websocket</a>
-                  </span>
-                </li>
-                
-                <li>
-                  <span class="title">
-                    <a href="/blog/post/2014/06/27/parse-bitcoin-blockchain/">Parsing Bitcoin Blockchain Data in Java</a>
-                  </span><br/>
-                  <span class="info">
-                    posted at
-                    06/27
-                    with tags <a href="/blog/tag/bitcoin">bitcoin</a>, <a href="/blog/tag/java">java</a>
-                  </span>
-                </li>
-                
-                <li>
-                  <span class="title">
-                    <a href="/blog/post/2014/02/14/java-safe-publication/">Safe Object Publication in Java</a>
-                  </span><br/>
-                  <span class="info">
-                    posted at
-                    02/14
-                    with tags <a href="/blog/tag/concurrency">concurrency</a>, <a href="/blog/tag/java">java</a>
-                  </span>
-                </li>
-                
-                <li>
-                  <span class="title">
-                    <a href="/blog/post/2014/01/03/tcp-time-wait/">Sockets, TCP Keep Alive and TIME_WAIT</a>
-                  </span><br/>
-                  <span class="info">
-                    posted at
-                    01/03
-                    with tags <a href="/blog/tag/java">java</a>, <a href="/blog/tag/link">link</a>
-                  </span>
-                </li>
-                
-                <li>
-                  <span class="title">
-                    <a href="/blog/post/2014/01/03/safe-math-ops/">Detecting Overflows in Java Arithmetic Operators</a>
-                  </span><br/>
-                  <span class="info">
-                    posted at
-                    01/03
-                    with tags <a href="/blog/tag/java">java</a>
-                  </span>
-                </li>
-                
-              </ul>
-              
-              <h2>2013</h2>
-              <ul class="arrow-list">
-                
-                <li>
-                  <span class="title">
-                    <a href="/blog/post/2013/12/04/combinations/">Key to Parallel Combinations: Enumeration</a>
-                  </span><br/>
-                  <span class="info">
-                    posted at
-                    12/04
-                    with tags <a href="/blog/tag/algorithm">algorithm</a>, <a href="/blog/tag/concurrency">concurrency</a>, <a href="/blog/tag/java">java</a>
-                  </span>
-                </li>
-                
-                <li>
-                  <span class="title">
-                    <a href="/blog/post/2013/07/31/openflow-controllers/">On the OpenFlow Controllers</a>
-                  </span><br/>
-                  <span class="info">
-                    posted at
-                    07/31
-                    with tags <a href="/blog/tag/cpp">cpp</a>, <a href="/blog/tag/java">java</a>, <a href="/blog/tag/networking">networking</a>, <a href="/blog/tag/openflow">openflow</a>, <a href="/blog/tag/python">python</a>, <a href="/blog/tag/sdn">sdn</a>
-                  </span>
-                </li>
-                
-              </ul>
-              
-              <h2>2012</h2>
-              <ul class="arrow-list">
-                
-                <li>
-                  <span class="title">
-                    <a href="/blog/post/2012/11/28/setting-up-a-scala-dev-env/">Scala Development Environment with Intellij IDEA and SBT</a>
-                  </span><br/>
-                  <span class="info">
-                    posted at
-                    11/28
-                    with tags <a href="/blog/tag/intellij">intellij</a>, <a href="/blog/tag/java">java</a>, <a href="/blog/tag/sbt">sbt</a>, <a href="/blog/tag/scala">scala</a>
-                  </span>
-                </li>
-                
-                <li>
-                  <span class="title">
-                    <a href="/blog/post/2012/06/21/rpc-with-hazelcast/">RPC (Remote Procedure Call) with Hazelcast</a>
-                  </span><br/>
-                  <span class="info">
-                    posted at
-                    06/21
-                    with tags <a href="/blog/tag/hazelcast">hazelcast</a>, <a href="/blog/tag/java">java</a>
-                  </span>
-                </li>
-                
-                <li>
-                  <span class="title">
-                    <a href="/blog/post/2012/04/27/jgroups-ipv6-broadcast-problem/">JGroups IPv6 Broadcast Problem</a>
-                  </span><br/>
-                  <span class="info">
-                    posted at
-                    04/27
-                    with tags <a href="/blog/tag/java">java</a>, <a href="/blog/tag/groups">groups</a>
-                  </span>
-                </li>
-                
-                <li>
-                  <span class="title">
-                    <a href="/blog/post/2012/04/08/rpc-with-jgroups/">RPC (Remote Procedure Call) with JGroup</a>
-                  </span><br/>
-                  <span class="info">
-                    posted at
-                    04/08
-                    with tags <a href="/blog/tag/java">java</a>, <a href="/blog/tag/jgroups">jgroups</a>
-                  </span>
-                </li>
-                
-                <li>
-                  <span class="title">
-                    <a href="/blog/post/2012/03/25/cleaning-up-the-bufferedreader-mess/">Cleaning up the BufferedReader Mess in a Proxy Server</a>
-                  </span><br/>
-                  <span class="info">
-                    posted at
-                    03/25
-                    with tags <a href="/blog/tag/java">java</a>
-                  </span>
-                </li>
-                
-                <li>
-                  <span class="title">
-                    <a href="/blog/post/2012/03/19/shared-transport-in-jgroups/">Shared Transport in JGroups</a>
-                  </span><br/>
-                  <span class="info">
-                    posted at
-                    03/19
-                    with tags <a href="/blog/tag/java">java</a>, <a href="/blog/tag/jgroups">jgroups</a>
-                  </span>
-                </li>
-                
-                <li>
-                  <span class="title">
-                    <a href="/blog/post/2012/03/11/chat-application-with-play-and-knockoutjs/">Chat Application with Play Framework and KnockoutJS</a>
-                  </span><br/>
-                  <span class="info">
-                    posted at
-                    03/11
-                    with tags <a href="/blog/tag/facebook">facebook</a>, <a href="/blog/tag/java">java</a>, <a href="/blog/tag/javascript">javascript</a>, <a href="/blog/tag/knockoutjs">knockoutjs</a>, <a href="/blog/tag/play-framework">play framework</a>
-                  </span>
-                </li>
-                
-                <li>
-                  <span class="title">
-                    <a href="/blog/post/2012/02/23/synchronization-between-jgroups-replicatedhashmaps/">Synchronization Between JGroups.ReplicatedHashMap's</a>
-                  </span><br/>
-                  <span class="info">
-                    posted at
-                    02/23
-                    with tags <a href="/blog/tag/java">java</a>, <a href="/blog/tag/jgroups">jgroups</a>
-                  </span>
-                </li>
-                
-                <li>
-                  <span class="title">
-                    <a href="/blog/post/2012/02/20/facebook-login-and-secure-module/">Facebook Login and Secure Module Integration in Play</a>
-                  </span><br/>
-                  <span class="info">
-                    posted at
-                    02/20
-                    with tags <a href="/blog/tag/facebook">facebook</a>, <a href="/blog/tag/java">java</a>, <a href="/blog/tag/play-framework">play framework</a>
-                  </span>
-                </li>
-                
-              </ul>
-              
-            </div>
-          </div>
-        </div>
-      </div>
-      <div id="bgauthor" class="narrow-font" style="margin-top: -10px">
-        background image by
-        <a href="http://weitz.de/">Edi Weitz</a>
-      </div>
-    </div>
-  </div>
+<div id="tags">
+  <div><a href="/blog/tag/akka">akka</a>&nbsp;(2)</div>
+<div><a href="/blog/tag/algorithm">algorithm</a>&nbsp;(3)</div>
+<div><a href="/blog/tag/angularjs">angularjs</a>&nbsp;(1)</div>
+<div><a href="/blog/tag/aop">aop</a>&nbsp;(1)</div>
+<div><a href="/blog/tag/bitcoin">bitcoin</a>&nbsp;(1)</div>
+<div><a href="/blog/tag/blog">blog</a>&nbsp;(1)</div>
+<div><a href="/blog/tag/chrome">chrome</a>&nbsp;(1)</div>
+<div><a href="/blog/tag/cifs">cifs</a>&nbsp;(1)</div>
+<div><a href="/blog/tag/coffeescript">coffeescript</a>&nbsp;(3)</div>
+<div><a href="/blog/tag/concurrency">concurrency</a>&nbsp;(6)</div>
+<div><a href="/blog/tag/cpp">cpp</a>&nbsp;(2)</div>
+<div><a href="/blog/tag/economy">economy</a>&nbsp;(1)</div>
+<div><a href="/blog/tag/expressjs">expressjs</a>&nbsp;(1)</div>
+<div><a href="/blog/tag/facebook">facebook</a>&nbsp;(2)</div>
+<div><a href="/blog/tag/firefox">firefox</a>&nbsp;(1)</div>
+<div><a href="/blog/tag/google">google</a>&nbsp;(1)</div>
+<div><a href="/blog/tag/groups">groups</a>&nbsp;(1)</div>
+<div><a href="/blog/tag/hazelcast">hazelcast</a>&nbsp;(1)</div>
+<div><a href="/blog/tag/industry">industry</a>&nbsp;(1)</div>
+<div><a href="/blog/tag/intellij">intellij</a>&nbsp;(1)</div>
+<div><a href="/blog/tag/internet">internet</a>&nbsp;(1)</div>
+<div><a href="/blog/tag/java"><span class='highlight'>java</span></a>&nbsp;(26)</div>
+<div><a href="/blog/tag/javascript">javascript</a>&nbsp;(4)</div>
+<div><a href="/blog/tag/jgroups">jgroups</a>&nbsp;(3)</div>
+<div><a href="/blog/tag/kernel">kernel</a>&nbsp;(3)</div>
+<div><a href="/blog/tag/knockoutjs">knockoutjs</a>&nbsp;(1)</div>
+<div><a href="/blog/tag/latex">latex</a>&nbsp;(1)</div>
+<div><a href="/blog/tag/link">link</a>&nbsp;(1)</div>
+<div><a href="/blog/tag/linux">linux</a>&nbsp;(5)</div>
+<div><a href="/blog/tag/literature">literature</a>&nbsp;(1)</div>
+<div><a href="/blog/tag/macbook">macbook</a>&nbsp;(1)</div>
+<div><a href="/blog/tag/maven">maven</a>&nbsp;(1)</div>
+<div><a href="/blog/tag/microservice">microservice</a>&nbsp;(1)</div>
+<div><a href="/blog/tag/mininet">mininet</a>&nbsp;(1)</div>
+<div><a href="/blog/tag/nanoc">nanoc</a>&nbsp;(1)</div>
+<div><a href="/blog/tag/networking">networking</a>&nbsp;(8)</div>
+<div><a href="/blog/tag/nodejs">nodejs</a>&nbsp;(1)</div>
+<div><a href="/blog/tag/openflow">openflow</a>&nbsp;(5)</div>
+<div><a href="/blog/tag/openvswitch">openvswitch</a>&nbsp;(1)</div>
+<div><a href="/blog/tag/osx">osx</a>&nbsp;(1)</div>
+<div><a href="/blog/tag/play-framework">play framework</a>&nbsp;(3)</div>
+<div><a href="/blog/tag/politics">politics</a>&nbsp;(1)</div>
+<div><a href="/blog/tag/programming">programming</a>&nbsp;(2)</div>
+<div><a href="/blog/tag/python">python</a>&nbsp;(1)</div>
+<div><a href="/blog/tag/quasar">quasar</a>&nbsp;(2)</div>
+<div><a href="/blog/tag/railwayjs">railwayjs</a>&nbsp;(1)</div>
+<div><a href="/blog/tag/rx">rx</a>&nbsp;(1)</div>
+<div><a href="/blog/tag/samba">samba</a>&nbsp;(1)</div>
+<div><a href="/blog/tag/sbt">sbt</a>&nbsp;(1)</div>
+<div><a href="/blog/tag/scala">scala</a>&nbsp;(5)</div>
+<div><a href="/blog/tag/sdn">sdn</a>&nbsp;(5)</div>
+<div><a href="/blog/tag/spring">spring</a>&nbsp;(1)</div>
+<div><a href="/blog/tag/turkey">turkey</a>&nbsp;(1)</div>
+<div><a href="/blog/tag/vaadin">vaadin</a>&nbsp;(1)</div>
+<div><a href="/blog/tag/websocket">websocket</a>&nbsp;(1)</div>
+</div>
+
+<div id="posts">
+  
+  <h2>2016</h2>
+  <ul class="arrow-list">
+    
+    <li>
+      <span class="title">
+        <a href="/blog/post/2016/07/20/rxjava-backpressure/">Callback Blocking for Back-Pressure in RxJava</a>
+      </span><br/>
+      <span class="info">
+        posted at
+        07/20
+        with tags <a href="/blog/tag/concurrency">concurrency</a>, <a href="/blog/tag/java">java</a>, <a href="/blog/tag/rx">rx</a>
+      </span>
+    </li>
+    
+  </ul>
+  
+  <h2>2015</h2>
+  <ul class="arrow-list">
+    
+    <li>
+      <span class="title">
+        <a href="/blog/post/2015/11/27/maven-protobuf/">Compiling Protocol Buffers Sources in Maven</a>
+      </span><br/>
+      <span class="info">
+        posted at
+        11/27
+        with tags <a href="/blog/tag/java">java</a>, <a href="/blog/tag/maven">maven</a>
+      </span>
+    </li>
+    
+    <li>
+      <span class="title">
+        <a href="/blog/post/2015/11/20/scala-method-with-java-reserved-keyword/">Calling a Scala Method with a Java Reserved Keyword</a>
+      </span><br/>
+      <span class="info">
+        posted at
+        11/20
+        with tags <a href="/blog/tag/java">java</a>, <a href="/blog/tag/scala">scala</a>
+      </span>
+    </li>
+    
+    <li>
+      <span class="title">
+        <a href="/blog/post/2015/06/17/goto2015-microservices-workshop/">GOTO 2015 Microservices Workshop</a>
+      </span><br/>
+      <span class="info">
+        posted at
+        06/17
+        with tags <a href="/blog/tag/java">java</a>, <a href="/blog/tag/microservice">microservice</a>, <a href="/blog/tag/programming">programming</a>
+      </span>
+    </li>
+    
+    <li>
+      <span class="title">
+        <a href="/blog/post/2015/06/09/fibers-in-jvm/">Presentation: Fibers in Java Virtual Machine</a>
+      </span><br/>
+      <span class="info">
+        posted at
+        06/09
+        with tags <a href="/blog/tag/akka">akka</a>, <a href="/blog/tag/java">java</a>, <a href="/blog/tag/quasar">quasar</a>
+      </span>
+    </li>
+    
+    <li>
+      <span class="title">
+        <a href="/blog/post/2015/03/21/immutable-persistence/">Using Immutable Objects for Persistence in Java</a>
+      </span><br/>
+      <span class="info">
+        posted at
+        03/21
+        with tags <a href="/blog/tag/java">java</a>
+      </span>
+    </li>
+    
+    <li>
+      <span class="title">
+        <a href="/blog/post/2015/01/30/java-null-check/">Checking Null Arguments at Runtime Using Spring AOP</a>
+      </span><br/>
+      <span class="info">
+        posted at
+        01/08
+        with tags <a href="/blog/tag/java">java</a>, <a href="/blog/tag/spring">spring</a>, <a href="/blog/tag/aop">aop</a>
+      </span>
+    </li>
+    
+  </ul>
+  
+  <h2>2014</h2>
+  <ul class="arrow-list">
+    
+    <li>
+      <span class="title">
+        <a href="/blog/post/2014/12/05/apache-devicemap/">Parsing User-Agent Strings with Apache DeviceMap</a>
+      </span><br/>
+      <span class="info">
+        posted at
+        12/05
+        with tags <a href="/blog/tag/java">java</a>
+      </span>
+    </li>
+    
+    <li>
+      <span class="title">
+        <a href="/blog/post/2014/09/08/wildcards-in-java-generics/">Wildcards in Java Generics</a>
+      </span><br/>
+      <span class="info">
+        posted at
+        09/08
+        with tags <a href="/blog/tag/java">java</a>
+      </span>
+    </li>
+    
+    <li>
+      <span class="title">
+        <a href="/blog/post/2014/09/01/java-fiber-test/">Testing Fiber Implementations in JVM</a>
+      </span><br/>
+      <span class="info">
+        posted at
+        08/07
+        with tags <a href="/blog/tag/akka">akka</a>, <a href="/blog/tag/java">java</a>, <a href="/blog/tag/quasar">quasar</a>
+      </span>
+    </li>
+    
+    <li>
+      <span class="title">
+        <a href="/blog/post/2014/08/07/testing-websockets-in-play/">Testing WebSockets in Play Framework</a>
+      </span><br/>
+      <span class="info">
+        posted at
+        08/07
+        with tags <a href="/blog/tag/java">java</a>, <a href="/blog/tag/play-framework">play framework</a>, <a href="/blog/tag/websocket">websocket</a>
+      </span>
+    </li>
+    
+    <li>
+      <span class="title">
+        <a href="/blog/post/2014/06/27/parse-bitcoin-blockchain/">Parsing Bitcoin Blockchain Data in Java</a>
+      </span><br/>
+      <span class="info">
+        posted at
+        06/27
+        with tags <a href="/blog/tag/bitcoin">bitcoin</a>, <a href="/blog/tag/java">java</a>
+      </span>
+    </li>
+    
+    <li>
+      <span class="title">
+        <a href="/blog/post/2014/02/14/java-safe-publication/">Safe Object Publication in Java</a>
+      </span><br/>
+      <span class="info">
+        posted at
+        02/14
+        with tags <a href="/blog/tag/concurrency">concurrency</a>, <a href="/blog/tag/java">java</a>
+      </span>
+    </li>
+    
+    <li>
+      <span class="title">
+        <a href="/blog/post/2014/01/03/tcp-time-wait/">Sockets, TCP Keep Alive and TIME_WAIT</a>
+      </span><br/>
+      <span class="info">
+        posted at
+        01/03
+        with tags <a href="/blog/tag/java">java</a>, <a href="/blog/tag/link">link</a>
+      </span>
+    </li>
+    
+    <li>
+      <span class="title">
+        <a href="/blog/post/2014/01/03/safe-math-ops/">Detecting Overflows in Java Arithmetic Operators</a>
+      </span><br/>
+      <span class="info">
+        posted at
+        01/03
+        with tags <a href="/blog/tag/java">java</a>
+      </span>
+    </li>
+    
+  </ul>
+  
+  <h2>2013</h2>
+  <ul class="arrow-list">
+    
+    <li>
+      <span class="title">
+        <a href="/blog/post/2013/12/04/combinations/">Key to Parallel Combinations: Enumeration</a>
+      </span><br/>
+      <span class="info">
+        posted at
+        12/04
+        with tags <a href="/blog/tag/algorithm">algorithm</a>, <a href="/blog/tag/concurrency">concurrency</a>, <a href="/blog/tag/java">java</a>
+      </span>
+    </li>
+    
+    <li>
+      <span class="title">
+        <a href="/blog/post/2013/07/31/openflow-controllers/">On the OpenFlow Controllers</a>
+      </span><br/>
+      <span class="info">
+        posted at
+        07/31
+        with tags <a href="/blog/tag/cpp">cpp</a>, <a href="/blog/tag/java">java</a>, <a href="/blog/tag/networking">networking</a>, <a href="/blog/tag/openflow">openflow</a>, <a href="/blog/tag/python">python</a>, <a href="/blog/tag/sdn">sdn</a>
+      </span>
+    </li>
+    
+  </ul>
+  
+  <h2>2012</h2>
+  <ul class="arrow-list">
+    
+    <li>
+      <span class="title">
+        <a href="/blog/post/2012/11/28/setting-up-a-scala-dev-env/">Scala Development Environment with Intellij IDEA and SBT</a>
+      </span><br/>
+      <span class="info">
+        posted at
+        11/28
+        with tags <a href="/blog/tag/intellij">intellij</a>, <a href="/blog/tag/java">java</a>, <a href="/blog/tag/sbt">sbt</a>, <a href="/blog/tag/scala">scala</a>
+      </span>
+    </li>
+    
+    <li>
+      <span class="title">
+        <a href="/blog/post/2012/06/21/rpc-with-hazelcast/">RPC (Remote Procedure Call) with Hazelcast</a>
+      </span><br/>
+      <span class="info">
+        posted at
+        06/21
+        with tags <a href="/blog/tag/hazelcast">hazelcast</a>, <a href="/blog/tag/java">java</a>
+      </span>
+    </li>
+    
+    <li>
+      <span class="title">
+        <a href="/blog/post/2012/04/27/jgroups-ipv6-broadcast-problem/">JGroups IPv6 Broadcast Problem</a>
+      </span><br/>
+      <span class="info">
+        posted at
+        04/27
+        with tags <a href="/blog/tag/java">java</a>, <a href="/blog/tag/groups">groups</a>
+      </span>
+    </li>
+    
+    <li>
+      <span class="title">
+        <a href="/blog/post/2012/04/08/rpc-with-jgroups/">RPC (Remote Procedure Call) with JGroup</a>
+      </span><br/>
+      <span class="info">
+        posted at
+        04/08
+        with tags <a href="/blog/tag/java">java</a>, <a href="/blog/tag/jgroups">jgroups</a>
+      </span>
+    </li>
+    
+    <li>
+      <span class="title">
+        <a href="/blog/post/2012/03/25/cleaning-up-the-bufferedreader-mess/">Cleaning up the BufferedReader Mess in a Proxy Server</a>
+      </span><br/>
+      <span class="info">
+        posted at
+        03/25
+        with tags <a href="/blog/tag/java">java</a>
+      </span>
+    </li>
+    
+    <li>
+      <span class="title">
+        <a href="/blog/post/2012/03/19/shared-transport-in-jgroups/">Shared Transport in JGroups</a>
+      </span><br/>
+      <span class="info">
+        posted at
+        03/19
+        with tags <a href="/blog/tag/java">java</a>, <a href="/blog/tag/jgroups">jgroups</a>
+      </span>
+    </li>
+    
+    <li>
+      <span class="title">
+        <a href="/blog/post/2012/03/11/chat-application-with-play-and-knockoutjs/">Chat Application with Play Framework and KnockoutJS</a>
+      </span><br/>
+      <span class="info">
+        posted at
+        03/11
+        with tags <a href="/blog/tag/facebook">facebook</a>, <a href="/blog/tag/java">java</a>, <a href="/blog/tag/javascript">javascript</a>, <a href="/blog/tag/knockoutjs">knockoutjs</a>, <a href="/blog/tag/play-framework">play framework</a>
+      </span>
+    </li>
+    
+    <li>
+      <span class="title">
+        <a href="/blog/post/2012/02/23/synchronization-between-jgroups-replicatedhashmaps/">Synchronization Between JGroups.ReplicatedHashMap's</a>
+      </span><br/>
+      <span class="info">
+        posted at
+        02/23
+        with tags <a href="/blog/tag/java">java</a>, <a href="/blog/tag/jgroups">jgroups</a>
+      </span>
+    </li>
+    
+    <li>
+      <span class="title">
+        <a href="/blog/post/2012/02/20/facebook-login-and-secure-module/">Facebook Login and Secure Module Integration in Play</a>
+      </span><br/>
+      <span class="info">
+        posted at
+        02/20
+        with tags <a href="/blog/tag/facebook">facebook</a>, <a href="/blog/tag/java">java</a>, <a href="/blog/tag/play-framework">play framework</a>
+      </span>
+    </li>
+    
+  </ul>
+  
 </div>
 
 
+
+    </div>
   </body>
 </html>
 
