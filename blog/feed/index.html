@@ -2,13 +2,256 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <id>https://vy.github.io//</id>
   <title>Volkan Yazıcı's Soap Co.</title>
-  <updated>2016-07-20T20:32:00Z</updated>
+  <updated>2016-08-12T17:53:00Z</updated>
   <link rel="alternate" href="https://vy.github.io//"/>
   <link rel="self" href="https://vy.github.io//blog/feed/"/>
   <author>
     <name>Volkan Yazıcı</name>
     <uri>https://vy.github.io/</uri>
   </author>
+  <entry>
+    <id>tag:vy.github.io,2016-08-12://blog/post/2016/08/12/hotspot-heapdump-threadump/</id>
+    <title type="html">Programmatically Taking Heap and Thread Dumps in HotSpot</title>
+    <published>2016-08-12T17:53:00Z</published>
+    <updated>2016-08-12T17:53:00Z</updated>
+    <link rel="alternate" href="https://vy.github.io//blog/post/2016/08/12/hotspot-heapdump-threadump/"/>
+    <content type="html">
+&lt;p&gt;While taking heap and thread dumps are one click away using modern JVM
+toolset, in many cases the deployment environment access restrictions render
+these options unusable. Hence, you might end up exposing these functionalities
+in certain ways like an internal REST interface. This implies a new nasty
+obstacle: You need to know how to programmatically take heap and thread dumps
+in a Java application. Unfortunately, there does not exist a standard
+interface to access these functionalities within the VM as of date. But if you
+are only concerned about HotSpot, then you are in luck!&lt;/p&gt;
+
+&lt;h1 id="heap-dumps"&gt;Heap Dumps&lt;/h1&gt;
+
+&lt;p&gt;For heap dumps, once you get your teeth into a
+&lt;a href="https://docs.oracle.com/javase/8/docs/jre/api/management/extension/com/sun/management/HotSpotDiagnosticMXBean.html"&gt;HotSpotDiagnosticMXBean&lt;/a&gt;,
+you are safe to go. It already exposes a
+&lt;a href="https://docs.oracle.com/javase/8/docs/jre/api/management/extension/com/sun/management/HotSpotDiagnosticMXBean.html#dumpHeap-java.lang.String-boolean-"&gt;dumpHeap()&lt;/a&gt;
+method ready to be used.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-java"&gt;&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;com.sun.management.HotSpotDiagnosticMXBean&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+
+&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;javax.management.MBeanServer&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;java.io.File&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;java.io.IOException&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;java.lang.management.ManagementFactory&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+
+&lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kd"&gt;enum&lt;/span&gt; &lt;span class="n"&gt;HotSpotHeapDumps&lt;/span&gt; &lt;span class="o"&gt;{;&lt;/span&gt;
+
+    &lt;span class="kd"&gt;private&lt;/span&gt; &lt;span class="kd"&gt;static&lt;/span&gt; &lt;span class="kd"&gt;final&lt;/span&gt; &lt;span class="n"&gt;HotSpotDiagnosticMXBean&lt;/span&gt; &lt;span class="n"&gt;HOT_SPOT_DIAGNOSTIC_MX_BEAN&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;
+            &lt;span class="n"&gt;getHotspotDiagnosticMxBean&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
+
+    &lt;span class="kd"&gt;private&lt;/span&gt; &lt;span class="kd"&gt;static&lt;/span&gt; &lt;span class="n"&gt;HotSpotDiagnosticMXBean&lt;/span&gt; &lt;span class="nf"&gt;getHotspotDiagnosticMxBean&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+        &lt;span class="n"&gt;MBeanServer&lt;/span&gt; &lt;span class="n"&gt;server&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;ManagementFactory&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;getPlatformMBeanServer&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
+        &lt;span class="k"&gt;try&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+            &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;ManagementFactory&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;newPlatformMXBeanProxy&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;
+                &lt;span class="n"&gt;server&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;HOT_SPOT_DIAGNOSTIC_MX_BEAN_NAME&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;HotSpotDiagnosticMXBean&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;class&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+        &lt;span class="o"&gt;}&lt;/span&gt; &lt;span class="k"&gt;catch&lt;/span&gt; &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;IOException&lt;/span&gt; &lt;span class="n"&gt;error&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+            &lt;span class="k"&gt;throw&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nf"&gt;RuntimeException&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="s"&gt;"failed getting Hotspot Diagnostic MX bean"&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;error&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+        &lt;span class="o"&gt;}&lt;/span&gt;
+    &lt;span class="o"&gt;}&lt;/span&gt;
+
+    &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;create&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;File&lt;/span&gt; &lt;span class="n"&gt;file&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="kt"&gt;boolean&lt;/span&gt; &lt;span class="n"&gt;live&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="kd"&gt;throws&lt;/span&gt; &lt;span class="n"&gt;IOException&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+        &lt;span class="n"&gt;HOT_SPOT_DIAGNOSTIC_MX_BEAN&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;dumpHeap&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;file&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;getAbsolutePath&lt;/span&gt;&lt;span class="o"&gt;(),&lt;/span&gt; &lt;span class="n"&gt;live&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+    &lt;span class="o"&gt;}&lt;/span&gt;
+
+&lt;span class="o"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The second argument of &lt;code&gt;dumpHeap&lt;/code&gt; denotes live objects, that is, objects that
+are reachable from others.&lt;/p&gt;
+
+&lt;p&gt;Note that many real-world Java applications occupy quite some memory. As a
+result of this, created heap dump generally end up consuming significant
+amount of disk space. You need to come up with your own custom clean up
+mechanism to tackle this problem. (For instance, in a JAX-RS resource, you can
+purpose a custom &lt;code&gt;MessageBodyWriter&lt;/code&gt; to delete the file after writing the
+entire file to the output stream.)&lt;/p&gt;
+
+&lt;h1 id="thread-dumps"&gt;Thread Dumps&lt;/h1&gt;
+
+&lt;p&gt;When you think first about thread dumps, they just contain simple plain text
+data.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;2016-08-12 18:40:46
+Full thread dump OpenJDK 64-Bit Server VM (25.76-b198 mixed mode):
+
+"RMI TCP Connection(266)-127.0.0.1" #24884 daemon prio=9 os_prio=0 tid=0x00007f9474010000 nid=0x2cee runnable [0x00007f941571b000]
+   java.lang.Thread.State: RUNNABLE
+    at java.net.SocketInputStream.socketRead0(Native Method)
+    at java.net.SocketInputStream.socketRead(SocketInputStream.java:116)
+    at java.net.SocketInputStream.read(SocketInputStream.java:170)
+    at java.net.SocketInputStream.read(SocketInputStream.java:141)
+    at java.io.BufferedInputStream.fill(BufferedInputStream.java:246)
+    at java.io.BufferedInputStream.read(BufferedInputStream.java:265)
+    - locked &amp;lt;0x00000005c086e8b0&amp;gt; (a java.io.BufferedInputStream)
+    at java.io.FilterInputStream.read(FilterInputStream.java:83)
+    at sun.rmi.transport.tcp.TCPTransport.handleMessages(TCPTransport.java:550)
+    at sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run0(TCPTransport.java:826)
+    at sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.lambda$run$0(TCPTransport.java:683)
+    at sun.rmi.transport.tcp.TCPTransport$ConnectionHandler$$Lambda$83/628845041.run(Unknown Source)
+    at java.security.AccessController.doPrivileged(Native Method)
+    at sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run(TCPTransport.java:682)
+    at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1142)
+    at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:617)
+    at java.lang.Thread.run(Thread.java:745)
+
+   Locked ownable synchronizers:
+    - &amp;lt;0x00000005c0489198&amp;gt; (a java.util.concurrent.ThreadPoolExecutor$Worker)
+
+"JobScheduler FJ pool 0/4" #24883 daemon prio=6 os_prio=0 tid=0x00007f946415d800 nid=0x2ced waiting on condition [0x00007f94093d2000]
+   java.lang.Thread.State: TIMED_WAITING (parking)
+    at sun.misc.Unsafe.park(Native Method)
+    - parking to wait for  &amp;lt;0x00000005d8a5f9e0&amp;gt; (a jsr166e.ForkJoinPool)
+    at jsr166e.ForkJoinPool.awaitWork(ForkJoinPool.java:1756)
+    at jsr166e.ForkJoinPool.scan(ForkJoinPool.java:1694)
+    at jsr166e.ForkJoinPool.runWorker(ForkJoinPool.java:1642)
+    at jsr166e.ForkJoinWorkerThread.run(ForkJoinWorkerThread.java:108)
+
+   Locked ownable synchronizers:
+    - None
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Unfortunately, thread dumps do not have a standard syntax. While there are
+various ways to produce this output, thread dump analysis software does not
+play well with them. For instance, &lt;a href="https://www.ibm.com/developerworks/community/groups/service/html/communityview?communityUuid=2245aa39-fa5c-4475-b891-14c205f7333c"&gt;IBM Thread and Monitor Dump Analyzer for
+Java&lt;/a&gt;
+cannot parse thread dumps created by VisualVM using JMX. At the end of the
+day, I always needed to fall back to a HotSpot thread dump.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;tools.jar&lt;/code&gt; shipped with JDKs (&amp;gt;=1.6) provide the magical
+&lt;code&gt;HotSpotVirtualMachine&lt;/code&gt; class containing our saviour &lt;code&gt;remoteDataDump()&lt;/code&gt;
+method. First add the following lines to your &lt;code&gt;pom.xml&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-xml"&gt;&lt;span class="nt"&gt;&amp;lt;dependencyManagement&amp;gt;&lt;/span&gt;
+    &lt;span class="nt"&gt;&amp;lt;dependencies&amp;gt;&lt;/span&gt;
+
+        &lt;span class="nt"&gt;&amp;lt;dependency&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;groupId&amp;gt;&lt;/span&gt;com.sun&lt;span class="nt"&gt;&amp;lt;/groupId&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;artifactId&amp;gt;&lt;/span&gt;tools&lt;span class="nt"&gt;&amp;lt;/artifactId&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;version&amp;gt;&lt;/span&gt;${java.version}&lt;span class="nt"&gt;&amp;lt;/version&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;scope&amp;gt;&lt;/span&gt;system&lt;span class="nt"&gt;&amp;lt;/scope&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;systemPath&amp;gt;&lt;/span&gt;${tools.jar}&lt;span class="nt"&gt;&amp;lt;/systemPath&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;/dependency&amp;gt;&lt;/span&gt;
+
+    &lt;span class="nt"&gt;&amp;lt;/dependencies&amp;gt;&lt;/span&gt;
+&lt;span class="nt"&gt;&amp;lt;/dependencyManagement&amp;gt;&lt;/span&gt;
+
+&lt;span class="nt"&gt;&amp;lt;profiles&amp;gt;&lt;/span&gt;
+
+    &lt;span class="c"&gt;&amp;lt;!-- tools.jar path for GNU/Linux and Windows --&amp;gt;&lt;/span&gt;
+    &lt;span class="nt"&gt;&amp;lt;profile&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;id&amp;gt;&lt;/span&gt;default-tools.jar&lt;span class="nt"&gt;&amp;lt;/id&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;activation&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;file&amp;gt;&lt;/span&gt;
+                &lt;span class="nt"&gt;&amp;lt;exists&amp;gt;&lt;/span&gt;${java.home}/../lib/tools.jar&lt;span class="nt"&gt;&amp;lt;/exists&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;/file&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;/activation&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;properties&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;tools.jar&amp;gt;&lt;/span&gt;${java.home}/../lib/tools.jar&lt;span class="nt"&gt;&amp;lt;/tools.jar&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;/properties&amp;gt;&lt;/span&gt;
+    &lt;span class="nt"&gt;&amp;lt;/profile&amp;gt;&lt;/span&gt;
+
+    &lt;span class="c"&gt;&amp;lt;!-- tools.jar path for OSX --&amp;gt;&lt;/span&gt;
+    &lt;span class="nt"&gt;&amp;lt;profile&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;id&amp;gt;&lt;/span&gt;default-tools.jar-mac&lt;span class="nt"&gt;&amp;lt;/id&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;activation&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;file&amp;gt;&lt;/span&gt;
+                &lt;span class="nt"&gt;&amp;lt;exists&amp;gt;&lt;/span&gt;${java.home}/../Classes/classes.jar&lt;span class="nt"&gt;&amp;lt;/exists&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;/file&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;/activation&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;properties&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;tools.jar&amp;gt;&lt;/span&gt;${java.home}/../Classes/classes.jar&lt;span class="nt"&gt;&amp;lt;/tools.jar&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;/properties&amp;gt;&lt;/span&gt;
+    &lt;span class="nt"&gt;&amp;lt;/profile&amp;gt;&lt;/span&gt;
+
+&lt;span class="nt"&gt;&amp;lt;/profiles&amp;gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Then the rest is a matter of accessing to &lt;code&gt;HotSpotVirtualMachine&lt;/code&gt; class:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-java"&gt;&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;com.google.common.io.ByteStreams&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;com.sun.management.HotSpotDiagnosticMXBean&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;com.sun.tools.attach.AttachNotSupportedException&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;com.sun.tools.attach.VirtualMachine&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;sun.tools.attach.HotSpotVirtualMachine&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+
+&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;java.io.IOException&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;java.io.InputStream&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;java.lang.management.ManagementFactory&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+
+&lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kd"&gt;enum&lt;/span&gt; &lt;span class="n"&gt;HotSpotThreadDumps&lt;/span&gt; &lt;span class="o"&gt;{;&lt;/span&gt;
+
+    &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="n"&gt;String&lt;/span&gt; &lt;span class="nf"&gt;create&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="kd"&gt;throws&lt;/span&gt; &lt;span class="n"&gt;AttachNotSupportedException&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;IOException&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+
+        &lt;span class="c1"&gt;// Get the PID of the current JVM process.&lt;/span&gt;
+        &lt;span class="n"&gt;String&lt;/span&gt; &lt;span class="n"&gt;selfName&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;ManagementFactory&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;getRuntimeMXBean&lt;/span&gt;&lt;span class="o"&gt;().&lt;/span&gt;&lt;span class="na"&gt;getName&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
+        &lt;span class="n"&gt;String&lt;/span&gt; &lt;span class="n"&gt;selfPid&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;selfName&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;substring&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;selfName&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;indexOf&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="sc"&gt;'@'&lt;/span&gt;&lt;span class="o"&gt;));&lt;/span&gt;
+
+        &lt;span class="c1"&gt;// Attach to the VM.&lt;/span&gt;
+        &lt;span class="n"&gt;VirtualMachine&lt;/span&gt; &lt;span class="n"&gt;vm&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;VirtualMachine&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;attach&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;selfPid&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+        &lt;span class="n"&gt;HotSpotVirtualMachine&lt;/span&gt; &lt;span class="n"&gt;hotSpotVm&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;HotSpotVirtualMachine&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="n"&gt;vm&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+
+        &lt;span class="c1"&gt;// Request a thread dump.&lt;/span&gt;
+        &lt;span class="k"&gt;try&lt;/span&gt; &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;InputStream&lt;/span&gt; &lt;span class="n"&gt;inputStream&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;hotSpotVm&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;remoteDataDump&lt;/span&gt;&lt;span class="o"&gt;())&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+            &lt;span class="kt"&gt;byte&lt;/span&gt;&lt;span class="o"&gt;[]&lt;/span&gt; &lt;span class="n"&gt;bytes&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;ByteStreams&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;toByteArray&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;inputStream&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+            &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nf"&gt;String&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;bytes&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+        &lt;span class="o"&gt;}&lt;/span&gt;
+
+    &lt;span class="o"&gt;}&lt;/span&gt;
+
+&lt;span class="o"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;You finished writing this code, you clicked on the Run button of the IDE, and
+it worked like a charm. This get you so excited that you wanted to add this
+functionality to your JEE service! Or better: Turn this into a JAR and pass it
+to your client’s machine and watch them take their part in the joy of
+thread-dump-oriented debugging! And this is what you get in return:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;java.lang.NoClassDefFoundError: com/sun/tools/attach/AttachNotSupportedException
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Which indicates that you did not pay attention my words: &lt;em&gt;&lt;code&gt;tools.jar&lt;/code&gt; is
+shipped with JDKs.&lt;/em&gt; So neither your flashy JEE application server, nor your
+client’s machine has a JDK, but a JRE. Rings a bell? Yes, you indeed can add
+&lt;code&gt;tools.jar&lt;/code&gt; into the final WAR/JAR of your project:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-xml"&gt;&lt;span class="nt"&gt;&amp;lt;build&amp;gt;&lt;/span&gt;
+    &lt;span class="nt"&gt;&amp;lt;plugins&amp;gt;&lt;/span&gt;
+
+        &lt;span class="c"&gt;&amp;lt;!-- copy tools.jar from JAVA_HOME --&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;plugin&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;groupId&amp;gt;&lt;/span&gt;org.apache.maven.plugins&lt;span class="nt"&gt;&amp;lt;/groupId&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;artifactId&amp;gt;&lt;/span&gt;maven-dependency-plugin&lt;span class="nt"&gt;&amp;lt;/artifactId&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;executions&amp;gt;&lt;/span&gt;
+                &lt;span class="nt"&gt;&amp;lt;execution&amp;gt;&lt;/span&gt;
+                    &lt;span class="nt"&gt;&amp;lt;id&amp;gt;&lt;/span&gt;copy-system-dependencies&lt;span class="nt"&gt;&amp;lt;/id&amp;gt;&lt;/span&gt;
+                    &lt;span class="nt"&gt;&amp;lt;phase&amp;gt;&lt;/span&gt;prepare-package&lt;span class="nt"&gt;&amp;lt;/phase&amp;gt;&lt;/span&gt;
+                    &lt;span class="nt"&gt;&amp;lt;goals&amp;gt;&lt;/span&gt;
+                        &lt;span class="nt"&gt;&amp;lt;goal&amp;gt;&lt;/span&gt;copy-dependencies&lt;span class="nt"&gt;&amp;lt;/goal&amp;gt;&lt;/span&gt;
+                    &lt;span class="nt"&gt;&amp;lt;/goals&amp;gt;&lt;/span&gt;
+                    &lt;span class="nt"&gt;&amp;lt;configuration&amp;gt;&lt;/span&gt;
+                        &lt;span class="nt"&gt;&amp;lt;outputDirectory&amp;gt;&lt;/span&gt;${project.build.directory}/${project.build.finalName}/WEB-INF/lib&lt;span class="nt"&gt;&amp;lt;/outputDirectory&amp;gt;&lt;/span&gt;
+                        &lt;span class="nt"&gt;&amp;lt;includeScope&amp;gt;&lt;/span&gt;system&lt;span class="nt"&gt;&amp;lt;/includeScope&amp;gt;&lt;/span&gt;
+                    &lt;span class="nt"&gt;&amp;lt;/configuration&amp;gt;&lt;/span&gt;
+                &lt;span class="nt"&gt;&amp;lt;/execution&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;/executions&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;/plugin&amp;gt;&lt;/span&gt;
+
+    &lt;span class="nt"&gt;&amp;lt;/plugins&amp;gt;&lt;/span&gt;
+&lt;span class="nt"&gt;&amp;lt;/build&amp;gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Note that this approach incorporates a JDK-specific JAR into your application
+and assumes that the application will run on a HotSpot VM. But unfortunately
+this is the only way that I know of to produce a thread dump that works with
+thread dump analysis software. If you don’t have such a need and just want a
+crude JMX generated thread dump, check out
+&lt;a href="https://java.net/projects/visualvm/sources/svn/content/branches/release134/visualvm/jmx/src/com/sun/tools/visualvm/jmx/impl/JmxSupport.java"&gt;JmxSupport.java&lt;/a&gt;
+shipped with VisualVM.&lt;/p&gt;
+</content>
+  </entry>
   <entry>
     <id>tag:vy.github.io,2016-07-20://blog/post/2016/07/20/rxjava-backpressure/</id>
     <title type="html">Callback Blocking for Back-Pressure in RxJava</title>
@@ -2052,23 +2295,6 @@ JSON-passing approach (where each microservice needs to implement its own
 reader/writer) not solid enough and I did not buy his facts on rationale
 behind this. Further, relating the microservice architectures with a
 particular language or tool was absolutely awkward, to say the least.&lt;/p&gt;
-</content>
-  </entry>
-  <entry>
-    <id>tag:vy.github.io,2015-06-09://blog/post/2015/06/09/fibers-in-jvm/</id>
-    <title type="html">Presentation: Fibers in Java Virtual Machine</title>
-    <published>2015-06-09T20:32:00Z</published>
-    <updated>2015-06-09T20:32:00Z</updated>
-    <link rel="alternate" href="https://vy.github.io//blog/post/2015/06/09/fibers-in-jvm/"/>
-    <content type="html">
-&lt;p&gt;A couple of months ago, I made a presentation in one of
-&lt;a href="http://bol.com"&gt;bol.com&lt;/a&gt; Brown Bag Sessions on the &lt;em&gt;Fiber Implementations in
-Java Virtual Machine&lt;/em&gt;. With the hope that others might find it useful, I share
-it here. (Slides are also available in &lt;a href="fibers-in-jvm.pdf"&gt;PDF&lt;/a&gt; and
-&lt;a href="fibers-in-jvm-org.odp"&gt;ODP&lt;/a&gt; formats.)&lt;/p&gt;
-
-&lt;iframe src="https://www.slideshare.net/slideshow/embed_code/key/CdpM73pq92heMk" width="476" height="400" frameborder="0" marginwidth="0" marginheight="0" scrolling="no"&gt;
-&lt;/iframe&gt;
 </content>
   </entry>
 </feed>
