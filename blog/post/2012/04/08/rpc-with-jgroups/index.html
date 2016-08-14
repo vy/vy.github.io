@@ -27,7 +27,6 @@
 
     
 
-
 <div id="post">
 
 	<div class="head">
@@ -110,10 +109,6 @@
 
 <p>I think (at least, hope) the code is self-explanatory. A minor important point here is the RPC channel. Per see, I use <code>ChannelFactory.getInstance().create()</code> method to create the channel. <code>ChannelFactory</code> is a shortcut class to create multiple channels sharing the same transport. (See my <a href="/blog/post/2012/03/19/shared-transport-in-jgroups/">Shared Transport in JGroups</a> post for details.) That is, you need to have a separate JGroups channel reserved for RPC communication. All other messages sent/received using this channel will be consumed and ignored by the <code>RpcDispatcher</code>.</p>
 
-
-	  <script type="text/javascript">
-	    $("#post table").attr("class", "table table-hover");
-	  </script>
 
 	  <div id="disqus_thread"></div>
 	  <script type="text/javascript">

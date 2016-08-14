@@ -27,7 +27,6 @@
 
     
 
-
 <div id="post">
 
 	<div class="head">
@@ -142,10 +141,6 @@
 
 <p>Here the JVM defers initializing the <code>ResourceHolder</code> class until it is actually used [JLS 12.4.1], and because the <code>Resource</code> is initialized with a static initializer, no additional synchronization is needed. The first call to <code>getResource</code> by any thread causes <code>ResourceHolder</code> to be loaded and initialized, at which time the initialization of the <code>Resource</code> happens through the static initializer.</p>
 
-
-	  <script type="text/javascript">
-	    $("#post table").attr("class", "table table-hover");
-	  </script>
 
 	  <div id="disqus_thread"></div>
 	  <script type="text/javascript">
