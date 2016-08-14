@@ -116,8 +116,9 @@ cannot parse thread dumps created by VisualVM using JMX. At the end of the
 day, I always needed to fall back to a HotSpot thread dump.
 
 `tools.jar` shipped with JDKs (>=1.6) provide the magical
-`HotSpotVirtualMachine` class containing our saviour `remoteDataDump()`
-method. First add the following lines to your `pom.xml`:
+[HotSpotVirtualMachine](http://www.docjar.com/docs/api/sun/tools/attach/HotSpotVirtualMachine.html)
+class containing our saviour `remoteDataDump()` method. First add the
+following lines to your `pom.xml`:
 
     #!xml
     <dependencyManagement>
