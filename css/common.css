@@ -10,7 +10,8 @@ p, li {
   list-style-type: none;
   text-indent: 0;
   text-align: center;
-  padding: 0; }
+  padding: 0;
+  margin-bottom: 2em; }
   #menu li {
     display: inline;
     margin-left: 1.05em;
