@@ -20,8 +20,8 @@ lastCommitId=$(getLastCommitId)
 echo "Switching to master..."
 git checkout master
 
-echo "Copying output files..."
-cp -r output/* .
+echo "Syncing output files..."
+rsync --exclude-from rsync-excludes.txt -a --delete --force output/ .
 
 echo "Adding all output files to the repository..."
 git add .
