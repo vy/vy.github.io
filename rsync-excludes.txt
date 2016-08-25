@@ -1,7 +1,6 @@
 /.git
 /.gitignore
 /.sass-cache
-/.vagrant
 /CNAME
 /crash.log
 /output
