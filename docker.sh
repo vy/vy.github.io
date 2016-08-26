@@ -12,7 +12,7 @@ case $1 in
 		;;
 
 	run)
-		sudo docker run \
+		docker run \
 			-i -t \
 			-p 3000:3000 \
 			-v $(pwd):/app \
