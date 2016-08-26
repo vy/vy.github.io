@@ -29,17 +29,21 @@
 
 <div id="post">
 
-	<div class="head">
-		<div class="title">Chat Application with Play Framework and KnockoutJS</div>
-		<div class="subtitle">posted at
-			March 11, 2012
-			with tags <a href="/blog/tag/facebook">facebook</a>, <a href="/blog/tag/java">java</a>, <a href="/blog/tag/javascript">javascript</a>, <a href="/blog/tag/knockoutjs">knockoutjs</a>, <a href="/blog/tag/play-framework">play framework</a>
-		</div>
-	</div>
+    <div class="head">
+        <div class="title">Chat Application with Play Framework and KnockoutJS</div>
+        <div class="subtitle">posted at
+            March 11, 2012
+            with tags <a href="/blog/tag/facebook">facebook</a>, <a href="/blog/tag/java">java</a>, <a href="/blog/tag/javascript">javascript</a>, <a href="/blog/tag/knockoutjs">knockoutjs</a>, <a href="/blog/tag/play-framework">play framework</a>
+        </div>
+    </div>
 
-	<div class="body">
+    <div class="body">
 
-	  
+        <script type="text/javascript">
+        var asyncLoadRequests = [];
+        </script>
+
+        
 <p>For a geography based social web application, I chose to work on a <a href="http://en.wikipedia.org/wiki/Single-page_application">Single Page Application</a> template. For this purpose, I needed a Javascript framework to do the necessary plumbing for synchronizing server side and client side model objects. It took my nearly 3-4 weeks to finish the implementation. I was very happy with its final state and was excited to use it in the rest of the project. Next morning, I met with <a href="http://documentcloud.github.com/backbone/">BackboneJS</a> with a suggestion from a friend of mine. Damn! My implementation was so close to BackboneJS that almost every function name was identical. Anyway, I couldn’t know if I should cry or laugh. Following that path, it didn’t take long for me to discover <a href="http://knockoutjs.com/">KnockoutJS</a>. I found it astonishingly beautiful and directly dived into the depths of the tutorial and spent that half day to read-and-evaluate  the exercises. Since the best way to learn something is to use it, in this blog post I will try to walk you through a chat application using <a href="http://playframework.org/">Play Framework</a> and KnockoutJS.</p>
 
 <p>In order to save some effort, I’ll use the Facebook Login mechanics described in my <a href="/blog/post/2012/02/20/facebook-login-and-secure-module/">Facebook Login and Secure Module Integration in Play</a> post. Since I put together the necessary pieces into a GitHub project (<a href="http://github.com/vy/play-facebook">play-facebook</a>), I will bootstrap directly from there.</p>
@@ -357,29 +361,36 @@ Another cool KnockoutJS feature is its <code>foreach</code> looping functionalit
 <p>There are other cool KnockoutJS tricks that are available in the above chat room sources (e.g., <code>if: type == 'MESSAGE'</code>, <code>css: { you: user == '${username}'</code>, etc.), but explaining all of them is out of the scope of my agenda, at least not in this blog post. I strongly advise you to take a look at the KnockoutJS <a href="http://learn.knockoutjs.com/">tutorials</a> and <a href="documentation">documentation</a>.</p>
 
 
-	  <div id="disqus_thread"></div>
-	  <script type="text/javascript">
-	  var disqus_shortname = 'vyazici';
-	  var disqus_identifier = '/blog/post/20120311-chat-application-with-play-and-knockoutjs/';
-	  var disqus_title = 'Chat Application with Play Framework and KnockoutJS';
-	  (function() {
-	  	var dsq = document.createElement('script');
-	  	dsq.type = 'text/javascript';
-	  	dsq.async = true;
-	  	dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
-	  	(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-	  })();
-	  </script>
+        <div id="disqus_thread"></div>
+        <script type="text/javascript">
+        var disqus_shortname = 'vyazici';
+        var disqus_identifier = '/blog/post/20120311-chat-application-with-play-and-knockoutjs/';
+        var disqus_title = 'Chat Application with Play Framework and KnockoutJS';
+        (function() {
+            var dsq = document.createElement('script');
+            dsq.type = 'text/javascript';
+            dsq.async = true;
+            dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+        </script>
 
-	</div>
+        
 
-</div>
-
-
-
-
+        
 
     </div>
   </body>
 </html>
 
+
+        <script type="text/javascript">
+        for (var i = 0; i < asyncLoadRequests.length; i++) {
+            asyncLoadRequest = asyncLoadRequests[i];
+            asyncLoadRequest();
+        }
+        </script>
+
+    </div>
+
+</div>

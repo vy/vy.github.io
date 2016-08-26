@@ -29,17 +29,21 @@
 
 <div id="post">
 
-	<div class="head">
-		<div class="title">Synchronization Between JGroups.ReplicatedHashMap's</div>
-		<div class="subtitle">posted at
-			February 23, 2012
-			with tags <a href="/blog/tag/java">java</a>, <a href="/blog/tag/jgroups">jgroups</a>
-		</div>
-	</div>
+    <div class="head">
+        <div class="title">Synchronization Between JGroups.ReplicatedHashMap's</div>
+        <div class="subtitle">posted at
+            February 23, 2012
+            with tags <a href="/blog/tag/java">java</a>, <a href="/blog/tag/jgroups">jgroups</a>
+        </div>
+    </div>
 
-	<div class="body">
+    <div class="body">
 
-	  
+        <script type="text/javascript">
+        var asyncLoadRequests = [];
+        </script>
+
+        
 <p><a href="http://www.jgroups.org/javadoc/org/jgroups/blocks/ReplicatedHashMap.html"><code>ReplicatedHashMap</code></a> of <a href="http://www.jgroups.org/">JGroups</a> provides a distributed <a href="http://docs.oracle.com/javase/6/docs/api/java/util/concurrent/ConcurrentHashMap.html"><code>ConcurrentHashMap</code></a> implementation. In its simplest form, it propagates every local change to all other instances in the cluster and you get your replicated-HashMap between available cluster members.</p>
 
 <p>In a cluster environment, new node arrivals are highly anticipated, but <code>ReplicatedHashMap</code> doesn’t really keep up with the late joiners. See below execution flow for a late joiner scenario.</p>
@@ -111,29 +115,36 @@
 <p>See <a href="http://comments.gmane.org/gmane.comp.java.javagroups.general/7665">ReplicatedHashMap Updates for Late Joiners</a> post in the mailing-list for the related discussion.</p>
 
 
-	  <div id="disqus_thread"></div>
-	  <script type="text/javascript">
-	  var disqus_shortname = 'vyazici';
-	  var disqus_identifier = '/blog/post/20120223-synchronization-between-jgroups-replicatedhashmaps/';
-	  var disqus_title = 'Synchronization Between JGroups.ReplicatedHashMap's';
-	  (function() {
-	  	var dsq = document.createElement('script');
-	  	dsq.type = 'text/javascript';
-	  	dsq.async = true;
-	  	dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
-	  	(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-	  })();
-	  </script>
+        <div id="disqus_thread"></div>
+        <script type="text/javascript">
+        var disqus_shortname = 'vyazici';
+        var disqus_identifier = '/blog/post/20120223-synchronization-between-jgroups-replicatedhashmaps/';
+        var disqus_title = 'Synchronization Between JGroups.ReplicatedHashMap's';
+        (function() {
+            var dsq = document.createElement('script');
+            dsq.type = 'text/javascript';
+            dsq.async = true;
+            dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+        </script>
 
-	</div>
+        
 
-</div>
-
-
-
-
+        
 
     </div>
   </body>
 </html>
 
+
+        <script type="text/javascript">
+        for (var i = 0; i < asyncLoadRequests.length; i++) {
+            asyncLoadRequest = asyncLoadRequests[i];
+            asyncLoadRequest();
+        }
+        </script>
+
+    </div>
+
+</div>

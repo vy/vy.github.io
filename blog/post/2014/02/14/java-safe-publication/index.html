@@ -29,17 +29,21 @@
 
 <div id="post">
 
-	<div class="head">
-		<div class="title">Safe Object Publication in Java</div>
-		<div class="subtitle">posted at
-			February 14, 2014
-			with tags <a href="/blog/tag/concurrency">concurrency</a>, <a href="/blog/tag/java">java</a>
-		</div>
-	</div>
+    <div class="head">
+        <div class="title">Safe Object Publication in Java</div>
+        <div class="subtitle">posted at
+            February 14, 2014
+            with tags <a href="/blog/tag/concurrency">concurrency</a>, <a href="/blog/tag/java">java</a>
+        </div>
+    </div>
 
-	<div class="body">
+    <div class="body">
 
-	  
+        <script type="text/javascript">
+        var asyncLoadRequests = [];
+        </script>
+
+        
 <p>I have just finished reading <a href="http://jcip.net/">Java Concurrency in Practice</a> yesterday and would like to share some excerpts from the book on safe object publication in Java. Before stepping into the details, I would like to state that I found every single page of the book quite useful and found numerous places that I can enhance my existing code base during my daily coding routine. Thanks to <a href="https://twitter.com/BrianGoetz">@BrianGoetz</a> et al for such a comprehensive and practical guide. (For those who want to go further up to its extremes, I strongly recommend you to check <a href="http://shipilev.net/">Aleksey Shipilёv</a>’s <a href="http://shipilev.net/blog/2014/safe-public-construction/">Safe Publication and Safe Initialization in Java</a> article – a must read on the subject.)</p>
 
 <p><em>(Presented excerpts are copied directly, sometimes with slight changes, from <a href="http://jcip.net/">Java Concurrency in Practice</a>.)</em></p>
@@ -142,29 +146,36 @@
 <p>Here the JVM defers initializing the <code>ResourceHolder</code> class until it is actually used [JLS 12.4.1], and because the <code>Resource</code> is initialized with a static initializer, no additional synchronization is needed. The first call to <code>getResource</code> by any thread causes <code>ResourceHolder</code> to be loaded and initialized, at which time the initialization of the <code>Resource</code> happens through the static initializer.</p>
 
 
-	  <div id="disqus_thread"></div>
-	  <script type="text/javascript">
-	  var disqus_shortname = 'vyazici';
-	  var disqus_identifier = '/blog/post/20140214-java-safe-publication/';
-	  var disqus_title = 'Safe Object Publication in Java';
-	  (function() {
-	  	var dsq = document.createElement('script');
-	  	dsq.type = 'text/javascript';
-	  	dsq.async = true;
-	  	dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
-	  	(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-	  })();
-	  </script>
+        <div id="disqus_thread"></div>
+        <script type="text/javascript">
+        var disqus_shortname = 'vyazici';
+        var disqus_identifier = '/blog/post/20140214-java-safe-publication/';
+        var disqus_title = 'Safe Object Publication in Java';
+        (function() {
+            var dsq = document.createElement('script');
+            dsq.type = 'text/javascript';
+            dsq.async = true;
+            dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+        </script>
 
-	</div>
+        
 
-</div>
-
-
-
-
+        
 
     </div>
   </body>
 </html>
 
+
+        <script type="text/javascript">
+        for (var i = 0; i < asyncLoadRequests.length; i++) {
+            asyncLoadRequest = asyncLoadRequests[i];
+            asyncLoadRequest();
+        }
+        </script>
+
+    </div>
+
+</div>

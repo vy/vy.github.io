@@ -29,17 +29,21 @@
 
 <div id="post">
 
-	<div class="head">
-		<div class="title">Performance of Linux IP Aliased Network Interfaces: Lessons Learnt</div>
-		<div class="subtitle">posted at
-			June 4, 2012
-			with tags <a href="/blog/tag/kernel">kernel</a>, <a href="/blog/tag/linux">linux</a>, <a href="/blog/tag/networking">networking</a>
-		</div>
-	</div>
+    <div class="head">
+        <div class="title">Performance of Linux IP Aliased Network Interfaces: Lessons Learnt</div>
+        <div class="subtitle">posted at
+            June 4, 2012
+            with tags <a href="/blog/tag/kernel">kernel</a>, <a href="/blog/tag/linux">linux</a>, <a href="/blog/tag/networking">networking</a>
+        </div>
+    </div>
 
-	<div class="body">
+    <div class="body">
 
-	  
+        <script type="text/javascript">
+        var asyncLoadRequests = [];
+        </script>
+
+        
 <p>In an earlier <a href="/blog/post/2012/05/11/performance-of-linux-ip-alias/">post</a>, I had put together a set of benchmarks to measure the performance of IP aliased network interfaces in Linux. While I was expecting a performance degredation due to IP aliasing related book keeping at the kernel level, suprisingly results were pointing out that the overall network throughput measured over the used physical interface increases proportional to the number of aliased interfaces. In this post, I will re-investigate the subject with the lessons I learnt from my previous try.</p>
 
 <p>To begin with, I want to address <a href="http://utcc.utoronto.ca/~cks/">Chris Siebenmann</a>’s <a href="http://utcc.utoronto.ca/~cks/space/blog/tech/NetworkPerfBasicStep?showcomments">concerns</a> regarding the raw performance of the used network interface card. For this purpose, I first replaced the NIC with a real one (RTL8111/8168B) that is capable of achieving gigabit rates. Then, I started playing with <code>iperf</code> parameters. After a couple of tries, I figured out that the game changer is <strong>TCP MSS (maximum segment size)</strong> for me. Setting MSS to 1448 helped me to boost my speed to gigabit rates. Other configurations (e.g., disabling TCP delays, i.e., Nagle’s algorithm) did not change the results that much, but I present them hereby anyway.</p>
@@ -126,29 +130,36 @@
 <p>Finally, we have a valid answer!</p>
 
 
-	  <div id="disqus_thread"></div>
-	  <script type="text/javascript">
-	  var disqus_shortname = 'vyazici';
-	  var disqus_identifier = '/blog/post/20120604-performance-of-linux-ip-alias-lessons-learnt/';
-	  var disqus_title = 'Performance of Linux IP Aliased Network Interfaces: Lessons Learnt';
-	  (function() {
-	  	var dsq = document.createElement('script');
-	  	dsq.type = 'text/javascript';
-	  	dsq.async = true;
-	  	dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
-	  	(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-	  })();
-	  </script>
+        <div id="disqus_thread"></div>
+        <script type="text/javascript">
+        var disqus_shortname = 'vyazici';
+        var disqus_identifier = '/blog/post/20120604-performance-of-linux-ip-alias-lessons-learnt/';
+        var disqus_title = 'Performance of Linux IP Aliased Network Interfaces: Lessons Learnt';
+        (function() {
+            var dsq = document.createElement('script');
+            dsq.type = 'text/javascript';
+            dsq.async = true;
+            dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+        </script>
 
-	</div>
+        
 
-</div>
-
-
-
-
+        
 
     </div>
   </body>
 </html>
 
+
+        <script type="text/javascript">
+        for (var i = 0; i < asyncLoadRequests.length; i++) {
+            asyncLoadRequest = asyncLoadRequests[i];
+            asyncLoadRequest();
+        }
+        </script>
+
+    </div>
+
+</div>

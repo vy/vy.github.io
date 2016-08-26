@@ -29,17 +29,21 @@
 
 <div id="post">
 
-	<div class="head">
-		<div class="title">Calling a Scala Method with a Java Reserved Keyword</div>
-		<div class="subtitle">posted at
-			November 20, 2015
-			with tags <a href="/blog/tag/java">java</a>, <a href="/blog/tag/scala">scala</a>
-		</div>
-	</div>
+    <div class="head">
+        <div class="title">Calling a Scala Method with a Java Reserved Keyword</div>
+        <div class="subtitle">posted at
+            November 20, 2015
+            with tags <a href="/blog/tag/java">java</a>, <a href="/blog/tag/scala">scala</a>
+        </div>
+    </div>
 
-	<div class="body">
+    <div class="body">
 
-	  
+        <script type="text/javascript">
+        var asyncLoadRequests = [];
+        </script>
+
+        
 <p>At work, there are a couple of JAX-RS microservices I develop and maintain.
 Fortunately, all of these services and their consumers are written in Scala.
 Up until now, I have never needed to access the service APIs from Java. But
@@ -91,29 +95,36 @@ reserved keywords in the source code, such as <code>reserved</code> in Scala or
 <code>@reserved</code> in C#, etc.</p>
 
 
-	  <div id="disqus_thread"></div>
-	  <script type="text/javascript">
-	  var disqus_shortname = 'vyazici';
-	  var disqus_identifier = '/blog/post/20151120-scala-method-with-java-reserved-keyword/';
-	  var disqus_title = 'Calling a Scala Method with a Java Reserved Keyword';
-	  (function() {
-	  	var dsq = document.createElement('script');
-	  	dsq.type = 'text/javascript';
-	  	dsq.async = true;
-	  	dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
-	  	(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-	  })();
-	  </script>
+        <div id="disqus_thread"></div>
+        <script type="text/javascript">
+        var disqus_shortname = 'vyazici';
+        var disqus_identifier = '/blog/post/20151120-scala-method-with-java-reserved-keyword/';
+        var disqus_title = 'Calling a Scala Method with a Java Reserved Keyword';
+        (function() {
+            var dsq = document.createElement('script');
+            dsq.type = 'text/javascript';
+            dsq.async = true;
+            dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+        </script>
 
-	</div>
+        
 
-</div>
-
-
-
-
+        
 
     </div>
   </body>
 </html>
 
+
+        <script type="text/javascript">
+        for (var i = 0; i < asyncLoadRequests.length; i++) {
+            asyncLoadRequest = asyncLoadRequests[i];
+            asyncLoadRequest();
+        }
+        </script>
+
+    </div>
+
+</div>

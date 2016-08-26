@@ -29,17 +29,21 @@
 
 <div id="post">
 
-	<div class="head">
-		<div class="title">Bandwidth Shaping on Linux</div>
-		<div class="subtitle">posted at
-			May 16, 2014
-			with tags <a href="/blog/tag/linux">linux</a>, <a href="/blog/tag/networking">networking</a>
-		</div>
-	</div>
+    <div class="head">
+        <div class="title">Bandwidth Shaping on Linux</div>
+        <div class="subtitle">posted at
+            May 16, 2014
+            with tags <a href="/blog/tag/linux">linux</a>, <a href="/blog/tag/networking">networking</a>
+        </div>
+    </div>
 
-	<div class="body">
+    <div class="body">
 
-	  
+        <script type="text/javascript">
+        var asyncLoadRequests = [];
+        </script>
+
+        
 <p>Networking stack in Linux kernel by default ships an immense set of
 functionality that provide every hairy sort of tuning a network administrator
 can (and most of the time, cannot) imagine. But unfortunately it totally lacks a
@@ -128,29 +132,36 @@ chapter in LARTC, it makes me smile: <strong>Now, when I discovered this, it rea
 blew me away.</strong> So true!</p>
 
 
-	  <div id="disqus_thread"></div>
-	  <script type="text/javascript">
-	  var disqus_shortname = 'vyazici';
-	  var disqus_identifier = '/blog/post/20140516-bandwidth-shaping/';
-	  var disqus_title = 'Bandwidth Shaping on Linux';
-	  (function() {
-	  	var dsq = document.createElement('script');
-	  	dsq.type = 'text/javascript';
-	  	dsq.async = true;
-	  	dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
-	  	(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-	  })();
-	  </script>
+        <div id="disqus_thread"></div>
+        <script type="text/javascript">
+        var disqus_shortname = 'vyazici';
+        var disqus_identifier = '/blog/post/20140516-bandwidth-shaping/';
+        var disqus_title = 'Bandwidth Shaping on Linux';
+        (function() {
+            var dsq = document.createElement('script');
+            dsq.type = 'text/javascript';
+            dsq.async = true;
+            dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+        </script>
 
-	</div>
+        
 
-</div>
-
-
-
-
+        
 
     </div>
   </body>
 </html>
 
+
+        <script type="text/javascript">
+        for (var i = 0; i < asyncLoadRequests.length; i++) {
+            asyncLoadRequest = asyncLoadRequests[i];
+            asyncLoadRequest();
+        }
+        </script>
+
+    </div>
+
+</div>

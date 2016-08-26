@@ -29,17 +29,21 @@
 
 <div id="post">
 
-	<div class="head">
-		<div class="title">Detecting Overflows in Java Arithmetic Operators</div>
-		<div class="subtitle">posted at
-			January 3, 2014
-			with tags <a href="/blog/tag/java">java</a>
-		</div>
-	</div>
+    <div class="head">
+        <div class="title">Detecting Overflows in Java Arithmetic Operators</div>
+        <div class="subtitle">posted at
+            January 3, 2014
+            with tags <a href="/blog/tag/java">java</a>
+        </div>
+    </div>
 
-	<div class="body">
+    <div class="body">
 
-	  
+        <script type="text/javascript">
+        var asyncLoadRequests = [];
+        </script>
+
+        
 <p>A couple of months ago I came across <a href="https://www.securecoding.cert.org/confluence/display/java/The+CERT+Oracle+Secure+Coding+Standard+for+Java">The CERT Oracle Secure Coding Standard for Java</a>. It is suprising how come I did not find this fascinating resource before. I first skimmed through the chapters and figured out that the recommended conventions are so practical that I can even directly use some of them in my existing code base. Right at that time I was working on a routing engine, which performs some arithmetic operators over link costs. It was a good place to apply the conventions metioned in the chapter <a href="https://www.securecoding.cert.org/confluence/display/java/NUM00-J.+Detect+or+prevent+integer+overflow">NUM00-J. Detect or prevent integer overflow</a>. Hence, I directly copied safe versions of arithmetic operators into my <code>util</code> package. (Everybody does have a <code>util</code>, right?)</p>
 
 <pre><code class="language-java"><span class="kd">public</span> <span class="kd">static</span> <span class="kt">int</span> <span class="nf">safeAdd</span><span class="o">(</span><span class="kt">int</span> <span class="n">l</span><span class="o">,</span> <span class="kt">int</span> <span class="n">r</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">OverflowException</span> <span class="o">{</span>
@@ -66,29 +70,36 @@
 <p>To my suprise, I observed integer overflow error messages in the server logs today. Yay! Further examination of the problem revealed that I cause an integer overflow while taking the square of link costs for a particular routing algorithm. Some might argue about the overhead of replacing operators with methods, but let’s think about this: How would I ever figure this problem out if I would not be using these safe arithmetic operators. No need to mention about the problem’s consequences.</p>
 
 
-	  <div id="disqus_thread"></div>
-	  <script type="text/javascript">
-	  var disqus_shortname = 'vyazici';
-	  var disqus_identifier = '/blog/post/20140103-safe-math-ops/';
-	  var disqus_title = 'Detecting Overflows in Java Arithmetic Operators';
-	  (function() {
-	  	var dsq = document.createElement('script');
-	  	dsq.type = 'text/javascript';
-	  	dsq.async = true;
-	  	dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
-	  	(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-	  })();
-	  </script>
+        <div id="disqus_thread"></div>
+        <script type="text/javascript">
+        var disqus_shortname = 'vyazici';
+        var disqus_identifier = '/blog/post/20140103-safe-math-ops/';
+        var disqus_title = 'Detecting Overflows in Java Arithmetic Operators';
+        (function() {
+            var dsq = document.createElement('script');
+            dsq.type = 'text/javascript';
+            dsq.async = true;
+            dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+        </script>
 
-	</div>
+        
 
-</div>
-
-
-
-
+        
 
     </div>
   </body>
 </html>
 
+
+        <script type="text/javascript">
+        for (var i = 0; i < asyncLoadRequests.length; i++) {
+            asyncLoadRequest = asyncLoadRequests[i];
+            asyncLoadRequest();
+        }
+        </script>
+
+    </div>
+
+</div>

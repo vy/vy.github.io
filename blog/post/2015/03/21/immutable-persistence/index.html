@@ -29,17 +29,21 @@
 
 <div id="post">
 
-	<div class="head">
-		<div class="title">Using Immutable Objects for Persistence in Java</div>
-		<div class="subtitle">posted at
-			March 21, 2015
-			with tags <a href="/blog/tag/java">java</a>
-		</div>
-	</div>
+    <div class="head">
+        <div class="title">Using Immutable Objects for Persistence in Java</div>
+        <div class="subtitle">posted at
+            March 21, 2015
+            with tags <a href="/blog/tag/java">java</a>
+        </div>
+    </div>
 
-	<div class="body">
+    <div class="body">
 
-	  
+        <script type="text/javascript">
+        var asyncLoadRequests = [];
+        </script>
+
+        
 <blockquote>
   <p><strong>TL;DR</strong> – A software design pattern to employ immutable classes for
 persisting data models in Java. That is, you do not need to ruin your
@@ -334,29 +338,36 @@ months ago and totally benefitted from it in a project. I hope you would find
 it useful too.</p>
 
 
-	  <div id="disqus_thread"></div>
-	  <script type="text/javascript">
-	  var disqus_shortname = 'vyazici';
-	  var disqus_identifier = '/blog/post/20150321-immutable-persistence/';
-	  var disqus_title = 'Using Immutable Objects for Persistence in Java';
-	  (function() {
-	  	var dsq = document.createElement('script');
-	  	dsq.type = 'text/javascript';
-	  	dsq.async = true;
-	  	dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
-	  	(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-	  })();
-	  </script>
+        <div id="disqus_thread"></div>
+        <script type="text/javascript">
+        var disqus_shortname = 'vyazici';
+        var disqus_identifier = '/blog/post/20150321-immutable-persistence/';
+        var disqus_title = 'Using Immutable Objects for Persistence in Java';
+        (function() {
+            var dsq = document.createElement('script');
+            dsq.type = 'text/javascript';
+            dsq.async = true;
+            dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+        </script>
 
-	</div>
+        
 
-</div>
-
-
-
-
+        
 
     </div>
   </body>
 </html>
 
+
+        <script type="text/javascript">
+        for (var i = 0; i < asyncLoadRequests.length; i++) {
+            asyncLoadRequest = asyncLoadRequests[i];
+            asyncLoadRequest();
+        }
+        </script>
+
+    </div>
+
+</div>

@@ -29,17 +29,21 @@
 
 <div id="post">
 
-	<div class="head">
-		<div class="title">RPC (Remote Procedure Call) with Hazelcast</div>
-		<div class="subtitle">posted at
-			June 21, 2012
-			with tags <a href="/blog/tag/hazelcast">hazelcast</a>, <a href="/blog/tag/java">java</a>
-		</div>
-	</div>
+    <div class="head">
+        <div class="title">RPC (Remote Procedure Call) with Hazelcast</div>
+        <div class="subtitle">posted at
+            June 21, 2012
+            with tags <a href="/blog/tag/hazelcast">hazelcast</a>, <a href="/blog/tag/java">java</a>
+        </div>
+    </div>
 
-	<div class="body">
+    <div class="body">
 
-	  
+        <script type="text/javascript">
+        var asyncLoadRequests = [];
+        </script>
+
+        
 <p>Despite the fact that <a href="http://www.hazelcast.com/">Hazelcast</a> is a data distribution (particularly, peer-to-peer) platform for Java, its group communication mechanics can be utilized for remote procedure calls in a similar fashion to <a href="http://vyazici.blogspot.com/2012/04/rpc-remote-procedure-call-with-jgroups.html">JGroups remote procedure calls</a>. Further, to ease this workflow, Hazelcast provides <a href="http://hazelcast.com/docs/2.1/manual/multi_html/ch09.html">distributed executor service</a> to execute <a href="http://docs.oracle.com/javase/6/docs/api/java/util/concurrent/Callable.html"><code>Callable</code></a> and <a href="http://docs.oracle.com/javase/6/docs/api/java/lang/Runnable.html"><code>Runnable</code></a> instances on the remote cluster members. Now, let’s glue things together for making remote procedure calls on Hazelcast cluster members.</p>
 
 <p>Assuming that you have some familiarity with executor services, check out below <code>SimpleRPC</code> class, which makes use of the Hazelcast executor service to invoke a <code>Call</code> instance on every cluster member.</p>
@@ -107,29 +111,36 @@
 <p>Simple, eh?</p>
 
 
-	  <div id="disqus_thread"></div>
-	  <script type="text/javascript">
-	  var disqus_shortname = 'vyazici';
-	  var disqus_identifier = '/blog/post/20120621-rpc-with-hazelcast/';
-	  var disqus_title = 'RPC (Remote Procedure Call) with Hazelcast';
-	  (function() {
-	  	var dsq = document.createElement('script');
-	  	dsq.type = 'text/javascript';
-	  	dsq.async = true;
-	  	dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
-	  	(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-	  })();
-	  </script>
+        <div id="disqus_thread"></div>
+        <script type="text/javascript">
+        var disqus_shortname = 'vyazici';
+        var disqus_identifier = '/blog/post/20120621-rpc-with-hazelcast/';
+        var disqus_title = 'RPC (Remote Procedure Call) with Hazelcast';
+        (function() {
+            var dsq = document.createElement('script');
+            dsq.type = 'text/javascript';
+            dsq.async = true;
+            dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+        </script>
 
-	</div>
+        
 
-</div>
-
-
-
-
+        
 
     </div>
   </body>
 </html>
 
+
+        <script type="text/javascript">
+        for (var i = 0; i < asyncLoadRequests.length; i++) {
+            asyncLoadRequest = asyncLoadRequests[i];
+            asyncLoadRequest();
+        }
+        </script>
+
+    </div>
+
+</div>

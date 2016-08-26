@@ -29,17 +29,21 @@
 
 <div id="post">
 
-	<div class="head">
-		<div class="title">Sequential Chaining of Nested Callbacks</div>
-		<div class="subtitle">posted at
-			September 30, 2012
-			with tags <a href="/blog/tag/coffeescript">coffeescript</a>, <a href="/blog/tag/concurrency">concurrency</a>, <a href="/blog/tag/javascript">javascript</a>
-		</div>
-	</div>
+    <div class="head">
+        <div class="title">Sequential Chaining of Nested Callbacks</div>
+        <div class="subtitle">posted at
+            September 30, 2012
+            with tags <a href="/blog/tag/coffeescript">coffeescript</a>, <a href="/blog/tag/concurrency">concurrency</a>, <a href="/blog/tag/javascript">javascript</a>
+        </div>
+    </div>
 
-	<div class="body">
+    <div class="body">
 
-	  
+        <script type="text/javascript">
+        var asyncLoadRequests = [];
+        </script>
+
+        
 <p>Back in the old days of programming, the days we used to have blocking function calls, things were easy: <em>first</em> do this, and <em>then</em> do that, and <em>finally</em> clean things up. While this sequential style of programming has its own advantages in terms of human perception, it imposes certain concurrency related limitations. That is, each expression in a program is supposed to wait for the completion of the execution flow up until the line above, regardless of if it has anything to do with the current expression or not. Asynchronious programs are known to solve this problem of concurrency, (at least, to some extent) with the cost of sacrificing the sequential program flow. At its most basic form, functions are provided interfaces to specify dependencies between each other and hence, independent functions are allowed to execute concurrently. These interfaces are generally provided in the form of callback functions, that is, when <code>f()</code> gets completed do <code>g()</code>, and when <code>g()</code> completes do <code>h()</code>, and so on. The premise of this blog post is to investigate whether it is possible to still preserve the dependency between functions by still allowing the programmer to syntatically structure the program sequentially.</p>
 
 <p><img src="seq-tran.png" alt="Sequential vs. Concurrent Program Flow"></p>
@@ -265,29 +269,36 @@
 <p>Note that while <code>PrioritizedSequentialExecutor</code> is quite good at doing what it is advertised for, especially compared to the lines of code written, there exists other libraries (e.g., <a href="https://github.com/substack/node-seq">seq</a>, <a href="https://github.com/substack/node-chainsaw">chainsaw</a>, <a href="https://github.com/coolaj86/futures">futures</a>, <a href="https://github.com/caolan/async">async</a>, <a href="https://github.com/JeffreyZhao/wind">windjs</a>, <a href="https://github.com/Sage/streamlinejs">streamlinejs</a>, etc.) with similar flow-control purposes. While you are at it, you might want to check them out too.</p>
 
 
-	  <div id="disqus_thread"></div>
-	  <script type="text/javascript">
-	  var disqus_shortname = 'vyazici';
-	  var disqus_identifier = '/blog/post/20120930-sequential-chaining-of-nested-callbacks/';
-	  var disqus_title = 'Sequential Chaining of Nested Callbacks';
-	  (function() {
-	  	var dsq = document.createElement('script');
-	  	dsq.type = 'text/javascript';
-	  	dsq.async = true;
-	  	dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
-	  	(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-	  })();
-	  </script>
+        <div id="disqus_thread"></div>
+        <script type="text/javascript">
+        var disqus_shortname = 'vyazici';
+        var disqus_identifier = '/blog/post/20120930-sequential-chaining-of-nested-callbacks/';
+        var disqus_title = 'Sequential Chaining of Nested Callbacks';
+        (function() {
+            var dsq = document.createElement('script');
+            dsq.type = 'text/javascript';
+            dsq.async = true;
+            dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+        </script>
 
-	</div>
+        
 
-</div>
-
-
-
-
+        
 
     </div>
   </body>
 </html>
 
+
+        <script type="text/javascript">
+        for (var i = 0; i < asyncLoadRequests.length; i++) {
+            asyncLoadRequest = asyncLoadRequests[i];
+            asyncLoadRequest();
+        }
+        </script>
+
+    </div>
+
+</div>

@@ -29,17 +29,21 @@
 
 <div id="post">
 
-	<div class="head">
-		<div class="title">JGroups IPv6 Broadcast Problem</div>
-		<div class="subtitle">posted at
-			April 27, 2012
-			with tags <a href="/blog/tag/java">java</a>, <a href="/blog/tag/groups">groups</a>
-		</div>
-	</div>
+    <div class="head">
+        <div class="title">JGroups IPv6 Broadcast Problem</div>
+        <div class="subtitle">posted at
+            April 27, 2012
+            with tags <a href="/blog/tag/java">java</a>, <a href="/blog/tag/groups">groups</a>
+        </div>
+    </div>
 
-	<div class="body">
+    <div class="body">
 
-	  
+        <script type="text/javascript">
+        var asyncLoadRequests = [];
+        </script>
+
+        
 <p>Here is a quick tip: Do you regularly observe below <em>harmless</em> JGroups message send failures?</p>
 
 <pre><code>09:49:02.270 [Timer-3,&lt;ADDR&gt;] ERROR org.jgroups.protocols.UDP - failed sending message to cluster (95 bytes): java.lang.Exception: dest=/ff0e:0:0:0:0:8:8:8:45588 (98 bytes), cause: java.io.IOException: Network is unreachable
@@ -57,29 +61,36 @@
 </blockquote>
 
 
-	  <div id="disqus_thread"></div>
-	  <script type="text/javascript">
-	  var disqus_shortname = 'vyazici';
-	  var disqus_identifier = '/blog/post/20120427-jgroups-ipv6-broadcast-problem/';
-	  var disqus_title = 'JGroups IPv6 Broadcast Problem';
-	  (function() {
-	  	var dsq = document.createElement('script');
-	  	dsq.type = 'text/javascript';
-	  	dsq.async = true;
-	  	dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
-	  	(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-	  })();
-	  </script>
+        <div id="disqus_thread"></div>
+        <script type="text/javascript">
+        var disqus_shortname = 'vyazici';
+        var disqus_identifier = '/blog/post/20120427-jgroups-ipv6-broadcast-problem/';
+        var disqus_title = 'JGroups IPv6 Broadcast Problem';
+        (function() {
+            var dsq = document.createElement('script');
+            dsq.type = 'text/javascript';
+            dsq.async = true;
+            dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+        </script>
 
-	</div>
+        
 
-</div>
-
-
-
-
+        
 
     </div>
   </body>
 </html>
 
+
+        <script type="text/javascript">
+        for (var i = 0; i < asyncLoadRequests.length; i++) {
+            asyncLoadRequest = asyncLoadRequests[i];
+            asyncLoadRequest();
+        }
+        </script>
+
+    </div>
+
+</div>

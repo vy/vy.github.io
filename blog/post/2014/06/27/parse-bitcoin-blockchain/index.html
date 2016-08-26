@@ -29,17 +29,21 @@
 
 <div id="post">
 
-	<div class="head">
-		<div class="title">Parsing Bitcoin Blockchain Data in Java</div>
-		<div class="subtitle">posted at
-			June 27, 2014
-			with tags <a href="/blog/tag/bitcoin">bitcoin</a>, <a href="/blog/tag/java">java</a>
-		</div>
-	</div>
+    <div class="head">
+        <div class="title">Parsing Bitcoin Blockchain Data in Java</div>
+        <div class="subtitle">posted at
+            June 27, 2014
+            with tags <a href="/blog/tag/bitcoin">bitcoin</a>, <a href="/blog/tag/java">java</a>
+        </div>
+    </div>
 
-	<div class="body">
+    <div class="body">
 
-	  
+        <script type="text/javascript">
+        var asyncLoadRequests = [];
+        </script>
+
+        
 <p>Last week I spent some time on collecting certain statistics (e.g., average
 number of performed transactions and created blocks per month) over a vast
 (~20GB) Bitcoin blockchain dataset. The hardest part for me was to pick the
@@ -141,29 +145,36 @@ tools first. (About the performance, for the sample blockchain dataset of size
 GNU/Linux notebook without any JVM flags. Pretty zippy!)</p>
 
 
-	  <div id="disqus_thread"></div>
-	  <script type="text/javascript">
-	  var disqus_shortname = 'vyazici';
-	  var disqus_identifier = '/blog/post/20140627-parse-bitcoin-blockchain/';
-	  var disqus_title = 'Parsing Bitcoin Blockchain Data in Java';
-	  (function() {
-	  	var dsq = document.createElement('script');
-	  	dsq.type = 'text/javascript';
-	  	dsq.async = true;
-	  	dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
-	  	(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-	  })();
-	  </script>
+        <div id="disqus_thread"></div>
+        <script type="text/javascript">
+        var disqus_shortname = 'vyazici';
+        var disqus_identifier = '/blog/post/20140627-parse-bitcoin-blockchain/';
+        var disqus_title = 'Parsing Bitcoin Blockchain Data in Java';
+        (function() {
+            var dsq = document.createElement('script');
+            dsq.type = 'text/javascript';
+            dsq.async = true;
+            dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+        </script>
 
-	</div>
+        
 
-</div>
-
-
-
-
+        
 
     </div>
   </body>
 </html>
 
+
+        <script type="text/javascript">
+        for (var i = 0; i < asyncLoadRequests.length; i++) {
+            asyncLoadRequest = asyncLoadRequests[i];
+            asyncLoadRequest();
+        }
+        </script>
+
+    </div>
+
+</div>

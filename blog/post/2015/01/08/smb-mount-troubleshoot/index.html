@@ -29,17 +29,21 @@
 
 <div id="post">
 
-	<div class="head">
-		<div class="title">Troubleshooting a SMB/CIFS Mount Problem</div>
-		<div class="subtitle">posted at
-			January 8, 2015
-			with tags <a href="/blog/tag/cifs">cifs</a>, <a href="/blog/tag/kernel">kernel</a>, <a href="/blog/tag/linux">linux</a>, <a href="/blog/tag/samba">samba</a>
-		</div>
-	</div>
+    <div class="head">
+        <div class="title">Troubleshooting a SMB/CIFS Mount Problem</div>
+        <div class="subtitle">posted at
+            January 8, 2015
+            with tags <a href="/blog/tag/cifs">cifs</a>, <a href="/blog/tag/kernel">kernel</a>, <a href="/blog/tag/linux">linux</a>, <a href="/blog/tag/samba">samba</a>
+        </div>
+    </div>
 
-	<div class="body">
+    <div class="body">
 
-	  
+        <script type="text/javascript">
+        var asyncLoadRequests = [];
+        </script>
+
+        
 <p>At every introduction to a new office environment, I spend (waste?) a certain
 period of time to connect to network shares through CIFS/SMB. This was not
 different at my new work place either. After spending almost two days to
@@ -141,29 +145,36 @@ my system. After installing <code>keyutils</code>, I did not observe any DNS res
 issues in the <code>dmesg</code> logs and <code>mount.cifs</code> worked without a problem.</p>
 
 
-	  <div id="disqus_thread"></div>
-	  <script type="text/javascript">
-	  var disqus_shortname = 'vyazici';
-	  var disqus_identifier = '/blog/post/20150108-smb-mount-troubleshoot/';
-	  var disqus_title = 'Troubleshooting a SMB/CIFS Mount Problem';
-	  (function() {
-	  	var dsq = document.createElement('script');
-	  	dsq.type = 'text/javascript';
-	  	dsq.async = true;
-	  	dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
-	  	(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-	  })();
-	  </script>
+        <div id="disqus_thread"></div>
+        <script type="text/javascript">
+        var disqus_shortname = 'vyazici';
+        var disqus_identifier = '/blog/post/20150108-smb-mount-troubleshoot/';
+        var disqus_title = 'Troubleshooting a SMB/CIFS Mount Problem';
+        (function() {
+            var dsq = document.createElement('script');
+            dsq.type = 'text/javascript';
+            dsq.async = true;
+            dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+        </script>
 
-	</div>
+        
 
-</div>
-
-
-
-
+        
 
     </div>
   </body>
 </html>
 
+
+        <script type="text/javascript">
+        for (var i = 0; i < asyncLoadRequests.length; i++) {
+            asyncLoadRequest = asyncLoadRequests[i];
+            asyncLoadRequest();
+        }
+        </script>
+
+    </div>
+
+</div>

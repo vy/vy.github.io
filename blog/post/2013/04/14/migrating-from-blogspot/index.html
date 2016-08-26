@@ -29,17 +29,21 @@
 
 <div id="post">
 
-	<div class="head">
-		<div class="title">Migrating from Blogspot to Nanoc</div>
-		<div class="subtitle">posted at
-			April 14, 2013
-			with tags <a href="/blog/tag/blog">blog</a>, <a href="/blog/tag/nanoc">nanoc</a>
-		</div>
-	</div>
+    <div class="head">
+        <div class="title">Migrating from Blogspot to Nanoc</div>
+        <div class="subtitle">posted at
+            April 14, 2013
+            with tags <a href="/blog/tag/blog">blog</a>, <a href="/blog/tag/nanoc">nanoc</a>
+        </div>
+    </div>
 
-	<div class="body">
+    <div class="body">
 
-	  
+        <script type="text/javascript">
+        var asyncLoadRequests = [];
+        </script>
+
+        
 <p>For a pretty long time, <a href="http://web.itu.edu.tr/~yazicivo/">my personal website</a> at İstanbul Technical University had become my attachment point with the rest of the web. Later, it is followed by <a href="https://github.com/vy">GitHub</a> and <a href="https://twitter.com/yazicivo">Twitter</a> accounts. And then in the race of trying to keep up with the internet evolution, I started writing in <a href="http://vyazici.blogspot.com/">Blogspot</a>. All that being said, from the very beginning I (ironically) always wanted to have a single entry point to the content originating by me. This blog post marks my first attempt in this pursuit.</p>
 
 <p>The startling point was Blogspot, oh yeah. First I started to type HTML by hand. Then it led to me find a JavaScript library to syntax highlight the code I share. Finally, I found myself trying to escape HTML characters within the shared code snippets. At some point I decided to use <a href="https://gist.github.com/">Gist</a>s. Later a reader complaint pointed out that shared Gists were not properly displayed on mobile browsers.</p>
@@ -47,29 +51,36 @@
 <p>After some research, I met with <a href="http://nanoc.ws/">nanoc</a>. A tiny static site generator written in Ruby. I have never used Ruby before but it didn’t take long for me to built this website in a couple of days. Thanks to the excellent documentation and the active community of nanoc. I might talk more about the obstacles that I experience during the transition, but to be honest none of the friction was due to the nanoc. (The words of <a href="http://en.wikipedia.org/wiki/Bob_Ross">Bob Ross</a> describes this best: <em>“We don’t make mistakes, just happy little accidents”</em>.) Instead, I invite you to check <a href="https://github.com/vy/vy.github.io/tree/source">the code</a> by yourself. I hope it helps other nanoc users out there.</p>
 
 
-	  <div id="disqus_thread"></div>
-	  <script type="text/javascript">
-	  var disqus_shortname = 'vyazici';
-	  var disqus_identifier = '/blog/post/20130414-migrating-from-blogspot/';
-	  var disqus_title = 'Migrating from Blogspot to Nanoc';
-	  (function() {
-	  	var dsq = document.createElement('script');
-	  	dsq.type = 'text/javascript';
-	  	dsq.async = true;
-	  	dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
-	  	(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-	  })();
-	  </script>
+        <div id="disqus_thread"></div>
+        <script type="text/javascript">
+        var disqus_shortname = 'vyazici';
+        var disqus_identifier = '/blog/post/20130414-migrating-from-blogspot/';
+        var disqus_title = 'Migrating from Blogspot to Nanoc';
+        (function() {
+            var dsq = document.createElement('script');
+            dsq.type = 'text/javascript';
+            dsq.async = true;
+            dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+        </script>
 
-	</div>
+        
 
-</div>
-
-
-
-
+        
 
     </div>
   </body>
 </html>
 
+
+        <script type="text/javascript">
+        for (var i = 0; i < asyncLoadRequests.length; i++) {
+            asyncLoadRequest = asyncLoadRequests[i];
+            asyncLoadRequest();
+        }
+        </script>
+
+    </div>
+
+</div>

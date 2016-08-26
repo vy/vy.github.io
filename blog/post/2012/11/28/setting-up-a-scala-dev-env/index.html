@@ -29,17 +29,21 @@
 
 <div id="post">
 
-	<div class="head">
-		<div class="title">Scala Development Environment with Intellij IDEA and SBT</div>
-		<div class="subtitle">posted at
-			November 28, 2012
-			with tags <a href="/blog/tag/intellij">intellij</a>, <a href="/blog/tag/java">java</a>, <a href="/blog/tag/sbt">sbt</a>, <a href="/blog/tag/scala">scala</a>
-		</div>
-	</div>
+    <div class="head">
+        <div class="title">Scala Development Environment with Intellij IDEA and SBT</div>
+        <div class="subtitle">posted at
+            November 28, 2012
+            with tags <a href="/blog/tag/intellij">intellij</a>, <a href="/blog/tag/java">java</a>, <a href="/blog/tag/sbt">sbt</a>, <a href="/blog/tag/scala">scala</a>
+        </div>
+    </div>
 
-	<div class="body">
+    <div class="body">
 
-	  
+        <script type="text/javascript">
+        var asyncLoadRequests = [];
+        </script>
+
+        
 <p>Resisting against the <a href="https://class.coursera.org/progfun-2012-001/">Functional Programming Principles in Scala</a> buzz was meaningless. After all, this or that way I know I would be repeating those steps on my own regardless of the presence of such a lecture. To warm up, I looked around for an appropriate development environment for Scala. The last time (~2 years ago) I repeated this same step ended up with a desperate search. Fortunately, reading dozens of blog posts, forum/mailing-list threads, GitHub README’s, repeating try-and-fail procedures leaded me to a working setup. To mitigate the friction at least to an extent for new comers, I put up this blog post to make a list of steps in order to setup a working Scala development environment on top of <a href="http://www.jetbrains.com/idea">IntelliJ IDEA</a> with <a href="http://www.scala-sbt.org/">SBT</a> integration.</p>
 
 <h1 id="is-there-a-scala-plugin-available-for-idea">Is there a Scala plugin available for IDEA?</h1>
@@ -173,29 +177,36 @@ target/
 <p>Enjoy the rest by either creating your own IDEA run configurations, or manually running tasks within the SBT console. (As a final note, while creating IDEA run configurations, you can use SBT <em>Before Launch</em> task provided by IDEA SBT plugin.)</p>
 
 
-	  <div id="disqus_thread"></div>
-	  <script type="text/javascript">
-	  var disqus_shortname = 'vyazici';
-	  var disqus_identifier = '/blog/post/20121128-setting-up-a-scala-dev-env/';
-	  var disqus_title = 'Scala Development Environment with Intellij IDEA and SBT';
-	  (function() {
-	  	var dsq = document.createElement('script');
-	  	dsq.type = 'text/javascript';
-	  	dsq.async = true;
-	  	dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
-	  	(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-	  })();
-	  </script>
+        <div id="disqus_thread"></div>
+        <script type="text/javascript">
+        var disqus_shortname = 'vyazici';
+        var disqus_identifier = '/blog/post/20121128-setting-up-a-scala-dev-env/';
+        var disqus_title = 'Scala Development Environment with Intellij IDEA and SBT';
+        (function() {
+            var dsq = document.createElement('script');
+            dsq.type = 'text/javascript';
+            dsq.async = true;
+            dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+        </script>
 
-	</div>
+        
 
-</div>
-
-
-
-
+        
 
     </div>
   </body>
 </html>
 
+
+        <script type="text/javascript">
+        for (var i = 0; i < asyncLoadRequests.length; i++) {
+            asyncLoadRequest = asyncLoadRequests[i];
+            asyncLoadRequest();
+        }
+        </script>
+
+    </div>
+
+</div>

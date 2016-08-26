@@ -29,17 +29,21 @@
 
 <div id="post">
 
-	<div class="head">
-		<div class="title">Sockets, TCP Keep Alive and TIME_WAIT</div>
-		<div class="subtitle">posted at
-			January 3, 2014
-			with tags <a href="/blog/tag/java">java</a>, <a href="/blog/tag/link">link</a>
-		</div>
-	</div>
+    <div class="head">
+        <div class="title">Sockets, TCP Keep Alive and TIME_WAIT</div>
+        <div class="subtitle">posted at
+            January 3, 2014
+            with tags <a href="/blog/tag/java">java</a>, <a href="/blog/tag/link">link</a>
+        </div>
+    </div>
 
-	<div class="body">
+    <div class="body">
 
-	  
+        <script type="text/javascript">
+        var asyncLoadRequests = [];
+        </script>
+
+        
 <p>Time to time I share some technical links on Twitter and let them get lost in the internet junk yard. I thought it might be a better idea to archive them on my blog in a more organized fashion. (I will group such posts under tag <a href="/blog/tag/link">link</a>.) This way they will at least be more accessible by myself. This post is my first effort towards this goal. (Sorry for the ugly Twitter embeddings. I find some 3rd party libraries to configure the display, but that stuff usually gets broken in the long run due to changes in the Twitter API.)</p>
 
 <p>Last month I have been bitten seriously by a software bug caused by <code>TIME_WAIT</code> sockets. Below is the list of links I found useful in the pursuit of trying to solve the problem.</p>
@@ -65,40 +69,47 @@
 </blockquote>
 
 
-	  <div id="disqus_thread"></div>
-	  <script type="text/javascript">
-	  var disqus_shortname = 'vyazici';
-	  var disqus_identifier = '/blog/post/20140103-tcp-time-wait/';
-	  var disqus_title = 'Sockets, TCP Keep Alive and TIME_WAIT';
-	  (function() {
-	  	var dsq = document.createElement('script');
-	  	dsq.type = 'text/javascript';
-	  	dsq.async = true;
-	  	dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
-	  	(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-	  })();
-	  </script>
+        <div id="disqus_thread"></div>
+        <script type="text/javascript">
+        var disqus_shortname = 'vyazici';
+        var disqus_identifier = '/blog/post/20140103-tcp-time-wait/';
+        var disqus_title = 'Sockets, TCP Keep Alive and TIME_WAIT';
+        (function() {
+            var dsq = document.createElement('script');
+            dsq.type = 'text/javascript';
+            dsq.async = true;
+            dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+        </script>
 
-	</div>
+        
 
-</div>
+        
 
+        
 
+        
+        <script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
+        <style type="text/css">.twitter-tweet { width: 100%; }</style>
+        
 
+        
 
-
-
-
-
-<script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
-<style type="text/css">.twitter-tweet { width: 100%; }</style>
-
-
-
-
-
+        
 
     </div>
   </body>
 </html>
 
+
+        <script type="text/javascript">
+        for (var i = 0; i < asyncLoadRequests.length; i++) {
+            asyncLoadRequest = asyncLoadRequests[i];
+            asyncLoadRequest();
+        }
+        </script>
+
+    </div>
+
+</div>

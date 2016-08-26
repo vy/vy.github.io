@@ -29,17 +29,21 @@
 
 <div id="post">
 
-	<div class="head">
-		<div class="title">How come a packet gets output from its input port?</div>
-		<div class="subtitle">posted at
-			August 6, 2013
-			with tags <a href="/blog/tag/networking">networking</a>, <a href="/blog/tag/openflow">openflow</a>, <a href="/blog/tag/sdn">sdn</a>
-		</div>
-	</div>
+    <div class="head">
+        <div class="title">How come a packet gets output from its input port?</div>
+        <div class="subtitle">posted at
+            August 6, 2013
+            with tags <a href="/blog/tag/networking">networking</a>, <a href="/blog/tag/openflow">openflow</a>, <a href="/blog/tag/sdn">sdn</a>
+        </div>
+    </div>
 
-	<div class="body">
+    <div class="body">
 
-	  
+        <script type="text/javascript">
+        var asyncLoadRequests = [];
+        </script>
+
+        
 <p>A couple of weeks ago I spotted a really suspicious flow in the logs that directly made me think of a bug at the controller. A packet was arriving to a port of a switch and was getting output from the very same port of the switch. This was kind of weird. If it is supposed to be transmitted back again, then why was it ended up here in the first hand? Was it because of a bug at the controller that first redirected the packet to the switch and then redirected it backwards to the previous switch? A logical fault at the controller was definitely the first suspect here. But later it turned out that this was not the case. The details are as follows.</p>
 
 <p><img src="topology.jpg" alt="SDN Topology"></p>
@@ -63,29 +67,36 @@
 <p>I do not have a single idea about the probability of such a subtle bug, but somehow it happened to exist in my logs, right at the lines I was just taking a glance and wasted my whole day. The saying was right, network is really unreliable. Gorgeous!</p>
 
 
-	  <div id="disqus_thread"></div>
-	  <script type="text/javascript">
-	  var disqus_shortname = 'vyazici';
-	  var disqus_identifier = '/blog/post/20130806-output-packet-from-input-port/';
-	  var disqus_title = 'How come a packet gets output from its input port?';
-	  (function() {
-	  	var dsq = document.createElement('script');
-	  	dsq.type = 'text/javascript';
-	  	dsq.async = true;
-	  	dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
-	  	(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-	  })();
-	  </script>
+        <div id="disqus_thread"></div>
+        <script type="text/javascript">
+        var disqus_shortname = 'vyazici';
+        var disqus_identifier = '/blog/post/20130806-output-packet-from-input-port/';
+        var disqus_title = 'How come a packet gets output from its input port?';
+        (function() {
+            var dsq = document.createElement('script');
+            dsq.type = 'text/javascript';
+            dsq.async = true;
+            dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+        </script>
 
-	</div>
+        
 
-</div>
-
-
-
-
+        
 
     </div>
   </body>
 </html>
 
+
+        <script type="text/javascript">
+        for (var i = 0; i < asyncLoadRequests.length; i++) {
+            asyncLoadRequest = asyncLoadRequests[i];
+            asyncLoadRequest();
+        }
+        </script>
+
+    </div>
+
+</div>

@@ -29,17 +29,21 @@
 
 <div id="post">
 
-	<div class="head">
-		<div class="title">Shared Transport in JGroups</div>
-		<div class="subtitle">posted at
-			March 19, 2012
-			with tags <a href="/blog/tag/java">java</a>, <a href="/blog/tag/jgroups">jgroups</a>
-		</div>
-	</div>
+    <div class="head">
+        <div class="title">Shared Transport in JGroups</div>
+        <div class="subtitle">posted at
+            March 19, 2012
+            with tags <a href="/blog/tag/java">java</a>, <a href="/blog/tag/jgroups">jgroups</a>
+        </div>
+    </div>
 
-	<div class="body">
+    <div class="body">
 
-	  
+        <script type="text/javascript">
+        var asyncLoadRequests = [];
+        </script>
+
+        
 <p>A transport in a JGroups application is a heavy-weight object with significant overhead and a majority of the JGroups entities (remote procedure call, replicated hash map, etc.) generally require their dedicated channels, and hence transports for communication. However, by <a href="http://www.jgroups.org/manual/html/user-advanced.html#SharedTransport">sharing a transport between multiple channels</a>, it is possible to optimize available resources. (Remember that each transport occupies a thread pool and a socket.) For this purpose, one just needs to set the <code>singleton_name</code> attribute for the transport.</p>
 
 <p><img src="shared-transport.png" alt="JGroups Shared Transport Architecture"></p>
@@ -92,29 +96,36 @@
 <p>Now, my individual classes make calls to <code>ChannelFactory.getInstance().create()</code> to get a channel dedicated to them. And while program shuts down, I just make a call to <code>ChannelFactory.getInstance().clear()</code> to tidy things up.</p>
 
 
-	  <div id="disqus_thread"></div>
-	  <script type="text/javascript">
-	  var disqus_shortname = 'vyazici';
-	  var disqus_identifier = '/blog/post/20120319-shared-transport-in-jgroups/';
-	  var disqus_title = 'Shared Transport in JGroups';
-	  (function() {
-	  	var dsq = document.createElement('script');
-	  	dsq.type = 'text/javascript';
-	  	dsq.async = true;
-	  	dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
-	  	(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-	  })();
-	  </script>
+        <div id="disqus_thread"></div>
+        <script type="text/javascript">
+        var disqus_shortname = 'vyazici';
+        var disqus_identifier = '/blog/post/20120319-shared-transport-in-jgroups/';
+        var disqus_title = 'Shared Transport in JGroups';
+        (function() {
+            var dsq = document.createElement('script');
+            dsq.type = 'text/javascript';
+            dsq.async = true;
+            dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+        </script>
 
-	</div>
+        
 
-</div>
-
-
-
-
+        
 
     </div>
   </body>
 </html>
 
+
+        <script type="text/javascript">
+        for (var i = 0; i < asyncLoadRequests.length; i++) {
+            asyncLoadRequest = asyncLoadRequests[i];
+            asyncLoadRequest();
+        }
+        </script>
+
+    </div>
+
+</div>

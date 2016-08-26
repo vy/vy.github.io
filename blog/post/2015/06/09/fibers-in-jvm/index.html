@@ -29,17 +29,21 @@
 
 <div id="post">
 
-	<div class="head">
-		<div class="title">Presentation: Fibers in Java Virtual Machine</div>
-		<div class="subtitle">posted at
-			June 9, 2015
-			with tags <a href="/blog/tag/akka">akka</a>, <a href="/blog/tag/java">java</a>, <a href="/blog/tag/quasar">quasar</a>
-		</div>
-	</div>
+    <div class="head">
+        <div class="title">Presentation: Fibers in Java Virtual Machine</div>
+        <div class="subtitle">posted at
+            June 9, 2015
+            with tags <a href="/blog/tag/akka">akka</a>, <a href="/blog/tag/java">java</a>, <a href="/blog/tag/quasar">quasar</a>
+        </div>
+    </div>
 
-	<div class="body">
+    <div class="body">
 
-	  
+        <script type="text/javascript">
+        var asyncLoadRequests = [];
+        </script>
+
+        
 <p>A couple of months ago, I made a presentation in one of
 <a href="http://bol.com">bol.com</a> Brown Bag Sessions on the <em>Fiber Implementations in
 Java Virtual Machine</em>. With the hope that others might find it useful, I share
@@ -50,29 +54,36 @@ it here. (Slides are also available in <a href="fibers-in-jvm.pdf">PDF</a> and
 </iframe>
 
 
-	  <div id="disqus_thread"></div>
-	  <script type="text/javascript">
-	  var disqus_shortname = 'vyazici';
-	  var disqus_identifier = '/blog/post/20150609-fibers-in-jvm/';
-	  var disqus_title = 'Presentation: Fibers in Java Virtual Machine';
-	  (function() {
-	  	var dsq = document.createElement('script');
-	  	dsq.type = 'text/javascript';
-	  	dsq.async = true;
-	  	dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
-	  	(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-	  })();
-	  </script>
+        <div id="disqus_thread"></div>
+        <script type="text/javascript">
+        var disqus_shortname = 'vyazici';
+        var disqus_identifier = '/blog/post/20150609-fibers-in-jvm/';
+        var disqus_title = 'Presentation: Fibers in Java Virtual Machine';
+        (function() {
+            var dsq = document.createElement('script');
+            dsq.type = 'text/javascript';
+            dsq.async = true;
+            dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+        </script>
 
-	</div>
+        
 
-</div>
-
-
-
-
+        
 
     </div>
   </body>
 </html>
 
+
+        <script type="text/javascript">
+        for (var i = 0; i < asyncLoadRequests.length; i++) {
+            asyncLoadRequest = asyncLoadRequests[i];
+            asyncLoadRequest();
+        }
+        </script>
+
+    </div>
+
+</div>

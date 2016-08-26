@@ -29,17 +29,21 @@
 
 <div id="post">
 
-	<div class="head">
-		<div class="title">Build Scripts for LaTeX-BibTeX-XFig-GnuPlot Combo</div>
-		<div class="subtitle">posted at
-			April 28, 2012
-			with tags <a href="/blog/tag/latex">latex</a>
-		</div>
-	</div>
+    <div class="head">
+        <div class="title">Build Scripts for LaTeX-BibTeX-XFig-GnuPlot Combo</div>
+        <div class="subtitle">posted at
+            April 28, 2012
+            with tags <a href="/blog/tag/latex">latex</a>
+        </div>
+    </div>
 
-	<div class="body">
+    <div class="body">
 
-	  
+        <script type="text/javascript">
+        var asyncLoadRequests = [];
+        </script>
+
+        
 <p>Over the past 8 years, I needed to compile LaTeX documents for this or that reason. As time passed, I enhanced them with BibTeX, XFig, and Gnuplot. Further, I generally needed to produce PDF files validated by <a href="http://www.pdf-express.org/">IEEE PDF eXpress</a>. Here, I share some scripts I developed during the road to ease the pain.</p>
 
 <p>First, note that there is a certain directory structure I stick to.</p>
@@ -217,29 +221,36 @@ rm -f <span class="se">\</span>
 <p>Scripts need a little bit more cleaning and they are probably not the most correct ones. Anyway, they served well until now, and I hope they would for you as well.</p>
 
 
-	  <div id="disqus_thread"></div>
-	  <script type="text/javascript">
-	  var disqus_shortname = 'vyazici';
-	  var disqus_identifier = '/blog/post/20120408-build-scripts-for-latex-bibtex-xfig-gnuplot/';
-	  var disqus_title = 'Build Scripts for LaTeX-BibTeX-XFig-GnuPlot Combo';
-	  (function() {
-	  	var dsq = document.createElement('script');
-	  	dsq.type = 'text/javascript';
-	  	dsq.async = true;
-	  	dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
-	  	(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-	  })();
-	  </script>
+        <div id="disqus_thread"></div>
+        <script type="text/javascript">
+        var disqus_shortname = 'vyazici';
+        var disqus_identifier = '/blog/post/20120408-build-scripts-for-latex-bibtex-xfig-gnuplot/';
+        var disqus_title = 'Build Scripts for LaTeX-BibTeX-XFig-GnuPlot Combo';
+        (function() {
+            var dsq = document.createElement('script');
+            dsq.type = 'text/javascript';
+            dsq.async = true;
+            dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+        </script>
 
-	</div>
+        
 
-</div>
-
-
-
-
+        
 
     </div>
   </body>
 </html>
 
+
+        <script type="text/javascript">
+        for (var i = 0; i < asyncLoadRequests.length; i++) {
+            asyncLoadRequest = asyncLoadRequests[i];
+            asyncLoadRequest();
+        }
+        </script>
+
+    </div>
+
+</div>

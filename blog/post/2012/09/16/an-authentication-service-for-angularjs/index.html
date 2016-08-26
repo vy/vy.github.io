@@ -29,17 +29,21 @@
 
 <div id="post">
 
-	<div class="head">
-		<div class="title">An Authentication Service for AngularJS</div>
-		<div class="subtitle">posted at
-			September 16, 2012
-			with tags <a href="/blog/tag/angularjs">angularjs</a>, <a href="/blog/tag/coffeescript">coffeescript</a>, <a href="/blog/tag/javascript">javascript</a>
-		</div>
-	</div>
+    <div class="head">
+        <div class="title">An Authentication Service for AngularJS</div>
+        <div class="subtitle">posted at
+            September 16, 2012
+            with tags <a href="/blog/tag/angularjs">angularjs</a>, <a href="/blog/tag/coffeescript">coffeescript</a>, <a href="/blog/tag/javascript">javascript</a>
+        </div>
+    </div>
 
-	<div class="body">
+    <div class="body">
 
-	  
+        <script type="text/javascript">
+        var asyncLoadRequests = [];
+        </script>
+
+        
 <p>I am so tired to form up explanatory, coherent sentences, but at the same time I really like to share a user authentication service that I wrote for <a href="http://www.angularjs.org/">AngularJS</a>. Hence, pardon my brevity.</p>
 
 <p>In this example I use RailwayJS with CoffeeScript both at the client- and server-side. (See my previous <a href="/blog/post/2012/09/16/auto-compiling-assets-with-connect-assets/">post</a> on auto-compiling assets with connect-assets.) Here is the scenario: You have <code>assignments.html</code> such that only authenticated users are allowed.</p>
@@ -164,29 +168,36 @@
 <p><strong>Edit:</strong> Thanks <a href="https://plus.google.com/100882799970411374993">Krisztián Kerék</a> for spotting the routing problem related with listening on <code>$rootScope</code> for <code>$routeChangeStart</code>. Replaced it with <code>$rootScope.$watch</code> as suggested in <a href="http://stackoverflow.com/a/15029387/1278899">this</a> StackOverflow post.</p>
 
 
-	  <div id="disqus_thread"></div>
-	  <script type="text/javascript">
-	  var disqus_shortname = 'vyazici';
-	  var disqus_identifier = '/blog/post/20120916-an-authentication-service-for-angularjs/';
-	  var disqus_title = 'An Authentication Service for AngularJS';
-	  (function() {
-	  	var dsq = document.createElement('script');
-	  	dsq.type = 'text/javascript';
-	  	dsq.async = true;
-	  	dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
-	  	(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-	  })();
-	  </script>
+        <div id="disqus_thread"></div>
+        <script type="text/javascript">
+        var disqus_shortname = 'vyazici';
+        var disqus_identifier = '/blog/post/20120916-an-authentication-service-for-angularjs/';
+        var disqus_title = 'An Authentication Service for AngularJS';
+        (function() {
+            var dsq = document.createElement('script');
+            dsq.type = 'text/javascript';
+            dsq.async = true;
+            dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+        </script>
 
-	</div>
+        
 
-</div>
-
-
-
-
+        
 
     </div>
   </body>
 </html>
 
+
+        <script type="text/javascript">
+        for (var i = 0; i < asyncLoadRequests.length; i++) {
+            asyncLoadRequest = asyncLoadRequests[i];
+            asyncLoadRequest();
+        }
+        </script>
+
+    </div>
+
+</div>

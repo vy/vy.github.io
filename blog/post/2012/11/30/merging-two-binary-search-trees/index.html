@@ -29,17 +29,21 @@
 
 <div id="post">
 
-	<div class="head">
-		<div class="title">Merging Two Binary Search Trees in O(logn) Space</div>
-		<div class="subtitle">posted at
-			November 30, 2012
-			with tags <a href="/blog/tag/algorithm">algorithm</a>, <a href="/blog/tag/cpp">cpp</a>
-		</div>
-	</div>
+    <div class="head">
+        <div class="title">Merging Two Binary Search Trees in O(logn) Space</div>
+        <div class="subtitle">posted at
+            November 30, 2012
+            with tags <a href="/blog/tag/algorithm">algorithm</a>, <a href="/blog/tag/cpp">cpp</a>
+        </div>
+    </div>
 
-	<div class="body">
+    <div class="body">
 
-	  
+        <script type="text/javascript">
+        var asyncLoadRequests = [];
+        </script>
+
+        
 <p>In a recent coding interview, I was asked to merge two <a href="http://en.wikipedia.org/wiki/Binary_search_tree">Binary Search Tree</a>s (BSTs) without modifying them. This was the first time I was exposed to this question and for an hour or so I tried to come up with a linear time algorithm of O(1) space complexity. The defeat was inevitable. (To tell the truth, if a hint would be given like O(m+n) storage is allowed, I could easily figure out the solution without breaking a sweat.) As usual, I could not sleep that night and scratched dozens of papers to come up with a better solution. But as night passed, I started to realize the fact that the space complexity is lower bounded by the tree height. This blog post is set to keep a cyber-record of this pursuit.</p>
 
 <h1 id="related-work">Related Work</h1>
@@ -97,29 +101,36 @@
 <p>I implemented a streamer (<code>NodeStream</code>), stream merger (<code>MergeNodeStream</code>), and a vector merger (<code>MergeNodeVector</code>) in C++ and Scala. Code is accessible through this <a href="https://gist.github.com/4171977">Gist</a>. You can also find implementations of the algorithm in <a href="https://gist.github.com/8be224c9cfb423dcc0f3">C++ using Boost Coroutines</a> and <a href="https://gist.github.com/4181097">Haskell</a> written by <a href="http://www.blogger.com/profile/01427008889073096042">Remko</a>.</p>
 
 
-	  <div id="disqus_thread"></div>
-	  <script type="text/javascript">
-	  var disqus_shortname = 'vyazici';
-	  var disqus_identifier = '/blog/post/20121130-merging-two-binary-search-trees/';
-	  var disqus_title = 'Merging Two Binary Search Trees in O(logn) Space';
-	  (function() {
-	  	var dsq = document.createElement('script');
-	  	dsq.type = 'text/javascript';
-	  	dsq.async = true;
-	  	dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
-	  	(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-	  })();
-	  </script>
+        <div id="disqus_thread"></div>
+        <script type="text/javascript">
+        var disqus_shortname = 'vyazici';
+        var disqus_identifier = '/blog/post/20121130-merging-two-binary-search-trees/';
+        var disqus_title = 'Merging Two Binary Search Trees in O(logn) Space';
+        (function() {
+            var dsq = document.createElement('script');
+            dsq.type = 'text/javascript';
+            dsq.async = true;
+            dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+        </script>
 
-	</div>
+        
 
-</div>
-
-
-
-
+        
 
     </div>
   </body>
 </html>
 
+
+        <script type="text/javascript">
+        for (var i = 0; i < asyncLoadRequests.length; i++) {
+            asyncLoadRequest = asyncLoadRequests[i];
+            asyncLoadRequest();
+        }
+        </script>
+
+    </div>
+
+</div>

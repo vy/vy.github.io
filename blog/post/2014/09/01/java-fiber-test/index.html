@@ -29,17 +29,21 @@
 
 <div id="post">
 
-	<div class="head">
-		<div class="title">Testing Fiber Implementations in JVM</div>
-		<div class="subtitle">posted at
-			August 7, 2014
-			with tags <a href="/blog/tag/akka">akka</a>, <a href="/blog/tag/java">java</a>, <a href="/blog/tag/quasar">quasar</a>
-		</div>
-	</div>
+    <div class="head">
+        <div class="title">Testing Fiber Implementations in JVM</div>
+        <div class="subtitle">posted at
+            August 7, 2014
+            with tags <a href="/blog/tag/akka">akka</a>, <a href="/blog/tag/java">java</a>, <a href="/blog/tag/quasar">quasar</a>
+        </div>
+    </div>
 
-	<div class="body">
+    <div class="body">
 
-	  
+        <script type="text/javascript">
+        var asyncLoadRequests = [];
+        </script>
+
+        
 <p>I have always been interested in concurrent programming through the use of
 threads. This inclination did not originate from a need to exploit the
 parallelism at the hardware level for performance reasons, but rather due to the
@@ -245,7 +249,7 @@ table#results td { padding: 1px; }
 
 <div id="chartContainer" style="margin: 0 auto; height: 100px; width: 75%"></div>
 <script type="text/javascript">
-$(document).ready(function() {
+asyncLoadRequests.push(function() {
 	var chart = new CanvasJS.Chart("chartContainer", {
 			backgroundColor: "transparent",
 			creditText: null,
@@ -457,43 +461,50 @@ noteworthy performance figures and stand as a perfect standard Java Thread
 replacement for a considerable amount of use cases.</p>
 
 
-	  <div id="disqus_thread"></div>
-	  <script type="text/javascript">
-	  var disqus_shortname = 'vyazici';
-	  var disqus_identifier = '/blog/post/20140901-java-fiber-test/';
-	  var disqus_title = 'Testing Fiber Implementations in JVM';
-	  (function() {
-	  	var dsq = document.createElement('script');
-	  	dsq.type = 'text/javascript';
-	  	dsq.async = true;
-	  	dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
-	  	(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-	  })();
-	  </script>
+        <div id="disqus_thread"></div>
+        <script type="text/javascript">
+        var disqus_shortname = 'vyazici';
+        var disqus_identifier = '/blog/post/20140901-java-fiber-test/';
+        var disqus_title = 'Testing Fiber Implementations in JVM';
+        (function() {
+            var dsq = document.createElement('script');
+            dsq.type = 'text/javascript';
+            dsq.async = true;
+            dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+        </script>
 
-	</div>
+        
 
-</div>
+        
+        <script type="text/javascript"
+          src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+        </script>
+        
 
+        
+        <script type="text/javascript" src="/js/canvasjs.js"></script>
+        
 
+        
 
+        
 
-<script type="text/javascript"
-  src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
-</script>
-
-
-
-<script type="text/javascript" src="/js/canvasjs.js"></script>
-
-
-
-
-
-
-
+        
 
     </div>
   </body>
 </html>
 
+
+        <script type="text/javascript">
+        for (var i = 0; i < asyncLoadRequests.length; i++) {
+            asyncLoadRequest = asyncLoadRequests[i];
+            asyncLoadRequest();
+        }
+        </script>
+
+    </div>
+
+</div>
