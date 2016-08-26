@@ -2,64 +2,75 @@
 
 <div id="post">
 
-	<div class="head">
-		<div class="title"><%= @item[:title] %></div>
-		<div class="subtitle">posted at
-			<%=
-			   require 'time'
-			   tm = Time.parse(@item[:created_at])
-			   tm.strftime('%B %-d, %Y')
-			%>
-			<%=
-			   unless @item[:tags].nil?
-			       "with tags " + \
-			        @item[:tags].map { |tag|
-			            link_to(tag, tag_identifier(tag))
-			        } .join(", ")
-			   end
-			%>
-		</div>
-	</div>
+    <div class="head">
+        <div class="title"><%= @item[:title] %></div>
+        <div class="subtitle">posted at
+            <%=
+                require 'time'
+                tm = Time.parse(@item[:created_at])
+                tm.strftime('%B %-d, %Y')
+            %>
+            <%=
+                unless @item[:tags].nil?
+                   "with tags " + \
+                    @item[:tags].map { |tag|
+                        link_to(tag, tag_identifier(tag))
+                    } .join(", ")
+                end
+            %>
+        </div>
+    </div>
 
-	<div class="body">
+    <div class="body">
 
-	  <%= yield %>
+        <script type="text/javascript">
+        var asyncLoadRequests = [];
+        </script>
 
-	  <div id="disqus_thread"></div>
-	  <script type="text/javascript">
-	  var disqus_shortname = 'vyazici';
-	  var disqus_identifier = '<%= @item.identifier %>';
-	  var disqus_title = '<%= @item[:title] %>';
-	  (function() {
-	  	var dsq = document.createElement('script');
-	  	dsq.type = 'text/javascript';
-	  	dsq.async = true;
-	  	dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
-	  	(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-	  })();
-	  </script>
+        <%= yield %>
 
-	</div>
+        <div id="disqus_thread"></div>
+        <script type="text/javascript">
+        var disqus_shortname = 'vyazici';
+        var disqus_identifier = '<%= @item.identifier %>';
+        var disqus_title = '<%= @item[:title] %>';
+        (function() {
+            var dsq = document.createElement('script');
+            dsq.type = 'text/javascript';
+            dsq.async = true;
+            dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+        </script>
+
+        <% if @item[:modules] %>
+
+        <% if @item[:modules].include?("mathjax") %>
+        <script type="text/javascript"
+          src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+        </script>
+        <% end %>
+
+        <% if @item[:modules].include?("canvasjs") %>
+        <script type="text/javascript" src="/js/canvasjs.js"></script>
+        <% end %>
+
+        <% if @item[:modules].include?("twitter") %>
+        <script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
+        <style type="text/css">.twitter-tweet { width: 100%; }</style>
+        <% end %>
+
+        <% end %>
+
+        <% end %>
+
+        <script type="text/javascript">
+        for (var i = 0; i < asyncLoadRequests.length; i++) {
+            asyncLoadRequest = asyncLoadRequests[i];
+            asyncLoadRequest();
+        }
+        </script>
+
+    </div>
 
 </div>
-
-<% if @item[:modules] %>
-
-<% if @item[:modules].include?("mathjax") %>
-<script type="text/javascript"
-  src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
-</script>
-<% end %>
-
-<% if @item[:modules].include?("canvasjs") %>
-<script type="text/javascript" src="/js/canvasjs.js"></script>
-<% end %>
-
-<% if @item[:modules].include?("twitter") %>
-<script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
-<style type="text/css">.twitter-tweet { width: 100%; }</style>
-<% end %>
-
-<% end %>
-
-<% end %>

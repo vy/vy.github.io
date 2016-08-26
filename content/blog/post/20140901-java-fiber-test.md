@@ -215,7 +215,7 @@ table#results td { padding: 1px; }
 
 <div id="chartContainer" style="margin: 0 auto; height: 100px; width: 75%"></div>
 <script type="text/javascript">
-$(document).ready(function() {
+asyncLoadRequests.push(function() {
 	var chart = new CanvasJS.Chart("chartContainer", {
 			backgroundColor: "transparent",
 			creditText: null,
