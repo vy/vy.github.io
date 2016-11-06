@@ -88,13 +88,13 @@ more.
 > of repetitive bullshit and standardized tests; it'll all be better once
 > you're in college." And then you get to your first year of college and
 > they're like, "Oh, no -- it gets better when you're in grad school." So it's
-> just same shit, different day -- I couldn't take it. [p5]
+> just same shit, different day -- I couldn't take it. \[p5\]
 
 His comments on C++, which are shared by many other interviewees throughout
 the book:
 
 > **Zawinski:** ... when you're programming C++ no one can ever agree on which
-> ten percent of the language is safe to use. [p20]
+> ten percent of the language is safe to use. \[p20\]
 
 The sad truth about F/OSS:
 
@@ -108,7 +108,7 @@ The sad truth about F/OSS:
 > whole Linux/GNOME side of things is straddling this line between someone's
 > hobby and a product. Is this a research project where we're deciding what
 > desktops should look like and we're experimenting? Or are we competing with
-> Macintosh? Which is it? Hard to do both. [p23]
+> Macintosh? Which is it? Hard to do both. \[p23\]
 
 Brad Fitzpatrick
 ----------------
@@ -117,7 +117,7 @@ His thoughts on finishing a project, which I sadly share as well:
 
 > **Fitzpatrick:** The projects that I never finish ... it's because I did the
 > hard part and I learned what I wanted to learn and I never got around to
-> doing the boring stuff. [p20]
+> doing the boring stuff. \[p20\]
 
 He is also poisoned by LWN, Reddit, etc.
 
@@ -131,7 +131,7 @@ He is also poisoned by LWN, Reddit, etc.
 > it? It's scary. I had a friend, who had some iptables rule, that on
 > connection to a certain IP address between certain hours of the day would
 > redirect to a "You should be working" page. I haven't got around to doing
-> that, but I need to do something like it, probably. [p73]
+> that, but I need to do something like it, probably. \[p73\]
 
 Douglas Crockford
 -----------------
@@ -139,14 +139,14 @@ Douglas Crockford
 Why programming is difficult?
 
 > **Crockford:** Part of what makes programming difficult is most of the time
-> we're doing stuff we've never done before. [p110]
+> we're doing stuff we've never done before. \[p110\]
 
 He talks about his preferred way for interviewing job candidates, which is also
 shared by other coders in the book.
 
 > **Crockford:** The approach I've taken now is to do a code reading. I invite
 > the candidate to bring in a piece of code he's really proud of and walk us
-> through it. [p129]
+> through it. \[p129\]
 
 Brendan Eich
 ------------
@@ -185,7 +185,7 @@ Is Java off in the weeds?
 > a pity they didn't become the successful language in the world." But often
 > there are reasons they didn't. Hopefully some language that does use
 > declaration-site variance, like Scala or C# 4.0, will answer this question
-> once and for all. [p191]
+> once and for all. \[p191\]
 
 On "obviously no deficiencies" versus "no obvious deficiencies":
 
@@ -201,7 +201,7 @@ On "obviously no deficiencies" versus "no obvious deficiencies":
 > requires a willingness to accept objectives which are limited by physical,
 > logical, and technological constraints, and to accept a compromise when
 > conflicting objectives cannot be met. No committee will ever do this until
-> it is too late." [p197]
+> it is too late." \[p197\]
 
 Smart people and programming:
 
@@ -213,7 +213,7 @@ Smart people and programming:
 > **Bloch:** I agree with you that people who are both smart enough to cope
 > with enormous complexity and lack empathy with the rest of use may fail prey
 > to that. They think, "I can understand this and I can use it, so it has to
-> be good." [p202]
+> be good." \[p202\]
 >
 > ...
 >
@@ -224,7 +224,7 @@ Smart people and programming:
 > organization doesn't mean they should be making all the decisions, because
 > intelligence is not a scalar quantity; it's a vector quantity. And if you
 > lack empathy or emotional intelligence, then you shouldn't be designing APIs
-> or GUIs or languages. [p203]
+> or GUIs or languages. \[p203\]
 
 Joe Armstrong
 -------------
@@ -253,7 +253,7 @@ On paralyses of choice:
 > languages, dozens of framework and operating systemsand you're paralyzed by
 > choice. There was no paralysis of choice then. You just start doing it
 > because the decision as to which language and things is just made -- there's
-> no thinking about what you should do, you just go and do it. [p210]
+> no thinking about what you should do, you just go and do it. \[p210\]
 
 Simon Peyton Jones
 ------------------
@@ -268,7 +268,7 @@ Testing an API in Microsoft:
 >
 > And the guys sitting there behind the glass screen say, "No, no, don't do
 > that! That's not the right way!" But it's soundproof. That turns out often
-> to be very instructive. They go and change their API. [p253]
+> to be very instructive. They go and change their API. \[p253\]
 
 Peter Norvig
 ------------
@@ -281,7 +281,7 @@ On the traditional master and apprentice approach:
 > there's only one heart, and so you want the best person on that and you want
 > the other guys just helping. With coding, it's not like that. You've got
 > plenty of terminals. You've got plenty of keyboards. You don't have to
-> ration it. [p295]
+> ration it. \[p295\]
 
 Why programming is not an art, but a craft:
 
@@ -301,7 +301,7 @@ Why programming is not an art, but a craft:
 >
 > But I don't think of that as art. I think *craft* is really the right word
 > for it. You can make a chair, and it's good looking, but it's mostly
-> functional -- it's a chair. [p319]
+> functional -- it's a chair. \[p319\]
 
 Guy Steele
 ----------
@@ -314,7 +314,7 @@ On the difficulty of getting a program right:
 > first entry. Now the address book is sorted. But that's not what you wanted.
 > It turns out that just specifying something as simple as "a list is in
 > sorted order and I haven't lost any of the data and nothing has been
-> duplicated" is actually a fairly tricky specification to write. [p361]
+> duplicated" is actually a fairly tricky specification to write. \[p361\]
 
 Dan Ingalls
 -----------
@@ -325,7 +325,7 @@ never heard of:
 
 > **Seibel:** Alan Kay has said that both Lisp and Smalltalk have the problem
 > that they're so good they eat their children. If you had known Lisp, then
-> Smalltalk would have been the first eaten child. [p378]
+> Smalltalk would have been the first eaten child. \[p378\]
 
 L Peter Deutsch
 ---------------
@@ -333,7 +333,7 @@ L Peter Deutsch
 On getting data structures right:
 
 > **Deutsch:** ... if you get the data structures and their invariants right,
-> most of the code will just kind of write itself. [p420]
+> most of the code will just kind of write itself. \[p420\]
 
 Conceptualization of software and memory pointers:
 
@@ -364,7 +364,7 @@ Conceptualization of software and memory pointers:
 > fundamental problem with software. Until we understand how to conceptualize
 > and organize software in a way that we don't have to think about how every
 > little piece interacts with every other piece, things are not going to get a
-> whole lot better. And we're very far from being there. [p424]
+> whole lot better. And we're very far from being there. \[p424\]
 
 Ken Thompson
 ------------
@@ -372,7 +372,7 @@ Ken Thompson
 On teaching:
 
 > **Thompson:** ... I love the teaching: the hard work of a first class, the
-> fun of the second class. Then the misery of the third. [p455]
+> fun of the second class. Then the misery of the third. \[p455\]
 
 What I am supposed to do and what I am actually doing:
 
@@ -382,12 +382,12 @@ What I am supposed to do and what I am actually doing:
 > one of those basic research things we shouldn't be doing. Because we tried
 > it, it didn't work, it was a huge failure, it was expensive; let's drop it.
 > So I kind of expected that for what I was doing I was going to eventually
-> get fired. I didn't. [p458]
+> get fired. I didn't. \[p458\]
 
 Code rots:
 
 > **Thompson:** Code by itself almost rots and it's gotta be rewritten. Even
-> when nothing has changed, for some reason it rots. [p460]
+> when nothing has changed, for some reason it rots. \[p460\]
 
 10 percent of the work:
 
@@ -405,7 +405,7 @@ Code rots:
 > optimization, like caches. I think it's largely a waste of time to do really
 > well. It's really hard; you generate as many bugs as you fix. You should
 > stop, not take that extra 100 percent of time to do 10 percent of the work.
-> [p462]
+> \[p462\]
 
 Writing an OS to test a file system:
 
@@ -416,14 +416,14 @@ Writing an OS to test a file system:
 > sharing system. I was writing the shell to drive the file system. And then I
 > was writing a couple other programs that drove the file system. And right
 > about there I said, "All I need is an editor and I've got an operating
-> system." [p465]
+> system." \[p465\]
 
 Economics of deciding on introducing a bag:
 
 > **Thompson:** Certainly every time I've written one of these non-compare
 > subroutine calls, strcpy and stuff like that, I know that I'm writing a bug.
 > And I somehow take the economic decision of whether the bug is worth the
-> extra arguments. [p468]
+> extra arguments. \[p468\]
 
 On testing:
 
@@ -439,12 +439,12 @@ On testing:
 > **Seibel:** So you figure you'll shake the bugs out that way?
 >
 > **Thompson:** Oh, absolutely. I mean, what's better as a test of an
-> operating system than people beating on it? [p469]
+> operating system than people beating on it? \[p469\]
 
 Code at Google:
 
 > **Thompson:** I guess way more than 50 percent of the code is the what-if
-> kind. [p473]
+> kind. \[p473\]
 
 On literate programming:
 
@@ -453,7 +453,7 @@ On literate programming:
 > a feature of literate programming, not a bug.
 >
 > **Thompson:** Well if you have two ways, one of them is real: what the
-> machine executes. [p477]
+> machine executes. \[p477\]
 
 Fran Allen
 ----------
@@ -462,7 +462,7 @@ What makes a program beautiful?
 
 > **Allen:** That it is a simple straightforward solution to a problem; that
 > has some intrinsic structure and obviousness about it that isn't obvious
-> from the problem itself. [p489]
+> from the problem itself. \[p489\]
 
 Bernie Cosell
 -------------
@@ -487,7 +487,7 @@ Should we teach Knuth to students?
 > algorithms, how they work, and how to apply them. It's really more of a case
 > of how to pick the right one for the job you're trying to do as opposed to
 > knowing that this one is an order n-cubed plus three and this one is just
-> order n-squared times four. [p527]
+> order n-squared times four. \[p527\]
 
 Writing programs and learning how to program:
 
@@ -503,13 +503,13 @@ Writing programs and learning how to program:
 > They'd be stunned when I tell them, "I don't care that the program works.
 > The fact that you're working here at all means that I expect you to be able
 > to write programs that work. Writing programs that work is a skilled craft
-> and you're good at it. Now, you have to learn how to program." [p543]
+> and you're good at it. Now, you have to learn how to program." \[p543\]
 
 Convictions:
 
 > **Cosell:** I had two convictions, which actually served me well: that
 > programs ought to make sense and there are very, very few inherently hard
-> problems. [p549]
+> problems. \[p549\]
 
 How long is it going to take you to put this change in?
 
@@ -519,13 +519,13 @@ How long is it going to take you to put this change in?
 > using my simple rule of rewriting the subroutine as if you were not going to
 > make that mistake. Then the third answer is how long if you fix that bug if
 > you were actually writing this subroutine in the better version of the
-> program. [p550]
+> program. \[p550\]
 
 Artistry in programming:
 
 > **Cosell:** Part of what I call the artistry of the computer program is how
 > easy it is for future people to be able to change it without breaking it.
-> [p555]
+> \[p555\]
 
 Difficulty of programming and C:
 
@@ -533,7 +533,7 @@ Difficulty of programming and C:
 > the places. And C makes too many places. Too scary for me, and I guess it's
 > fair to say I've programmed C only about five years less than Ken has. We're
 > not in the same league, but I have a long track record with C and know how
-> difficult it is and I think C is a big part of the problem. [p559]
+> difficult it is and I think C is a big part of the problem. \[p559\]
 
 75 million run-of-the-mill programmers and Java:
 
@@ -546,7 +546,7 @@ Difficulty of programming and C:
 > will use to make great art because the world is now populated with 75
 > million run-of-the-mill programmers building these incredibly complicated
 > applications and they need more help than that. So maybe Java's the right
-> thing. I don't know. [p560]
+> thing. I don't know. \[p560\]
 
 Not-so-good programmers and C:
 
@@ -555,7 +555,7 @@ Not-so-good programmers and C:
 > programmers are using it to build applications and the bottom line is
 > they're not good enough and they can't. Maybe C is the perfect language for
 > really good systems programmers, but unfortunately not-so-good systems and
-> applications programmers are using it and they shouldn't be. [p560]
+> applications programmers are using it and they shouldn't be. \[p560\]
 
 Donald Knuth
 ------------
@@ -566,7 +566,7 @@ Teaching a class, writing a book, and programming:
 > software required so much attention to detail. It filled that much of my
 > brain to the exclusion of other stuff. So it gave me a special admiration
 > for people who do large software projects -- I would never have guessed it
-> without having been faced with that myself. [p572]
+> without having been faced with that myself. \[p572\]
 
 Why isn't everybody a super programmer and super writer?
 
@@ -575,7 +575,7 @@ Why isn't everybody a super programmer and super writer?
 > I think it was Jon Bentley. Simplified it is like this: only two percent of
 > the world's population is born to be super programmers. And only two percent
 > of the population is born to be super writers. And Knuth is expecting
-> everybody to be both. [p574]
+> everybody to be both. \[p574\]
 
 Use of pointers in C:
 
@@ -591,7 +591,7 @@ Use of pointers in C:
 > to: if it points to a big node, x
 > + 1 jumps by a large amount; if x points to a small thing, x + 1 just moves
 > a little. That, to me, is one of the most amazing improvements in notation.
-> [p585]
+> \[p585\]
 
 I did not know about Knuth's *change files*. But it seemed like an
 inconvenient overkill:
@@ -608,7 +608,7 @@ inconvenient overkill:
 > you find the first line in the master file that agrees with the first line
 > of your change. When you get to the end of the part of the change that was
 > supposed to match the master file, then comes the part which says, "Replace
-> that by these lines instead." [p586]
+> that by these lines instead." \[p586\]
 > 
 > The extreme example of this was when TeX was adapted to Unicode. They had a
 > change file maybe 10 times as long as the master program. In other words,
@@ -616,7 +616,7 @@ inconvenient overkill:
 > through and redoing my master program, they were so into change files that
 > they just wrote their whole draft of what they called Omega as change files,
 > as a million lines of change files to TeX's 20,000 lines of code or
-> something. So that's the extreme. [p587]
+> something. So that's the extreme. \[p587\]
 
 Is programming fun any more?
 
@@ -625,8 +625,8 @@ Is programming fun any more?
 > fun because it's just plugging in magic incantations -- combine somebody
 > else's software and start it up. It doesn't have much creativity. I'm
 > worried that it's becoming too boring because you don't have a chance to do
-> anything much new. [p594]
+> anything much new. \[p594\]
 
 Code reading:
 
-> **Knuth:** ... don't only read the people who code like you. [p601]
+> **Knuth:** ... don't only read the people who code like you. \[p601\]
