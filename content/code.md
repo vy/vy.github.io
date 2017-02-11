@@ -3,6 +3,12 @@ title: Code
 css: code
 ---
 
+2017
+----
+
+* [HRRS: HTTP Request Record Suite](https://github.com/vy/hrrs) is a set of
+  tools to record and replay HTTP requests in JEE and Spring applications.
+
 2014
 ----
 
