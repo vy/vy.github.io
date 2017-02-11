@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Testing Rx Observables Using a Blocking Subscriber</title>
+    <link rel="stylesheet" href="/css/common.css">
+    <meta name="generator" content="nanoc 3.8.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/post.css">
+    <script type="text/javascript">
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-40183531-1']);
+      _gaq.push(['_trackPageview']);
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="container">
+
+      <ul id="menu">
+        <li><a href="/">Home</a></li><li><a href="/blog/">Blog</a></li><li><a href="/code/">Code</a></li><li><a href="/blog/feed/">Feed</a></li>
+      </ul>
+
+    
+
+<div id="post">
+
+    <div class="head">
+        <div class="title">Testing Rx Observables Using a Blocking Subscriber</div>
+        <div class="subtitle">posted at
+            November 6, 2016
+            with tags <a href="/blog/tag/java">java</a>, <a href="/blog/tag/rx">rx</a>, <a href="/blog/tag/test">test</a>
+        </div>
+    </div>
+
+    <div class="body">
+
+        <script type="text/javascript">
+        var asyncLoadRequests = [];
+        </script>
+
+        
+<p>Testing asynchronous applications are known to be more demanding compared to
+their synchronous counterparts due to non-linear progress of the program flow.
+An input provided seconds ago might be keeping some dusted parts of the code
+busy which is expected to emit the result. In this challenging realm,
+<a href="https://github.com/ReactiveX/RxJava">RxJava</a> has some good moves up its
+sleeve that can put the joy back to an unhappy experience. You can try
+<code>toBlocking()</code> method on the source observable, use a <code>TestSubscriber</code> to both
+emit and receive events, or inject a custom scheduler and advance the timer
+according to your needs. A recent <a href="https://www.infoq.com/articles/Testing-RxJava">InfoQ
+article</a> by Andres Almiray
+covers all these tricks in quite some detail.</p>
+
+<p>I try to follow every new Rx testing related post in the entire blogosphere
+and keep on hearing about new fancy ways (e.g., resetting all Rx schedulers to
+a single threaded executor service to make the system behave synchronously for
+testing purposes) of testing Rx code. Nevertheless, I always fall back to using a small hack that I put together half a year ago: <code>BlockingSubscriber</code>.</p>
+
+<p><a href="https://labs.ribot.co.uk/unit-testing-rxjava-6e9540d4a329">TestSubscriber</a>
+provided by Rx is a good programmer companion to mitigate this problem and
+ease unit testing of such applications. But what if you are testing against
+asynchronously triggered events in a separate thread? Consider the following
+case.</p>
+
+<pre><code class="language-java"><span class="kn">import</span> <span class="nn">com.google.common.base.Throwables</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">rx.Observable</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">rx.subjects.PublishSubject</span><span class="o">;</span>
+
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">DelayedPublisher</span> <span class="o">{</span>
+
+    <span class="kd">private</span> <span class="kd">final</span> <span class="n">PublishSubject</span><span class="o">&lt;</span><span class="n">Double</span><span class="o">&gt;</span> <span class="n">subject</span> <span class="o">=</span> <span class="n">PublishSubject</span><span class="o">.</span><span class="na">create</span><span class="o">();</span>
+
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">publish</span><span class="o">()</span> <span class="o">{</span>
+        <span class="k">new</span> <span class="nf">Thread</span><span class="o">()</span> <span class="o">{</span>
+            <span class="nd">@Override</span>
+            <span class="kd">public</span> <span class="kt">void</span> <span class="nf">run</span><span class="o">()</span> <span class="o">{</span>
+                <span class="k">try</span> <span class="o">{</span> <span class="n">Thread</span><span class="o">.</span><span class="na">sleep</span><span class="o">(</span><span class="mi">1000</span><span class="o">);</span> <span class="o">}</span>
+                <span class="k">catch</span> <span class="o">(</span><span class="n">InterruptedException</span> <span class="n">error</span><span class="o">)</span> <span class="o">{</span> <span class="n">Throwables</span><span class="o">.</span><span class="na">propagate</span><span class="o">(</span><span class="n">error</span><span class="o">);</span> <span class="o">}</span>
+                <span class="kt">double</span> <span class="n">next</span> <span class="o">=</span> <span class="n">Math</span><span class="o">.</span><span class="na">random</span><span class="o">();</span>
+                <span class="n">subject</span><span class="o">.</span><span class="na">onNext</span><span class="o">(</span><span class="n">next</span><span class="o">);</span>
+            <span class="o">}</span>
+        <span class="o">}.</span><span class="na">start</span><span class="o">();</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="n">Observable</span><span class="o">&lt;</span><span class="n">Double</span><span class="o">&gt;</span> <span class="nf">asObservable</span><span class="o">()</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="n">subject</span><span class="o">;</span>
+    <span class="o">}</span>
+
+<span class="o">}</span></code></pre>
+
+<p>How would you test <code>DelayedPublisher</code>? Let’s try to put <code>TestSubscriber</code> into
+use:</p>
+
+<pre><code class="language-java"><span class="kn">import</span> <span class="nn">org.junit.Test</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">rx.Observable</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">rx.observers.TestSubscriber</span><span class="o">;</span>
+
+<span class="kn">import</span> <span class="nn">java.util.List</span><span class="o">;</span>
+
+<span class="kn">import</span> <span class="nn">static</span> <span class="n">org</span><span class="o">.</span><span class="na">assertj</span><span class="o">.</span><span class="na">core</span><span class="o">.</span><span class="na">api</span><span class="o">.</span><span class="na">Assertions</span><span class="o">.</span><span class="na">assertThat</span><span class="o">;</span>
+
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">DelayedPublisherTest</span> <span class="o">{</span>
+
+    <span class="nd">@Test</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">shouldPublish</span><span class="o">()</span> <span class="o">{</span>
+
+        <span class="c1">// Create a delayed publisher.</span>
+        <span class="n">DelayedPublisher</span> <span class="n">publisher</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">DelayedPublisher</span><span class="o">();</span>
+        <span class="n">Observable</span><span class="o">&lt;</span><span class="n">Double</span><span class="o">&gt;</span> <span class="n">observable</span> <span class="o">=</span> <span class="n">publisher</span><span class="o">.</span><span class="na">asObservable</span><span class="o">();</span>
+
+        <span class="c1">// Subscribe to the publisher using Rx TestSubscriber.</span>
+        <span class="n">TestSubscriber</span><span class="o">&lt;</span><span class="n">Double</span><span class="o">&gt;</span> <span class="n">subscriber</span> <span class="o">=</span> <span class="n">TestSubscriber</span><span class="o">.</span><span class="na">create</span><span class="o">();</span>
+        <span class="n">observable</span><span class="o">.</span><span class="na">subscribe</span><span class="o">(</span><span class="n">subscriber</span><span class="o">);</span>
+
+        <span class="c1">// Try to observe a publish.</span>
+        <span class="n">publisher</span><span class="o">.</span><span class="na">publish</span><span class="o">();</span>
+        <span class="n">List</span><span class="o">&lt;</span><span class="n">Double</span><span class="o">&gt;</span> <span class="n">events</span> <span class="o">=</span> <span class="n">subscriber</span><span class="o">.</span><span class="na">getOnNextEvents</span><span class="o">();</span>
+        <span class="n">assertThat</span><span class="o">(</span><span class="n">events</span><span class="o">).</span><span class="na">isNotNull</span><span class="o">().</span><span class="na">isNotEmpty</span><span class="o">();</span>
+
+    <span class="o">}</span>
+
+<span class="o">}</span></code></pre>
+
+<p>As expected, the assertion will fail since <code>subscriber.getOnNextEvents()</code> runs
+immediatly after <code>publisher.publish()</code> without a delay. But internally publish
+kicks in 1 second after the <code>publisher.publish()</code> call. Hence,
+<code>TestSubscriber</code> returns an empty list and serves no purpose in this case.</p>
+
+<p>If you Google for possible solutions, you might stumble across approaches like
+<a href="http://fedepaol.github.io/blog/2015/09/13/testing-rxjava-observables-subscriptions/">replacing all Rx schedulers with
+Schedulers.immediate()</a>,
+which I personally find a sort of hack and more importantly, does not cover
+the above presented case.</p>
+
+<p>An alternative approach that you can take is just <em>acting like the actual
+consumer</em>, and hence blocking whenever needed, as the actual consumer would
+also do. For this purpose, I come up with the following <code>RxBlockingSubscriber</code>
+in a similar fashion to the <code>TestSubscriber</code>:</p>
+
+<pre><code class="language-java"><span class="kn">import</span> <span class="nn">com.google.common.base.Throwables</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">org.slf4j.Logger</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">org.slf4j.LoggerFactory</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">rx.Subscriber</span><span class="o">;</span>
+
+<span class="kn">import</span> <span class="nn">java.util.concurrent.ArrayBlockingQueue</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">java.util.concurrent.BlockingQueue</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">java.util.concurrent.TimeUnit</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">java.util.concurrent.TimeoutException</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">java.util.stream.IntStream</span><span class="o">;</span>
+
+<span class="kn">import</span> <span class="nn">static</span> <span class="n">com</span><span class="o">.</span><span class="na">google</span><span class="o">.</span><span class="na">common</span><span class="o">.</span><span class="na">base</span><span class="o">.</span><span class="na">Preconditions</span><span class="o">.</span><span class="na">checkArgument</span><span class="o">;</span>
+
+<span class="cm">/**</span>
+<span class="cm"> * Unit test friendly Rx subscriber backed by a BlockingQueue.</span>
+<span class="cm"> */</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">RxBlockingSubscriber</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="kd">extends</span> <span class="n">Subscriber</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="o">{</span>
+
+    <span class="kd">private</span> <span class="kd">static</span> <span class="kd">final</span> <span class="n">Logger</span> <span class="n">LOGGER</span> <span class="o">=</span> <span class="n">LoggerFactory</span><span class="o">.</span><span class="na">getLogger</span><span class="o">(</span><span class="n">RxBlockingSubscriber</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+
+    <span class="kd">private</span> <span class="kd">final</span> <span class="n">BlockingQueue</span><span class="o">&lt;</span><span class="n">Object</span><span class="o">&gt;</span> <span class="n">events</span><span class="o">;</span>
+
+    <span class="kd">private</span> <span class="kd">final</span> <span class="kt">int</span> <span class="n">timeoutMillis</span><span class="o">;</span>
+
+    <span class="kd">private</span> <span class="kt">boolean</span> <span class="n">completed</span> <span class="o">=</span> <span class="kc">false</span><span class="o">;</span>
+
+    <span class="cm">/**</span>
+<span class="cm">     * @param bufferSize queue size</span>
+<span class="cm">     * @param timeoutMillis timeout for queue push/pop calls</span>
+<span class="cm">     */</span>
+    <span class="kd">public</span> <span class="nf">RxBlockingSubscriber</span><span class="o">(</span><span class="kt">int</span> <span class="n">bufferSize</span><span class="o">,</span> <span class="kt">int</span> <span class="n">timeoutMillis</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">checkArgument</span><span class="o">(</span><span class="n">bufferSize</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="o">,</span> <span class="s">"bufferSize &gt; 0, found: %d"</span><span class="o">,</span> <span class="n">bufferSize</span><span class="o">);</span>
+        <span class="n">checkArgument</span><span class="o">(</span><span class="n">timeoutMillis</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="o">,</span> <span class="s">"timeoutMillis &gt; 0, found: %d"</span><span class="o">,</span> <span class="n">timeoutMillis</span><span class="o">);</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">events</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ArrayBlockingQueue</span><span class="o">&lt;&gt;(</span><span class="n">bufferSize</span><span class="o">);</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">timeoutMillis</span> <span class="o">=</span> <span class="n">timeoutMillis</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kd">synchronized</span> <span class="kt">void</span> <span class="nf">onCompleted</span><span class="o">()</span> <span class="o">{</span>
+        <span class="n">LOGGER</span><span class="o">.</span><span class="na">trace</span><span class="o">(</span><span class="s">"completed"</span><span class="o">);</span>
+        <span class="n">completed</span> <span class="o">=</span> <span class="kc">true</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onError</span><span class="o">(</span><span class="n">Throwable</span> <span class="n">error</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">offer</span><span class="o">(</span><span class="n">error</span><span class="o">);</span>
+    <span class="o">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onNext</span><span class="o">(</span><span class="n">T</span> <span class="n">next</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">offer</span><span class="o">(</span><span class="n">next</span><span class="o">);</span>
+    <span class="o">}</span>
+
+    <span class="kd">private</span> <span class="kd">synchronized</span> <span class="kt">void</span> <span class="nf">offer</span><span class="o">(</span><span class="n">Object</span> <span class="n">event</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">if</span> <span class="o">(!</span><span class="n">completed</span><span class="o">)</span> <span class="o">{</span>
+            <span class="k">try</span> <span class="o">{</span> <span class="n">events</span><span class="o">.</span><span class="na">offer</span><span class="o">(</span><span class="n">event</span><span class="o">,</span> <span class="n">timeoutMillis</span><span class="o">,</span> <span class="n">TimeUnit</span><span class="o">.</span><span class="na">MILLISECONDS</span><span class="o">);</span> <span class="o">}</span>
+            <span class="k">catch</span> <span class="o">(</span><span class="n">InterruptedException</span> <span class="n">error</span><span class="o">)</span> <span class="o">{</span> <span class="k">throw</span> <span class="n">Throwables</span><span class="o">.</span><span class="na">propagate</span><span class="o">(</span><span class="n">error</span><span class="o">);</span> <span class="o">}</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+
+    <span class="cm">/**</span>
+<span class="cm">     * Blocks until getting the next emitted item (can be an error as well) and returns it.</span>
+<span class="cm">     */</span>
+    <span class="kd">public</span> <span class="n">Object</span> <span class="nf">take</span><span class="o">()</span> <span class="o">{</span>
+        <span class="k">try</span> <span class="o">{</span>
+            <span class="n">Object</span> <span class="n">next</span> <span class="o">=</span> <span class="n">events</span><span class="o">.</span><span class="na">poll</span><span class="o">(</span><span class="n">timeoutMillis</span><span class="o">,</span> <span class="n">TimeUnit</span><span class="o">.</span><span class="na">MILLISECONDS</span><span class="o">);</span>
+            <span class="k">if</span> <span class="o">(</span><span class="n">next</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span> <span class="k">throw</span> <span class="k">new</span> <span class="nf">TimeoutException</span><span class="o">();</span> <span class="o">}</span>
+            <span class="k">return</span> <span class="n">next</span><span class="o">;</span>
+        <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">InterruptedException</span> <span class="o">|</span> <span class="n">TimeoutException</span> <span class="n">error</span><span class="o">)</span> <span class="o">{</span>
+            <span class="k">throw</span> <span class="n">Throwables</span><span class="o">.</span><span class="na">propagate</span><span class="o">(</span><span class="n">error</span><span class="o">);</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+
+    <span class="cm">/**</span>
+<span class="cm">     * Calls {@link RxBlockingSubscriber#take()} {@code count} times.</span>
+<span class="cm">     */</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">skip</span><span class="o">(</span><span class="kt">int</span> <span class="n">count</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">checkArgument</span><span class="o">(</span><span class="n">count</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="o">,</span> <span class="s">"count &gt; 0, found: %d"</span><span class="o">,</span> <span class="n">count</span><span class="o">);</span>
+        <span class="n">IntStream</span><span class="o">.</span><span class="na">range</span><span class="o">(</span><span class="mi">0</span><span class="o">,</span> <span class="n">count</span><span class="o">).</span><span class="na">forEach</span><span class="o">(</span><span class="n">ignored</span> <span class="o">-&gt;</span> <span class="n">take</span><span class="o">());</span>
+    <span class="o">}</span>
+
+<span class="o">}</span></code></pre>
+
+<p>Let’s try testing <code>DelayedPublish</code> using <code>RxBlockingSubscriber</code>:</p>
+
+<pre><code class="language-java"><span class="kn">import</span> <span class="nn">org.junit.Test</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">rx.Observable</span><span class="o">;</span>
+
+<span class="kn">import</span> <span class="nn">static</span> <span class="n">org</span><span class="o">.</span><span class="na">assertj</span><span class="o">.</span><span class="na">core</span><span class="o">.</span><span class="na">api</span><span class="o">.</span><span class="na">Assertions</span><span class="o">.</span><span class="na">assertThat</span><span class="o">;</span>
+
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">DelayedPublisherTest</span> <span class="o">{</span>
+
+    <span class="nd">@Test</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">shouldPublish</span><span class="o">()</span> <span class="o">{</span>
+
+        <span class="c1">// Create a delayed publisher.</span>
+        <span class="n">DelayedPublisher</span> <span class="n">publisher</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">DelayedPublisher</span><span class="o">();</span>
+        <span class="n">Observable</span><span class="o">&lt;</span><span class="n">Double</span><span class="o">&gt;</span> <span class="n">observable</span> <span class="o">=</span> <span class="n">publisher</span><span class="o">.</span><span class="na">asObservable</span><span class="o">();</span>
+
+        <span class="c1">// Subscribe to the publisher using RxBlockingSubscriber.</span>
+        <span class="n">RxBlockingSubscriber</span><span class="o">&lt;</span><span class="n">Double</span><span class="o">&gt;</span> <span class="n">subscriber</span> <span class="o">=</span> <span class="k">new</span> <span class="n">RxBlockingSubscriber</span><span class="o">&lt;&gt;(</span><span class="mi">1</span><span class="o">,</span> <span class="mi">1500</span><span class="o">);</span>
+        <span class="n">observable</span><span class="o">.</span><span class="na">subscribe</span><span class="o">(</span><span class="n">subscriber</span><span class="o">);</span>
+
+        <span class="c1">// Try to observe a publish.</span>
+        <span class="n">publisher</span><span class="o">.</span><span class="na">publish</span><span class="o">();</span>
+        <span class="n">Object</span> <span class="n">item</span> <span class="o">=</span> <span class="n">subscriber</span><span class="o">.</span><span class="na">take</span><span class="o">();</span>
+        <span class="n">assertThat</span><span class="o">(</span><span class="n">item</span><span class="o">).</span><span class="na">isNotNull</span><span class="o">().</span><span class="na">isInstanceOf</span><span class="o">(</span><span class="n">Double</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+
+    <span class="o">}</span>
+
+<span class="o">}</span></code></pre>
+
+<p>Note that in the above test we just employed <code>RxBlockingSubscriber#take()</code>
+method. But you can similarly use <code>onNext()</code>, <code>onError()</code>, and <code>onCompleted()</code>
+as well in a similar fashion to <code>TestSubscriber</code>.</p>
+
+
+        <div id="disqus_thread"></div>
+        <script type="text/javascript">
+        var disqus_shortname = 'vyazici';
+        var disqus_identifier = '/blog/post/20161106-rx-blocking-subscriber/';
+        var disqus_title = 'Testing Rx Observables Using a Blocking Subscriber';
+        (function() {
+            var dsq = document.createElement('script');
+            dsq.type = 'text/javascript';
+            dsq.async = true;
+            dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+        </script>
+
+        
+
+        
+
+    </div>
+  </body>
+</html>
+
+
+        <script type="text/javascript">
+        for (var i = 0; i < asyncLoadRequests.length; i++) {
+            asyncLoadRequest = asyncLoadRequests[i];
+            asyncLoadRequest();
+        }
+        </script>
+
+    </div>
+
+</div>
