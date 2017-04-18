@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>On Sadness and Inter-Microservice Communication</title>
+    <link rel="stylesheet" href="/css/common.css">
+    <meta name="generator" content="nanoc 3.8.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/post.css">
+    <script type="text/javascript">
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-40183531-1']);
+      _gaq.push(['_trackPageview']);
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="container">
+
+      <ul id="menu">
+        <li><a href="/">Home</a></li><li><a href="/blog/">Blog</a></li><li><a href="/code/">Code</a></li><li><a href="/blog/feed/">Feed</a></li>
+      </ul>
+
+    
+
+<div id="post">
+
+    <div class="head">
+        <div class="title">On Sadness and Inter-Microservice Communication</div>
+        <div class="subtitle">posted at
+            April 18, 2017
+            with tags <a href="/blog/tag/java">java</a>, <a href="/blog/tag/programming">programming</a>
+        </div>
+    </div>
+
+    <div class="body">
+
+        <script type="text/javascript">
+        var asyncLoadRequests = [];
+        </script>
+
+        
+<p>Let me get this straight: <strong>Every single line of code that needs to
+communicate with a remote microservice is the most bizarre, annoying, sad, and
+hopeless experience in my daily coding routine.</strong> And the worst is: Most of
+the time its <em>my client</em> code communicating with <em>my services</em>, so there is no
+one else to blame that would sooth my anger. But I did not end up here out of
+blue.</p>
+
+<p>In my freshman years, I was given the responsibility of further development of
+a microservice, where both the server and its driver (API models, HTTP client,
+etc.) were written in Scala. Because Scala was still a cool buzzword back then
+and the team wanted to experiment with it. (No, this won’t be a Scala FUD
+post.) It was using an in-house built HTTP client, which is more or less yet
+another buggy wrapper over an ancient version of <a href="https://github.com/ning/async-http-client">Ning
+async-http-client</a>. I implemented a
+(yes, another!) thin wrapper over it to expose the HTTP response models as
+<code>scala.concurrent.Future</code>s, so we can compose them via Scala’s
+for-comprehensions. (It did not take long for me to figure out that exposing
+the API in Scala was one of the worst possible design decisions one could have
+made in an ecosystem dominated by Java consumers.)</p>
+
+<p>Later on as a team we adopted another critical microservice comprising a giant
+Java client with Spring fizz and buzz, caching, Guava immutables all under the
+hood with insanely strict <code>checkNotNull</code>/<code>checkArgument</code>-powered model
+validation, etc. This comet created its own fan clubs. There are two types of
+people in the company who are consuming this service:</p>
+
+<ol>
+  <li>
+    <p>ones that bite the bullet and use the gigantic driver we
+provide (say hello to a truck load of artifacts in your
+not-sufficiently-sucking dependency hell) or</p>
+  </li>
+  <li>
+    <p>ones that prefer to implement his/her own HTTP driver hosting an empire of
+bugs by manually building/parsing query request/response models formatted
+in JSON/XML/Protobuf.</p>
+  </li>
+</ol>
+
+<p>Later on I said enough is enough! Let’s stick to a standard: JEE HTTP client,
+that is, Jersey JAX-RS Client with Jackson cream on it. I still needed to
+create all the API models and verify them myself every time. It was bearable
+to some extent. But here comes the perfect storm: JAX-RS Client 2.0 (which
+supports proper HTTP connection pooling with sanely configurable
+socket+connection timeout support, which weren’t sanely available in 1.x)
+requires <code>javax.ws.rs-api</code> 2.x, which is binary incompatible with 1.x, which
+is used by 80% of microservices in the ecosystem. So in practice no other
+microservice will be able to use my driver without the developer losing half
+of his/her hairs.</p>
+
+<p>Later on I kept repeating “enough is enough”! Let’s use <a href="https://github.com/AsyncHttpClient/async-http-client">Google’s
+async-http-client</a>. It
+is pluggable all around the place: the HTTP connector (Apache HC, etc.),
+marshaller (Jackson, Gson, etc.). The project is more or less undocumented.
+But thanks to an army of Android users, there is plenty of blog posts and
+source code to discover your own personal bugs, so you can keep on blog
+posting about it. Anyway… It worked. I still need to motivate myself to dive
+into the source code to comprehend how it works under the hood, but it worked.</p>
+
+<p>Today… When I need to talk to one of these services I need to pick a lousy,
+juice, smelly sh*t of my preference:</p>
+
+<ul>
+  <li>
+    <p>Inject the entire Scala milky way into your 1-file Java microservice, which
+could have been delivered as a 5MB fat-JAR before Scala space-warping it
+into 50MB. And don’t forget to pat your IDE in the back every time it needs
+to auto-complete a Scala class. Oh, by the way, have you ever tried
+accessing a <code>scala.Option</code> from Java? Boy! It is fun! I hope your service
+consumers think likewise.</p>
+  </li>
+  <li>
+    <p>Let the giant Java driver bring all its feature-rich functionality together
+with its cousins, its nephews, its uncle, its grandma, its grandpa, its
+friends from the school, its ex, and of course with spring-core. All you
+wanted is to make a <code>GET</code> to <code>/v1/user/&lt;id&gt;</code>, but now you have the entire
+Pivotal art gallery decorating your <code>mvn dependency:tree</code> output on the
+wall.</p>
+  </li>
+  <li>
+    <p>You can of course purpose maven-shade-plugin to shade and relocate the
+entire <code>javax.ws.rs-api</code>, Jersey dependencies, together with the entire
+universe. I know you can do that.</p>
+  </li>
+  <li>
+    <p>Browse to Google’s <code>async-http-client</code> webpage and try to find the page that
+explains how to make a simple fscking <code>GET</code> request.</p>
+  </li>
+  <li>
+    <p>Embrace the old Ning client wrapper, welcome bugs (the first time I needed
+to use it I found out that <code>setHeaders()</code> wasn’t working as expected), stick
+to JAX-RS 1.x and an ancient Netty version, which causes a JAR Hell with any
+recent library, e.g., Elasticsearch. (Please refer back to
+maven-shade-plugin item.)</p>
+  </li>
+</ul>
+
+<p>I can hear you shouting about compile-time generated HTTP clients based on
+Swagger or WADL specs. But weren’t we just cursing WSDL and trying to run away
+from it? <a href="square.github.io/retrofit/">Retrofit</a>?
+<a href="https://twitter.github.io/finagle/">Finagle</a>? <a href="http://www.grpc.io/">gRPC</a>? I
+bet it is a matter of time until you end up needing to consume two clients
+which have transitive dependencies to two binary incompatible versions of
+Retrofit/Finagle/gRPC. You can blame the Java class loader mechanism. But that
+doesn’t make the problem fade away. Oh! I was just about to forget! Wait until
+I migrate to <code>rx.Completable</code> from <code>rx.Single&lt;Void&gt;</code>, which I migrated from
+<code>rx.Observable&lt;Void&gt;</code>.</p>
+
+<p>I am exhausted and demotiviated to write yet another single line of code that
+needs to communicate with a remote microservice and which could have been
+simple fucking RPC. I don’t have a solution for the mud ball in my hands. Even
+if I do have, I am not sure whether it will survive a couple of years or not.
+But at the back of my head, I keep on cursing the Java Platform SE guys: How
+difficult could it be to come up with a proper pluggable HTTP client? Compared
+to <code>NPE</code>, Java’s HTTP client is not <em>the</em> billion dollar mistake, but a really
+close one.</p>
+
+
+        <div id="disqus_thread"></div>
+        <script type="text/javascript">
+        var disqus_shortname = 'vyazici';
+        var disqus_identifier = '/blog/post/20170418-inter-service-comm/';
+        var disqus_title = 'On Sadness and Inter-Microservice Communication';
+        (function() {
+            var dsq = document.createElement('script');
+            dsq.type = 'text/javascript';
+            dsq.async = true;
+            dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+        </script>
+
+        
+
+        
+
+    </div>
+  </body>
+</html>
+
+
+        <script type="text/javascript">
+        for (var i = 0; i < asyncLoadRequests.length; i++) {
+            asyncLoadRequest = asyncLoadRequests[i];
+            asyncLoadRequest();
+        }
+        </script>
+
+    </div>
+
+</div>

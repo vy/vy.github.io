@@ -2,13 +2,138 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <id>https://vy.github.io//</id>
   <title>Volkan Yazıcı's Soap Co.</title>
-  <updated>2016-10-04T18:40:00Z</updated>
+  <updated>2017-04-18T17:22:00Z</updated>
   <link rel="alternate" href="https://vy.github.io//"/>
   <link rel="self" href="https://vy.github.io//blog/feed/"/>
   <author>
     <name>Volkan Yazıcı</name>
     <uri>https://vy.github.io/</uri>
   </author>
+  <entry>
+    <id>tag:vy.github.io,2017-04-18://blog/post/2017/04/18/inter-service-comm/</id>
+    <title type="html">On Sadness and Inter-Microservice Communication</title>
+    <published>2017-04-18T17:22:00Z</published>
+    <updated>2017-04-18T17:22:00Z</updated>
+    <link rel="alternate" href="https://vy.github.io//blog/post/2017/04/18/inter-service-comm/"/>
+    <content type="html">
+&lt;p&gt;Let me get this straight: &lt;strong&gt;Every single line of code that needs to
+communicate with a remote microservice is the most bizarre, annoying, sad, and
+hopeless experience in my daily coding routine.&lt;/strong&gt; And the worst is: Most of
+the time its &lt;em&gt;my client&lt;/em&gt; code communicating with &lt;em&gt;my services&lt;/em&gt;, so there is no
+one else to blame that would sooth my anger. But I did not end up here out of
+blue.&lt;/p&gt;
+
+&lt;p&gt;In my freshman years, I was given the responsibility of further development of
+a microservice, where both the server and its driver (API models, HTTP client,
+etc.) were written in Scala. Because Scala was still a cool buzzword back then
+and the team wanted to experiment with it. (No, this won’t be a Scala FUD
+post.) It was using an in-house built HTTP client, which is more or less yet
+another buggy wrapper over an ancient version of &lt;a href="https://github.com/ning/async-http-client"&gt;Ning
+async-http-client&lt;/a&gt;. I implemented a
+(yes, another!) thin wrapper over it to expose the HTTP response models as
+&lt;code&gt;scala.concurrent.Future&lt;/code&gt;s, so we can compose them via Scala’s
+for-comprehensions. (It did not take long for me to figure out that exposing
+the API in Scala was one of the worst possible design decisions one could have
+made in an ecosystem dominated by Java consumers.)&lt;/p&gt;
+
+&lt;p&gt;Later on as a team we adopted another critical microservice comprising a giant
+Java client with Spring fizz and buzz, caching, Guava immutables all under the
+hood with insanely strict &lt;code&gt;checkNotNull&lt;/code&gt;/&lt;code&gt;checkArgument&lt;/code&gt;-powered model
+validation, etc. This comet created its own fan clubs. There are two types of
+people in the company who are consuming this service:&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;
+    &lt;p&gt;ones that bite the bullet and use the gigantic driver we
+provide (say hello to a truck load of artifacts in your
+not-sufficiently-sucking dependency hell) or&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;ones that prefer to implement his/her own HTTP driver hosting an empire of
+bugs by manually building/parsing query request/response models formatted
+in JSON/XML/Protobuf.&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;Later on I said enough is enough! Let’s stick to a standard: JEE HTTP client,
+that is, Jersey JAX-RS Client with Jackson cream on it. I still needed to
+create all the API models and verify them myself every time. It was bearable
+to some extent. But here comes the perfect storm: JAX-RS Client 2.0 (which
+supports proper HTTP connection pooling with sanely configurable
+socket+connection timeout support, which weren’t sanely available in 1.x)
+requires &lt;code&gt;javax.ws.rs-api&lt;/code&gt; 2.x, which is binary incompatible with 1.x, which
+is used by 80% of microservices in the ecosystem. So in practice no other
+microservice will be able to use my driver without the developer losing half
+of his/her hairs.&lt;/p&gt;
+
+&lt;p&gt;Later on I kept repeating “enough is enough”! Let’s use &lt;a href="https://github.com/AsyncHttpClient/async-http-client"&gt;Google’s
+async-http-client&lt;/a&gt;. It
+is pluggable all around the place: the HTTP connector (Apache HC, etc.),
+marshaller (Jackson, Gson, etc.). The project is more or less undocumented.
+But thanks to an army of Android users, there is plenty of blog posts and
+source code to discover your own personal bugs, so you can keep on blog
+posting about it. Anyway… It worked. I still need to motivate myself to dive
+into the source code to comprehend how it works under the hood, but it worked.&lt;/p&gt;
+
+&lt;p&gt;Today… When I need to talk to one of these services I need to pick a lousy,
+juice, smelly sh*t of my preference:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;Inject the entire Scala milky way into your 1-file Java microservice, which
+could have been delivered as a 5MB fat-JAR before Scala space-warping it
+into 50MB. And don’t forget to pat your IDE in the back every time it needs
+to auto-complete a Scala class. Oh, by the way, have you ever tried
+accessing a &lt;code&gt;scala.Option&lt;/code&gt; from Java? Boy! It is fun! I hope your service
+consumers think likewise.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Let the giant Java driver bring all its feature-rich functionality together
+with its cousins, its nephews, its uncle, its grandma, its grandpa, its
+friends from the school, its ex, and of course with spring-core. All you
+wanted is to make a &lt;code&gt;GET&lt;/code&gt; to &lt;code&gt;/v1/user/&amp;lt;id&amp;gt;&lt;/code&gt;, but now you have the entire
+Pivotal art gallery decorating your &lt;code&gt;mvn dependency:tree&lt;/code&gt; output on the
+wall.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;You can of course purpose maven-shade-plugin to shade and relocate the
+entire &lt;code&gt;javax.ws.rs-api&lt;/code&gt;, Jersey dependencies, together with the entire
+universe. I know you can do that.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Browse to Google’s &lt;code&gt;async-http-client&lt;/code&gt; webpage and try to find the page that
+explains how to make a simple fscking &lt;code&gt;GET&lt;/code&gt; request.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Embrace the old Ning client wrapper, welcome bugs (the first time I needed
+to use it I found out that &lt;code&gt;setHeaders()&lt;/code&gt; wasn’t working as expected), stick
+to JAX-RS 1.x and an ancient Netty version, which causes a JAR Hell with any
+recent library, e.g., Elasticsearch. (Please refer back to
+maven-shade-plugin item.)&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;I can hear you shouting about compile-time generated HTTP clients based on
+Swagger or WADL specs. But weren’t we just cursing WSDL and trying to run away
+from it? &lt;a href="square.github.io/retrofit/"&gt;Retrofit&lt;/a&gt;?
+&lt;a href="https://twitter.github.io/finagle/"&gt;Finagle&lt;/a&gt;? &lt;a href="http://www.grpc.io/"&gt;gRPC&lt;/a&gt;? I
+bet it is a matter of time until you end up needing to consume two clients
+which have transitive dependencies to two binary incompatible versions of
+Retrofit/Finagle/gRPC. You can blame the Java class loader mechanism. But that
+doesn’t make the problem fade away. Oh! I was just about to forget! Wait until
+I migrate to &lt;code&gt;rx.Completable&lt;/code&gt; from &lt;code&gt;rx.Single&amp;lt;Void&amp;gt;&lt;/code&gt;, which I migrated from
+&lt;code&gt;rx.Observable&amp;lt;Void&amp;gt;&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;I am exhausted and demotiviated to write yet another single line of code that
+needs to communicate with a remote microservice and which could have been
+simple fucking RPC. I don’t have a solution for the mud ball in my hands. Even
+if I do have, I am not sure whether it will survive a couple of years or not.
+But at the back of my head, I keep on cursing the Java Platform SE guys: How
+difficult could it be to come up with a proper pluggable HTTP client? Compared
+to &lt;code&gt;NPE&lt;/code&gt;, Java’s HTTP client is not &lt;em&gt;the&lt;/em&gt; billion dollar mistake, but a really
+close one.&lt;/p&gt;
+</content>
+  </entry>
   <entry>
     <id>tag:vy.github.io,2016-10-04://blog/post/2016/10/04/coders-at-work/</id>
     <title type="html">Notes on "Coders at Work"</title>
@@ -2754,83 +2879,6 @@ on:&lt;/p&gt;
   &lt;span class="o"&gt;}&lt;/span&gt;
 
 &lt;span class="o"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
-</content>
-  </entry>
-  <entry>
-    <id>tag:vy.github.io,2015-08-13://blog/post/2015/08/13/browsing-with-firefox/</id>
-    <title type="html">Notes on Browsing the Web with Firefox</title>
-    <published>2015-08-13T18:14:00Z</published>
-    <updated>2015-08-13T18:14:00Z</updated>
-    <link rel="alternate" href="https://vy.github.io//blog/post/2015/08/13/browsing-with-firefox/"/>
-    <content type="html">
-&lt;p&gt;I had always been a big fan of free and open source software (F/OSS). To the
-point of trying to avoid using any propriatery software on systems that I have
-control over. My main motivatation for going along this route has many
-dimensions within itself that are offered in the nature of F/OSS ecosystem.
-That is, sources are publicly accessible, you can modify the product to adapt
-your needs, you can directly get in touch with developers to have any sort of
-information on the product internals, there is (most of the time) a strong
-community and user base behind the project, etc. And you know that it &lt;em&gt;does no
-evil&lt;/em&gt;.&lt;/p&gt;
-
-&lt;p&gt;Nearly 2 years ago, my frustration with Firefox hit to its peak and I
-completely switched to Google Chrome. From then on, no need to worry about
-unreasonably slow page loads, lagging scrolls, video/audio encoding issues,
-etc. Chrome was working perfectly fine with all the bells and whistles one
-would need while surfing. And honestly, I never looked back. While I was aware
-of Google’s &lt;em&gt;do no evil&lt;/em&gt; motto is something just in the surface, I did not
-imagine that they could have gone to the point of &lt;a href="https://www.privateinternetaccess.com/blog/2015/06/google-chrome-listening-in-to-your-room-shows-the-importance-of-privacy-defense-in-depth/"&gt;turning on the microphone
-and actively listening to the
-room&lt;/a&gt;,
-maybe partly due to I was so satisfied with the product experience. This felt
-like the last drop of a massive flood of privacy invasion. Right that moment
-I uninstalled anything related with Google Chrome on my computer and switched
-to Firefox back. So how did it feel to surf the web just using F/OSS tools
-after 2 years? Frustratingly disappointing – particularly, while using
-Firefox 39.0.3 shipped with Ubuntu GNU/Linux.&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;
-    &lt;p&gt;You almost cannot have a proper browsing experience in &lt;em&gt;IMDB, Facebook,
-YouTube and Twitter&lt;/em&gt;. Almost every video is not supported by the browser by
-default. Further, YouTube limits you to have 360p at maximum. I do not even
-want to talk about the annoying advertisement videos that litters all the
-joy. (I do not know if it is just me, but I was not shown any ads while
-using Chrome.)&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;I am Turkish guy living in the Netherlands, communicating in English, and
-learning Dutch along the way. A majority of utility and govermental mails
-that I receive and websites I visit for similar purposes are all in Dutch.
-You cannot imagine what an impediment it was for me to live without &lt;em&gt;Google
-Translate&lt;/em&gt; support shipped with Google Chrome.&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;In order to study Dutch, I am regularly using
-&lt;a href="https://www.duolingo.com/"&gt;&lt;em&gt;Duolingo&lt;/em&gt;&lt;/a&gt;. And it was not functioning properly
-under Firefox.&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;When you hit to a damn slow website, Firefox just falls down to its knees
-and the entire application becomes unresponsive. Compared to this, Google
-Chrome’s &lt;em&gt;one process for each tab&lt;/em&gt; approach was working far superior and I
-experienced absolutely no troubles with it.&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;Needless to say, Google Chrome saves you a &lt;em&gt;larger view&lt;/em&gt; with all the
-buttons, fields, etc. are packed in a smaller area.&lt;/p&gt;
-  &lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;Long story short, switching back to Firefox took all the fun away from
-surfing. It felt like I was working in an army base, where access to internet
-is limited by a damn load of firewall rules. On the other hand, I also
-understand (some of) Firefox’s shortcomings, which were there for a certain
-reason like sticking to free and open standards without causing any potential
-licensing issues. Anyway, right now I believe I found a middle ground. I only
-open Google Chrome for certain websites and use Firefox for the rest. While I
-am not totally satisifed with this solution either, it is something I can
-stick to until there exists a better one.&lt;/p&gt;
 </content>
   </entry>
 </feed>
