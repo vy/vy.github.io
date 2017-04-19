@@ -1,7 +1,7 @@
 ---
 kind: article
 created_at: 2017-04-18 17:22 CET
-title: On Sadness and Inter-Microservice Communication
+title: Inter-Microservice Communication Fatigue
 tags:
   - java
   - programming
@@ -103,7 +103,7 @@ I migrate to `rx.Completable` from `rx.Single<Void>`, which I migrated from
 `rx.Observable<Void>`.
 
 I am exhausted and demotiviated to write yet another single line of code that
-needs to communicate with a remote microservice and which could have been
+needs to communicate with a remote microservice and which could have been a
 simple fucking RPC. I don't have a solution for the mud ball in my hands. Even
 if I do have, I am not sure whether it will survive a couple of years or not.
 But at the back of my head, I keep on cursing the Java Platform SE guys: How
