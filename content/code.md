@@ -6,8 +6,14 @@ css: code
 2017
 ----
 
+* [log4j2-redis-appender](https://github.com/vy/log4j2-redis-appender) is
+  a Log4j 2.x appender for Redis.
+
+* [log4j2-logstash-layout](https://github.com/vy/log4j2-logstash-layout) is
+  a Log4j 2.x plugin for customizable and Logstash-friendly JSON layout.
+
 * [HRRS: HTTP Request Record Suite](https://github.com/vy/hrrs) is a set of
-  tools to record and replay HTTP requests in JEE and Spring applications.
+  tools to record and replay HTTP requests in Java EE and Spring applications.
 
 2014
 ----
