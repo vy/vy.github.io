@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Guice Integration in Hazelcast</title>
+    <link rel="stylesheet" href="/css/common.css">
+    <meta name="generator" content="nanoc 3.8.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/post.css">
+    <script type="text/javascript">
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-40183531-1']);
+      _gaq.push(['_trackPageview']);
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="container">
+
+      <ul id="menu">
+        <li><a href="/">Home</a></li><li><a href="/blog/">Blog</a></li><li><a href="/code/">Code</a></li><li><a href="/blog/feed/">Feed</a></li>
+      </ul>
+
+    
+
+<div id="post">
+
+    <div class="head">
+        <div class="title">Guice Integration in Hazelcast</div>
+        <div class="subtitle">posted at
+            April 18, 2017
+            with tags <a href="/blog/tag/guice">guice</a>, <a href="/blog/tag/hazelcast">hazelcast</a>, <a href="/blog/tag/java">java</a>
+        </div>
+    </div>
+
+    <div class="body">
+
+        <script type="text/javascript">
+        var asyncLoadRequests = [];
+        </script>
+
+        
+<p>For many occassions I find the distributed <code>ExecutorService</code> of Hazelcast
+(aka. <code>IExecutorService</code>) pretty convenient to turn a set of nodes into a
+tamed cluster waiting for orders. You just submit an either <code>Runnable</code> or
+<code>Callable&lt;T&gt;</code> and Hazelcast takes care of the rest – executing the task on
+remote members, acknowledging the response(s) back, etc. Though note that
+since the method and its response will be delivered over the wire, it is no
+surprise that they all need to be <code>Serializable</code>.</p>
+
+<pre><code class="language-java"><span class="kn">import</span> <span class="nn">com.hazelcast.core.Hazelcast</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">com.hazelcast.core.HazelcastInstance</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">com.hazelcast.core.IExecutorService</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">com.hazelcast.core.Member</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">com.hazelcast.core.MultiExecutionCallback</span><span class="o">;</span>
+
+<span class="kn">import</span> <span class="nn">java.io.Serializable</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">java.util.Map</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">java.util.concurrent.Callable</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">java.util.concurrent.CompletableFuture</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">java.util.concurrent.TimeUnit</span><span class="o">;</span>
+
+<span class="kd">public</span> <span class="kd">enum</span> <span class="n">HzGuiceDemo</span> <span class="o">{;</span>
+
+    <span class="kd">public</span> <span class="kd">static</span> <span class="kd">class</span> <span class="nc">ProcessorCountTask</span> <span class="kd">implements</span> <span class="n">Serializable</span><span class="o">,</span> <span class="n">Callable</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">&gt;</span> <span class="o">{</span>
+
+        <span class="nd">@Override</span>
+        <span class="kd">public</span> <span class="n">Integer</span> <span class="nf">call</span><span class="o">()</span> <span class="o">{</span>
+            <span class="k">return</span> <span class="n">Runtime</span><span class="o">.</span><span class="na">getRuntime</span><span class="o">().</span><span class="na">availableProcessors</span><span class="o">();</span>
+        <span class="o">}</span>
+
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="n">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">Throwable</span> <span class="o">{</span>
+        <span class="n">HazelcastInstance</span> <span class="n">hzInstance</span> <span class="o">=</span> <span class="n">Hazelcast</span><span class="o">.</span><span class="na">newHazelcastInstance</span><span class="o">();</span>
+        <span class="n">IExecutorService</span> <span class="n">hzExecutorService</span> <span class="o">=</span> <span class="n">hzInstance</span><span class="o">.</span><span class="na">getExecutorService</span><span class="o">(</span><span class="s">"ballpark"</span><span class="o">);</span>
+        <span class="n">CompletableFuture</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">&gt;</span> <span class="n">totalProcessorCountFuture</span> <span class="o">=</span> <span class="k">new</span> <span class="n">CompletableFuture</span><span class="o">&lt;&gt;();</span>
+        <span class="n">hzExecutorService</span><span class="o">.</span><span class="na">submitToAllMembers</span><span class="o">(</span>
+                <span class="k">new</span> <span class="nf">ProcessorCountTask</span><span class="o">(),</span>
+                <span class="k">new</span> <span class="nf">MultiExecutionCallback</span><span class="o">()</span> <span class="o">{</span>
+
+                    <span class="nd">@Override</span>
+                    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onResponse</span><span class="o">(</span><span class="n">Member</span> <span class="n">member</span><span class="o">,</span> <span class="n">Object</span> <span class="n">value</span><span class="o">)</span> <span class="o">{</span>
+                        <span class="c1">// Ignored.</span>
+                    <span class="o">}</span>
+
+                    <span class="nd">@Override</span>
+                    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onComplete</span><span class="o">(</span><span class="n">Map</span><span class="o">&lt;</span><span class="n">Member</span><span class="o">,</span> <span class="n">Object</span><span class="o">&gt;</span> <span class="n">values</span><span class="o">)</span> <span class="o">{</span>
+                        <span class="kt">int</span> <span class="n">totalProcessorCount</span> <span class="o">=</span> <span class="n">values</span>
+                            <span class="o">.</span><span class="na">values</span><span class="o">()</span>
+                            <span class="o">.</span><span class="na">stream</span><span class="o">()</span>
+                            <span class="o">.</span><span class="na">mapToInt</span><span class="o">(</span><span class="n">object</span> <span class="o">-&gt;</span> <span class="o">(</span><span class="kt">int</span><span class="o">)</span> <span class="n">object</span><span class="o">)</span>
+                            <span class="o">.</span><span class="na">sum</span><span class="o">();</span>
+                        <span class="n">totalProcessorCountFuture</span><span class="o">.</span><span class="na">complete</span><span class="o">(</span><span class="n">totalProcessorCount</span><span class="o">);</span>
+                    <span class="o">}</span>
+
+                <span class="o">});</span>
+        <span class="kt">int</span> <span class="n">totalProcessorCount</span> <span class="o">=</span> <span class="n">totalProcessorCountFuture</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="mi">10</span><span class="o">,</span> <span class="n">TimeUnit</span><span class="o">.</span><span class="na">SECONDS</span><span class="o">);</span>
+        <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">format</span><span class="o">(</span><span class="s">"there are %d processors in total%n"</span><span class="o">,</span> <span class="n">totalProcessorCount</span><span class="o">);</span>
+        <span class="n">hzInstance</span><span class="o">.</span><span class="na">shutdown</span><span class="o">();</span>
+    <span class="o">}</span>
+
+<span class="o">}</span></code></pre>
+
+<p>Unfortunately many of our tasks are not isolated from the rest of the
+application state (i.e., <em>stateless</em>) as <code>ProcessorCountTask</code> given above.
+Most of the time the functional requirements necessitate access to the remote
+node state that is available through beans provided by the underlying
+dependency injection framework. Consider the following stateful <code>PizzaService</code>
+that is responsible for cooking pizzas to its users.</p>
+
+<pre><code class="language-java"><span class="kn">import</span> <span class="nn">javax.inject.Singleton</span><span class="o">;</span>
+
+<span class="kn">import</span> <span class="nn">static</span> <span class="n">com</span><span class="o">.</span><span class="na">google</span><span class="o">.</span><span class="na">common</span><span class="o">.</span><span class="na">base</span><span class="o">.</span><span class="na">Preconditions</span><span class="o">.</span><span class="na">checkArgument</span><span class="o">;</span>
+
+<span class="nd">@Singleton</span>
+<span class="kd">public</span> <span class="kd">static</span> <span class="kd">class</span> <span class="nc">PizzaService</span> <span class="o">{</span>
+
+    <span class="kd">private</span> <span class="kd">volatile</span> <span class="kt">int</span> <span class="n">totalPizzaCount</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span>
+
+    <span class="kd">public</span> <span class="kd">synchronized</span> <span class="kt">int</span> <span class="nf">cook</span><span class="o">(</span><span class="kt">int</span> <span class="n">amount</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">checkArgument</span><span class="o">(</span><span class="n">amount</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="o">,</span> <span class="s">"expecting: amount &gt; 0, found: %s"</span><span class="o">,</span> <span class="n">amount</span><span class="o">);</span>
+        <span class="n">availablePizzaCount</span> <span class="o">+=</span> <span class="n">amount</span><span class="o">;</span>
+        <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">format</span><span class="o">(</span><span class="s">"🍕 cooking %d pizza(s)%n"</span><span class="o">,</span> <span class="n">amount</span><span class="o">);</span>
+    <span class="o">}</span>
+
+<span class="o">}</span></code></pre>
+
+<p>We further have a task class to remotely command <code>PizzaService</code> to cook:</p>
+
+<pre><code class="language-java"><span class="kn">import</span> <span class="nn">java.io.Serializable</span><span class="o">;</span>
+
+<span class="kd">public</span> <span class="kd">static</span> <span class="kd">class</span> <span class="nc">PizzaCookTask</span> <span class="kd">implements</span> <span class="n">Serializable</span><span class="o">,</span> <span class="n">Runnable</span> <span class="o">{</span>
+
+    <span class="nd">@Inject</span>
+    <span class="kd">private</span> <span class="n">PizzaService</span> <span class="n">pizzaService</span><span class="o">;</span>
+
+    <span class="kd">private</span> <span class="kd">final</span> <span class="kt">int</span> <span class="n">amount</span><span class="o">;</span>
+
+    <span class="kd">public</span> <span class="nf">PizzaMakeTask</span><span class="o">(</span><span class="kt">int</span> <span class="n">amount</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">amount</span> <span class="o">=</span> <span class="n">amount</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">run</span><span class="o">()</span> <span class="o">{</span>
+        <span class="n">pizzaService</span><span class="o">.</span><span class="na">cook</span><span class="o">(</span><span class="n">amount</span><span class="o">);</span>
+    <span class="o">}</span>
+
+<span class="o">}</span></code></pre>
+
+<p>A naive approach to run this task on an <code>IExecutorService</code> would result in the
+following code:</p>
+
+<pre><code class="language-java"><span class="kn">import</span> <span class="nn">com.hazelcast.core.Hazelcast</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">com.hazelcast.core.HazelcastInstance</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">com.hazelcast.core.IExecutorService</span><span class="o">;</span>
+
+<span class="kn">import</span> <span class="nn">java.util.concurrent.CompletableFuture</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">java.util.concurrent.TimeUnit</span><span class="o">;</span>
+
+<span class="kd">public</span> <span class="kd">enum</span> <span class="n">HzGuiceDemo</span> <span class="o">{;</span>
+
+    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="n">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">Throwable</span> <span class="o">{</span>
+        <span class="n">HazelcastInstance</span> <span class="n">hzInstance</span> <span class="o">=</span> <span class="n">Hazelcast</span><span class="o">.</span><span class="na">newHazelcastInstance</span><span class="o">();</span>
+        <span class="n">IExecutorService</span> <span class="n">hzExecutorService</span> <span class="o">=</span> <span class="n">hzInstance</span><span class="o">.</span><span class="na">getExecutorService</span><span class="o">(</span><span class="s">"ballpark"</span><span class="o">);</span>
+        <span class="n">hzExecutorService</span><span class="o">.</span><span class="na">executeOnAllMembers</span><span class="o">(</span><span class="k">new</span> <span class="nf">PizzaCookTask</span><span class="o">(</span><span class="mi">1</span><span class="o">));</span>
+        <span class="n">hzInstance</span><span class="o">.</span><span class="na">shutdown</span><span class="o">();</span>
+    <span class="o">}</span>
+
+<span class="o">}</span></code></pre>
+
+<p>which fails with a sweet <code>NullPointerException</code> as follows:</p>
+
+<pre><code>Exception in thread "main" java.util.concurrent.ExecutionException: java.util.concurrent.ExecutionException: java.lang.NullPointerException
+  at java.util.concurrent.CompletableFuture.reportGet(CompletableFuture.java:357)
+  at java.util.concurrent.CompletableFuture.get(CompletableFuture.java:1915)
+  at com.vlkan.hzguicedemo.HzGuiceDemo.main(HzGuiceDemo.java:??)
+Caused by: java.util.concurrent.ExecutionException: java.lang.NullPointerException
+  at java.util.concurrent.FutureTask.report(FutureTask.java:122)
+  at java.util.concurrent.FutureTask.get(FutureTask.java:192)
+  at com.hazelcast.executor.DistributedExecutorService$CallableProcessor.run(DistributedExecutorService.java:189)
+  at com.hazelcast.util.executor.CachedExecutorServiceDelegate$Worker.run(CachedExecutorServiceDelegate.java:186)
+  at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1142)
+  at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:617)
+  at java.lang.Thread.run(Thread.java:745)
+  at com.hazelcast.util.executor.HazelcastManagedThread.executeRun(HazelcastManagedThread.java:76)
+  at com.hazelcast.util.executor.HazelcastManagedThread.run(HazelcastManagedThread.java:92)
+Caused by: java.lang.NullPointerException
+  at com.vlkan.hzguicedemo.HzGuiceDemo$PizzaCookTask.call(HzGuiceDemo.java:??)
+  at com.vlkan.hzguicedemo.HzGuiceDemo$PizzaCookTask.call(HzGuiceDemo.java:??)
+</code></pre>
+
+<p>What is really happening here is that Hazelcast does not have a magical ball
+to guess the dependency injection framework you are using to process the
+<code>@Inject</code>-annotated properties of the <code>PizzaCookTask</code>. Though Hazelcast has
+something else:
+<a href="http://docs.hazelcast.org/docs/2.3/manual/html/ch14s02.html">ManagedContext</a>.
+In a nutshell, <code>ManagedContext</code> provides means to intercept class
+instantiation at deserialization. We can leverage this functionality to come
+up with a <code>ManagedContext</code> implementation that bakes Guice dependency
+injection into the Hazelcast class instantiation process.</p>
+
+<pre><code class="language-java"><span class="kn">import</span> <span class="nn">com.google.inject.Injector</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">com.hazelcast.core.ManagedContext</span><span class="o">;</span>
+
+<span class="kn">import</span> <span class="nn">javax.inject.Inject</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">javax.inject.Singleton</span><span class="o">;</span>
+
+<span class="nd">@Singleton</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">HazelcastGuiceManagedContext</span> <span class="kd">implements</span> <span class="n">ManagedContext</span> <span class="o">{</span>
+
+    <span class="kd">private</span> <span class="kd">final</span> <span class="n">Injector</span> <span class="n">injector</span><span class="o">;</span>
+
+    <span class="nd">@Inject</span>
+    <span class="kd">public</span> <span class="nf">HazelcastGuiceManagedContext</span><span class="o">(</span><span class="n">Injector</span> <span class="n">injector</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">injector</span> <span class="o">=</span> <span class="n">injector</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="n">Object</span> <span class="nf">initialize</span><span class="o">(</span><span class="n">Object</span> <span class="n">instance</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">injector</span><span class="o">.</span><span class="na">injectMembers</span><span class="o">(</span><span class="n">instance</span><span class="o">);</span>
+        <span class="k">return</span> <span class="n">instance</span><span class="o">;</span>
+    <span class="o">}</span>
+
+<span class="o">}</span></code></pre>
+
+<p>Next all you need to do is to use this <code>ManagedContext</code> while creating your
+<code>HazelcastInstance</code>:</p>
+
+<pre><code class="language-java"><span class="n">Injector</span> <span class="n">injector</span> <span class="o">=</span> <span class="n">Guice</span><span class="o">.</span><span class="na">createInjector</span><span class="o">();</span>
+<span class="n">HazelcastGuiceManagedContext</span> <span class="n">guiceManagedContext</span> <span class="o">=</span> <span class="n">injector</span><span class="o">.</span><span class="na">getInstance</span><span class="o">(</span><span class="n">HazelcastGuiceManagedContext</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+<span class="n">Config</span> <span class="n">hzConfig</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">Config</span><span class="o">();</span>
+<span class="n">hzConfig</span><span class="o">.</span><span class="na">setManagedContext</span><span class="o">(</span><span class="n">guiceManagedContext</span><span class="o">);</span>
+<span class="n">HazelcastInstance</span> <span class="n">hzInstance</span> <span class="o">=</span> <span class="n">Hazelcast</span><span class="o">.</span><span class="na">newHazelcastInstance</span><span class="o">(</span><span class="n">hzConfig</span><span class="o">);</span></code></pre>
+
+<p>While I have provided an example for Guice, this method is applicable to any
+dependency injection framework that provides an equivalent to
+<code>Injector#injectMembers()</code> of Guice. Needless to say, but Spring folks are
+already covered by <code>SpringManagedContext</code> shipped with Hazelcast.</p>
+
+
+        <div id="disqus_thread"></div>
+        <script type="text/javascript">
+        var disqus_shortname = 'vyazici';
+        var disqus_identifier = '/blog/post/20171020-hazelcast-guice/';
+        var disqus_title = 'Guice Integration in Hazelcast';
+        (function() {
+            var dsq = document.createElement('script');
+            dsq.type = 'text/javascript';
+            dsq.async = true;
+            dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+        </script>
+
+        
+
+        
+
+    </div>
+  </body>
+</html>
+
+
+        <script type="text/javascript">
+        for (var i = 0; i < asyncLoadRequests.length; i++) {
+            asyncLoadRequest = asyncLoadRequests[i];
+            asyncLoadRequest();
+        }
+        </script>
+
+    </div>
+
+</div>
