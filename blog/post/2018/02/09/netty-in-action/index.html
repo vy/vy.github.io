@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Notes on "Netty in Action"</title>
+    <link rel="stylesheet" href="/css/common.css">
+    <meta name="generator" content="nanoc 3.8.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/post.css">
+    <script type="text/javascript">
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-40183531-1']);
+      _gaq.push(['_trackPageview']);
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="container">
+
+      <ul id="menu">
+        <li><a href="/">Home</a></li><li><a href="/blog/">Blog</a></li><li><a href="/code/">Code</a></li><li><a href="/blog/feed/">Feed</a></li>
+      </ul>
+
+    
+
+<div id="post">
+
+    <div class="head">
+        <div class="title">Notes on "Netty in Action"</div>
+        <div class="subtitle">posted at
+            February 9, 2018
+            with tags <a href="/blog/tag/java">java</a>, <a href="/blog/tag/networking">networking</a>, <a href="/blog/tag/programming">programming</a>
+        </div>
+    </div>
+
+    <div class="body">
+
+        <script type="text/javascript">
+        var asyncLoadRequests = [];
+        </script>
+
+        
+<p>Those who had priviledge to read my <a href="/blog/post/2017/04/18/inter-service-comm/">frustration chronicles on intra-microservice communication</a> would easily
+recall me pointing my finger to Java Platform SE guys for not shipping a
+proper HTTP client. There my fury went to an extent calling it as one of the
+closest candidates for the billion dollar mistake. Unfortunately screaming out
+loud in a blog post does not give much of a relief, because it doesn’t take
+more than a month for me to find myself in precisely the same technical
+mudpot. Indeed after a couple of months later I wrote that post, I was chasing
+yet another performance problem in one of our aggregation services. In
+essence, each incoming HTTP request is served by aggregating multiple sources
+collected again over HTTP. This simple fairy tale architecture gets
+slaughtered on production by 200 Tomcat threads intertwined with Rx
+computation and I/O threads resting in the shades of a dozen other thread
+pools dedicated for so-called-asynchronous HTTP clients for aggregated remote
+services. And I saved the best for last: there were leaking <code>TIME_WAIT</code>
+sockets.</p>
+
+<p>All of a sudden the question occurred to me like the roar of rolling boulders
+down a steep hill in a far distance: What is the lowest level that I can plumb
+a networking application in Java without dealing with protocol intricacies.
+Put another way, is there a foundational abstraction exposing both the lowest
+(channel with I/O streams) and highest (HTTP headers and body) levels that are
+in reach? I rode both Java OIO and NIO (that is, old- and new-I/O) horses in
+the past and fell off enough to learn it the hard way that they are definitely
+not feasible options in this case. The first attempt in the search of a cure
+in Google introduces you to <a href="http://netty.io/">Netty</a>. If you dig long enough,
+you also stumble upon <a href="http://mina.apache.org/">Apache Mina</a> too. Netty is
+popular enough in the Java world that it is highly likely you are an indirect
+consumer of it, unless you are already directly using it. I was aware of its
+presence like dark matter in every single network application that I wrote,
+though I have never considered to use it directly. Checking the Netty website
+after dealing with crippled network applications at hand revealed an
+enlightenment within me: <em>Hey! I can purpose this to implement some sort of
+RPC mechanism using Protocol Buffers in HTTP 2.0 request payloads!</em> Though
+further investigation swipes the dust from the footsteps of giants who had
+followed the same path: Google (<a href="https://grpc.io/">gRPC</a>), Facebook
+(<a href="https://github.com/facebook/nifty">Nifty</a>), Twitter
+(<a href="https://twitter.github.io/finagle/">Finagle</a>), etc. This finding while
+crushing my first excitement, later on left its place to the confidence of
+getting confirmed that I am on the right path.</p>
+
+<p>I have always heard good things about both Netty and its community. I have
+already been sneakily following the
+<a href="http://normanmaurer.me/presentations/">presentations</a> and <a href="https://twitter.com/normanmaurer">Twitter
+updates</a> of <a href="http://normanmaurer.me/">Norman
+Maurer</a>, the Netty shepherd as of date. Though what
+triggered me for diving deep with Netty has become the following tweet:</p>
+
+<blockquote class="twitter-tweet" data-lang="en">
+<p lang="en" dir="ltr">Challenge accepted! First step is done. Next: Cover to cover study. <a href="https://t.co/Gnfhbi6Ko0">pic.twitter.com/Gnfhbi6Ko0</a></p>— Volkan Yazıcı (@yazicivo) <a href="https://twitter.com/yazicivo/status/954366672751689728?ref_src=twsrc%5Etfw">January 19, 2018</a>
+</blockquote>
+
+<p>Norman Maurer has always been kind and encouraging to new contributors. So my
+plan is to turn this into a relation with mutual benefit: I can contribute and
+get tutored while doing that so.</p>
+
+<h1 id="netty-in-action">Netty in Action</h1>
+
+<p>The book (2016 press date) is definitely a must read for anyone planning to
+use Netty. It lays out Netty fundamentals like channels, handlers, encoders,
+etc. in detail. That being said, I have got the impression that the content is
+mostly curated for beginners. For instance, dozens of pages (and an appendix)
+are spent (wasted?) for a Maven crash course, not to mention the space wasted
+by Maven command ouputs shared. This felt a little bit disappointing
+considering the existing audience of Netty in general. Who would really read a
+book about Netty? You have probably had your time with OIO/NIO primitives or
+client/server frameworks in the market. You certainly don’t want to use yet
+another library that promises to make all your problems disappear. So I don’t
+think you can be qualified as a novice in this battle anymore, and you are
+indeed in the search of a scalpel rather than a swiss army knife.
+Nevertheless, I still think the book eventually managed to succeed in finding
+a balance between going too deep and just scratching the surface.</p>
+
+<h2 id="things-that-are-well-done">Things that are well done</h2>
+
+<ul>
+  <li>
+    <p>I really enjoyed the presented <strong>historical perspective</strong> on the development
+of Java platforms’ networking facilities and Netty itself. Found it quite
+valuable and wanted to read more and more!</p>
+  </li>
+  <li>
+    <p>Emphasis on <strong><code>ByteBuf</code></strong> was really handy. Later on I learnt that there are
+people using Netty just for its sound <code>ByteBuf</code> implementation.</p>
+  </li>
+  <li>
+    <p>Almost every single conscious decision within the shared <strong>code snippets are
+explained in detail</strong>. While this felt like quite some noise in the
+beginning, later on it turned out be really helpful – especially while
+manually updating <code>ByteBuf</code> reference counts.</p>
+  </li>
+  <li>
+    <p>Presented <strong>case studies</strong> were quite interesting to read and inspiring too.</p>
+  </li>
+</ul>
+
+<h2 id="things-that-could-have-been-improved">Things that could have been improved</h2>
+
+<ul>
+  <li>
+    <p>I had big hopes to read about how to implement an HTTP client with
+<strong>connection pool</strong> support. I particularly find this feature inevitable in a
+networking application and often not consumed wisely. Though there wasn’t a
+single section mentioning about connection pooling of any sort.</p>
+  </li>
+  <li>
+    <p>As someone who had studied <a href="http://normanmaurer.me/presentations/">Norman Maurer’s
+presentations</a>, I was expecting to
+see waaaay more practical tips about <strong>GC considerations</strong>, updating <strong>socket
+options</strong> (<code>TCP_NO_DELAY</code>, <code>SO_SNDBUF</code>, <code>SO_RCVBUF</code>, <code>SO_BACKLOG</code>, etc.),
+mitigating <strong><code>TIME_WAIT</code></strong> socket problems, and Netty best practices. Maybe
+adding this content would have doubled the size of the book, though I still
+think a book on Netty is incomplete without such practical tips.</p>
+  </li>
+  <li>
+    <p>Many inbound requests trigger multiple I/O operations in a typical network
+application. It is crucial to not let these operatins block a running thread,
+which Netty is well aware of and hence ships a fully-fledged <code>EventExecutor</code>
+abstraction. This crucial detail is mentioned in many places within the book,
+though none gave a concrete example. Such a common thing could have been
+demonstrated by an example.</p>
+  </li>
+</ul>
+
+<h1 id="notes">Notes</h1>
+
+<p>I always take notes while reading a book. Let it be a grammar mistake, code
+typo, incorrect or ambiguous information, thought provoking know-how,
+practical tip, etc. You name it. Here I will share them in page order. I will
+further classify my notes in 3 groups: <span class="note-mistake">mistakes</span>,
+<span class="note-improvement">improvements</span>,
+<span class="note-question">questions</span>, and
+<span class="note-other">other</span>.</p>
+
+<ul>
+  <li>
+    <p><span class="note-question">[p19, Listing 2.1]</span> Why did we use
+<code>ctx.writeAndFlush(Unpooled.EMPTY_BUFFER)</code>   rather than just calling
+<code>ctx.flush()</code>?</p>
+  </li>
+  <li>
+    <p><span class="note-mistake">[p21, Listing 2.2]</span> Typo in
+<code>throws Exceptio3n</code>.</p>
+  </li>
+  <li>
+    <p><span class="note-improvement">[p49, Section 4.3.1]</span>
+The listed items</p>
+
+    <blockquote>
+      <ul>
+        <li>A new <code>Channel</code> was accepted and is ready.</li>
+        <li>A <code>Channel</code> connection …</li>
+      </ul>
+    </blockquote>
+
+    <p>are an identical repetition of Table 4.3.</p>
+  </li>
+  <li>
+    <p><span class="note-question">[p60]</span> <code>CompositeByteBuf</code> has the
+following remark:</p>
+
+    <blockquote>
+      <p>Note that Netty optimizes socket I/O operations that employ
+<code>CompositeByteBuf</code>, eliminating whenever possible the performance and
+memory usage penalties that are incurred with JDK’s buffer implementation.
+This optimization takes place in Netty’s core code and is therefore not
+exposed, but you should be aware of its impact.</p>
+    </blockquote>
+
+    <p>Interesting. Good to know. I should be aware of <em>its impact</em>. But how can
+I measure and relate this impact? Maybe I am just nitpicking, tough I would
+love to hear a little bit more.</p>
+  </li>
+  <li>
+    <p><span class="note-question">[p77, Table 6.3]</span>
+<code>channelWritabilityChanged()</code> method of <code>ChannelInboundHandler</code>… How come
+an inbound channel can have a writability notion? I would have expected an
+inbound channel to be just readable.</p>
+  </li>
+  <li>
+    <p><span class="note-improvement">[p78, Section 6.1.4]</span> Starts with
+some really intriguing paragraph:</p>
+
+    <blockquote>
+      <p>A powerful capability of <code>ChannelOutboundHandler</code> is to defer an operation
+or event on demand, which allows for sophisticated approaches to request
+handling. If writing to the remote peer is suspended, for example, you can
+defer flush operations and resume them later.</p>
+    </blockquote>
+
+    <p>Though it ends here. No more explanations, not even a single example, etc.
+A total mystery.</p>
+  </li>
+  <li>
+    <p><span class="note-question">[p79, Table 6.4]</span> <code>read()</code> method of a
+<code>ChannelOutboundHandler</code>… Similar to <code>ChannelInboundHandler#channelWritabilityChanged()</code>,
+how come an outbound channel can have a read method? What are we reading
+that is supposed to be already originating from us and destined to a remote
+peer?</p>
+  </li>
+  <li>
+    <p><span class="note-improvement">[p79, Section 6.1.4]</span>
+It goes as follows:</p>
+
+    <blockquote>
+      <p><strong><code>ChannelPromise</code> vs. <code>ChannelFuture</code></strong> Most of the methods in
+<code>ChannelOutboutHandler</code> take a <code>ChannelPromise</code> argument to be notified
+when the operation completes. <code>ChannelPromise</code> is a subinterface of
+<code>ChannelFuture</code> that defines the writable methods, such as <code>setSuccess()</code>
+or <code>setFailure()</code>, thus making <code>ChannelFuture</code> immutable.</p>
+    </blockquote>
+
+    <p>Ok, but why? I know the difference between a <code>Future</code> and <code>Promise</code>, though
+I still cannot see the necessity for outbound handlers to employ <code>Promise</code>
+instead of a <code>Future</code>.</p>
+  </li>
+  <li>
+    <p><span class="note-question">[p84, Listing 6.5]</span> While adding handlers
+to a pipeline, what happens in the case of a name conflict?</p>
+  </li>
+  <li>
+    <p><span class="note-improvement">[p84]</span> A remark is dropped on the
+<strong><code>ChannelHandler</code> execution and blocking</strong> subject. Just in time! Though
+it misses a demonstration.</p>
+  </li>
+  <li>
+    <p><span class="note-question">[p86, Listing 6.9]</span> Again a <code>read()</code>
+method for <code>ChannelPipeline</code>s outbound operations. I am really puzzled on
+the notion of reading from outbound channels.</p>
+  </li>
+  <li>
+    <p><span class="note-question">[p94, Listing 6.13]</span> What happens when
+a <code>ChannelFuture</code> completes before adding a listener to it?</p>
+  </li>
+  <li>
+    <p><span class="note-mistake">[p95, Section 6.5]</span> Last paragraph goes
+like this:</p>
+
+    <blockquote>
+      <p>The next chapter will focus on Netty’s codec abstraction, which makes
+writing protocol encoders and decoders much easier than using the
+underlying <code>ChannelHandler</code> implementations directly.</p>
+    </blockquote>
+
+    <p>Though next chapter focuses on <code>EventLoop</code> and threading model.</p>
+  </li>
+  <li>
+    <p><span class="note-question">[p102, Listing 7.3]</span> Speaking of
+scheduling <code>Runnable</code>s to a channel’s event loop, what if channel gets
+closed before triggering the scheduled tasks?</p>
+  </li>
+  <li>
+    <p><span class="note-improvement">[p103]</span> Page starts with the
+following last paragraph:</p>
+
+    <blockquote>
+      <p>These examples illustrate the performance gain that can be achieved
+by taking advantage of Netty’s scheduling capabilities.</p>
+    </blockquote>
+
+    <p>Really? Netty’s scheduling capabilities are shown by using each function in
+isolation. Though I still don’t have a clue on how these capabilities can be
+purposed for a performance gain. This is a <strong>common problem throughout the
+book</strong>: The innocent flashy statement hangs in the air, waiting for a
+demonstration that shares some insight distilled by experience.</p>
+  </li>
+  <li>
+    <p><span class="note-mistake">[p104, Figure 7.4]</span> The caption of figure
+is as follows:</p>
+
+    <blockquote>
+      <p><code>EventLoop</code> allocation for non-blocking transports (such as NIO and AIO)</p>
+    </blockquote>
+
+    <p>AIO? Looks like a typo.</p>
+  </li>
+  <li>
+    <p><span class="note-mistake">[p107]</span> Chapter starts with the following
+opening paragraph:</p>
+
+    <blockquote>
+      <p>Having studied <code>ChannelPipeline</code>s, <code>ChannelHandler</code>s, and codec classes in
+depth, …</p>
+    </blockquote>
+
+    <p>Nope. Nothing has been mentioned so far about codec classes.</p>
+  </li>
+  <li>
+    <p><span class="note-improvement">[p112]</span> It is explained that, in the
+context of <code>Bootstrap</code>, <code>bind()</code>   and <code>connect()</code> can throw
+<code>IllegalStateException</code> if some combination of   <code>group()</code>, <code>channel()</code>,
+<code>channelHandler()</code>, and/or <code>handler()</code> method calls   is missing. Similarly,
+calling <code>attr()</code> after <code>bind()</code> has no effect. I personally find such
+abstractions poorly designed. I would rather have used the <a href="https://immutables.github.io/immutable.html#staged-builder">staged builder
+pattern</a> and
+avoid such intricacies at compile-time.</p>
+  </li>
+  <li>
+    <p><span class="note-mistake">[p117, Listing 8.6]</span> The 2nd argument to
+<code>Bootstrap#group()</code> looks like a typo.</p>
+  </li>
+  <li>
+    <p><span class="note-improvement">[p120]</span> Check this end of chapter
+summary out:</p>
+
+    <blockquote>
+      <p>In this chapter you learned how to bootstrap Netty server and client
+applications, including those that use connectionless protocols. We
+covered a number of special cases, including bootstrapping client channels
+in server applications and using a <code>ChannelInitializer</code> to handle the
+installation of multiple <code>ChannelHandler</code>s during bootstrapping. You saw
+how to specify configuration options on channels and how to attach
+information to a channel using attributes. Finally, you learned how to
+shut down an application gracefully to release all resources in an
+orderly fashion.</p>
+
+      <p>In the next chapter we’ll examine the tools Netty provides to help you
+test your <code>ChannelHandler</code> implementations.</p>
+    </blockquote>
+
+    <p>I have always found such summaries useless, since it is a repetition of
+the first chapter introduction, and hence a waste of space. Rather just
+give crucial take aways, preferably in a digestible at a glimpse form.
+For instance, <em>use <code>EventLoopGroup.shutdownGracefully()</code></em>, etc.</p>
+  </li>
+  <li>
+    <p><span class="note-improvement">[p121]</span> I suppose <em>Unit Testing</em>
+chapter used to come after <em>Codecs</em> in previous prints and the authors
+have moved it to an earlier stage to establish a certain coherence in
+the introductory chapters. Though, reading <em>Codecs</em> reveals that there
+is close to 70% overlap in content, which feels like a poorly structured
+flow. I see the value in authors’ attempt, though there is quite some
+room for improvement via tuning the break down of chapters.</p>
+  </li>
+  <li>
+    <p><span class="note-mistake">[p124, Section 9.2.1]</span>
+<code>ByteToMessageDecoder</code> is used before explained. (See my remark above.)</p>
+  </li>
+  <li>
+    <p><span class="note-improvement">[p127]</span> The following bullets</p>
+
+    <blockquote>
+      <p>Here are the steps executed in the code:</p>
+
+      <ol>
+        <li>Writes negative 4-byte integers to a new <code>ByteBuf</code>.</li>
+        <li>Creates an <code>EmbeddedChannel</code> …</li>
+      </ol>
+    </blockquote>
+
+    <p>is a repetition of the descriptions available in Listing 9.4.</p>
+  </li>
+  <li>
+    <p><span class="note-mistake">[p138, Listing 10.3]</span> Comma missing
+after <code>Integer msg</code>.</p>
+  </li>
+  <li>
+    <p><span class="note-question">[p141]</span> Why do
+<code>MessageToMessage{Encoder,Decoder}</code> classes do not have an output type,
+but just <code>Object</code>? How do you ensure type safety while chaining them
+along a pipeline?</p>
+  </li>
+  <li>
+    <p><span class="note-mistake">[p142, Listing 10.6]</span> Comma missing
+after <code>Integer msg</code>.</p>
+  </li>
+  <li>
+    <p><span class="note-mistake">[p145, Listing 10.7]</span> Constructor of
+<code>MyWebSocketFrame</code> is named incorrectly.</p>
+  </li>
+  <li>
+    <p><span class="note-improvement">[p151, Section 11.2]</span> I think
+<em>Building Netty HTTP/HTTPS applications</em> deserves its own chapter. And
+a very important subject is missing: connection pooling.</p>
+  </li>
+  <li>
+    <p><span class="note-question">[p157, Listing 11.6]</span> While building
+the WebSocket pipeline, which handler addresses ping/pong frames?</p>
+  </li>
+  <li>
+    <p><span class="note-mistake">[p159, Table 11.4]</span> The first sentence
+in the description of <code>WriteTimeoutHandler</code> is identical to the one in
+<code>ReadTimeoutHandler</code>. Supposedly a copy-paste side-effect.</p>
+  </li>
+  <li>
+    <p><span class="note-mistake">[p171]</span> Check out the first paragraph:</p>
+
+    <blockquote>
+      <p>WebSocket is an advanced network protocol that has been developed to
+improve the performance and responsiveness of web applications. We’ll
+explore Netty’s support for <em>each of them</em> by writing a sample
+application.</p>
+    </blockquote>
+
+    <p>Each of them? Who are they?</p>
+  </li>
+  <li>
+    <p><span class="note-mistake">[p177]</span> <em>The call to <code>retain()</code> is
+needed because after <code>channelRead()</code> …</em> → <em>The call to <code>retain()</code>
+is needed because after <code>channelRead0()</code> …</em></p>
+  </li>
+  <li>
+    <p><span class="note-improvement">[p178, Table 12.1]</span> Identical to
+Table 11.3.</p>
+  </li>
+  <li>
+    <p><span class="note-mistake">[p181, Figure 12.3]</span>
+<code>ChunkedWriteHandler</code> is missing.</p>
+  </li>
+  <li>
+    <p><span class="note-question">[p183, Listing 12.4]</span> There the shutdown
+of the chat server is realized via <code>Runtime.getRuntime().addShutdownHook()</code>.
+Is this a recommended practice?</p>
+  </li>
+  <li>
+    <p><span class="note-mistake">[p189]</span> <em>Figure 14.1 presents a high-level
+view of the …</em> → <em>Figure 13.1</em></p>
+  </li>
+  <li>
+    <p><span class="note-mistake">[p189]</span> <em>Listing 14.1 shows the details
+of this simple POJO.</em> → <em>Listing 13.1</em></p>
+  </li>
+  <li>
+    <p><span class="note-improvement">[p190, Listing 13.1]</span> <code>received</code>
+field is not used at all. Could be removed to increase clarity.
+Interestingly, the field is not even encoded.</p>
+  </li>
+  <li>
+    <p><span class="note-mistake">[p191, Table 13.1]</span>
+<code>extendsDefaultAddressedEnvelope</code> → <code>extends DefaultAddressedEnvelope</code></p>
+  </li>
+  <li>
+    <p><span class="note-mistake">[p191]</span> <em>Figure 14.2 shows the
+broadcasting of three log …</em> → <em>Figure 13.2</em></p>
+  </li>
+  <li>
+    <p><span class="note-mistake">[p192]</span> <em>Figure 14.3 represents
+a high-level view of the …</em> → <em>Figure 13.3</em></p>
+  </li>
+  <li>
+    <p><span class="note-improvement">[p192, Listing 13.2]</span> A <code>byte[] file</code>
+and <code>byte[] msg</code> pair is encoded as follows:</p>
+
+    <p><code>java
+buf.writeBytes(file);
+buf.writeBytes(LogEvent.SEPARATOR);
+buf.writeBytes(msg);
+</code></p>
+
+    <p>Later on each entry is read back by splitting at <code>LogEvent.SEPARATOR</code>. What
+if <code>file</code> contains <code>LogEvent.SEPARATOR</code>? I think this is a bad encoding
+practice. I would rather do:</p>
+
+    <p><code>java
+buf.writeInt(file.length);
+buf.writeBytes(file);
+buf.writeInt(msg.length);
+buf.writeBytes(msg);
+</code></p>
+  </li>
+  <li>
+    <p><span class="note-question">[p194, Listing 13.3]</span> Is there a
+constant for <code>255.255.255.255</code> broadcast address?</p>
+  </li>
+  <li>
+    <p><span class="note-mistake">[p195]</span> <em>Figure 14.4 depicts the
+<code>ChannelPipeline</code> of the <code>LogEventonitor</code> …</em> → <em>Figure 13.4</em></p>
+  </li>
+  <li>
+    <p><span class="note-improvement">[p196]</span> Check this out:</p>
+
+    <blockquote>
+      <p>The <code>LogEventHandler</code> prints the <code>LogEvent</code>s in an easy-to-read
+format that consists of the following:</p>
+
+      <ul>
+        <li>The received timestamp in milliseconds.</li>
+      </ul>
+    </blockquote>
+
+    <p>Really? I did not know epoch timestamps were <em>easy-to-read</em>. Maybe for some
+definition of easy-to-read.</p>
+  </li>
+  <li>
+    <p><span class="note-mistake">[p195]</span> <em>Now we need to install our
+handlers in the <code>ChannelPipeline</code>, as seen in figure 14.4.</em> →
+<em>Figure 13.4</em></p>
+  </li>
+  <li>
+    <p><span class="note-mistake">[p205]</span> <em>Approach A, optimistic and
+apparently simpler (figure 15.1)</em> → <em>figure 14.1</em></p>
+  </li>
+  <li>
+    <p><span class="note-improvement">[p206]</span> Half of the page is spent
+for justifying Droplr’s preference of approach B (safe and complex) over
+approach A (optimistic and simpler). Call me an idiot, but I am not sold
+to these arguments that the former approach is less safe.</p>
+  </li>
+  <li>
+    <p><span class="note-mistake">[p207]</span> Type of <code>pipelineFactory</code>
+is missing.</p>
+  </li>
+  <li>
+    <p><span class="note-improvement">[p210]</span> There is a bullet for
+tuning JVM. This on its own could have been a really interesting chapter
+of this book.</p>
+  </li>
+  <li>
+    <p><span class="note-other">[p213]</span> Firebase is indeed implementing
+TCP-over-long-polling. I wonder if there exists any Java libraries that
+implements user-level TCP over a certain channel abstraction.</p>
+  </li>
+  <li>
+    <p><span class="note-mistake">[p214]</span> <em>Figure 15.4 demonstrates
+how the Firebase long-polling …</em> → <em>Figure 14.4</em></p>
+  </li>
+  <li>
+    <p><span class="note-mistake">[p215]</span> <em>Figure 15.5 illustrates
+how Netty lets Firebase respond to …</em> → <em>Figure 14.5</em></p>
+  </li>
+  <li>
+    <p><span class="note-mistake">[p216]</span> <em>… can start as soon as
+byes come in off the wire.</em> → <em>bytes</em></p>
+  </li>
+  <li>
+    <p><span class="note-mistake">[p217, Listing 14.3]</span> Last parenthesis
+is missing:</p>
+
+    <p><code>scala
+rxBytes += buf.readableBytes(
+                          tryFlush(ctx)
+</code></p>
+  </li>
+  <li>
+    <p><span class="note-improvement">[p217, Listing 14.3]</span> 70% of the
+intro was about implementing a control flow over long polling, though the
+shared code snippet is about totally something else and almost irrelevant.</p>
+  </li>
+  <li>
+    <p><span class="note-mistake">[p223]</span> <em>In referring to figure 15.1,
+note that two paths …</em> → <em>figure 14.6</em></p>
+  </li>
+  <li>
+    <p><span class="note-mistake">[p229]</span> <em>This request/execution flow is
+shown in figure 16.1.</em> → <em>figure 15.1</em></p>
+  </li>
+  <li>
+    <p><span class="note-mistake">[p230]</span> <em>Figure 16.2 shows how pipelined
+requests are handled …</em> → <em>Figure 15.2</em></p>
+  </li>
+  <li>
+    <p><span class="note-mistake">[p230]</span> <em>…, in the required order. See
+figure 16.3.</em> → <em>figure 15.3</em></p>
+  </li>
+  <li>
+    <p><span class="note-mistake">[p232]</span> <em>That simple flow (show in figure
+16.4) works…</em> → <em>figure 15.4</em></p>
+  </li>
+  <li>
+    <p><span class="note-improvement">[p232]</span> <em>The client call is dispatched
+to the Swift library, …</em> What is Swift library? Not explained throughout
+the book.</p>
+  </li>
+  <li>
+    <p><span class="note-mistake">[p232]</span> <em>This is the flow shown in figure
+16.5.</em> → <em>figure 15.5</em></p>
+  </li>
+  <li>
+    <p><span class="note-other">[p234]</span> This is a really interesting piece:</p>
+
+    <blockquote>
+      <p>Before <a href="https://github.com/facebook/nifty">Nifty</a>, many of our major Java
+services at Facebook used an older, custom NIO-based Thrift server
+implementation that works similarly to Nifty. That implementation is an
+older codebase that had more time to mature, but because its asynchronous
+I/O handling code was built from scratch, and because Nifty is built on
+the solid foundation of Netty’s asynchronous I/O framework, it has had
+many fewer problems.</p>
+
+      <p>One of our custom message queuing services had been built using the older
+framework, and it started to suffer from a kind of socket leak. A lot of
+connections were sitting around in <code>CLOSE_WAIT</code> state, meaning the server
+had received a notification that the client had closed the socket, but the
+server never reciprocated by making its own call to close the socket. This
+left the sockets in a kind of <code>CLOSE_WAIT</code> limbo.</p>
+
+      <p>The problem happened very slowly; across the entire pool of machines
+handling this service, there might be millions of requests per second,
+but usually only one socket on one server would enter this state in an
+hour. It wasn’t an urgent issue because it took a long time before a
+server needed a restart at that rate, but it also complicated tracking
+down the cause. Extensive digging through the code didn’t help much
+either: initially several places looked suspicious, but everything
+ultimately checked out and we didn’t locate the problem.</p>
+    </blockquote>
+  </li>
+  <li>
+    <p><span class="note-mistake">[p238]</span> <em>Figure 16.6 shows the
+relationship between …</em> → <em>figure 15.6</em></p>
+  </li>
+  <li>
+    <p><span class="note-improvement">[p239, Listing 15.2]</span> All presented
+Scala code in this chapter is over-complicated and the complexity does not
+serve any purpose except wasting space and increasing cognitive load. For
+instance, why does <code>ChannelConnector</code> extend
+<code>(SocketAddress =&gt; Future[Transport[In, Out]])</code> rather than just being a
+simple method?</p>
+  </li>
+  <li>
+    <p><span class="note-improvement">[p239]</span> <em>This factory is provided a
+<code>ChannelPipelineFactory</code>, which is …</em> What is <em>this factory</em>?</p>
+  </li>
+</ul>
+
+<style type="text/css">
+    span.note-mistake {
+        color: red;
+    }
+    span.note-improvement {
+        color: orange;
+    }
+    span.note-question {
+        color: green;
+    }
+    span.note-other {
+        color: silver;
+    }
+</style>
+
+<h1 id="conclusion">Conclusion</h1>
+
+<p>In summary, <em>Netty in Action</em> is a book that I would recommend to everyone who
+wants to learn more about Netty to use it in their applications. Almost the
+entire set of fundamental Netty abstractions are covered in detail. The
+content is a bliss for novice users in networking domain. Though this in
+return might make the book uninteresting for people who already got their
+hands pretty dirty with networking facilities available in Java Platform. That
+being said, the presented historical perspective and shared case studies are
+still pretty attractive even for the most advanced users.</p>
+
+<p>I don’t know much about the 2<sup>nd</sup> author of the book, Marvin Allen
+Wolfthal. Though, the 1<sup>st</sup> author, Norman Maurer, is a pretty known
+figure in the F/OSS ecosystem. If he manages to transfer more juice from his
+experience and presentations to the book, I will definitely buy the
+2<sup>nd</sup> print of the book too!</p>
+
+
+        <div id="disqus_thread"></div>
+        <script type="text/javascript">
+        var disqus_shortname = 'vyazici';
+        var disqus_identifier = '/blog/post/20180209-netty-in-action/';
+        var disqus_title = 'Notes on "Netty in Action"';
+        (function() {
+            var dsq = document.createElement('script');
+            dsq.type = 'text/javascript';
+            dsq.async = true;
+            dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+        </script>
+
+        
+
+        
+
+        
+
+        
+        <script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
+        <style type="text/css">.twitter-tweet { width: 100%; }</style>
+        
+
+        
+
+        
+
+    </div>
+  </body>
+</html>
+
+
+        <script type="text/javascript">
+        for (var i = 0; i < asyncLoadRequests.length; i++) {
+            asyncLoadRequest = asyncLoadRequests[i];
+            asyncLoadRequest();
+        }
+        </script>
+
+    </div>
+
+</div>
