@@ -101,20 +101,21 @@ get tutored while doing that so.</p>
 
 <h1 id="netty-in-action">Netty in Action</h1>
 
-<p>The book (2016 press date) is definitely a must read for anyone planning to
-use Netty. It lays out Netty fundamentals like channels, handlers, encoders,
-etc. in detail. That being said, I have got the impression that the content is
-mostly curated for beginners. For instance, dozens of pages (and an appendix)
-are spent (wasted?) for a Maven crash course, not to mention the space wasted
-by Maven command ouputs shared. This felt a little bit disappointing
-considering the existing audience of Netty in general. Who would really read a
-book about Netty? You have probably had your time with OIO/NIO primitives or
-client/server frameworks in the market. You certainly don’t want to use yet
-another library that promises to make all your problems disappear. So I don’t
-think you can be qualified as a novice in this battle anymore, and you are
-indeed in the search of a scalpel rather than a swiss army knife.
-Nevertheless, I still think the book eventually managed to succeed in finding
-a balance between going too deep and just scratching the surface.</p>
+<p><a href="https://www.manning.com/books/netty-in-action">The book</a> (2016 press date) is
+definitely a must read for anyone planning to use Netty. It lays out Netty
+fundamentals like channels, handlers, encoders, etc. in detail. That being
+said, I have got the impression that the content is mostly curated for
+beginners. For instance, dozens of pages (and an appendix) are spent (wasted?)
+for a Maven crash course, not to mention the space wasted by Maven command
+ouputs shared. This felt a little bit disappointing considering the existing
+audience of Netty in general. Who would really read a book about Netty? You
+have probably had your time with OIO/NIO primitives or client/server
+frameworks in the market. You certainly don’t want to use yet another library
+that promises to make all your problems disappear. So I don’t think you can be
+qualified as a novice in this battle anymore, and you are indeed in the search
+of a scalpel rather than a swiss army knife. Nevertheless, I still think the
+book eventually managed to succeed in finding a balance between going too deep
+and just scratching the surface.</p>
 
 <h2 id="things-that-are-well-done">Things that are well done</h2>
 
@@ -201,7 +202,7 @@ The listed items</p>
     <p>are an identical repetition of Table 4.3.</p>
   </li>
   <li>
-    <p><span class="note-question">[p60]</span> <code>CompositeByteBuf</code> has the
+    <p><span class="note-improvement">[p60]</span> <code>CompositeByteBuf</code> has the
 following remark:</p>
 
     <blockquote>
@@ -255,7 +256,7 @@ when the operation completes. <code>ChannelPromise</code> is a subinterface of
 or <code>setFailure()</code>, thus making <code>ChannelFuture</code> immutable.</p>
     </blockquote>
 
-    <p>Ok, but why? I know the difference between a <code>Future</code> and <code>Promise</code>, though
+    <p>Ok, but why? I know the difference between a <code>Future</code> and a <code>Promise</code>, though
 I still cannot see the necessity for outbound handlers to employ <code>Promise</code>
 instead of a <code>Future</code>.</p>
   </li>
@@ -270,8 +271,8 @@ it misses a demonstration.</p>
   </li>
   <li>
     <p><span class="note-question">[p86, Listing 6.9]</span> Again a <code>read()</code>
-method for <code>ChannelPipeline</code>s outbound operations. I am really puzzled on
-the notion of reading from outbound channels.</p>
+method for the outbound operations of a <code>ChannelPipeline</code>. I am really
+puzzled on the notion of reading from an outbound channel.</p>
   </li>
   <li>
     <p><span class="note-question">[p94, Listing 6.13]</span> What happens when
@@ -364,7 +365,7 @@ test your <code>ChannelHandler</code> implementations.</p>
     </blockquote>
 
     <p>I have always found such summaries useless, since it is a repetition of
-the first chapter introduction, and hence a waste of space. Rather just
+the chapter introduction, and hence a waste of space. Rather just
 give crucial take aways, preferably in a digestible at a glimpse form.
 For instance, <em>use <code>EventLoopGroup.shutdownGracefully()</code></em>, etc.</p>
   </li>
@@ -486,22 +487,18 @@ a high-level view of the …</em> → <em>Figure 13.3</em></p>
     <p><span class="note-improvement">[p192, Listing 13.2]</span> A <code>byte[] file</code>
 and <code>byte[] msg</code> pair is encoded as follows:</p>
 
-    <p><code>java
-buf.writeBytes(file);
-buf.writeBytes(LogEvent.SEPARATOR);
-buf.writeBytes(msg);
-</code></p>
+    <pre><code class="language-java"><span class="n">buf</span><span class="o">.</span><span class="na">writeBytes</span><span class="o">(</span><span class="n">file</span><span class="o">);</span>
+<span class="n">buf</span><span class="o">.</span><span class="na">writeBytes</span><span class="o">(</span><span class="n">LogEvent</span><span class="o">.</span><span class="na">SEPARATOR</span><span class="o">);</span>
+<span class="n">buf</span><span class="o">.</span><span class="na">writeBytes</span><span class="o">(</span><span class="n">msg</span><span class="o">);</span></code></pre>
 
     <p>Later on each entry is read back by splitting at <code>LogEvent.SEPARATOR</code>. What
 if <code>file</code> contains <code>LogEvent.SEPARATOR</code>? I think this is a bad encoding
 practice. I would rather do:</p>
 
-    <p><code>java
-buf.writeInt(file.length);
-buf.writeBytes(file);
-buf.writeInt(msg.length);
-buf.writeBytes(msg);
-</code></p>
+    <pre><code class="language-java"><span class="n">buf</span><span class="o">.</span><span class="na">writeInt</span><span class="o">(</span><span class="n">file</span><span class="o">.</span><span class="na">length</span><span class="o">);</span>
+<span class="n">buf</span><span class="o">.</span><span class="na">writeBytes</span><span class="o">(</span><span class="n">file</span><span class="o">);</span>
+<span class="n">buf</span><span class="o">.</span><span class="na">writeInt</span><span class="o">(</span><span class="n">msg</span><span class="o">.</span><span class="na">length</span><span class="o">);</span>
+<span class="n">buf</span><span class="o">.</span><span class="na">writeBytes</span><span class="o">(</span><span class="n">msg</span><span class="o">);</span></code></pre>
   </li>
   <li>
     <p><span class="note-question">[p194, Listing 13.3]</span> Is there a
@@ -571,10 +568,8 @@ byes come in off the wire.</em> → <em>bytes</em></p>
     <p><span class="note-mistake">[p217, Listing 14.3]</span> Last parenthesis
 is missing:</p>
 
-    <p><code>scala
-rxBytes += buf.readableBytes(
-                          tryFlush(ctx)
-</code></p>
+    <pre><code class="language-scala"><span class="n">rxBytes</span> <span class="o">+=</span> <span class="n">buf</span><span class="o">.</span><span class="n">readableBytes</span><span class="o">(</span>
+                          <span class="n">tryFlush</span><span class="o">(</span><span class="n">ctx</span><span class="o">)</span></code></pre>
   </li>
   <li>
     <p><span class="note-improvement">[p217, Listing 14.3]</span> 70% of the
@@ -603,8 +598,7 @@ figure 16.3.</em> → <em>figure 15.3</em></p>
   </li>
   <li>
     <p><span class="note-improvement">[p232]</span> <em>The client call is dispatched
-to the Swift library, …</em> What is Swift library? Not explained throughout
-the book.</p>
+to the Swift library, …</em> What is Swift library? Was not explained anywhere.</p>
   </li>
   <li>
     <p><span class="note-mistake">[p232]</span> <em>This is the flow shown in figure
@@ -674,14 +668,15 @@ simple method?</p>
 
 <h1 id="conclusion">Conclusion</h1>
 
-<p>In summary, <em>Netty in Action</em> is a book that I would recommend to everyone who
-wants to learn more about Netty to use it in their applications. Almost the
-entire set of fundamental Netty abstractions are covered in detail. The
-content is a bliss for novice users in networking domain. Though this in
-return might make the book uninteresting for people who already got their
-hands pretty dirty with networking facilities available in Java Platform. That
-being said, the presented historical perspective and shared case studies are
-still pretty attractive even for the most advanced users.</p>
+<p>In summary, <a href="https://www.manning.com/books/netty-in-action">Netty in Action</a>
+is a book that I would recommend to everyone who wants to learn more about
+Netty to use it in their applications. Almost the entire set of fundamental
+Netty abstractions are covered in detail. The content is a bliss for novice
+users in networking domain. Though this in return might make the book
+uninteresting for people who already got their hands pretty dirty with
+networking facilities available in Java Platform. That being said, the
+presented historical perspective and shared case studies are still pretty
+attractive even for the most advanced users.</p>
 
 <p>I don’t know much about the 2<sup>nd</sup> author of the book, Marvin Allen
 Wolfthal. Though, the 1<sup>st</sup> author, Norman Maurer, is a pretty known
