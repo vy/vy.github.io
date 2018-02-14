@@ -68,20 +68,21 @@ get tutored while doing that so.
 Netty in Action
 ===============
 
-The book (2016 press date) is definitely a must read for anyone planning to
-use Netty. It lays out Netty fundamentals like channels, handlers, encoders,
-etc. in detail. That being said, I have got the impression that the content is
-mostly curated for beginners. For instance, dozens of pages (and an appendix)
-are spent (wasted?) for a Maven crash course, not to mention the space wasted
-by Maven command ouputs shared. This felt a little bit disappointing
-considering the existing audience of Netty in general. Who would really read a
-book about Netty? You have probably had your time with OIO/NIO primitives or
-client/server frameworks in the market. You certainly don't want to use yet
-another library that promises to make all your problems disappear. So I don't
-think you can be qualified as a novice in this battle anymore, and you are
-indeed in the search of a scalpel rather than a swiss army knife.
-Nevertheless, I still think the book eventually managed to succeed in finding
-a balance between going too deep and just scratching the surface.
+[The book](https://www.manning.com/books/netty-in-action) (2016 press date) is
+definitely a must read for anyone planning to use Netty. It lays out Netty
+fundamentals like channels, handlers, encoders, etc. in detail. That being
+said, I have got the impression that the content is mostly curated for
+beginners. For instance, dozens of pages (and an appendix) are spent (wasted?)
+for a Maven crash course, not to mention the space wasted by Maven command
+ouputs shared. This felt a little bit disappointing considering the existing
+audience of Netty in general. Who would really read a book about Netty? You
+have probably had your time with OIO/NIO primitives or client/server
+frameworks in the market. You certainly don't want to use yet another library
+that promises to make all your problems disappear. So I don't think you can be
+qualified as a novice in this battle anymore, and you are indeed in the search
+of a scalpel rather than a swiss army knife. Nevertheless, I still think the
+book eventually managed to succeed in finding a balance between going too deep
+and just scratching the surface.
 
 Things that are well done
 -------------------------
@@ -149,7 +150,7 @@ further classify my notes in 3 groups: <span class="note-mistake">mistakes</span
 
   are an identical repetition of Table 4.3.
 
-* <span class="note-question">\[p60\]</span> `CompositeByteBuf` has the
+* <span class="note-improvement">\[p60\]</span> `CompositeByteBuf` has the
   following remark:
 
   > Note that Netty optimizes socket I/O operations that employ
@@ -193,7 +194,7 @@ further classify my notes in 3 groups: <span class="note-mistake">mistakes</span
   > `ChannelFuture` that defines the writable methods, such as `setSuccess()`
   > or `setFailure()`, thus making `ChannelFuture` immutable.
 
-  Ok, but why? I know the difference between a `Future` and `Promise`, though
+  Ok, but why? I know the difference between a `Future` and a `Promise`, though
   I still cannot see the necessity for outbound handlers to employ `Promise`
   instead of a `Future`.
 
@@ -205,8 +206,8 @@ further classify my notes in 3 groups: <span class="note-mistake">mistakes</span
   it misses a demonstration.
 
 * <span class="note-question">\[p86, Listing 6.9\]</span> Again a `read()`
-  method for `ChannelPipeline`s outbound operations. I am really puzzled on
-  the notion of reading from outbound channels.
+  method for the outbound operations of a `ChannelPipeline`. I am really
+  puzzled on the notion of reading from an outbound channel.
 
 * <span class="note-question">\[p94, Listing 6.13\]</span> What happens when
   a `ChannelFuture` completes before adding a listener to it?
@@ -280,7 +281,7 @@ further classify my notes in 3 groups: <span class="note-mistake">mistakes</span
   > test your `ChannelHandler` implementations.
 
   I have always found such summaries useless, since it is a repetition of
-  the first chapter introduction, and hence a waste of space. Rather just
+  the chapter introduction, and hence a waste of space. Rather just
   give crucial take aways, preferably in a digestible at a glimpse form.
   For instance, *use `EventLoopGroup.shutdownGracefully()`*, etc.
 
@@ -374,22 +375,20 @@ further classify my notes in 3 groups: <span class="note-mistake">mistakes</span
 * <span class="note-improvement">\[p192, Listing 13.2\]</span> A `byte[] file`
   and `byte[] msg` pair is encoded as follows:
 
-  ```java
-  buf.writeBytes(file);
-  buf.writeBytes(LogEvent.SEPARATOR);
-  buf.writeBytes(msg);
-  ```
+      #!java
+      buf.writeBytes(file);
+      buf.writeBytes(LogEvent.SEPARATOR);
+      buf.writeBytes(msg);
 
   Later on each entry is read back by splitting at `LogEvent.SEPARATOR`. What
   if `file` contains `LogEvent.SEPARATOR`? I think this is a bad encoding
   practice. I would rather do:
 
-  ```java
-  buf.writeInt(file.length);
-  buf.writeBytes(file);
-  buf.writeInt(msg.length);
-  buf.writeBytes(msg);
-  ```
+      #!java
+      buf.writeInt(file.length);
+      buf.writeBytes(file);
+      buf.writeInt(msg.length);
+      buf.writeBytes(msg);
 
 * <span class="note-question">\[p194, Listing 13.3\]</span> Is there a
   constant for `255.255.255.255` broadcast address?
@@ -442,10 +441,9 @@ further classify my notes in 3 groups: <span class="note-mistake">mistakes</span
 * <span class="note-mistake">\[p217, Listing 14.3\]</span> Last parenthesis
   is missing:
 
-  ```scala
-  rxBytes += buf.readableBytes(
-                            tryFlush(ctx)
-  ```
+      #!scala
+      rxBytes += buf.readableBytes(
+                                tryFlush(ctx)
 
 * <span class="note-improvement">\[p217, Listing 14.3\]</span> 70% of the
   intro was about implementing a control flow over long polling, though the
@@ -467,8 +465,7 @@ further classify my notes in 3 groups: <span class="note-mistake">mistakes</span
   16.4) works...* &rarr; *figure 15.4*
 
 * <span class="note-improvement">\[p232\]</span> *The client call is dispatched
-  to the Swift library, ...* What is Swift library? Not explained throughout
-  the book.
+  to the Swift library, ...* What is Swift library? Was not explained anywhere.
 
 * <span class="note-mistake">\[p232\]</span> *This is the flow shown in figure
   16.5.* &rarr; *figure 15.5*
@@ -530,14 +527,15 @@ further classify my notes in 3 groups: <span class="note-mistake">mistakes</span
 Conclusion
 ==========
 
-In summary, *Netty in Action* is a book that I would recommend to everyone who
-wants to learn more about Netty to use it in their applications. Almost the
-entire set of fundamental Netty abstractions are covered in detail. The
-content is a bliss for novice users in networking domain. Though this in
-return might make the book uninteresting for people who already got their
-hands pretty dirty with networking facilities available in Java Platform. That
-being said, the presented historical perspective and shared case studies are
-still pretty attractive even for the most advanced users.
+In summary, [Netty in Action](https://www.manning.com/books/netty-in-action)
+is a book that I would recommend to everyone who wants to learn more about
+Netty to use it in their applications. Almost the entire set of fundamental
+Netty abstractions are covered in detail. The content is a bliss for novice
+users in networking domain. Though this in return might make the book
+uninteresting for people who already got their hands pretty dirty with
+networking facilities available in Java Platform. That being said, the
+presented historical perspective and shared case studies are still pretty
+attractive even for the most advanced users.
 
 I don't know much about the 2<sup>nd</sup> author of the book, Marvin Allen
 Wolfthal. Though, the 1<sup>st</sup> author, Norman Maurer, is a pretty known
