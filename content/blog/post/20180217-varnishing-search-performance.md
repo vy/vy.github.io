@@ -4,6 +4,7 @@ created_at: 2018-02-17 20:42 CEST
 title: Varnishing Search Performance
 tags:
   - elasticsearch
+  - presentation
 ---
 
 This week [bol.com](http://bol.com) hosted an [Elastic User Group
