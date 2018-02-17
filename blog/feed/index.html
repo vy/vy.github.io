@@ -2,13 +2,56 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <id>https://vy.github.io//</id>
   <title>Volkan Yazıcı's Soap Co.</title>
-  <updated>2018-02-09T20:34:00Z</updated>
+  <updated>2018-02-17T20:42:00Z</updated>
   <link rel="alternate" href="https://vy.github.io//"/>
   <link rel="self" href="https://vy.github.io//blog/feed/"/>
   <author>
     <name>Volkan Yazıcı</name>
     <uri>https://vy.github.io/</uri>
   </author>
+  <entry>
+    <id>tag:vy.github.io,2018-02-17://blog/post/2018/02/17/varnishing-search-performance/</id>
+    <title type="html">Varnishing Search Performance</title>
+    <published>2018-02-17T20:42:00Z</published>
+    <updated>2018-02-17T20:42:00Z</updated>
+    <link rel="alternate" href="https://vy.github.io//blog/post/2018/02/17/varnishing-search-performance/"/>
+    <content type="html">
+&lt;p&gt;This week &lt;a href="http://bol.com"&gt;bol.com&lt;/a&gt; hosted an &lt;a href="https://www.meetup.com/Elastic-NL/"&gt;Elastic User Group
+NL&lt;/a&gt; meetup titled &lt;a href="https://www.meetup.com/Elastic-NL/events/247114723/"&gt;bol.com: Changing the
+(search) engine of a racecar going 300 km/h&lt;/a&gt;.
+The abstract of the presentations were as follows:&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;Almost 2 years ago bol.com decided to move towards an
+Elasticsearch-powered search engine. But how do you approach such a
+project? Who do you involve and what do you need to (not) do? The
+engineers at bol.com would like to share their experiences about this
+migration, in 4 short talks.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;And among those 4 short talks, I took the stage with &lt;em&gt;Varnishing Search Performance&lt;/em&gt;.&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;Searching is &lt;em&gt;peanuts&lt;/em&gt;. You setup your Elasticsearch cluster (or better
+find a SaaS partner) and start shooting your search queries against it.
+Well… Not really. If we put the biblical data ingestion story aside, it
+won’t take long to realize that even moderately complicated queries can
+become a bottleneck for those aiming for &amp;lt;50ms query performance.
+Combine a couple of aggregations, double that for facets of range type,
+add your grandpa’s boosting factors to the scoring, and there you go;
+now you are a search query performance bottleneck owner too! Maybe I am
+exaggerating a bit. Why not just start throwing some caches in front of
+it? Hrm… We actually thought of that and did so. Though it brought a
+mountain of problems along with itself, and there goes my story.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;The slides are available in &lt;a href="varnishing-search-performance.pdf"&gt;PDF&lt;/a&gt; and
+&lt;a href="varnishing-search-performance-org.odp"&gt;ODP&lt;/a&gt; formats.&lt;/p&gt;
+
+&lt;iframe src="//www.slideshare.net/slideshow/embed_code/key/4h5JWHH25nHGa4" width="476" height="400" frameborder="0" marginwidth="0" marginheight="0" scrolling="no"&gt;
+&lt;/iframe&gt;
+</content>
+  </entry>
   <entry>
     <id>tag:vy.github.io,2018-02-09://blog/post/2018/02/09/netty-in-action/</id>
     <title type="html">Notes on "Netty in Action"</title>
@@ -2923,214 +2966,6 @@ targeting all available languages that compile to JVM byte code. I think that
 is one of the reasons why programming languages provide constructs to use
 reserved keywords in the source code, such as &lt;code&gt;reserved&lt;/code&gt; in Scala or
 &lt;code&gt;@reserved&lt;/code&gt; in C#, etc.&lt;/p&gt;
-</content>
-  </entry>
-  <entry>
-    <id>tag:vy.github.io,2015-09-09://blog/post/2015/09/09/enforce-locking/</id>
-    <title type="html">Enforcing a Locking Context on Variables in Scala</title>
-    <published>2015-09-09T18:56:00Z</published>
-    <updated>2015-09-09T18:56:00Z</updated>
-    <link rel="alternate" href="https://vy.github.io//blog/post/2015/09/09/enforce-locking/"/>
-    <content type="html">
-&lt;p&gt;Accessing variables that need synchronization necessitates book keeping by
-programmers. Since it is not something explicitly enforced by the language
-mechanics, programmer needs to make sure that such variables are not accessed
-out of a synchronization scope. Consider the following innocent user store:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="language-scala"&gt;&lt;span class="k"&gt;case&lt;/span&gt; &lt;span class="k"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;User&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;id&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Int&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;String&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;manager&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Boolean&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
-
-&lt;span class="c1"&gt;// Use with caution! Can be accessed by multiple threads.&lt;/span&gt;
-&lt;span class="k"&gt;private&lt;/span&gt; &lt;span class="k"&gt;var&lt;/span&gt; &lt;span class="n"&gt;users&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Map&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="kt"&gt;Int&lt;/span&gt;, &lt;span class="kt"&gt;User&lt;/span&gt;&lt;span class="o"&gt;]&lt;/span&gt; &lt;span class="k"&gt;=&lt;/span&gt; &lt;span class="nc"&gt;Map&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="kt"&gt;Int&lt;/span&gt;, &lt;span class="kt"&gt;User&lt;/span&gt;&lt;span class="o"&gt;]()&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;The safest approach would be encapsulating every access to &lt;code&gt;users&lt;/code&gt; variables
-in a &lt;code&gt;synchronized&lt;/code&gt; block:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="language-scala"&gt;&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;save&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;user&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;User&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Unit&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;synchronized&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="n"&gt;users&lt;/span&gt; &lt;span class="o"&gt;+=&lt;/span&gt; &lt;span class="n"&gt;user&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;id&lt;/span&gt; &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;user&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
-
-&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;findById&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;id&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Int&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Option&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="kt"&gt;User&lt;/span&gt;&lt;span class="o"&gt;]&lt;/span&gt; &lt;span class="k"&gt;=&lt;/span&gt; &lt;span class="n"&gt;synchronized&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="n"&gt;users&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;get&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;id&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;You can even go further and use a &lt;code&gt;ReadWriteLock&lt;/code&gt; to boost read-only queries:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="language-scala"&gt;&lt;span class="k"&gt;private&lt;/span&gt; &lt;span class="k"&gt;val&lt;/span&gt; &lt;span class="n"&gt;lock&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;ReadWriteLock&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nc"&gt;ReentrantReadWriteLock&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt;
-
-&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;save&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;user&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;User&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Unit&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
-  &lt;span class="n"&gt;lock&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;writeLock&lt;/span&gt;&lt;span class="o"&gt;().&lt;/span&gt;&lt;span class="n"&gt;lock&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt;
-  &lt;span class="k"&gt;try&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="n"&gt;users&lt;/span&gt; &lt;span class="o"&gt;+=&lt;/span&gt; &lt;span class="n"&gt;user&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;id&lt;/span&gt; &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;user&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
-  &lt;span class="k"&gt;finally&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="n"&gt;lock&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;writeLock&lt;/span&gt;&lt;span class="o"&gt;().&lt;/span&gt;&lt;span class="n"&gt;unlock&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
-&lt;span class="o"&gt;}&lt;/span&gt;
-
-&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;findById&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;id&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Int&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Option&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="kt"&gt;User&lt;/span&gt;&lt;span class="o"&gt;]&lt;/span&gt; &lt;span class="k"&gt;=&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
-  &lt;span class="n"&gt;lock&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;readLock&lt;/span&gt;&lt;span class="o"&gt;().&lt;/span&gt;&lt;span class="n"&gt;lock&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt;
-  &lt;span class="k"&gt;try&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="n"&gt;users&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;get&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;id&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
-  &lt;span class="k"&gt;finally&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="n"&gt;lock&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;readLock&lt;/span&gt;&lt;span class="o"&gt;().&lt;/span&gt;&lt;span class="n"&gt;unlock&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
-&lt;span class="o"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Now you think you are safe. And it does not take a couple of VCS commits for
-somebody (most probably you) to mess up the entire synchronization scheme:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="language-scala"&gt;&lt;span class="c1"&gt;// Violating thread-safety on `users`.&lt;/span&gt;
-&lt;span class="k"&gt;override&lt;/span&gt; &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;toString&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;String&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;s&lt;/span&gt;&lt;span class="s"&gt;"There are ${users.size} user(s)."&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Oops! There can arise a lot more complicated subtle bugs. Shit can even hit
-the fan when you introduce multiple variables or make nested calls, that is,
-functions calling functions calling functions which are accessing &lt;code&gt;users&lt;/code&gt;. It
-is obvious that you are doomed. Now good luck with your chasing the
-&lt;a href="https://en.wikipedia.org/wiki/Heisenbug"&gt;Heisenbug&lt;/a&gt; journey!&lt;/p&gt;
-
-&lt;p&gt;Then it occured to me, can’t we make the compiler enforce a certain lock
-context while accessing to a particular set of variables? What if compiler
-would not allow you to read &lt;code&gt;users&lt;/code&gt; if your thread did not already acquire
-&lt;code&gt;lock.readLock()&lt;/code&gt;? Or similarly would not allow you to mutate it if you did
-not already acquire &lt;code&gt;lock.writeLock()&lt;/code&gt;? Here is the solution that I came up
-with to these questions:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="language-scala"&gt;&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;java.util.concurrent.locks.Lock&lt;/span&gt;
-&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;java.util.concurrent.locks.ReentrantReadWriteLock&lt;/span&gt;
-
-&lt;span class="k"&gt;trait&lt;/span&gt; &lt;span class="nc"&gt;SynchronizedAccess&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
-
-  &lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;SynchronizedAccess._&lt;/span&gt;
-
-  &lt;span class="k"&gt;protected&lt;/span&gt; &lt;span class="k"&gt;val&lt;/span&gt; &lt;span class="n"&gt;instanceLock&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;ReentrantReadWriteLock&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;
-    &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nc"&gt;ReentrantReadWriteLock&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt;
-
-  &lt;span class="k"&gt;protected&lt;/span&gt; &lt;span class="k"&gt;val&lt;/span&gt; &lt;span class="n"&gt;instanceReadLock&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;ReadLock&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;
-    &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nc"&gt;ReadLock&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;instanceLock&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;readLock&lt;/span&gt;&lt;span class="o"&gt;())&lt;/span&gt;
-
-  &lt;span class="k"&gt;protected&lt;/span&gt; &lt;span class="k"&gt;val&lt;/span&gt; &lt;span class="n"&gt;instanceReadWriteLock&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;ReadWriteLock&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;
-    &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nc"&gt;ReadWriteLock&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;instanceLock&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;readLock&lt;/span&gt;&lt;span class="o"&gt;(),&lt;/span&gt; &lt;span class="n"&gt;instanceLock&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;writeLock&lt;/span&gt;&lt;span class="o"&gt;())&lt;/span&gt;
-
-  &lt;span class="k"&gt;protected&lt;/span&gt; &lt;span class="k"&gt;case&lt;/span&gt; &lt;span class="k"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;Synchronized&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="kt"&gt;T&lt;/span&gt;&lt;span class="o"&gt;](&lt;/span&gt;&lt;span class="k"&gt;private&lt;/span&gt; &lt;span class="k"&gt;var&lt;/span&gt; &lt;span class="n"&gt;value&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;T&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
-
-    &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;apply&lt;/span&gt;&lt;span class="o"&gt;()(&lt;/span&gt;&lt;span class="k"&gt;implicit&lt;/span&gt; &lt;span class="n"&gt;readLock&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;ReadLock&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;T&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
-      &lt;span class="n"&gt;validateLock&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;readLock&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;instanceReadLock&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;instanceReadWriteLock&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
-      &lt;span class="n"&gt;value&lt;/span&gt;
-    &lt;span class="o"&gt;}&lt;/span&gt;
-
-    &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;update&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;newValue&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;T&lt;/span&gt;&lt;span class="o"&gt;)(&lt;/span&gt;&lt;span class="k"&gt;implicit&lt;/span&gt; &lt;span class="n"&gt;readWriteLock&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;ReadWriteLock&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Unit&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
-      &lt;span class="n"&gt;validateLock&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;readWriteLock&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;instanceReadWriteLock&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
-      &lt;span class="n"&gt;value&lt;/span&gt; &lt;span class="k"&gt;=&lt;/span&gt; &lt;span class="n"&gt;newValue&lt;/span&gt;
-    &lt;span class="o"&gt;}&lt;/span&gt;
-
-    &lt;span class="k"&gt;private&lt;/span&gt; &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;validateLock&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;lock&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;TypedLock&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;allowedLocks&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;TypedLock*&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Unit&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
-      &lt;span class="n"&gt;require&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;allowedLocks&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;contains&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;lock&lt;/span&gt;&lt;span class="o"&gt;),&lt;/span&gt; &lt;span class="s"&gt;"cannot be accessed from another synchronization scope"&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
-      &lt;span class="n"&gt;require&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;lock&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;tryLock&lt;/span&gt;&lt;span class="o"&gt;(),&lt;/span&gt; &lt;span class="s"&gt;"cannot be accessed out of a synchronization scope"&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
-      &lt;span class="n"&gt;lock&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;unlock&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt;
-    &lt;span class="o"&gt;}&lt;/span&gt;
-
-  &lt;span class="o"&gt;}&lt;/span&gt;
-
-  &lt;span class="k"&gt;protected&lt;/span&gt; &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;synchronizeRead&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="kt"&gt;T&lt;/span&gt;&lt;span class="o"&gt;](&lt;/span&gt;&lt;span class="n"&gt;body&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;ReadLock&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;T&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;T&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;
-    &lt;span class="n"&gt;synchronizeOperation&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;instanceReadLock&lt;/span&gt;&lt;span class="o"&gt;)(&lt;/span&gt;&lt;span class="n"&gt;body&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
-
-  &lt;span class="k"&gt;protected&lt;/span&gt; &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;synchronizeReadWrite&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="kt"&gt;T&lt;/span&gt;&lt;span class="o"&gt;](&lt;/span&gt;&lt;span class="n"&gt;body&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;ReadWriteLock&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;T&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;T&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;
-    &lt;span class="n"&gt;synchronizeOperation&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;instanceReadWriteLock&lt;/span&gt;&lt;span class="o"&gt;)(&lt;/span&gt;&lt;span class="n"&gt;body&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
-
-  &lt;span class="k"&gt;protected&lt;/span&gt; &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;synchronizeOperation&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="kt"&gt;T&lt;/span&gt;, &lt;span class="kt"&gt;L&lt;/span&gt; &lt;span class="k"&gt;&amp;lt;:&lt;/span&gt; &lt;span class="kt"&gt;TypedLock&lt;/span&gt;&lt;span class="o"&gt;](&lt;/span&gt;&lt;span class="n"&gt;lock&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;L&lt;/span&gt;&lt;span class="o"&gt;)(&lt;/span&gt;&lt;span class="n"&gt;body&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;L&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;T&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;T&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
-    &lt;span class="n"&gt;lock&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;lock&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt;
-    &lt;span class="k"&gt;try&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="n"&gt;body&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;lock&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
-    &lt;span class="k"&gt;finally&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="n"&gt;lock&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;unlock&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;}&lt;/span&gt;
-  &lt;span class="o"&gt;}&lt;/span&gt;
-
-&lt;span class="o"&gt;}&lt;/span&gt;
-
-&lt;span class="k"&gt;object&lt;/span&gt; &lt;span class="nc"&gt;SynchronizedAccess&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
-
-  &lt;span class="k"&gt;sealed&lt;/span&gt; &lt;span class="k"&gt;trait&lt;/span&gt; &lt;span class="nc"&gt;TypedLock&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
-
-    &lt;span class="k"&gt;protected&lt;/span&gt; &lt;span class="k"&gt;val&lt;/span&gt; &lt;span class="n"&gt;instance&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Lock&lt;/span&gt;
-
-    &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;lock&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Unit&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;instance&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;lock&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt;
-
-    &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;unlock&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Unit&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;instance&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;unlock&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt;
-
-    &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;tryLock&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Boolean&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;instance&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;tryLock&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt;
-
-  &lt;span class="o"&gt;}&lt;/span&gt;
-
-  &lt;span class="k"&gt;sealed&lt;/span&gt; &lt;span class="k"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;ReadLock&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;readLock&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;ReentrantReadWriteLock.ReadLock&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="k"&gt;extends&lt;/span&gt; &lt;span class="nc"&gt;TypedLock&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
-
-    &lt;span class="k"&gt;override&lt;/span&gt; &lt;span class="k"&gt;protected&lt;/span&gt; &lt;span class="k"&gt;val&lt;/span&gt; &lt;span class="n"&gt;instance&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Lock&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;readLock&lt;/span&gt;
-
-  &lt;span class="o"&gt;}&lt;/span&gt;
-
-  &lt;span class="k"&gt;sealed&lt;/span&gt; &lt;span class="k"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;ReadWriteLock&lt;/span&gt;
-  &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;readLock&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;ReentrantReadWriteLock.ReadLock&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt;
-   &lt;span class="n"&gt;writeLock&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;ReentrantReadWriteLock.WriteLock&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
-    &lt;span class="k"&gt;extends&lt;/span&gt; &lt;span class="nc"&gt;ReadLock&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;readLock&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
-
-    &lt;span class="k"&gt;override&lt;/span&gt; &lt;span class="k"&gt;protected&lt;/span&gt; &lt;span class="k"&gt;val&lt;/span&gt; &lt;span class="n"&gt;instance&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Lock&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;writeLock&lt;/span&gt;
-
-  &lt;span class="o"&gt;}&lt;/span&gt;
-
-&lt;span class="o"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Looks complicated? See me while I dance with it:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="language-scala"&gt;&lt;span class="k"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;UserService&lt;/span&gt; &lt;span class="k"&gt;extends&lt;/span&gt; &lt;span class="nc"&gt;SynchronizedAccess&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
-
-  &lt;span class="k"&gt;private&lt;/span&gt; &lt;span class="k"&gt;val&lt;/span&gt; &lt;span class="n"&gt;users&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Synchronized&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="kt"&gt;Map&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="kt"&gt;Int&lt;/span&gt;, &lt;span class="kt"&gt;User&lt;/span&gt;&lt;span class="o"&gt;]]&lt;/span&gt; &lt;span class="k"&gt;=&lt;/span&gt; &lt;span class="nc"&gt;Synchronized&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="nc"&gt;Map&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="kt"&gt;Int&lt;/span&gt;, &lt;span class="kt"&gt;User&lt;/span&gt;&lt;span class="o"&gt;]())&lt;/span&gt;
-
-  &lt;span class="k"&gt;private&lt;/span&gt; &lt;span class="k"&gt;val&lt;/span&gt; &lt;span class="n"&gt;managerCount&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Synchronized&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="kt"&gt;Int&lt;/span&gt;&lt;span class="o"&gt;]&lt;/span&gt; &lt;span class="k"&gt;=&lt;/span&gt; &lt;span class="nc"&gt;Synchronized&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
-
-  &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;save&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;user&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;User&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Unit&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;
-    &lt;span class="c1"&gt;// Note that `users` and `managerCount` variables will be updated&lt;/span&gt;
-    &lt;span class="c1"&gt;// atomically while the rest waits for the `ReadWrite` lock.&lt;/span&gt;
-    &lt;span class="n"&gt;synchronizeReadWrite&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="k"&gt;implicit&lt;/span&gt; &lt;span class="n"&gt;lock&lt;/span&gt; &lt;span class="k"&gt;=&amp;gt;&lt;/span&gt;
-      &lt;span class="n"&gt;users&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;+=&lt;/span&gt; &lt;span class="n"&gt;user&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;id&lt;/span&gt; &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;user&lt;/span&gt;
-      &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;user&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;manager&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
-        &lt;span class="n"&gt;managerCount&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;+=&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt;
-    &lt;span class="o"&gt;}&lt;/span&gt;
-
-  &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;findById&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;id&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Int&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Option&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="kt"&gt;User&lt;/span&gt;&lt;span class="o"&gt;]&lt;/span&gt; &lt;span class="k"&gt;=&lt;/span&gt;
-    &lt;span class="n"&gt;synchronizeRead&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="k"&gt;implicit&lt;/span&gt; &lt;span class="n"&gt;lock&lt;/span&gt; &lt;span class="k"&gt;=&amp;gt;&lt;/span&gt;
-      &lt;span class="n"&gt;users&lt;/span&gt;&lt;span class="o"&gt;().&lt;/span&gt;&lt;span class="n"&gt;get&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;id&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
-    &lt;span class="o"&gt;}&lt;/span&gt;
-
-  &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;findAllNames&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Seq&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="kt"&gt;String&lt;/span&gt;&lt;span class="o"&gt;]&lt;/span&gt; &lt;span class="k"&gt;=&lt;/span&gt;
-    &lt;span class="n"&gt;synchronizeRead&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="k"&gt;implicit&lt;/span&gt; &lt;span class="n"&gt;lock&lt;/span&gt; &lt;span class="k"&gt;=&amp;gt;&lt;/span&gt;
-      &lt;span class="n"&gt;findAll&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;map&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="k"&gt;_&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
-    &lt;span class="o"&gt;}&lt;/span&gt;
-
-  &lt;span class="c1"&gt;// Note that findAll() requires a `ReadLock` context in order to access `users`.&lt;/span&gt;
-  &lt;span class="k"&gt;private&lt;/span&gt; &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;findAll&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="k"&gt;implicit&lt;/span&gt; &lt;span class="n"&gt;lock&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;ReadLock&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Seq&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="kt"&gt;User&lt;/span&gt;&lt;span class="o"&gt;]&lt;/span&gt; &lt;span class="k"&gt;=&lt;/span&gt;
-    &lt;span class="n"&gt;users&lt;/span&gt;&lt;span class="o"&gt;().&lt;/span&gt;&lt;span class="n"&gt;values&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;toSeq&lt;/span&gt;
-
-  &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="n"&gt;findManagerCount&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt;&lt;span class="k"&gt;:&lt;/span&gt; &lt;span class="kt"&gt;Int&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; 
-    &lt;span class="n"&gt;synchronizeRead&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt; &lt;span class="k"&gt;implicit&lt;/span&gt; &lt;span class="n"&gt;lock&lt;/span&gt; &lt;span class="k"&gt;=&amp;gt;&lt;/span&gt;
-      &lt;span class="n"&gt;managerCount&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt;
-    &lt;span class="o"&gt;}&lt;/span&gt;
-
-&lt;span class="o"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;In a nutshell, what did &lt;code&gt;SynchronizedAccess&lt;/code&gt; trait really bring us? &lt;em&gt;It
-enforces a &lt;strong&gt;typed&lt;/strong&gt; and &lt;strong&gt;unique&lt;/strong&gt; locking context on the variables of type
-&lt;code&gt;Synchronized[T]&lt;/code&gt;.&lt;/em&gt; It is &lt;em&gt;typed&lt;/em&gt; because read and read-write operations are
-distinct from each other in the function decleration via implicit &lt;code&gt;ReadLock&lt;/code&gt;
-and &lt;code&gt;ReadWriteLock&lt;/code&gt; parameters. It is &lt;em&gt;unique&lt;/em&gt; because &lt;code&gt;Synchronized&lt;/code&gt;
-variables can only be accessed by the instance lock inherited from
-&lt;code&gt;SynchronizedAccess&lt;/code&gt; trait.&lt;/p&gt;
-
-&lt;p&gt;Here is your free lunch. &lt;a href="https://translate.google.com/#nl/en/eet%20smakelijk"&gt;Eet smaaklijk!&lt;/a&gt;&lt;/p&gt;
-
-&lt;h1 id="common-confusions"&gt;Common Confusions&lt;/h1&gt;
-
-&lt;p&gt;I sadly observed that there are some common confusions about &lt;code&gt;Synchronized[T]&lt;/code&gt;
-type. Let me try to address them here.&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;
-    &lt;p&gt;&lt;strong&gt;I could have used a &lt;code&gt;ConcurrentMap&lt;/code&gt; instead!&lt;/strong&gt; &lt;code&gt;Map&lt;/code&gt; usage in the examples
-above is just there for demonstration purposes. It does not have to be a
-collection at all. If you have just one variable and it is a collection,
-then going with a synchronized/concurrent implementation is totally fine.&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;&lt;strong&gt;I could have used a &lt;code&gt;ConcurrentMap&lt;/code&gt; and an &lt;code&gt;AtomicInteger&lt;/code&gt; instead!&lt;/strong&gt; No,
-you cannot. Then you would totally spoil the &lt;em&gt;atomic&lt;/em&gt; read-write operations.
-You will still need a &lt;em&gt;transaction&lt;/em&gt;-like mechanism ala in SQL.&lt;/p&gt;
-  &lt;/li&gt;
-&lt;/ul&gt;
 </content>
   </entry>
 </feed>

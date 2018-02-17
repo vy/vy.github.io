@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Varnishing Search Performance</title>
+    <link rel="stylesheet" href="/css/common.css">
+    <meta name="generator" content="nanoc 3.8.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/post.css">
+    <script type="text/javascript">
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-40183531-1']);
+      _gaq.push(['_trackPageview']);
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="container">
+
+      <ul id="menu">
+        <li><a href="/">Home</a></li><li><a href="/blog/">Blog</a></li><li><a href="/code/">Code</a></li><li><a href="/blog/feed/">Feed</a></li>
+      </ul>
+
+    
+
+<div id="post">
+
+    <div class="head">
+        <div class="title">Varnishing Search Performance</div>
+        <div class="subtitle">posted at
+            February 17, 2018
+            with tags <a href="/blog/tag/elasticsearch">elasticsearch</a>
+        </div>
+    </div>
+
+    <div class="body">
+
+        <script type="text/javascript">
+        var asyncLoadRequests = [];
+        </script>
+
+        
+<p>This week <a href="http://bol.com">bol.com</a> hosted an <a href="https://www.meetup.com/Elastic-NL/">Elastic User Group
+NL</a> meetup titled <a href="https://www.meetup.com/Elastic-NL/events/247114723/">bol.com: Changing the
+(search) engine of a racecar going 300 km/h</a>.
+The abstract of the presentations were as follows:</p>
+
+<blockquote>
+  <p>Almost 2 years ago bol.com decided to move towards an
+Elasticsearch-powered search engine. But how do you approach such a
+project? Who do you involve and what do you need to (not) do? The
+engineers at bol.com would like to share their experiences about this
+migration, in 4 short talks.</p>
+</blockquote>
+
+<p>And among those 4 short talks, I took the stage with <em>Varnishing Search Performance</em>.</p>
+
+<blockquote>
+  <p>Searching is <em>peanuts</em>. You setup your Elasticsearch cluster (or better
+find a SaaS partner) and start shooting your search queries against it.
+Well… Not really. If we put the biblical data ingestion story aside, it
+won’t take long to realize that even moderately complicated queries can
+become a bottleneck for those aiming for &lt;50ms query performance.
+Combine a couple of aggregations, double that for facets of range type,
+add your grandpa’s boosting factors to the scoring, and there you go;
+now you are a search query performance bottleneck owner too! Maybe I am
+exaggerating a bit. Why not just start throwing some caches in front of
+it? Hrm… We actually thought of that and did so. Though it brought a
+mountain of problems along with itself, and there goes my story.</p>
+</blockquote>
+
+<p>The slides are available in <a href="varnishing-search-performance.pdf">PDF</a> and
+<a href="varnishing-search-performance-org.odp">ODP</a> formats.</p>
+
+<iframe src="//www.slideshare.net/slideshow/embed_code/key/4h5JWHH25nHGa4" width="476" height="400" frameborder="0" marginwidth="0" marginheight="0" scrolling="no">
+</iframe>
+
+
+        <div id="disqus_thread"></div>
+        <script type="text/javascript">
+        var disqus_shortname = 'vyazici';
+        var disqus_identifier = '/blog/post/20180217-varnishing-search-performance/';
+        var disqus_title = 'Varnishing Search Performance';
+        (function() {
+            var dsq = document.createElement('script');
+            dsq.type = 'text/javascript';
+            dsq.async = true;
+            dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+        </script>
+
+        
+
+        
+
+    </div>
+  </body>
+</html>
+
+
+        <script type="text/javascript">
+        for (var i = 0; i < asyncLoadRequests.length; i++) {
+            asyncLoadRequest = asyncLoadRequests[i];
+            asyncLoadRequest();
+        }
+        </script>
+
+    </div>
+
+</div>
