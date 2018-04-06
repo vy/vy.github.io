@@ -3,6 +3,12 @@ title: Code
 css: code
 ---
 
+2018
+----
+
+* [rotating-fos](https://github.com/vy/rotating-fos) is
+  Java library providing rotating/rolling FileOutputStream.
+
 2017
 ----
 
