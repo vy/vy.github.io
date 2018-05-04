@@ -6,6 +6,11 @@ css: code
 2018
 ----
 
+* [pass-extension-copyq](https://github.com/vy/pass-extension-copyq) is a
+  [pass](https://www.passwordstore.org/) extension that copies a stored
+  password using [copyq](https://github.com/hluk/CopyQ) with a certain
+  retention period/timeout.
+
 * [rotating-fos](https://github.com/vy/rotating-fos) is
   Java library providing rotating/rolling FileOutputStream.
 
