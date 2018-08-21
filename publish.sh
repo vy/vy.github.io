@@ -3,7 +3,7 @@
 set -e
 
 isEverythingComitted() {
-	git status | grep -q "nothing to commit, working directory clean"
+	git status | grep -q "nothing to commit, working tree clean"
 }
 
 getLastCommitId() {
