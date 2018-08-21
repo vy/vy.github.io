@@ -35,7 +35,7 @@ css: code
 
 * [BTCTurkTracker](https://github.com/vy/BTCTurkTracker) is a Scala
   application that periodically collects data from
-  [BTCTurk](http://btcturk.com/)
+  [BTCTurk](https://btcturk.com/)
   [API](https://btcturk.com/yardim/api-home-page).
 
 * [lubang-menggali](https://github.com/vy/lubang-menggali) is a real-time
@@ -76,7 +76,7 @@ css: code
   wrapped around htmlize.el for syntax highlighting.
 
 * [binomial-heap](https://github.com/vy/binomial-heap) is an implementation of
-  the <a href="http://en.wikipedia.org/wiki/Binomial_heap">binomial heap data
+  the <a href="https://en.wikipedia.org/wiki/Binomial_heap">binomial heap data
   structure</a> in Common Lisp.
 
 * [patron](https://github.com/vy/patron) is a multi-consumer/multi-producer
@@ -89,7 +89,7 @@ css: code
   for language definitions.
 
 * [avl-tree](https://github.com/vy/avl-tree) is an implementation of the [AVL
-  (Adelson-Velsky-Landis)](http://en.wikipedia.org/wiki/AVL_tree) data
+  (Adelson-Velsky-Landis)](https://en.wikipedia.org/wiki/AVL_tree) data
   structure in Common Lisp.
 
 * [SST](https://github.com/vy/sst) (SQL Schema Transformer) is a Common Lisp
@@ -102,7 +102,7 @@ css: code
   Common Lisp, using LL(1) grammars with s-expressions.
 
 * [bk-tree](https://github.com/vy/bk-tree) is an implementation of the
-  [BK-Tree data structure](http://en.wikipedia.org/wiki/BK-tree) in Common
+  [BK-Tree data structure](https://en.wikipedia.org/wiki/BK-tree) in Common
   Lisp.
 
 * [ALIW](https://github.com/vy/aliw) (A Lisp in Wonderland) is a wiki software

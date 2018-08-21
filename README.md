@@ -1,16 +1,14 @@
 # About
 
 This branch contains the sources for generating my personal web site. You can
-either [view it online](http://vy.github.io/) or
+either [view it online](https://vlkan.com/) or
 [browse the generated content](https://github.com/vy/vy.github.io/tree/master/).
 
 # Installation
 
-You can easily bootstrap a development environment by using `vagrant up`. In
-the first run, Vagrant will run `bootstrap.sh` to install the necessary
-packages, hence make sure you have a decent internet connection. Next, you
-can directly ssh into the virtual machine via `vagrant ssh` and browse
-to `/vagrant` directory for sources.
+You can easily bootstrap a development environment by using `./docker.sh build`.
+Once the Docker image is built, you can run it via `./docker.sh run` and browse
+to `/app` directory to access the sources.
 
 Then you are safe to go.
 
