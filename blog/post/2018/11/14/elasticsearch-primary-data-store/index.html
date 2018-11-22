@@ -1,0 +1,1336 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Using Elasticsearch as the Primary Data Store</title>
+    <link rel="stylesheet" href="/css/common.css">
+    <meta name="generator" content="nanoc 3.8.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/post.css">
+    <script type="text/javascript">
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-40183531-1']);
+      _gaq.push(['_trackPageview']);
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="container">
+
+      <ul id="menu">
+        <li><a href="/">Home</a></li><li><a href="/blog/">Blog</a></li><li><a href="/code/">Code</a></li><li><a href="/blog/feed/">Feed</a></li>
+      </ul>
+
+    
+
+<div id="post">
+
+    <div class="head">
+        <div class="title">Using Elasticsearch as the Primary Data Store</div>
+        <div class="subtitle">posted at
+            November 14, 2018
+            with tags <a href="/blog/tag/elasticsearch">elasticsearch</a>, <a href="/blog/tag/java">java</a>
+        </div>
+    </div>
+
+    <div class="body">
+
+        <script type="text/javascript">
+        var asyncLoadRequests = [];
+        </script>
+
+        
+<p>At <a href="https://bol.com">bol.com</a>, the biggest e-commerce company in the
+Netherlands and Belgium, the last 4 years witnessed to the pursuit of
+rethinking the entire <a href="https://en.wikipedia.org/wiki/Extract,_transform,_load">ETL (Extract, Transform, Load)</a>
+pipeline that has been cooking up the data used by the search engine. This
+more than a decade old white-bearded giant breathing in the dungeons of shady
+Oracle PL/SQL hacks, was in a state causing ever increasing hiccups on
+production and necessitating a rewrite. After drafting many blueprints, we
+decided to go with a Java service backed by <strong>Elasticsearch as the primary
+storage</strong>! Given this idea gave the shivers to even the Elasticsearch
+consultants hired, I will walk you through why did we take such an
+unconventional step and how we managed to succeed.</p>
+
+<p>Before diving into the details, let me share a 2,000ft overview of an
+e-commerce search setup that will help you to have a better understanding of
+the subjects discussed onwards. Note that this simplification totally omits a
+nebula of incorporated caching layers, systems orchestrating multiple search
+clusters, queues with custom flush and replay functionalities, in-place
+resiliency mechanisms, services maintaining deprecated search entities to
+avoid getting ranked down by bots due to 404s, circuit breakers, throttlers,
+load balancers, etc. But it is still accurate enough to convey the general
+idea.</p>
+
+<p><img src="overview.jpg" alt="Architecture Overview"></p>
+
+<h1 id="table-of-contents">Table of Contents</h1>
+
+<ul>
+  <li>
+<a href="#search">The Search</a>
+    <ul>
+      <li><a href="#what-is-search">What is search anyway?</a></li>
+      <li><a href="#who-is-using-search">Who/What is using search?</a></li>
+      <li><a href="#what-about-performance">What about performance?</a></li>
+      <li><a href="#how-volatile">How volatile is the content?</a></li>
+    </ul>
+  </li>
+  <li>
+<a href="#etl">The ETL</a>
+    <ul>
+      <li><a href="#content-stream">Real-time Content Stream</a></li>
+      <li><a href="#configuration-stream">Configuration Stream</a></li>
+    </ul>
+  </li>
+  <li>
+<a href="#operational-overview">Operational Overview</a>
+    <ul>
+      <li><a href="#configuration-mutations">Configuration Mutations</a></li>
+      <li><a href="#configuration-predicates">Configuration Predicates</a></li>
+    </ul>
+  </li>
+  <li><a href="#old-etl">The Old ETL</a></li>
+  <li>
+<a href="#battle-of-storage-engines">The Battle of Storage Engines</a>
+    <ul>
+      <li><a href="#benchmark-setup">Benchmark Setup</a></li>
+      <li><a href="#benchmark-results">Benchmark Results</a></li>
+    </ul>
+  </li>
+  <li>
+<a href="#new-etl">The New ETL</a>
+    <ul>
+      <li><a href="#primary-storage-elasticsearch">The Primary Storage: Elasticsearch</a></li>
+      <li><a href="#configuration-dsl-json-groovy">The Configuration DSL: JSON and Groovy</a></li>
+    </ul>
+  </li>
+  <li><a href="#conclusion">Conclusion</a></li>
+</ul>
+
+<p><a name="search"></a></p>
+
+<h1 id="the-search">The Search</h1>
+
+<p><i>[Before going any further, I want to take this opportunity to align you on
+what exactly I do mean by <em>search</em>. I hope this will help you to better wrap
+your mind around the ultimate consumer of ETL. That being said, feel free to
+skip this section and directly jump to the ETL deep dive in the next
+section.]</i></p>
+
+<p>Many people tend to make the mistake of having a narrow view on search at
+e-commerce and confining its use case to a mere term scavenging in a
+mountainous stack of product attributes. While this statement holds to a
+certain extent, it resembles a cherry located at the tip of an iceberg. (In
+<a href="/blog/post/2018/02/17/varnishing-search-performance/">Varnishing Search Performance</a>
+presentation, I tried to summarize how difficult it can get just to add a
+caching layer between your search logic and backend.) There are books written,
+university lectures offered, and computer science branches dedicated on the
+matter. But let me try to briefly elaborate this from an engineering
+standpoint.</p>
+
+<p><a name="what-is-search"></a></p>
+
+<h2 id="what-is-search-anyway">What is search anyway?</h2>
+
+<p>If I would try to give a general, but far from complete, overview, it enables
+one to</p>
+
+<ul>
+  <li>
+    <p>search for a term in hundreds of product attributes, where <em>matching</em>
+and <em>ranking</em> are curated with directly or indirectly available consumer
+(are you a PS4 owner searching for the newest “Call of Duty”?) and
+relevance (you probably meant a band by typing “The Doors”, which is
+irrelevant for “Doors &amp; Windows” department) contexts,</p>
+  </li>
+  <li>
+    <p>browse (basically a search without a term) in thousands of categories
+with similar ranking mechanics used in search aforementioned,</p>
+  </li>
+  <li>
+    <p>beam up directly to a certain product or category given the input matches
+with certain patterns (EAN, ISBN, ISSN, etc.) or merchandising rules (any
+syntactic and/or semantic combination of “wine glasses” should end the
+flow in a particular department, etc.),</p>
+  </li>
+  <li>
+    <p>implicitly trigger multiple searches under the hood (e.g. narrowing
+down to a lower category or widening up to a higher category, etc.)
+to enhance the results,</p>
+  </li>
+  <li>
+    <p>and decorate every listing with faceting (you probably want to see
+“Capacity” facet rather than “Shoe Size” while searching/browsing in
+“Harddisks”) support.</p>
+  </li>
+</ul>
+
+<p><a name="who-is-using-search"></a></p>
+
+<h2 id="whowhat-is-using-search">Who/What is using search?</h2>
+
+<p>This is a big debate. But I know a handful of certain consumers:</p>
+
+<ul>
+  <li>
+    <p><strong>Customers:</strong> People who search and buy goods. They look harmless, until
+one gets exposed to them on a <a href="https://en.wikipedia.org/wiki/Black_Friday_%28shopping%29">Black Friday</a>
+where they work hand to hand in masses to <a href="https://en.wikipedia.org/wiki/Denial-of-service_attack">DDoS</a>
+the entire infrastructure.</p>
+  </li>
+  <li>
+    <p><strong>Bots:</strong> They periodically (a couple of times a day at most, as of the
+date of this writing) try to digest your entire catalog into their system
+for two main purposes:</p>
+
+    <ul>
+      <li>Integrate the catalog into their own search engine (that is, Google),</li>
+      <li>Tune their pricing strategy (that is, competitors)</li>
+    </ul>
+
+    <p>The worst part of handling bot traffic is you cannot always throttle them
+(for instance, Google takes into account website latencies for rankings) and
+you need to make sure they do not harm the customer traffic. Food for
+thought: Imagine your customers swarming at your shop at Christmas Eve
+and Google decided to spider your entire catalog with thousands of requests
+per second.</p>
+  </li>
+  <li>
+    <p><strong>Partners:</strong> Your business partners can also scan your catalog
+periodically to integrate into their own systems. (Fun fact: Some even
+require a daily Excel export.) One can classify them as bots only
+interested in a subset of the data.</p>
+  </li>
+  <li>
+    <p><strong>Internal services:</strong> Last time I counted, there were 20+ internal
+services using search to enhance their results in addition to the
+users I listed above. Their usage can constitute up to 50% of the
+traffic.</p>
+  </li>
+</ul>
+
+<p>In the case of partners and internal services, one might argue why do they
+need the search data rather than directly accessing the raw product attributes
+and offers. The answer is simple: They also use additional attributes (e.g.,
+facets, categories) incorporated at the ETL pipeline. Hence, rather than
+exposing the internal ETL system to them, it is more convenient to manage them
+at the search gateway which is known to have battle-tested scalability and
+resiliency measures.</p>
+
+<p><a name="what-about-performance"></a></p>
+
+<h2 id="what-about-performance">What about performance?</h2>
+
+<p>As decades-long experience in this domain points, making search 10ms faster
+can yield millions of euros extra revenue depending on the scale of your
+business. Unfortunately, this equation works the other way around as well.
+Hence, you are always expected to perform under a certain latency and above a
+certain throughput threshold.</p>
+
+<p><a name="how-volatile"></a></p>
+
+<h2 id="how-volatile-is-the-content">How volatile is the content?</h2>
+
+<p>Very, very, very much! I don’t think I can emphasize enough on this and I
+believe this is a crucial difference that puts e-commerce search apart from
+Google-like search engines – recall the conflict between Google and Twitter
+for indexing tweets. Maybe examples can help to convey the idea better:</p>
+
+<ul>
+  <li>
+    <p>A product might have multiple offers (bol.com offer, partner offer, etc.)
+featuring varying properties (pricing, deliverability, discounts, etc.)
+where both offers and/or their properties are highly volatile. The offer
+might run out of stock, the price might change, etc. While customer-facing
+web pages are enhanced with the most recent data at runtime, search index
+might lag behind and provide an eventually consistent view. The volatility
+in this context might range from seconds to months. On prime time, e.g. on
+Valentine’s Day, you don’t want your search engine to return gift listings
+that ran out of stock a couple of seconds ago.</p>
+  </li>
+  <li>
+    <p>Your manual (triggered by product specialists) and automated (artificial
+intelligence, machine learning driven) processes can alter category tree,
+add new facets, tune the exposure of existing facets, modify the search
+behavior (e.g., flows triggered by merchandising rules), add context
+sensitive (e.g. category-dependent) thesaurus entries, synonyms, introduce
+new rankings, etc. These changes might necessitate the update of millions of
+documents retroactively.</p>
+  </li>
+</ul>
+
+<p>This <em>volatility</em> debate will take a prominent role while deciding on the
+architecture of the next ETL pipeline, which I will elaborate in a minute.</p>
+
+<p><a name="etl"></a></p>
+
+<h1 id="the-etl">The ETL</h1>
+
+<p>In the domain of search at e-commerce,
+<a href="https://en.wikipedia.org/wiki/Extract,_transform,_load">ETL</a> denotes the
+pipeline where the input is a multitude of information sources (product
+attributes, offers, discounts, rankings, facets, synonyms, thesaurus entries,
+etc.) and the output is the
+<a href="https://en.wikipedia.org/wiki/Denormalization">denormalized</a> input
+constituting search-ready documents optimized for search query performance.
+Wait a second? If an ETL pipeline just delivers some optimization purposes,
+doesn’t this sound like that one can have a search without it? Sorta… That
+is indeed up to a certain extent possible. If we would put the details aside
+for a moment, we can roughly compare the two approaches as follows:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Strategy</th>
+      <th>Advantages</th>
+      <th>Disadvantages</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Without ETL</strong></td>
+      <td>
+        Every change in the input sources take immediate effect. (Hence, almost
+        zero index time cost.)
+      </td>
+      <td>
+        Latency and throughput hurts dramatically due to necessitated join and
+        enrich operations on input sources at query time.
+      </td>
+    </tr>
+    <tr>
+      <td><strong>With ETL</strong></td>
+      <td>
+        Every change in the input sources will necessitate pre-processing
+        affecting a multitude of products ranging from a couple to millions.
+      </td>
+      <td>
+        Since every potential data to satisfy search requests has already
+        been baked into the index, search necessitates the least amount of
+        effort to satisfy a request at query time.
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Put another way, ETL is all about the trade-off between index versus
+query time performance. In the light of all these and given</p>
+
+<ol>
+  <li>our existing ETL was functionally comprehensive enough,</li>
+  <li>query time performance of Elasticsearch has already been suffering due to
+faceting, internally triggered queries, etc. to an extent external caching
+becomes a necessity,</li>
+  <li>and search latency has a big impact on the revenue,</li>
+</ol>
+
+<p>we took the having a thick ETL pipeline path.</p>
+
+<p>But what is this ETL pipeline really? What does it literally do? In order to
+answer these questions, let me take your attention to the input sources going
+into the ETL pipeline:</p>
+
+<p><img src="etl.jpg" alt="ETL Input Sources"></p>
+
+<p><i>[GPC stands for <a href="https://www.gs1.org/standards/gpc">Global Product Classification</a>,
+which is de facto commercial categorization of goods varying from a car to
+a litre of milk.]</i></p>
+
+<p>These two input sources, content and configuration, feature two totally
+different execution patterns framing the functional requirements of the
+potential ETL solutions, hence, play the uttermost critical role in justifying
+the plan we picked. Let’s examine them further:</p>
+
+<p><a name="content-stream"></a></p>
+
+<h2 id="real-time-content-stream">Real-time Content Stream</h2>
+
+<p>Here the ETL pipeline listens from more than a dozen queues for updates
+ranging from product attributes to offers, offer-specific discounts to
+rankings, etc. all formatted in <a href="https://json.org/">JSON</a>. Fortunately, each
+real-time content stream message triggers a single product update. Let me
+exemplify this with a case: when <code>disk_capacity_bytes</code> attribute of a product
+changes, we</p>
+
+<ol>
+  <li>first fetch the relevant document from the storage,</li>
+  <li>update its <code>disk_capacity_bytes</code> attribute,</li>
+  <li>apply configuration(s) interested in this attribute,</li>
+  <li>and persist the obtained result back.</li>
+</ol>
+
+<p>There are some concerns need to be addressed here:</p>
+
+<ul>
+  <li>
+    <p>This is a pretty <em>CPU intensive</em> operation. The changed attribute might be
+of interest to many configurations. You first need to perform an inverse
+lookup on tens of thousands of configuration criteria, that is, handles
+configurations indicate attributes they are interested in. After finding
+matching configurations, execute them to let them shape the document
+according to their needs.</p>
+
+    <p>This innocent looking procedure description sneakily introduces two
+critical issues under the hood:</p>
+
+    <ol>
+      <li><em>How would you represent the configuration criteria such that you can
+match them against the content?</em></li>
+      <li><em>How would you represent the configuration mutation such that you can
+execute them against the content?</em></li>
+    </ol>
+
+    <p>And it goes without saying, both concerns aforementioned need to be
+engineered efficiently. You are expected to repeat this procedure on each
+message JSON of the real-time content stream where the traffic is in the
+order of millions per day.</p>
+
+    <p>As a concrete configuration example consider the following: You have two
+“Disk Capacity” facets defined by business: one for computers, one for
+smart phones departments. The first one translates the
+<code>disk_capacity_bytes</code> into a <code>disk_capacity_terabytes</code> attribute which is
+defined to be exposed when <code>category == "computers"</code> and the second
+translates into a <code>disk_capacity_gigabytes</code> attribute which is defined to
+be exposed when <code>category == "smart phones"</code>. Here both configurations are
+executed when the <code>attrs.disk_capacity_bytes != null</code> predicate holds.</p>
+  </li>
+  <li>
+    <p>This operation needs to be performed <em>atomically</em>. Two concurrent operations
+touching to the same product should not result in a corrupt content.</p>
+  </li>
+</ul>
+
+<p><a name="configuration-stream"></a></p>
+
+<h2 id="configuration-stream">Configuration Stream</h2>
+
+<p>Configurations are the rules defined via business-friendly screens. There
+modifications done by shop specialists are published in snapshots when they
+think the changes grow into a stable state that they are ready to be exposed
+to the customer. Each published configuration snapshot ends up serving three
+purposes:</p>
+
+<ol>
+  <li>search gateway uses it to determine how to query the search index,</li>
+  <li>ETL pipeline uses it to process the real-time content stream,</li>
+  <li>and ETL pipeline <em>retroactively updates</em> the documents that are potentially
+affected.</li>
+</ol>
+
+<p>While the first two are relatively cheap operations, the last one is the
+elephant in the room! This is the first time in our beautiful tale described
+so far that we need to propagate a change to millions of documents. Let me
+further explain this in an example:</p>
+
+<p>Let’s consider that the following category definition:</p>
+
+<pre><code class="language-javascript"><span class="k">if</span> <span class="p">(</span><span class="nx">attrs</span><span class="p">.</span><span class="nx">gpc</span><span class="p">.</span><span class="nx">family_id</span> <span class="o">==</span> <span class="mi">1234</span> <span class="o">&amp;&amp;</span> <span class="nx">attrs</span><span class="p">.</span><span class="nx">gpc</span><span class="p">.</span><span class="nx">chunk_id</span> <span class="o">==</span> <span class="mi">5678</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">doc</span><span class="p">.</span><span class="nx">category</span> <span class="o">=</span> <span class="s2">"books"</span>
+<span class="p">}</span></code></pre>
+
+<p>is modified as follows:</p>
+
+<pre><code class="language-javascript"><span class="k">if</span> <span class="p">(</span><span class="nx">attrs</span><span class="p">.</span><span class="nx">gpc</span><span class="p">.</span><span class="nx">family_id</span> <span class="o">==</span> <span class="mi">1234</span> <span class="o">&amp;&amp;</span> <span class="nx">attrs</span><span class="p">.</span><span class="nx">gpc</span><span class="p">.</span><span class="nx">chunk_id</span> <span class="o">==</span> <span class="mh">0xDEADBEEF</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">doc</span><span class="p">.</span><span class="nx">category</span> <span class="o">=</span> <span class="s2">"AWESOME BOOKS"</span>
+<span class="p">}</span></code></pre>
+
+<p>Sir, you are in trouble! As the very ETL pipeline, what you are expected to
+deliver is to</p>
+
+<ol>
+  <li>find products that are matching with the old predicate,</li>
+  <li>remove <code>books</code> from the <code>category</code> field,</li>
+  <li>find products that are matching with the new predicate,</li>
+  <li>and add <code>AWESOME BOOKS</code> to the <code>category</code> field.</li>
+</ol>
+
+<p>This easier said than done operation contain many implicit concerns:</p>
+
+<ul>
+  <li>
+    <p>ETL needs to avoid removing <code>books</code> from the <code>category</code> field if there are
+rules, other than the changed one, adding <code>books</code> to the very same <code>category</code>
+field. There are two ways you can approach to this:</p>
+
+    <ol>
+      <li>
+        <p>With every value added to a field, store a meta information pointing
+to the rules associated with that value. These back-tracking pointers
+optimize the check whether a value can be removed or not, with the cost
+of maintaining them in an ocean of values.</p>
+      </li>
+      <li>
+        <p>After removing every value, put the product back into the ETL pipeline
+just like handling products in the real-time content stream. If there are
+any rules, other than the changed one, adding <code>books</code> to the very same
+<code>category</code> field, they will kick in. This simple approach comes with the
+cost of a CPU intensive and unfortunately mostly redundant processing.</p>
+      </li>
+    </ol>
+  </li>
+  <li>
+    <p>Given configuration predicates are allowed to access any field, how one
+would represent a predicate and translate this into an ETL storage query
+filter that performs well? (You would not want to scan the whole data set
+for each predicate that is changed, right? Well… Depends.)</p>
+
+    <p>Let’s first discuss the representation of predicates issue, which was also a
+concern in the real-time content stream processing. Here you might first
+fall into the trap of whitelisting the operators (<code>==</code>, <code>!=</code>, <code>&gt;</code>, <code>&gt;=</code>,
+<code>&lt;</code>, <code>&lt;=</code>, <code>~=</code>) and the content attributes (<code>attrs.gpc.family_id</code>,
+<code>attrs.gpc.chunk_id</code>, <code>attrs.disk_capacity_bytes</code>, etc.) that are allowed in
+configuration predicates. While whitelisting operators is fine, whitelisting
+the content attributes implies that the ETL pipeline, the configuration
+administration GUIs, etc. all needs to have the knowledge of this whitelist
+which strictly depends on the structure of the real-time content stream
+message structures. Whenever the message structures change or you want to
+add a new attribute to this whitelist, both happen a couples of times every
+year, you need to propagate this to many components in your service milky
+way and perform a deploy without downtime.</p>
+
+    <p>What about translating these predicate representations into efficient ETL
+storage query filters? Let’s take the simplest approach: Represent each
+attribute with a separate field. Then let me ask you the following
+questions:</p>
+
+    <ol>
+      <li>
+        <p>If you would opt for using an RDBMS, you can represent attributes by
+columns and create an index for each individual column. (Ouch!) Thanks to
+the half-century battle-tested RDBMS literature, the database can easily
+optimize and perform an index scan for the constructed queries:</p>
+
+        <pre><code class="language-sql"><span class="k">SELECT</span> <span class="p">...</span>
+  <span class="k">FROM</span> <span class="n">content</span>
+ <span class="k">WHERE</span> <span class="n">attrs_gpc_family_id</span> <span class="o">=</span> <span class="s1">'1234'</span>
+   <span class="k">AND</span> <span class="n">attrs_gpc_chunk_id</span> <span class="o">=</span> <span class="s1">'5678'</span></code></pre>
+
+        <p>That being said… What if you hit to the maximum column count limitation?
+(Yes, we did!) Further, what about attributes that are list of objects:</p>
+
+        <pre><code class="language-json"><span class="p">{</span>
+  <span class="nt">"authors"</span><span class="p">:</span> <span class="p">[</span>
+    <span class="p">{</span>
+      <span class="nt">"fname"</span><span class="p">:</span> <span class="s2">"Volkan"</span><span class="p">,</span>
+      <span class="nt">"lname"</span><span class="p">:</span> <span class="s2">"Yazici"</span>
+    <span class="p">},</span>
+    <span class="p">{</span>
+      <span class="nt">"fname"</span><span class="p">:</span> <span class="s2">"Lourens"</span><span class="p">,</span>
+      <span class="nt">"lname"</span><span class="p">:</span> <span class="s2">"Heijs"</span>
+    <span class="p">}</span>
+  <span class="p">]</span>
+<span class="p">}</span></code></pre>
+
+        <p>You definitely cannot store these in a single column and still query each
+individual component. Ok, then you can normalize the data as follows:</p>
+
+        <pre><code class="language-sql"><span class="k">SELECT</span> <span class="p">...</span>
+  <span class="k">FROM</span> <span class="n">attribute</span><span class="p">,</span> <span class="n">content</span>
+ <span class="k">WHERE</span> <span class="n">attribute</span><span class="p">.</span><span class="n">content_id</span> <span class="o">=</span> <span class="n">content</span><span class="p">.</span><span class="n">id</span>
+   <span class="k">AND</span> <span class="n">attribute</span><span class="p">.</span><span class="n">name</span> <span class="o">=</span> <span class="s1">'gpc_family_id'</span> <span class="k">AND</span> <span class="n">attribute</span><span class="p">.</span><span class="n">value</span> <span class="o">=</span> <span class="s1">'1234'</span>
+   <span class="k">AND</span> <span class="n">attribute</span><span class="p">.</span><span class="n">name</span> <span class="o">=</span> <span class="s1">'gpc_chunk_id'</span> <span class="k">AND</span> <span class="n">attribute</span><span class="p">.</span><span class="n">value</span> <span class="o">=</span> <span class="s1">'5678'</span></code></pre>
+
+        <p>So far so good. But… In a matter of months, you will need to start
+partitioning tables and maybe even move certain partitions into separate
+database instances to maintain the latency under a certain threshold.
+(Yes, we did this as well!) But this never-ending database structure
+optimization more and more feels like you are inventing your own
+distributed database using a plain RDBMS. Does this really still need to
+be this way in 2018?</p>
+      </li>
+      <li>
+        <p>If you would opt for using <a href="https://www.mongodb.com/">MongoDB</a>, like using
+an RDBMS, you still need create an explicit index on each (whitelisted)
+field. For filters involving multiple fields (e.g., <code>attrs.gpc.family_id
+== 1234 &amp;&amp; attrs.gpc.chunk_id == 5678</code>), MongoDB query optimizer can
+purpose individual field indices via <a href="https://docs.mongodb.com/manual/core/index-intersection/">index intersection</a>.
+That being said, our experience with this feature has not been very
+pleasant.</p>
+
+        <p>The issue where attributes might contain list of objects is
+<a href="https://docs.mongodb.com/manual/tutorial/query-array-of-documents/">not a problem for MongoDB</a>.</p>
+      </li>
+      <li>
+        <p>If you would opt for <a href="https://cloud.google.com/datastore">Google Cloud Datastore</a>,
+you will need to create explicit indices for each potential filter
+combination and order matters! Yes, you read that right! Let me exemplify
+this bizarre situation. If you have configurations with the following
+predicates:</p>
+
+        <ul>
+          <li><code>attrs.gpc.family_id == 1234</code></li>
+          <li><code>attrs.gpc.chunk_id == 5678</code></li>
+          <li><code>attrs.gpc.family_id == 1234 &amp;&amp; attrs.gpc.chunk_id == 5678</code></li>
+          <li><code>attrs.gpc.chunk_id == 5678 &amp;&amp; attrs.gpc.family_id == 1234</code></li>
+        </ul>
+
+        <p>you need to define 4 different indices! Ouch! This in its own was a
+Datastore show stopper for us.</p>
+      </li>
+      <li>
+        <p>If you would opt for <a href="https://www.elastic.co/products/elasticsearch">Elasticsearch</a>,
+all fields are indexed by default and you can use them in any combination!
+Yay! No need for whitelisting! And similar to MongoDB, Elasticsearch also
+allows <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/nested.html">querying list of objects</a>,
+you just need to declare them explicitly as <code>nested</code>. If you don’t even
+want to worry about that, you can add a dynamic mapping template to make
+each object nested by default. Following is the index mapping you can use
+for that purpose:</p>
+
+        <pre><code class="language-json"><span class="p">{</span>
+  <span class="nt">"date_detection"</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+  <span class="nt">"dynamic_templates"</span><span class="p">:</span> <span class="p">[</span>
+    <span class="p">{</span>
+      <span class="nt">"strings"</span><span class="p">:</span> <span class="p">{</span>
+        <span class="nt">"match_mapping_type"</span><span class="p">:</span> <span class="s2">"string"</span><span class="p">,</span>
+        <span class="nt">"mapping"</span><span class="p">:</span> <span class="p">{</span>
+          <span class="nt">"type"</span><span class="p">:</span> <span class="s2">"keyword"</span>
+        <span class="p">}</span>
+      <span class="p">}</span>
+    <span class="p">},</span>
+    <span class="p">{</span>
+      <span class="nt">"objects"</span><span class="p">:</span> <span class="p">{</span>
+        <span class="nt">"match_mapping_type"</span><span class="p">:</span> <span class="s2">"object"</span><span class="p">,</span>
+        <span class="nt">"mapping"</span><span class="p">:</span> <span class="p">{</span>
+          <span class="nt">"type"</span><span class="p">:</span> <span class="s2">"nested"</span>
+        <span class="p">}</span>
+      <span class="p">}</span>
+    <span class="p">}</span>
+  <span class="p">]</span>
+<span class="p">}</span></code></pre>
+
+        <p>Above mapping also disables analyzing the fields of type <code>string</code>, since
+we are not interested in performing fuzzy queries. Clearly, date detection
+is disabled for similar reasons.</p>
+
+        <p>These being said, Elasticsearch does not have a good track record for high
+update rates known to deteriorate the query performance over time.</p>
+      </li>
+    </ol>
+  </li>
+</ul>
+
+<p><a name="operational-overview"></a></p>
+
+<h1 id="operational-overview">Operational Overview</h1>
+
+<p>So far we examined the current ETL setup with concrete examples on cases. We
+broke down the system into its individual input sources and detailed their
+implications on certain architectural decisions. Let’s wrap up this
+mind-boggling details into operational abstractions:</p>
+
+<p><img src="etl-abstraction.jpg" alt="The ETL: Operational Overview"></p>
+
+<p>Given these operational abstractions, let me summarize the constraints the
+configuration components (predicate and mutation) imply.</p>
+
+<p><a name="configuration-mutations"></a></p>
+
+<h2 id="configuration-mutations">Configuration Mutations</h2>
+
+<p>If you would recall, configuration mutations were simple document enhancement
+instructions that I exemplified as follows:</p>
+
+<pre><code class="language-javascript"><span class="nx">doc</span><span class="p">.</span><span class="nx">category</span> <span class="o">=</span> <span class="s2">"books"</span></code></pre>
+
+<p>Here <code>doc</code> is a dictionary denoting the ETL’ed document source and mutation
+“adds” <code>books</code> value to its <code>category</code> field. This (for simplification
+purposes, JavaScript-employed) innocent looking expression can (and does!) go
+to unintended extents:</p>
+
+<pre><code class="language-javascript"><span class="k">if</span> <span class="p">(</span><span class="nx">attrs</span><span class="p">.</span><span class="nx">suitable_for_month</span> <span class="o">&lt;=</span> <span class="mi">2</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">doc</span><span class="p">.</span><span class="nx">childhood_stage</span> <span class="o">=</span> <span class="s2">"newborn"</span><span class="p">;</span>
+<span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">attrs</span><span class="p">.</span><span class="nx">suitable_for_month</span> <span class="o">&lt;=</span> <span class="mi">12</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">doc</span><span class="p">.</span><span class="nx">childhood_stage</span> <span class="o">=</span> <span class="s2">"infant"</span><span class="p">;</span>
+<span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">attrs</span><span class="p">.</span><span class="nx">suitable_for_month</span> <span class="o">&lt;=</span> <span class="mi">48</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">doc</span><span class="p">.</span><span class="nx">childhood_stage</span> <span class="o">=</span> <span class="s2">"toddler"</span><span class="p">;</span>
+<span class="p">}</span></code></pre>
+
+<p>The choice of the mutation <a href="https://en.wikipedia.org/wiki/Domain-specific_language">DSL</a>
+employed is expected to deliver the following requirements:</p>
+
+<ul>
+  <li>It “must” support JSON input and output for the real-time content stream.
+(See step B4 in the figure.)</li>
+  <li>It “should” support ETL storage input and output for the configuration
+snapshot stream. (See step A4 in the figure.)</li>
+</ul>
+
+<p>The reason that the latter functionality marked as optional is that the ETL
+pipeline can as well retrieve these documents in raw from the storage, convert
+them to JSON, execute mutations, and persist them back again – assuming data
+integrity is provided by other means, e.g., transactions, retries powered by
+compare-and-swap operations, etc.</p>
+
+<p><a name="configuration-predicates"></a></p>
+
+<h2 id="configuration-predicates">Configuration Predicates</h2>
+
+<p>Configuration predicates were simple conditions restricted to use a
+whitelisted set of operators (<code>==</code>, <code>!=</code>, <code>&gt;</code>, <code>&gt;=</code>,   <code>&lt;</code>, <code>&lt;=</code>, <code>~=</code>)
+supporting grouping:</p>
+
+<pre><code class="language-javascript"><span class="nx">attrs</span><span class="p">.</span><span class="nx">gpc</span><span class="p">.</span><span class="nx">family_id</span> <span class="o">==</span> <span class="mi">1234</span> <span class="o">&amp;&amp;</span> <span class="nx">attrs</span><span class="p">.</span><span class="nx">gpc</span><span class="p">.</span><span class="nx">chunk_id</span> <span class="o">==</span> <span class="mi">5678</span></code></pre>
+
+<p>Similar to mutations, the choice of the predicate DSL used is expected to
+deliver the following requirements:</p>
+
+<ul>
+  <li>It “must” support JSON input for the real-time content stream. (See step B2
+in the figure.)</li>
+  <li>It “should” support ETL storage input for determining the affected documents
+by the configuration snapshot delta. (See step A4 in the figure.)</li>
+</ul>
+
+<p>We relaxed the latter constraint since one can very well prefer to put the
+entire stored document collection (Ouch!) back into the ETL pipeline, process
+them, detect the changed ones, and persist the updates. This approach has
+certain assumptions though:</p>
+
+<ul>
+  <li>We don’t need to perform this too often. That is, the frequency of
+configuration snapshots are relatively low, e.g., max. a couple of times a
+day.</li>
+  <li>The snapshot deltas affect a significant percentage of the entire collection
+to an extent that the advantage of finding and processing only the affected
+documents diminishes.</li>
+</ul>
+
+<p>Given you still need to make a back of the envelope calculation on your cloud
+bill for each approach, our years of statistics in the ETL snapshot
+configuration point that most of the time snapshot deltas affect at most 5% of
+the entire collection and the average is less than 1% – thanks to the
+incremental updates carried out by shop specialists. Hence, performing a
+complete ETL a couple of times a day feels like an overkill and hurts the
+engineer within you.</p>
+
+<p><a name="old-etl"></a></p>
+
+<h1 id="the-old-etl">The Old ETL</h1>
+
+<p>The old ETL was a single Oracle database where the configurations were modeled
+in PL/SQL. Since the configuration abstraction language was the very same
+language the database uses itself, executing mutations and predicates was
+effortless. Hail <a href="https://en.wikipedia.org/wiki/SQL_injection">SQL injection</a>
+as a feature! Though this came with some notable costs:</p>
+
+<ul>
+  <li>Using PL/SQL within the abstraction model created both functional and
+financial vendor lock-in. The functional deficiency (incompetent
+expressiveness, leakage of PL/SQL to irrelevant components) obstructed many
+innovations over the years, where it became more and more difficult as time
+passed. Its financial aspect was negligible at the scale of
+<a href="https://bol.com">bol.com</a>.</li>
+  <li>Rolling back changes of an updated configuration mutation is quite a
+PL/SQL engineering endeavor to implement in practice. This difficulty,
+spiced up with the insufficient logging, testing, debugging, profiling, etc.
+utilities, drew programmers back from taking this path. <em>Hence, there was a
+12+ hours long complete ETL run every night for configuration snapshot
+deltas.</em> This beast tamed by an experienced couple of engineers has a
+reputation of having frequent hiccups and contrive really difficult to
+debug, find, reproduce, and fix bugs.</li>
+</ul>
+
+<p>In its incarnation, the content attributes were stored in <code>&lt;id, content_id,
+key, value&gt;</code> normalized form. This approach started to suffer from efficiency
+aches in the hinges pulling the ETL’ed data to the search index. Back then
+hired Oracle consultants examined the usage and recommended to go with a
+denormalized structure where each attribute is stored as a column. In addition
+to temporarily bandaging up the efficiency related wounds, this allowed DBAs
+to let their imaginations go wild to map the attributes to columns. Recall the
+attributes composed of objects I mentioned above? Special characters were used
+to create such multi-value attributes, which was pretty much (to put it
+mildly) unpleasant. But the killer bullet came in the form of a six-inch punch
+referred as <a href="https://stackoverflow.com/a/14722914/1278899">the maximum allowed column count
+limit</a>. But isn’t engineering
+all about <a href="https://youtu.be/D_Vg4uyYwEk">how hard you can get it and keep moving
+forward</a>? Yes, comrade! We thought so and used a
+single binary XML column to store attributes, queried them using Oracle XPath
+toolbox, escaped attribute values, finally concatenated them into SQL strings
+that are eventually executed, and for sure crossed our fingers.</p>
+
+<p>There are a couple of important details that I could not manage to cover in
+the above war diary without spoiling the coherency. Let me drop them here in
+no particular order:</p>
+
+<ul>
+  <li>Task parallelization is pretty difficult in PL/SQL. We tried patching this
+hole via internal Oracle AQs, but I am not really sure whether it improved
+or worsened the state.</li>
+  <li>In a database procedure that is expected to run for 12+ hours, Murphy’s law
+works flawlessly. Anything that can go wrong, did, does, or will go wrong.
+We wisely(!) engineered the system to persist its state at certain check
+points constituting retriable handles to invoke when you come in the morning
+and see that the ETL was crashed.</li>
+  <li>The number of moving components and their out of reach (back then?)
+necessitated the use of <a href="https://www.cronacle.com/">a proprietary scheduling tool supporting
+Oracle</a>. The schedule was glued with
+<a href="https://www.gnu.org/software/bash/">bash</a> scripts, designed in a
+proprietary development environment only available for Windows, and rolled
+out on Oracle machines running GNU/Linux. Neither GNU/Linux, nor Windows
+using developers were fond of this situation.</li>
+</ul>
+
+<p>Enough with blaming the former engineer. We need to get our facts right. The
+aforementioned PL/SQL giant was not rolled out in a day with a big bang. This
+more than a decade old ETL pipeline was developed with all the best practices
+and tooling available back then. The more you dive into its source code,
+navigate through commits of features spanning through years, it becomes easier
+to see what went wrong and where. Now you are able to realize the patterns
+that necessitated exceptional handling of certain features, of which many due
+to backward-compatibility with legacy systems that have already been
+deprecated or replaced by newcomers, exploded the complexity in unintended
+depths. Software development is a never-ending progress and axioms you base
+your initial architecture on become invalidated in the course of time due to
+changing business needs. Aiming for the infinite flexibility also comes with
+an engineering cost as well, which might very well fall short of justifying
+such an expense. I personally think the old ETL pipeline and its engineers did
+a fantastic job. The tool served its purpose for more than a decade and
+harvested an immense amount of lessons for its successor. I would be more than
+happy if we as a team can also achieve to deliver such a long living product.</p>
+
+<p><a name="battle-of-storage-engines"></a></p>
+
+<h1 id="the-battle-of-storage-engines">The Battle of Storage Engines</h1>
+
+<p>Given our functional requirements, we evaluated a couple of different ETL
+pipeline storage solutions which I <a href="#configuration-stream">slightly mentioned earlier</a>.
+Following is the feature matrix of each candidate:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Storage Solution</th>
+      <th>Distributed</th>
+      <th>Sharded</th>
+      <th>Required Indices</th>
+      <th>Integrity Measure</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>PostgreSQL</td>
+      <td>No</td>
+      <td>No</td>
+      <td>One<sup>1</sup>
+</td>
+      <td>Transactions</td>
+    </tr>
+    <tr>
+      <td>PostgreSQL (partitioned)</td>
+      <td>No</td>
+      <td>Yes<sup>2</sup>
+</td>
+      <td>One<sup>1</sup>
+</td>
+      <td>Transactions</td>
+    </tr>
+    <tr>
+      <td>MongoDB</td>
+      <td>Yes</td>
+      <td>Yes<sup>3</sup>
+</td>
+      <td>Some<sup>4</sup>
+</td>
+      <td>Compare-and-swap<sup>5</sup>
+</td>
+    </tr>
+    <tr>
+      <td>Elasticsearch</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>None</td>
+      <td>Compare-and-swap<sup>6</sup>
+</td>
+    </tr>
+  </tbody>
+</table>
+
+<p><sup>1</sup> PostgreSQL <code>jsonb</code> index covers all fields.<br>
+<sup>2</sup> PostgreSQL partitioning is not sharding in distributed sense, but still serves a similar purpose.<br>
+<sup>3</sup> MongoDB sharding requires <a href="https://docs.mongodb.com/manual/sharding/#shard-keys">manual configuration</a>.<br>
+<sup>4</sup> MongoDB requires an explicit index for each whitelisted field allowed in ETL configuration predicates.<br>
+<sup>4</sup> MongoDB <a href="https://docs.mongodb.com/manual/core/write-operations-atomicity/"><code>updateMany()</code> or <code>findAndModify()</code></a> can be leveraged for the desired integrity.<br>
+<sup>5</sup> Elasticsearch <code>_version</code> field can be leveraged to implement a compare-and-swap loop.</p>
+
+<p><a name="benchmark-setup"></a></p>
+
+<h2 id="benchmark-setup">Benchmark Setup</h2>
+
+<p>For the benchmark, we populated each store with 33 million JSON documents of
+which each weighs an average size of 2.5KB. One of the contrived fields in the
+document is <code>search_rank</code>. Later on, a file consisting of 6 million distinct
+<code>&lt;id, search_rank&gt;</code> pairs is streamed in batches of size 1000. For each batch,
+we first fetch the old <code>search_rank</code>s associated with the <code>id</code>s and then bulk
+update these with the new <code>search_rank</code>s. In this scenario, what we tried to
+emulate is a bulk update triggered by a configuration snapshot delta, which
+is the most storage performance demanding operation in the ETL pipeline.</p>
+
+<p>Used test bed is a cluster composed of 6 dedicated machines with the following
+specifications:</p>
+
+<ul>
+  <li>
+<strong>CPU</strong>: 16 core Intel Xeon E5-2620 v4 @ 2.10GHz</li>
+  <li>
+<strong>Memory/Swap</strong>: 128GB/16GB</li>
+  <li>
+<strong>Disk</strong>: 375GB (Intel P4800X Performance NVMe PCIe SSD)</li>
+  <li>
+<strong>OS</strong>: 3.10.0-693.1.1.el7.x86_64</li>
+</ul>
+
+<p>We further configured each store as follows:</p>
+
+<ul>
+  <li>
+    <p><strong>PostgreSQL</strong>: Just one PostgreSQL 9.6.10 instance
+(<code>shared_buffers = 128MB</code>) containing a single <code>&lt;id, content&gt;</code> table where
+<code>content</code> is of type <a href="https://www.postgresql.org/docs/current/datatype-json.html#JSON-INDEXING"><code>jsonb</code></a>.
+Benchmark configured to update only the <code>search_rank</code> attribute of the
+<code>content</code> column.</p>
+  </li>
+  <li>
+    <p><strong>PostgreSQL (partitioned)</strong>: Same as above, but the <code>content</code> table is
+partitioned into 10 tables.</p>
+  </li>
+  <li>
+    <p><strong>MongoDB</strong>: MongoDB 3.6 with the following configurations:</p>
+
+    <pre><code class="language-yaml"><span class="l-Scalar-Plain">systemLog.destination</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">file</span>
+<span class="l-Scalar-Plain">systemLog.logAppend</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">true</span>
+<span class="l-Scalar-Plain">processManagement.fork</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">true</span>
+<span class="l-Scalar-Plain">storage.engine</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">wiredTiger</span>
+<span class="l-Scalar-Plain">security.authorization</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">enabled</span>
+<span class="l-Scalar-Plain">replication.oplogSizeMB</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">9216</span></code></pre>
+
+    <p>Note that sharding is not enabled. (More on this later.)</p>
+
+    <p>Similar to PostgreSQL setup, benchmark configured to update only the
+<code>search_rank</code> attribute of documents.</p>
+  </li>
+  <li>
+    <p><strong>Elasticsearch</strong>: Elasticsearch 6.3.0 with the following JVM flags:</p>
+
+    <pre><code>-Xms30g
+-Xmx30g
+-Xss256k
+-XX:NewRatio=3
+-XX:+UseParNewGC
+-XX:+UseConcMarkSweepGC
+-XX:CMSInitiatingOccupancyFraction=75
+-XX:+UseCMSInitiatingOccupancyOnly
+-XX:+PrintGCDetails
+-XX:+PrintGCDateStamps
+-XX:+PrintClassHistogram
+-XX:+PrintTenuringDistribution
+-XX:+PrintGCApplicationStoppedTime
+</code></pre>
+
+    <p>Here JVM heap size is set to 30G due to
+<a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/heap-size.html">compressed OOPs limitation</a>.</p>
+
+    <p>Different from PostgreSQL and MongoDB setups, where only the <code>search_rank</code>
+attribute is updated, Elasticsearch benchmark is configured to update the
+entire document. While this overkill is subject to hammer Elasticsearch way
+heavier (since Elasticsearch will create quite some garbage segments waiting
+to be merged and making every object nested worsens the case even more) than
+other stores, it is more strategically aligned with how we want to use it in
+the future.</p>
+  </li>
+</ul>
+
+<p><a name="benchmark-results"></a></p>
+
+<h2 id="benchmark-results">Benchmark Results</h2>
+
+<p>Below you will see the results of the benchmark for only MongoDB and
+Elasticsearch. The reason PostgreSQL results were omitted is no matter what
+kind of optimization we throw at it, the benchmark always took more than 2
+hours, regardless of partitioning, whereas MongoDB and Elasticsearch took a
+couple of minutes.</p>
+
+<style>
+.concurrency { text-align: center; }
+.measurement { text-align: right; }
+.per-batch .measurement { font-weight: bold;  }
+</style>
+
+<table>
+  <thead>
+    <tr>
+      <th>Store</th>
+      <th>Conc.<sup>6</sup>
+</th>
+      <th>Latency</th>
+      <th>Total (s)</th>
+      <th>Fetch<sup>7</sup> 75% (ms)</th>
+      <th>Fetch<sup>7</sup> 99% (ms)</th>
+      <th>Fetch<sup>7</sup> Max. (ms)</th>
+      <th>Update<sup>8</sup> 75% (ms)</th>
+      <th>Update<sup>8</sup> 99% (ms)</th>
+      <th>Update<sup>8</sup> Max. (ms)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td rowspan="6">MongoDB</td>
+      <td rowspan="2" class="concurrency">8</td>
+      <td>total</td>
+      <td class="measurement">518</td>
+      <td class="measurement">68</td>
+      <td class="measurement">999</td>
+      <td class="measurement">3380</td>
+      <td class="measurement">64</td>
+      <td class="measurement">2347</td>
+      <td class="measurement">4153</td>
+    </tr>
+    <tr class="per-batch">
+      <td colspan="2">per batch</td>
+      <td class="measurement">8</td>
+      <td class="measurement">125</td>
+      <td class="measurement">423</td>
+      <td class="measurement">8</td>
+      <td class="measurement">293</td>
+      <td class="measurement">519</td>
+    </tr>
+    <tr>
+      <td rowspan="2" class="concurrency">16</td>
+      <td>total</td>
+      <td class="measurement">526</td>
+      <td class="measurement">71</td>
+      <td class="measurement">3082</td>
+      <td class="measurement">7905</td>
+      <td class="measurement">68</td>
+      <td class="measurement">5564</td>
+      <td class="measurement">7955</td>
+    </tr>
+    <tr class="per-batch">
+      <td colspan="2">per batch</td>
+      <td class="measurement">4</td>
+      <td class="measurement">193</td>
+      <td class="measurement">494</td>
+      <td class="measurement">4</td>
+      <td class="measurement">348</td>
+      <td class="measurement">497</td>
+    </tr>
+    <tr>
+      <td rowspan="2" class="concurrency">32</td>
+      <td>total</td>
+      <td class="measurement">518</td>
+      <td class="measurement">61</td>
+      <td class="measurement">6668</td>
+      <td class="measurement">11465</td>
+      <td class="measurement">98</td>
+      <td class="measurement">10533</td>
+      <td class="measurement">13784</td>
+    </tr>
+    <tr class="per-batch">
+      <td colspan="2">per batch</td>
+      <td class="measurement">2</td>
+      <td class="measurement">208</td>
+      <td class="measurement">358</td>
+      <td class="measurement">3</td>
+      <td class="measurement">329</td>
+      <td class="measurement">431</td>
+    </tr>
+    <tr>
+      <td rowspan="6">Elasticsearch</td>
+      <td rowspan="2" class="concurrency">8</td>
+      <td>total</td>
+      <td class="measurement">251</td>
+      <td class="measurement">278</td>
+      <td class="measurement">423</td>
+      <td class="measurement">798</td>
+      <td class="measurement">94</td>
+      <td class="measurement">186</td>
+      <td class="measurement">412</td>
+    </tr>
+    <tr class="per-batch">
+      <td colspan="2">per batch</td>
+      <td class="measurement">35</td>
+      <td class="measurement">53</td>
+      <td class="measurement">100</td>
+      <td class="measurement">12</td>
+      <td class="measurement">23</td>
+      <td class="measurement">52</td>
+    </tr>
+    <tr>
+      <td rowspan="2" class="concurrency">16</td>
+      <td>total</td>
+      <td class="measurement">196</td>
+      <td class="measurement">478</td>
+      <td class="measurement">697</td>
+      <td class="measurement">1004</td>
+      <td class="measurement">141</td>
+      <td class="measurement">266</td>
+      <td class="measurement">410</td>
+    </tr>
+    <tr class="per-batch">
+      <td colspan="2">per batch</td>
+      <td class="measurement">30</td>
+      <td class="measurement">44</td>
+      <td class="measurement">63</td>
+      <td class="measurement">9</td>
+      <td class="measurement">17</td>
+      <td class="measurement">26</td>
+    </tr>
+    <tr>
+      <td rowspan="2" class="concurrency">32</td>
+      <td>total</td>
+      <td class="measurement">175</td>
+      <td class="measurement">951</td>
+      <td class="measurement">1368</td>
+      <td class="measurement">1515</td>
+      <td class="measurement">214</td>
+      <td class="measurement">331</td>
+      <td class="measurement">828</td>
+    </tr>
+    <tr class="per-batch">
+      <td colspan="2">per batch</td>
+      <td class="measurement">30</td>
+      <td class="measurement">43</td>
+      <td class="measurement">47</td>
+      <td class="measurement">7</td>
+      <td class="measurement">10</td>
+      <td class="measurement">26</td>
+    </tr>
+  </tbody>
+</table>
+
+<p><sup>6</sup> Number of concurrent batches.<br>
+<sup>7</sup> Time it takes to fetch a batch.<br>
+<sup>8</sup> Time it takes to update a batch.</p>
+
+<p>Let me share some observations from the results:</p>
+
+<ul>
+  <li>
+    <p><strong>Increasing concurrency</strong> improves Elasticsearch performance (up to 32
+concurrent batches) but does not have much effect on MongoDB.</p>
+  </li>
+  <li>
+    <p><strong>Elasticsearch rocked in performance</strong> even though it is hammered with
+the update of the entire document whereas MongoDB is just trying to update a
+single attribute. Using 32 concurrent batches, it took 175s and 518s for
+Elasticsearch and MongoDB, respectively, to complete the benchmark.</p>
+  </li>
+  <li>
+    <p><strong>Elasticsearch segment merges</strong> were unexpectedly pretty stable during
+the runs, whereas we were anticipating it to become the bottleneck due to
+high update rate. But compare-and-swap loops played over <code>_version</code> fields
+performed necessary data integrity without breaking a sweat.</p>
+  </li>
+</ul>
+
+<p>At the time of testing, we initially were not able to enable sharding in
+MongoDB due to operational obstacles on our side. Though Elasticsearch results
+were such promising, to the point of even shocking the hired Elasticsearch
+consultants, we decided to go with it of which we have years of production
+experience. If we would put the necessity of whitelisted configuration
+predicate fields problem aside – that is, required explicit indices on what
+can be queried – MongoDB could very well be a viable option as well.</p>
+
+<p><a name="new-etl"></a></p>
+
+<h1 id="the-new-etl">The New ETL</h1>
+
+<p>By taking into account the ETL pipeline concerns detailed in previous
+chapters, we derived a list of basic foundations that we aim to deliver:</p>
+
+<ol>
+  <li>The configuration DSL must be abstract enough to avoid any vendor lock-in.
+One must be able to represent configurations in this DSL such that applying
+these on a JSON and/or the underlying storage unit must be a matter of
+writing the necessary adapter classes.</li>
+  <li>The storage must allow the ETL pipeline to query the entire collection
+using any possible filter combinations allowed by the configuration
+predicate DSL. This is a crucial pillar in the design to enable real-time
+processing of every message, both content and configuration snapshot
+stream, without necessitating an ETL run over the complete collection which
+used to be the case in the old ETL pipeline.</li>
+</ol>
+
+<p>Let me elaborate on how we addressed these deliverables.</p>
+
+<p><a name="primary-storage-elasticsearch"></a></p>
+
+<h2 id="the-primary-storage-elasticsearch">The Primary Storage: Elasticsearch</h2>
+
+<p>Previous benchmark section already detailed the rationale behind employing
+Elasticsearch as the primary storage. It is distributed and sharded by
+default. It doesn’t require explicit indices on a whitelist of allowed
+configuration predicate fields – every field is allowed to be queried by
+default. It has no problems with querying fields containing a list of objects.
+It provides sufficient leverage for data integrity via compare-and-swap loops
+over <code>_version</code> fields. It is very efficient on bulk fetches and updates,
+which was totally unexpected for us. Last, but not least, it is our bread and
+butter in search and we have plenty of experience with it.</p>
+
+<p><a name="configuration-dsl-json-groovy"></a></p>
+
+<h2 id="the-configuration-dsl-json-and-groovy">The Configuration DSL: JSON and Groovy</h2>
+
+<p>In the case of configuration DSL, we wanted to stop the plague of PL/SQL
+leakage all around the code base. For this purpose, we decided to go with the
+model depicted below.</p>
+
+<p><img src="dsl.jpg" alt="The New Configuration DSL"></p>
+
+<p>Here we replaced SQL WHERE clauses, which was used to represent configuration
+predicates in the old ETL pipeline, with a JSON describing the structure of
+the predicate. This new predicate representation resembling the Elasticsearch
+filters is translated to individual executors matching against either a JSON
+(coming from the real-time content stream) or the storage engine, that is,
+Elasticsearch. Note that the way we used to represent the predicate is
+independent of medium (JSON, Elasticsearch, etc.) it is executed against such
+that we even implemented a MongoDB adapter at some point. An example
+configuration predicate JSON is show below:</p>
+
+<pre><code class="language-json"><span class="p">{</span>
+  <span class="nt">"type"</span><span class="p">:</span> <span class="s2">"nested"</span><span class="p">,</span>
+  <span class="nt">"path"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"content"</span><span class="p">,</span> <span class="s2">"attribute"</span><span class="p">],</span>
+  <span class="nt">"filter"</span><span class="p">:</span> <span class="p">{</span>
+    <span class="nt">"type"</span><span class="p">:</span> <span class="s2">"and"</span><span class="p">,</span>
+    <span class="nt">"filters"</span><span class="p">:</span> <span class="p">[</span>
+      <span class="p">{</span>
+        <span class="nt">"type"</span><span class="p">:</span> <span class="s2">"nested"</span><span class="p">,</span>
+        <span class="nt">"path"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"gpc"</span><span class="p">],</span>
+        <span class="nt">"filter"</span><span class="p">:</span> <span class="p">{</span>
+          <span class="nt">"type"</span><span class="p">:</span> <span class="s2">"and"</span><span class="p">,</span>
+          <span class="nt">"filters"</span><span class="p">:</span> <span class="p">[</span>
+            <span class="p">{</span>
+              <span class="nt">"type"</span><span class="p">:</span> <span class="s2">"equals"</span><span class="p">,</span>
+              <span class="nt">"path"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"family_id"</span><span class="p">],</span>
+              <span class="nt">"value"</span><span class="p">:</span> <span class="s2">"1234"</span>
+            <span class="p">},</span>
+            <span class="p">{</span>
+              <span class="nt">"type"</span><span class="p">:</span> <span class="s2">"equals"</span><span class="p">,</span>
+              <span class="nt">"path"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"chunk_id"</span><span class="p">],</span>
+              <span class="nt">"value"</span><span class="p">:</span> <span class="s2">"5678"</span>
+            <span class="p">}</span>
+          <span class="p">]</span>
+        <span class="p">}</span>
+      <span class="p">},</span>
+      <span class="p">{</span>
+        <span class="nt">"type"</span><span class="p">:</span> <span class="s2">"nested"</span><span class="p">,</span>
+        <span class="nt">"path"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"authors"</span><span class="p">],</span>
+        <span class="nt">"filter"</span><span class="p">:</span> <span class="p">{</span>
+          <span class="nt">"type"</span><span class="p">:</span> <span class="s2">"and"</span><span class="p">,</span>
+          <span class="nt">"filters"</span><span class="p">:</span> <span class="p">[</span>
+            <span class="p">{</span>
+              <span class="nt">"type"</span><span class="p">:</span> <span class="s2">"equals"</span><span class="p">,</span>
+              <span class="nt">"path"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"fname"</span><span class="p">],</span>
+              <span class="nt">"value"</span><span class="p">:</span> <span class="s2">"Volkan"</span>
+            <span class="p">},</span>
+            <span class="p">{</span>
+              <span class="nt">"type"</span><span class="p">:</span> <span class="s2">"equals"</span><span class="p">,</span>
+              <span class="nt">"path"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"lname"</span><span class="p">],</span>
+              <span class="nt">"value"</span><span class="p">:</span> <span class="s2">"Yazici"</span>
+            <span class="p">}</span>
+          <span class="p">]</span>
+        <span class="p">}</span>
+      <span class="p">}</span>
+    <span class="p">]</span>
+  <span class="p">}</span>
+<span class="p">}</span></code></pre>
+
+<p>As depicted above, we split the configuration mutation model into two
+abstractions: <em>extension</em> and <em>functional extension</em>. An extension is the
+simplest form of mutation that generally applies to more than 90% of the
+available configurations. It is basically a JSON object that is upon execution
+expected to be merged into the original source. A simple example is as
+follows:</p>
+
+<pre><code class="language-json"><span class="p">{</span>
+  <span class="nt">"category"</span><span class="p">:</span> <span class="s2">"books"</span>
+<span class="p">}</span></code></pre>
+
+<p>Functional extensions are built to address complex configuration mutations.
+There we employed <a href="http://www.groovy-lang.org/">Groovy</a> after experimenting
+with some other candidates, e.g., JavaScript (<a href="https://www.oracle.com%0A/technetwork/articles/java/jf14-nashorn-2126515.html">Nashorn</a>, which is <a href="http://openjdk.java.net/jeps/335">planned to be
+dropped</a>), Python
+(<a href="http://www.jython.org/">Jython</a>), Ruby (<a href="https://www.jruby.org/">JRuby</a>),
+etc. The main drivers for us to pick Groovy are as follows:</p>
+
+<ul>
+  <li>It supports direct access to Java data structures (e.g., <code>java.util.Map</code>)
+without any intermediate translations, hence has no problems processing
+thousands of mutations on a single core.</li>
+  <li>It is widely adopted to an extent that in the future we might opt for
+running it against the storage engine.</li>
+  <li>Its runtime performance is on par with the rest of the candidates.</li>
+</ul>
+
+<p>That being said, the decision of Groovy creates a JVM vendor lock-in for the
+ETL pipeline, though we do not anticipate this to be a problem for at least
+the upcoming decade.</p>
+
+<p>A sample functional extension is given below.</p>
+
+<pre><code class="language-groovy"><span class="kd">static</span> <span class="n">Map</span><span class="o">&lt;</span><span class="n">String</span><span class="o">,</span> <span class="n">Object</span><span class="o">&gt;</span> <span class="n">extend</span><span class="o">(</span><span class="n">Map</span><span class="o">&lt;</span><span class="n">String</span><span class="o">,</span> <span class="n">Object</span><span class="o">&gt;</span> <span class="n">source</span><span class="o">)</span> <span class="o">{</span>
+    <span class="kt">def</span> <span class="n">diskCapacityBytes</span> <span class="o">=</span> <span class="o">(</span><span class="kt">long</span><span class="o">)</span> <span class="n">source</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="s2">"disk_capacity_bytes"</span><span class="o">)</span>
+    <span class="kt">def</span> <span class="n">diskCapacityGigabytes</span> <span class="o">=</span> <span class="n">diskCapacityBytes</span> <span class="o">/</span> <span class="mi">1</span><span class="n">e9</span>
+    <span class="n">source</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="s2">"disk_capacity_gigabytes"</span><span class="o">,</span> <span class="n">diskCapacityGigabytes</span><span class="o">)</span>
+    <span class="k">return</span> <span class="n">source</span>
+<span class="o">}</span></code></pre>
+
+<p><a name="conclusion"></a></p>
+
+<h1 id="conclusion">Conclusion</h1>
+
+<p>Implementing an e-commerce search engine is a tough business. The part of the
+iceberg under the water level – that is, the ETL pipeline – is not less than
+that. In this post, I tried to share the lessons we piled up in the
+implementation and maintenance of our decade-old ETL pipeline and how we
+cultivated these to come up with something new. I attempted to explain how the
+choice for the configuration DSL and the used primary storage engine has the
+uttermost implication on the rest of the components of the architecture.
+Elasticsearch has already been serving us pretty well in the search gateway.
+Taking a step further and employing it in the ETL was a substantially
+unconventional idea that gave the shivers to every engineer involved in the
+decision. But the careful consideration and evaluation of potential candidates
+paid off: It worked! So when you visit <a href="https://bol.com">bol.com</a> next time,
+you will know that the Elasticsearch in the ETL pipeline – in addition to
+many other Elasticsearch using services involved – cooked that warm page for
+you seconds ago.</p>
+
+
+        <div id="disqus_thread"></div>
+        <script type="text/javascript">
+        var disqus_shortname = 'vyazici';
+        var disqus_identifier = '/blog/post/20181114-elasticsearch-primary-data-store/';
+        var disqus_title = 'Using Elasticsearch as the Primary Data Store';
+        (function() {
+            var dsq = document.createElement('script');
+            dsq.type = 'text/javascript';
+            dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+        </script>
+
+        
+
+        
+
+    </div>
+  </body>
+</html>
+
+
+        <script type="text/javascript">
+        for (var i = 0; i < asyncLoadRequests.length; i++) {
+            asyncLoadRequest = asyncLoadRequests[i];
+            asyncLoadRequest();
+        }
+        </script>
+
+    </div>
+
+</div>
