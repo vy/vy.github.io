@@ -957,6 +957,67 @@ experience. If we would put the necessity of whitelisted configuration
 predicate fields problem aside -- that is, required explicit indices on what
 can be queried -- MongoDB could very well be a viable option as well.
 
+But, really, why Elasticsearch has a reputation of not being recommended as a
+primary data store? I think it all started when the official project website
+years ago contained an explicit statement admitting that Elasticsearch is not
+intended to be used as a primary data store. Once, as the very owner of the
+project itself, you admit this fact, it is really difficult to convince people
+the other way around -- even if the situation might have been improved. Later
+on, published [Jepsen](https://jepsen.io/) (an effort to improve the safety of
+distributed databases, queues, consensus systems, etc.) reports ([one in
+2014-06-15 using Elasticsearch 1.1.0](https://aphyr.com/posts/317-call-me-maybe-elasticsearch)
+and the other [one in 2015-04-27 using Elasticsearch
+1.5.0](https://aphyr.com/posts/323-call-me-maybe-elasticsearch-1-5-0))
+worsened the situation and this bad reputation disseminated over the web in
+the speed of light. While this tornado DDoS'ing the entire Hackernews,
+Proggit, etc. blogosphere with endless discussions in the form of <i>"See? I
+told ya so!"</i>, Elasticsearch team put up a [Elasticsearch Resiliency
+Status](https://www.elastic.co/guide/en/elasticsearch/resiliency/current/index.html)
+page. There they started sharing (even up to today!) known resiliency
+problems, including the ones found in Jepsen reports, converting them into
+reproducable cases in [GitHub
+issues](https://github.com/elastic/elasticsearch/issues/), and tackling them
+one at a time. What else would qualify as a professional commitment if not
+this one? Again, these were all back in early 2015. Our Elasticsearch
+production deployments successfully managed to return with a victory from
+every battle front they were thrown at. It did not always feel like a walk in
+the park. We had our hard times, though managed to overcome those and noted
+down the experience to the book of lessons learnt. Let me share some common
+practices from that collection:
+
+- **Security**: Elasticsearch does not provide any means of security
+  measures (encryption, etc.) out of the box. We do not use Elasticsearch to
+  store any sort of [PII](https://en.wikipedia.org/wiki/Personally_identifiable_information).
+- **Transactions**: Elasticsearch does not have transaction support. Though we
+  turn around it by performing compare-and-swap loops over the `_version`
+  field.
+- **Tooling**: Elasticsearch tooling is... just a piece of crap. It doesn't
+  have a proper development environment -- you are stuck to running a fully
+  blown Kibana just to be able to use its arcane
+  [Console](https://www.elastic.co/guide/en/kibana/current/console-kibana.html).
+  Its Java client drags the entire milky way of Elasticsearch artifacts
+  as a dependency which is a [JAR
+  Hell](https://en.wikipedia.org/wiki/Java_Classloader#JAR_hell) time bomb
+  waiting to explode. Further, the recently introduced [high-level REST
+  client](https://www.elastic.co/guide/en/elasticsearch/client/java-rest/master/java-rest-high.html)
+  leaks the Apache HTTP Client API models, etc. For the leaked models
+  and transitive dependencies, there is nothing much you can do -- you just
+  learn to live with them. For IDE, you just keep a thick stack of HTTP
+  request recipes using your favorite HTTP client, e.g.,
+  [cURL](https://curl.haxx.se/2), [Postman](https://www.getpostman.com/),
+  [httpie](https://httpie.org/), etc.
+- **Resiliency**: Yes, Elasticsearch can crash, just like another piece of
+  software. In order to address these emergencies, in addition to hot-standby
+  clusters, we take regular [snapshots](https://www.elastic.co/guide/en/elasticsearch/reference/current/modules-snapshots.html)
+  and persist the messages processed by the ETL pipeline to a separate storage
+  providing efficient write and bulk read operations, e.g., PostgreSQL, Google
+  BigQuery, etc. In case of need, we just restore from a snapshot and replay
+  the necessary set of messages to recover the lost state.
+
+Is Elasticsearch the perfect tool for the job at hand? Not really. But it is
+the one closest to that. We also know how to deal with each other -- just like
+in any other relationship.
+
 <a name="new-etl"/>
 
 # The New ETL
