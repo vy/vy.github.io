@@ -1006,6 +1006,16 @@ practices from that collection:
   request recipes using your favorite HTTP client, e.g.,
   [cURL](https://curl.haxx.se/2), [Postman](https://www.getpostman.com/),
   [httpie](https://httpie.org/), etc.
+- **Documentation**: Elasticsearch does not have documentation; [PostgreSQL
+  has documentation](https://www.postgresql.org/docs/), [MongoDB has
+  documentation](https://docs.mongodb.com/). What Elasticsearch has is [a stack
+  of surface-scratching blog posts served in the form of a documentation-like
+  website](https://www.elastic.co/guide/en/elasticsearch/reference/current/index.html).
+  Elasticsearch also has an ocean of [Stack
+  Overflow](https://stackoverflow.com/questions/tagged/elasticsearch)
+  and [forum](https://discuss.elastic.co/c/elasticsearch) posts where you are
+  allowed to swim at your convenience. That being said, one need to admit that
+  situation is improving over the time. (Yes, it was way worse!)
 - **Resiliency**: Yes, Elasticsearch can crash, just like another piece of
   software. In order to address these emergencies, in addition to hot-standby
   clusters, we take regular [snapshots](https://www.elastic.co/guide/en/elasticsearch/reference/current/modules-snapshots.html)
