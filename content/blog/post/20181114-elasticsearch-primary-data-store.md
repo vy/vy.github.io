@@ -238,8 +238,8 @@ a moment, we can roughly compare the two approaches as follows:
   </tbody>
 </table>
 
-Put another way, ETL is all about the trade-off between index versus
-query time performance. In the light of all these and given
+Put another way, ETL is all about the trade-off between index- versus
+query-time performance. In the light of all these and given
 
 1. our existing ETL was functionally comprehensive enough,
 2. query time performance of Elasticsearch has already been suffering due to
@@ -709,8 +709,8 @@ Following is the feature matrix of each candidate:
 <sup>2</sup> PostgreSQL partitioning is not sharding in distributed sense, but still serves a similar purpose.<br/>
 <sup>3</sup> MongoDB sharding requires [manual configuration](https://docs.mongodb.com/manual/sharding/#shard-keys).<br/>
 <sup>4</sup> MongoDB requires an explicit index for each whitelisted field allowed in ETL configuration predicates.<br/>
-<sup>4</sup> MongoDB [`updateMany()` or `findAndModify()`](https://docs.mongodb.com/manual/core/write-operations-atomicity/) can be leveraged for the desired integrity.<br/>
-<sup>5</sup> Elasticsearch `_version` field can be leveraged to implement a compare-and-swap loop.
+<sup>5</sup> MongoDB [`updateMany()` or `findAndModify()`](https://docs.mongodb.com/manual/core/write-operations-atomicity/) can be leveraged for the desired integrity.<br/>
+<sup>6</sup> Elasticsearch `_version` field can be leveraged to implement a compare-and-swap loop.
 
 <a name="benchmark-setup"/>
 
@@ -805,15 +805,15 @@ couple of minutes.
   <thead>
     <tr>
       <th>Store</th>
-      <th>Conc.<sup>6</sup></th>
+      <th>Conc.<sup>7</sup></th>
       <th>Latency</th>
       <th>Total (s)</th>
-      <th>Fetch<sup>7</sup> 75% (ms)</th>
-      <th>Fetch<sup>7</sup> 99% (ms)</th>
-      <th>Fetch<sup>7</sup> Max. (ms)</th>
-      <th>Update<sup>8</sup> 75% (ms)</th>
-      <th>Update<sup>8</sup> 99% (ms)</th>
-      <th>Update<sup>8</sup> Max. (ms)</th>
+      <th>Fetch<sup>8</sup> 75% (ms)</th>
+      <th>Fetch<sup>8</sup> 99% (ms)</th>
+      <th>Fetch<sup>8</sup> Max. (ms)</th>
+      <th>Update<sup>9</sup> 75% (ms)</th>
+      <th>Update<sup>9</sup> 99% (ms)</th>
+      <th>Update<sup>9</sup> Max. (ms)</th>
     </tr>
   </thead>
   <tbody>
@@ -942,9 +942,9 @@ couple of minutes.
   </tbody>
 </table>
 
-<sup>6</sup> Number of concurrent batches.<br/>
-<sup>7</sup> Time it takes to fetch a batch.<br/>
-<sup>8</sup> Time it takes to update a batch.
+<sup>7</sup> Number of concurrent batches.<br/>
+<sup>8</sup> Time it takes to fetch a batch.<br/>
+<sup>9</sup> Time it takes to update a batch.
 
 Let me share some observations from the results:
 
