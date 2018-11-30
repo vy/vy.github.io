@@ -7,20 +7,20 @@ tags:
   - java
 ---
 
-At [bol.com](https://bol.com), the biggest e-commerce company in the
-Netherlands and Belgium, the last 4 years witnessed to the pursuit of
-rethinking the entire [ETL (Extract, Transform, Load)](https://en.wikipedia.org/wiki/Extract,_transform,_load)
-pipeline that has been cooking up the data used by the search engine. This
-more than a decade old white-bearded giant breathing in the dungeons of shady
-Oracle PL/SQL hacks, was in a state causing ever increasing hiccups on
-production and necessitating a rewrite. After drafting many blueprints, we
-decided to go with a Java service backed by **Elasticsearch as the primary
-storage**! Given this idea gave the shivers to even the Elasticsearch
-consultants hired, I will walk you through why did we take such an
-unconventional step and how we managed to succeed.
+The biggest e-commerce company in the Netherlands and Belgium,
+[bol.com](https://bol.com), set out on a 4 year journey to rethink and rebuild
+their entire [ETL (Extract, Transform, Load)](https://en.wikipedia.org/wiki/Extract,_transform,_load)
+pipeline, that has been cooking up the data used by its search engine since
+the dawn of time. This more than a decade old white-bearded giant, breathing
+in the dungeons of shady Oracle PL/SQL hacks, was in a state of decay, causing
+ever increasing hiccups on production. A rewrite was inevitable. After
+drafting many blueprints, we went for a Java service backed by **Elasticsearch
+as the primary storage!** This idea brought shivers to even the most senior
+Elasticsearch consultants hired, so to ease your mind I’ll walk you through
+why we took such a radical approach and how we managed to escape our legacy.
 
 Before diving into the details, let me share a 2,000ft overview of an
-e-commerce search setup that will help you to have a better understanding of
+e-commerce search setup that will help you to gain a better understanding of
 the subjects discussed onwards. Note that this simplification totally omits a
 nebula of incorporated caching layers, systems orchestrating multiple search
 clusters, queues with custom flush and replay functionalities, in-place
@@ -52,6 +52,7 @@ idea.
   - [The Primary Storage: Elasticsearch](#primary-storage-elasticsearch)
   - [The Configuration DSL: JSON and Groovy](#configuration-dsl-json-groovy)
 - [Conclusion](#conclusion)
+- [Acknowledgements](#acknowledgements)
 
 <a name="search"/>
 
@@ -160,10 +161,10 @@ certain throughput threshold.
 
 ## How volatile is the content?
 
-Very, very, very much! I don't think I can emphasize enough on this and I
-believe this is a crucial difference that puts e-commerce search apart from
-Google-like search engines -- recall the conflict between Google and Twitter
-for indexing tweets. Maybe examples can help to convey the idea better:
+Very, very, very volatile! I cannot emphasize this enough and I believe this
+is a crucial difference that puts e-commerce search apart from Google-like
+search engines -- recall the conflict between Google and Twitter for indexing
+tweets. Maybe examples can help to convey the idea better:
 
 - A product might have multiple offers (bol.com offer, partner offer, etc.)
   featuring varying properties (pricing, deliverability, discounts, etc.)
@@ -175,10 +176,10 @@ for indexing tweets. Maybe examples can help to convey the idea better:
   Valentine's Day, you don't want your search engine to return gift listings
   that ran out of stock a couple of seconds ago.
 
-- Your manual (triggered by product specialists) and automated (artificial
-  intelligence, machine learning driven) processes can alter category tree,
-  add new facets, tune the exposure of existing facets, modify the search
-  behavior (e.g., flows triggered by merchandising rules), add context
+- Your manual (triggered by shop specialists) and automated (artificial
+  intelligence, machine learning driven) processes can alter the category
+  tree, add new facets, tune the exposure of existing facets, modify the
+  search behavior (e.g., flows triggered by merchandising rules), add context
   sensitive (e.g. category-dependent) thesaurus entries, synonyms, introduce
   new rankings, etc. These changes might necessitate the update of millions of
   documents retroactively.
@@ -199,8 +200,8 @@ etc.) and the output is the
 constituting search-ready documents optimized for search query performance.
 Wait a second? If an ETL pipeline just delivers some optimization purposes,
 doesn't this sound like that one can have a search without it? Sorta... That
-is indeed up to a certain extent possible. If we would put the details aside
-for a moment, we can roughly compare the two approaches as follows:
+is indeed possible to a certain extent. If we would put the details aside for
+a moment, we can roughly compare the two approaches as follows:
 
 <table>
   <thead>
@@ -225,13 +226,13 @@ for a moment, we can roughly compare the two approaches as follows:
     <tr>
       <td><strong>With&nbsp;ETL</strong></td>
       <td>
-        Every change in the input sources will necessitate pre-processing
-        affecting a multitude of products ranging from a couple to millions.
-      </td>
-      <td>
-        Since every potential data to satisfy search requests has already
+        Since all potential data to satisfy search requests has already
         been baked into the index, search necessitates the least amount of
         effort to satisfy a request at query time.
+      </td>
+      <td>
+        Every change in the input sources will necessitate pre-processing
+        affecting a multitude of products ranging from a couple to millions.
       </td>
     </tr>
   </tbody>
@@ -246,10 +247,10 @@ query time performance. In the light of all these and given
    becomes a necessity,
 3. and search latency has a big impact on the revenue,
 
-we took the having a thick ETL pipeline path.
+we took the thick ETL pipeline path.
 
 But what is this ETL pipeline really? What does it literally do? In order to
-answer these questions, let me take your attention to the input sources going
+answer these questions, let me focus your attention to the input sources going
 into the ETL pipeline:
 
 ![ETL Input Sources](etl.jpg)
@@ -276,22 +277,26 @@ changes, we
 
 1. first fetch the relevant document from the storage,
 2. update its `disk_capacity_bytes` attribute,
-3. apply configuration(s) interested in this attribute,
+3. apply configuration(s) matching with the last state of the updated document,
 4. and persist the obtained result back.
 
 There are some concerns need to be addressed here:
 
-- This is a pretty *CPU intensive* operation. The changed attribute might be
-  of interest to many configurations. You first need to perform an inverse
-  lookup on tens of thousands of configuration criteria, that is, handles
-  configurations indicate attributes they are interested in. After finding
-  matching configurations, execute them to let them shape the document
+- This is a pretty *CPU intensive* operation. Configurations, in essence, are
+  rules in the form of `(predicate, mutation)` pairs defined via
+  business-friendly screens by shop specialists. When an attribute of a
+  document gets updated, this change might be of interest to many
+  configurations which are determined by performing an inverse lookup on tens
+  of thousands of configuration predicates (e.g., `attrs.disk_capacity_bytes !=
+  null`) matching with the last state of the document. Later on mutations
+  (e.g., `doc.disk_capacity_gigabytes = attrs.disk_capacity_bytes / 1e9`) of
+  the found configurations are executed to let them shape the document
   according to their needs.
 
-  This innocent looking procedure description sneakily introduces two
-  critical issues under the hood:
+  This innocent looking procedure sneakily introduces two critical issues
+  under the hood:
 
-  1. *How would you represent the configuration criteria such that you can
+  1. *How would you represent the configuration predicate such that you can
      match them against the content?*
   2. *How would you represent the configuration mutation such that you can
      execute them against the content?*
@@ -351,11 +356,11 @@ Sir, you are in trouble! As the very ETL pipeline, what you are expected to
 deliver is to
 
 1. find products that are matching with the old predicate,
-2. remove `books` from the `category` field,
+2. revert the changes of the old configuration mutation by removing `books` from the `category` field,
 4. find products that are matching with the new predicate,
-5. and add `AWESOME BOOKS` to the `category` field.
+5. and apply the changes of the new configuration mutation by adding `AWESOME BOOKS` to the `category` field.
 
-This easier said than done operation contain many implicit concerns:
+This easier said than done operation contains many implicit concerns:
 
 - ETL needs to avoid removing `books` from the `category` field if there are
   rules, other than the changed one, adding `books` to the very same `category`
@@ -372,10 +377,10 @@ This easier said than done operation contain many implicit concerns:
      `category` field, they will kick in. This simple approach comes with the
      cost of a CPU intensive and unfortunately mostly redundant processing.
 
-- Given configuration predicates are allowed to access any field, how one
-  would represent a predicate and translate this into an ETL storage query
+- Given that configuration predicates are allowed to access any field, how
+  would one represent a predicate and translate this into an ETL storage query
   filter that performs well? (You would not want to scan the whole data set
-  for each predicate that is changed, right? Well... Depends.)
+  for each predicate that is changed, right? Well... depends.)
 
   Let's first discuss the representation of predicates issue, which was also a
   concern in the real-time content stream processing. Here you might first
@@ -387,7 +392,7 @@ This easier said than done operation contain many implicit concerns:
   administration GUIs, etc. all needs to have the knowledge of this whitelist
   which strictly depends on the structure of the real-time content stream
   message structures. Whenever the message structures change or you want to
-  add a new attribute to this whitelist, both happen a couples of times every
+  add a new attribute to this whitelist, both happen a couple of times every
   year, you need to propagate this to many components in your service milky
   way and perform a deploy without downtime.
 
@@ -429,10 +434,11 @@ This easier said than done operation contain many implicit concerns:
 
          #!sql
          SELECT ...
-           FROM attribute, content
-          WHERE attribute.content_id = content.id
-            AND attribute.name = 'gpc_family_id' AND attribute.value = '1234'
-            AND attribute.name = 'gpc_chunk_id' AND attribute.value = '5678'
+           FROM content,
+                attribute AS a1,
+                attribute AS a2
+          WHERE a1.content_id = content.id AND a1.name = 'gpc_family_id' AND a1.value = '1234'
+            AND a2.content_id = content.id AND a2.name = 'gpc_chunk_id'  AND a2.value = '5678'
 
      So far so good. But... In a matter of months, you will need to start
      partitioning tables and maybe even move certain partitions into separate
@@ -503,16 +509,16 @@ This easier said than done operation contain many implicit concerns:
      we are not interested in performing fuzzy queries. Clearly, date detection
      is disabled for similar reasons.
 
-     These being said, Elasticsearch does not have a good track record for high
-     update rates known to deteriorate the query performance over time.
+     These being said, Elasticsearch is known to suffer from deteriorating
+     query performance over time when exposed to high update rates.
 
 <a name="operational-overview"/>
 
 # Operational Overview
 
-So far we examined the current ETL setup with concrete examples on cases. We
-broke down the system into its individual input sources and detailed their
-implications on certain architectural decisions. Let's wrap up this
+So far we examined the current ETL setup with concrete examples for several
+cases. We broke down the system into its individual input sources and detailed
+their implications on certain architectural decisions. Let's wrap up this
 mind-boggling details into operational abstractions:
 
 ![The ETL: Operational Overview](etl-abstraction.jpg)
@@ -553,7 +559,7 @@ employed is expected to deliver the following requirements:
   snapshot stream. (See step A4 in the figure.)
 
 The reason that the latter functionality marked as optional is that the ETL
-pipeline can as well retrieve these documents in raw from the storage, convert
+pipeline can also retrieve these documents in raw from the storage, convert
 them to JSON, execute mutations, and persist them back again -- assuming data
 integrity is provided by other means, e.g., transactions, retries powered by
 compare-and-swap operations, etc.
@@ -594,7 +600,7 @@ bill for each approach, our years of statistics in the ETL snapshot
 configuration point that most of the time snapshot deltas affect at most 5% of
 the entire collection and the average is less than 1% -- thanks to the
 incremental updates carried out by shop specialists. Hence, performing a
-complete ETL a couple of times a day feels like an overkill and hurts the
+complete ETL a couple of times a day feels like overkill and hurts the
 engineer within you.
 
 <a name="old-etl"/>
@@ -611,28 +617,29 @@ as a feature! Though this came with some notable costs:
   financial vendor lock-in. The functional deficiency (incompetent
   expressiveness, leakage of PL/SQL to irrelevant components) obstructed many
   innovations over the years, where it became more and more difficult as time
-  passed. Its financial aspect was negligible at the scale of
-  [bol.com](https://bol.com).
+  passed. Additionally, it constituted a significant obstacle for migrating
+  the service to the cloud. Its financial aspect was negligible at the scale
+  of [bol.com](https://bol.com).
 - Rolling back changes of an updated configuration mutation is quite a
   PL/SQL engineering endeavor to implement in practice. This difficulty,
   spiced up with the insufficient logging, testing, debugging, profiling, etc.
   utilities, drew programmers back from taking this path. *Hence, there was a
   12+ hours long complete ETL run every night for configuration snapshot
   deltas.* This beast tamed by an experienced couple of engineers has a
-  reputation of having frequent hiccups and contrive really difficult to
-  debug, find, reproduce, and fix bugs.
+  reputation to have frequent hiccups and make bugs really difficult to debug,
+  find, and reproduce, let alone fix!
 
-In its incarnation, the content attributes were stored in `<id, content_id,
-key, value>` normalized form. This approach started to suffer from efficiency
-aches in the hinges pulling the ETL'ed data to the search index. Back then
-hired Oracle consultants examined the usage and recommended to go with a
-denormalized structure where each attribute is stored as a column. In addition
-to temporarily bandaging up the efficiency related wounds, this allowed DBAs
-to let their imaginations go wild to map the attributes to columns. Recall the
-attributes composed of objects I mentioned above? Special characters were used
-to create such multi-value attributes, which was pretty much (to put it
-mildly) unpleasant. But the killer bullet came in the form of a six-inch punch
-referred as [the maximum allowed column count
+In its previous incarnation, the content attributes were stored in `<id,
+content_id, key, value>` normalized form. This approach started to suffer from
+efficiency aches in the hinges pulling the ETL'ed data to the search index.
+Back then hired Oracle consultants examined the usage and recommended to go
+with a denormalized structure where each attribute is stored as a column. In
+addition to temporarily bandaging up the efficiency related wounds, this
+allowed DBAs to let their imaginations go wild to map the attributes to
+columns. Recall the attributes composed of objects I mentioned above? Special
+characters were used to create such multi-value attributes, which was pretty
+much (to put it mildly) unpleasant. But the killer bullet came in the form of
+a six-inch punch referred as [the maximum allowed column count
 limit](https://stackoverflow.com/a/14722914/1278899). But isn't engineering
 all about [how hard you can get it and keep moving
 forward](https://youtu.be/D_Vg4uyYwEk)? Yes, comrade! We thought so and used a
@@ -648,19 +655,22 @@ no particular order:
   hole via internal Oracle AQs, but I am not really sure whether it improved
   or worsened the state.
 - In a database procedure that is expected to run for 12+ hours, Murphy's law
-  works flawlessly. Anything that can go wrong, did, does, or will go wrong.
+  works flawlessly. Anything that can go wrong, did, does, and will go wrong.
   We wisely(!) engineered the system to persist its state at certain check
   points constituting retriable handles to invoke when you come in the morning
-  and see that the ETL was crashed.
-- The number of moving components and their out of reach (back then?)
-  necessitated the use of [a proprietary scheduling tool supporting
-  Oracle](https://www.cronacle.com/). The schedule was glued with
-  [bash](https://www.gnu.org/software/bash/) scripts, designed in a
-  proprietary development environment only available for Windows, and rolled
-  out on Oracle machines running GNU/Linux. Neither GNU/Linux, nor Windows
-  using developers were fond of this situation.
+  and see that the ETL crashed.
+- The number of moving components necessitated the use of [a proprietary
+  scheduling tool supporting Oracle](https://www.cronacle.com/). The schedule
+  was glued with [bash](https://www.gnu.org/software/bash/) scripts, designed
+  in a proprietary development environment only available for Windows, and
+  rolled out on Oracle machines running GNU/Linux. Neither GNU/Linux, nor
+  Windows using developers were fond of this situation.
+- Due to the high cost of a failing ETL, business also did not feel empowered
+  to change and/or commercially optimize it easily. This was a pretty
+  demotivating issue affecting both technical and business people need to work
+  with it.
 
-Enough with blaming the former engineer. We need to get our facts right. The
+Enough blaming the former engineer. We need to get our facts right. The
 aforementioned PL/SQL giant was not rolled out in a day with a big bang. This
 more than a decade old ETL pipeline was developed with all the best practices
 and tooling available back then. The more you dive into its source code,
@@ -668,22 +678,24 @@ navigate through commits of features spanning through years, it becomes easier
 to see what went wrong and where. Now you are able to realize the patterns
 that necessitated exceptional handling of certain features, of which many due
 to backward-compatibility with legacy systems that have already been
-deprecated or replaced by newcomers, exploded the complexity in unintended
-depths. Software development is a never-ending progress and axioms you base
-your initial architecture on become invalidated in the course of time due to
-changing business needs. Aiming for the infinite flexibility also comes with
-an engineering cost as well, which might very well fall short of justifying
-such an expense. I personally think the old ETL pipeline and its engineers did
-a fantastic job. The tool served its purpose for more than a decade and
-harvested an immense amount of lessons for its successor. I would be more than
-happy if we as a team can also achieve to deliver such a long living product.
+deprecated or replaced by newcomers, exploded the complexity to unintended
+depths. Software development is never-ending progress and axioms you base your
+initial architecture on become invalidated in the course of time due to
+changing business needs. Aiming for infinite flexibility comes with an
+engineering cost as well, which might very well fall short of justifying such
+an expense. One should also include the massive burst of data volume and its
+update frequency into this list. I personally think the old ETL pipeline and
+its engineers did a fantastic job. The tool served its purpose for more than a
+decade and harvested an immense amount of lessons for its successor. I would
+be more than happy if we as a team can also achieve to deliver such a long
+living product.
 
 <a name="battle-of-storage-engines"/>
 
 # The Battle of Storage Engines
 
 Given our functional requirements, we evaluated a couple of different ETL
-pipeline storage solutions which I [slightly mentioned earlier](#configuration-stream).
+pipeline storage solutions which I [hinted to earlier](#configuration-stream).
 Following is the feature matrix of each candidate:
 
 |Storage Solution|Distributed|Sharded|Required Indices|Integrity Measure|
@@ -719,7 +731,7 @@ specifications:
 - **CPU**: 16 core Intel Xeon E5-2620 v4 @ 2.10GHz
 - **Memory/Swap**: 128GB/16GB
 - **Disk**: 375GB (Intel P4800X Performance NVMe PCIe SSD)
-- **OS**: 3.10.0-693.1.1.el7.x86_64
+- **Kernel**: 3.10.0-693.1.1.el7.x86_64
 
 We further configured each store as follows:
 
@@ -944,15 +956,18 @@ Let me share some observations from the results:
   single attribute. Using 32 concurrent batches, it took 175s and 518s for
   Elasticsearch and MongoDB, respectively, to complete the benchmark.
 
+- **Elasticsearch yielded way more predictable performance** figures compared
+  to MongoDB. Note the difference between 75- and 99-percentile figures. 
+
 - **Elasticsearch segment merges** were unexpectedly pretty stable during
   the runs, whereas we were anticipating it to become the bottleneck due to
   high update rate. But compare-and-swap loops played over `_version` fields
-  performed necessary data integrity without breaking a sweat.
+  allowed for the necessary data integrity without breaking a sweat.
 
 At the time of testing, we initially were not able to enable sharding in
 MongoDB due to operational obstacles on our side. Though Elasticsearch results
 were such promising, to the point of even shocking the hired Elasticsearch
-consultants, we decided to go with it of which we have years of production
+consultants, we decided to go with it, of which we have years of production
 experience. If we would put the necessity of whitelisted configuration
 predicate fields problem aside -- that is, required explicit indices on what
 can be queried -- MongoDB could very well be a viable option as well.
@@ -980,7 +995,7 @@ issues](https://github.com/elastic/elasticsearch/issues/), and tackling them
 one at a time. What else would qualify as a professional commitment if not
 this one? Again, these were all back in early 2015. Our Elasticsearch
 production deployments successfully managed to return with a victory from
-every battle front they were thrown at. It did not always feel like a walk in
+every battle front thrown at them. It did not always feel like a walk in
 the park. We had our hard times, though managed to overcome those and noted
 down the experience to the book of lessons learnt. Let me share some common
 practices from that collection:
@@ -989,13 +1004,13 @@ practices from that collection:
   measures (encryption, etc.) out of the box. We do not use Elasticsearch to
   store any sort of [PII](https://en.wikipedia.org/wiki/Personally_identifiable_information).
 - **Transactions**: Elasticsearch does not have transaction support. Though we
-  turn around it by performing compare-and-swap loops over the `_version`
+  work around it by performing compare-and-swap loops over the `_version`
   field.
 - **Tooling**: Elasticsearch tooling is... just a piece of crap. It doesn't
   have a proper development environment -- you are stuck to running a fully
   blown Kibana just to be able to use its arcane
   [Console](https://www.elastic.co/guide/en/kibana/current/console-kibana.html).
-  Its Java client drags the entire milky way of Elasticsearch artifacts
+  Its Java client drags in the entire milky way of Elasticsearch artifacts
   as a dependency which is a [JAR
   Hell](https://en.wikipedia.org/wiki/Java_Classloader#JAR_hell) time bomb
   waiting to explode. Further, the recently introduced [high-level REST
@@ -1014,7 +1029,7 @@ practices from that collection:
   Elasticsearch also has an ocean of [Stack
   Overflow](https://stackoverflow.com/questions/tagged/elasticsearch)
   and [forum](https://discuss.elastic.co/c/elasticsearch) posts where you are
-  allowed to swim at your convenience. That being said, one need to admit that
+  allowed to swim at your convenience. That being said, one needs to admit that
   situation is improving over the time. (Yes, it was way worse!)
 - **Resiliency**: Yes, Elasticsearch can crash, just like another piece of
   software. In order to address these emergencies, in addition to hot-standby
@@ -1035,10 +1050,10 @@ in any other relationship.
 By taking into account the ETL pipeline concerns detailed in previous
 chapters, we derived a list of basic foundations that we aim to deliver:
 
-1. The configuration DSL must be abstract enough to avoid any vendor lock-in.
-   One must be able to represent configurations in this DSL such that applying
-   these on a JSON and/or the underlying storage unit must be a matter of
-   writing the necessary adapter classes.
+1. The configuration DSL must be abstract enough to avoid <del>any</del> too
+   much vendor lock-in. One must be able to represent configurations in this
+   DSL such that applying these on a JSON and/or the underlying storage unit
+   must be a matter of writing the necessary adapter classes.
 2. The storage must allow the ETL pipeline to query the entire collection
    using any possible filter combinations allowed by the configuration
    predicate DSL. This is a crucial pillar in the design to enable real-time
@@ -1052,7 +1067,7 @@ Let me elaborate on how we addressed these deliverables.
 
 ## The Primary Storage: Elasticsearch
 
-Previous benchmark section already detailed the rationale behind employing
+The previous benchmark section already detailed the rationale behind employing
 Elasticsearch as the primary storage. It is distributed and sharded by
 default. It doesn't require explicit indices on a whitelist of allowed
 configuration predicate fields -- every field is allowed to be queried by
@@ -1072,10 +1087,10 @@ model depicted below.
 
 ![The New Configuration DSL](dsl.jpg)
 
-Here we replaced SQL WHERE clauses, which was used to represent configuration
-predicates in the old ETL pipeline, with a JSON describing the structure of
+Here we replaced SQL WHERE clauses, which were used to represent configuration
+predicates in the old ETL pipeline, with JSON describing the structure of
 the predicate. This new predicate representation resembling the Elasticsearch
-filters is translated to individual executors matching against either a JSON
+filters is translated to individual executors matching against either JSON
 (coming from the real-time content stream) or the storage engine, that is,
 Elasticsearch. Note that the way we used to represent the predicate is
 independent of medium (JSON, Elasticsearch, etc.) it is executed against such
@@ -1160,7 +1175,7 @@ etc. The main drivers for us to pick Groovy are as follows:
 
 That being said, the decision of Groovy creates a JVM vendor lock-in for the
 ETL pipeline, though we do not anticipate this to be a problem for at least
-the upcoming decade.
+the coming decade.
 
 A sample functional extension is given below.
 
@@ -1191,3 +1206,12 @@ paid off: It worked! So when you visit [bol.com](https://bol.com) next time,
 you will know that the Elasticsearch in the ETL pipeline -- in addition to
 many other Elasticsearch using services involved -- cooked that warm page for
 you seconds ago.
+
+<a name="acknowledgements"/>
+
+# Acknowledgements
+
+I would like thank to [Berkay Buharalı](https://twitter.com/bbuharali),
+Lourens Heijs, [William Leese](https://twitter.com/wvl0), Leon Widdershoven,
+and [Maurice Zeijen](https://twitter.com/maurice_zeijen) for their valuable
+feedback in bringing the post to its final form.
