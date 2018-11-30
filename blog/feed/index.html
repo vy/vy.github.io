@@ -291,8 +291,8 @@ a moment, we can roughly compare the two approaches as follows:&lt;/p&gt;
   &lt;/tbody&gt;
 &lt;/table&gt;
 
-&lt;p&gt;Put another way, ETL is all about the trade-off between index versus
-query time performance. In the light of all these and given&lt;/p&gt;
+&lt;p&gt;Put another way, ETL is all about the trade-off between index- versus
+query-time performance. In the light of all these and given&lt;/p&gt;
 
 &lt;ol&gt;
   &lt;li&gt;our existing ETL was functionally comprehensive enough,&lt;/li&gt;
@@ -839,8 +839,8 @@ Following is the feature matrix of each candidate:&lt;/p&gt;
 &lt;sup&gt;2&lt;/sup&gt; PostgreSQL partitioning is not sharding in distributed sense, but still serves a similar purpose.&lt;br&gt;
 &lt;sup&gt;3&lt;/sup&gt; MongoDB sharding requires &lt;a href="https://docs.mongodb.com/manual/sharding/#shard-keys"&gt;manual configuration&lt;/a&gt;.&lt;br&gt;
 &lt;sup&gt;4&lt;/sup&gt; MongoDB requires an explicit index for each whitelisted field allowed in ETL configuration predicates.&lt;br&gt;
-&lt;sup&gt;4&lt;/sup&gt; MongoDB &lt;a href="https://docs.mongodb.com/manual/core/write-operations-atomicity/"&gt;&lt;code&gt;updateMany()&lt;/code&gt; or &lt;code&gt;findAndModify()&lt;/code&gt;&lt;/a&gt; can be leveraged for the desired integrity.&lt;br&gt;
-&lt;sup&gt;5&lt;/sup&gt; Elasticsearch &lt;code&gt;_version&lt;/code&gt; field can be leveraged to implement a compare-and-swap loop.&lt;/p&gt;
+&lt;sup&gt;5&lt;/sup&gt; MongoDB &lt;a href="https://docs.mongodb.com/manual/core/write-operations-atomicity/"&gt;&lt;code&gt;updateMany()&lt;/code&gt; or &lt;code&gt;findAndModify()&lt;/code&gt;&lt;/a&gt; can be leveraged for the desired integrity.&lt;br&gt;
+&lt;sup&gt;6&lt;/sup&gt; Elasticsearch &lt;code&gt;_version&lt;/code&gt; field can be leveraged to implement a compare-and-swap loop.&lt;/p&gt;
 
 &lt;p&gt;&lt;a name="benchmark-setup"&gt;&lt;/a&gt;&lt;/p&gt;
 
@@ -949,16 +949,16 @@ couple of minutes.&lt;/p&gt;
   &lt;thead&gt;
     &lt;tr&gt;
       &lt;th&gt;Store&lt;/th&gt;
-      &lt;th&gt;Conc.&lt;sup&gt;6&lt;/sup&gt;
+      &lt;th&gt;Conc.&lt;sup&gt;7&lt;/sup&gt;
 &lt;/th&gt;
       &lt;th&gt;Latency&lt;/th&gt;
       &lt;th&gt;Total (s)&lt;/th&gt;
-      &lt;th&gt;Fetch&lt;sup&gt;7&lt;/sup&gt; 75% (ms)&lt;/th&gt;
-      &lt;th&gt;Fetch&lt;sup&gt;7&lt;/sup&gt; 99% (ms)&lt;/th&gt;
-      &lt;th&gt;Fetch&lt;sup&gt;7&lt;/sup&gt; Max. (ms)&lt;/th&gt;
-      &lt;th&gt;Update&lt;sup&gt;8&lt;/sup&gt; 75% (ms)&lt;/th&gt;
-      &lt;th&gt;Update&lt;sup&gt;8&lt;/sup&gt; 99% (ms)&lt;/th&gt;
-      &lt;th&gt;Update&lt;sup&gt;8&lt;/sup&gt; Max. (ms)&lt;/th&gt;
+      &lt;th&gt;Fetch&lt;sup&gt;8&lt;/sup&gt; 75% (ms)&lt;/th&gt;
+      &lt;th&gt;Fetch&lt;sup&gt;8&lt;/sup&gt; 99% (ms)&lt;/th&gt;
+      &lt;th&gt;Fetch&lt;sup&gt;8&lt;/sup&gt; Max. (ms)&lt;/th&gt;
+      &lt;th&gt;Update&lt;sup&gt;9&lt;/sup&gt; 75% (ms)&lt;/th&gt;
+      &lt;th&gt;Update&lt;sup&gt;9&lt;/sup&gt; 99% (ms)&lt;/th&gt;
+      &lt;th&gt;Update&lt;sup&gt;9&lt;/sup&gt; Max. (ms)&lt;/th&gt;
     &lt;/tr&gt;
   &lt;/thead&gt;
   &lt;tbody&gt;
@@ -1087,9 +1087,9 @@ couple of minutes.&lt;/p&gt;
   &lt;/tbody&gt;
 &lt;/table&gt;
 
-&lt;p&gt;&lt;sup&gt;6&lt;/sup&gt; Number of concurrent batches.&lt;br&gt;
-&lt;sup&gt;7&lt;/sup&gt; Time it takes to fetch a batch.&lt;br&gt;
-&lt;sup&gt;8&lt;/sup&gt; Time it takes to update a batch.&lt;/p&gt;
+&lt;p&gt;&lt;sup&gt;7&lt;/sup&gt; Number of concurrent batches.&lt;br&gt;
+&lt;sup&gt;8&lt;/sup&gt; Time it takes to fetch a batch.&lt;br&gt;
+&lt;sup&gt;9&lt;/sup&gt; Time it takes to update a batch.&lt;/p&gt;
 
 &lt;p&gt;Let me share some observations from the results:&lt;/p&gt;
 
