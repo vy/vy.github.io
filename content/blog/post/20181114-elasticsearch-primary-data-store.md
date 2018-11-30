@@ -1212,6 +1212,7 @@ you seconds ago.
 # Acknowledgements
 
 I would like thank to [Berkay Buharalı](https://twitter.com/bbuharali),
-Lourens Heijs, [William Leese](https://twitter.com/wvl0), Leon Widdershoven,
-and [Maurice Zeijen](https://twitter.com/maurice_zeijen) for their valuable
-feedback in bringing the post to its final form.
+Lourens Heijs, [William Leese](https://twitter.com/wvl0), [Almer S.
+Tigelaar](https://almer.tigelaar.net/), Leon Widdershoven, and [Maurice
+Zeijen](https://twitter.com/maurice_zeijen) for their valuable feedback in
+bringing the post to its final form.
