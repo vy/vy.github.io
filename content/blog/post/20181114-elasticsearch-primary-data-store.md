@@ -735,9 +735,8 @@ specifications:
 
 We further configured each store as follows:
 
-- **PostgreSQL**: Just one PostgreSQL 9.6.10 instance
-  (`shared_buffers = 128MB`) containing a single `<id, content>` table where
-  `content` is of type [`jsonb`](https://www.postgresql.org/docs/current/datatype-json.html#JSON-INDEXING).
+- **PostgreSQL**: Just one PostgreSQL 9.6.10 instance containing a single
+  `<id, content>` table where `content` is of type [`jsonb`](https://www.postgresql.org/docs/current/datatype-json.html#JSON-INDEXING).
   Benchmark configured to update only the `search_rank` attribute of the
   `content` column.
 
