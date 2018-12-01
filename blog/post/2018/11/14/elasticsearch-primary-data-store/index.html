@@ -901,9 +901,8 @@ specifications:</p>
 
 <ul>
   <li>
-    <p><strong>PostgreSQL</strong>: Just one PostgreSQL 9.6.10 instance
-(<code>shared_buffers = 128MB</code>) containing a single <code>&lt;id, content&gt;</code> table where
-<code>content</code> is of type <a href="https://www.postgresql.org/docs/current/datatype-json.html#JSON-INDEXING"><code>jsonb</code></a>.
+    <p><strong>PostgreSQL</strong>: Just one PostgreSQL 9.6.10 instance containing a single
+<code>&lt;id, content&gt;</code> table where <code>content</code> is of type <a href="https://www.postgresql.org/docs/current/datatype-json.html#JSON-INDEXING"><code>jsonb</code></a>.
 Benchmark configured to update only the <code>search_rank</code> attribute of the
 <code>content</code> column.</p>
   </li>
