@@ -53,6 +53,7 @@ idea.
   - [The Configuration DSL: JSON and Groovy](#configuration-dsl-json-groovy)
 - [Conclusion](#conclusion)
 - [Acknowledgements](#acknowledgements)
+- [F.A.Q](#faq)
 
 <a name="search"/>
 
@@ -1215,3 +1216,28 @@ Lourens Heijs, [William Leese](https://twitter.com/wvl0), [Almer S.
 Tigelaar](https://almer.tigelaar.net/), Leon Widdershoven, and [Maurice
 Zeijen](https://twitter.com/maurice_zeijen) for their valuable feedback in
 bringing the post to its final form.
+
+<a name="faq"/>
+
+# F.A.Q.
+
+Here I will try to answer certain questions I received via
+[Hackernews](https://news.ycombinator.com/item?id=18568922) or e-mail.
+
+## Did you try tuning the PostgreSQL optimization knobs?
+
+bol.com has plenty of databases supported by an army of skilled DBAs. During
+benchmarks, we collaborated with our PostgreSQL experts to continuosly tune
+the necessary knobs to get the best performance given our data size and access
+patterns. Hence, it wasn't a tune once, run once operation, but rather a
+continuous effort to determine an optimal configuration.
+
+## How do you calculate `search_rank`?
+
+For the benchmark purposes, we employed a deprecated signal (that is,
+`search_rank`) that we used to score the matched documents. In the new search
+gateway, that approach is replaced with a multitude of context-dependent
+signals combined at runtime. The answer to how does the computation of ranking
+signals work is out of the scope of this post. But in a nutshell, it is an
+in-house machine learning algorithm harvesting historical user interaction log.
+Handling of sudden or seasonal trends? That is a whole different game.
