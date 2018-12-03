@@ -83,6 +83,7 @@ idea.&lt;/p&gt;
   &lt;/li&gt;
   &lt;li&gt;&lt;a href="#conclusion"&gt;Conclusion&lt;/a&gt;&lt;/li&gt;
   &lt;li&gt;&lt;a href="#acknowledgements"&gt;Acknowledgements&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href="#faq"&gt;F.A.Q&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;
 
 &lt;p&gt;&lt;a name="search"&gt;&lt;/a&gt;&lt;/p&gt;
@@ -1374,6 +1375,31 @@ Lourens Heijs, &lt;a href="https://twitter.com/wvl0"&gt;William Leese&lt;/a&gt;,
 Tigelaar&lt;/a&gt;, Leon Widdershoven, and &lt;a href="https://twitter.com/maurice_zeijen"&gt;Maurice
 Zeijen&lt;/a&gt; for their valuable feedback in
 bringing the post to its final form.&lt;/p&gt;
+
+&lt;p&gt;&lt;a name="faq"&gt;&lt;/a&gt;&lt;/p&gt;
+
+&lt;h1 id="faq"&gt;F.A.Q.&lt;/h1&gt;
+
+&lt;p&gt;Here I will try to answer certain questions I received via
+&lt;a href="https://news.ycombinator.com/item?id=18568922"&gt;Hackernews&lt;/a&gt; or e-mail.&lt;/p&gt;
+
+&lt;h2 id="did-you-try-tuning-the-postgresql-optimization-knobs"&gt;Did you try tuning the PostgreSQL optimization knobs?&lt;/h2&gt;
+
+&lt;p&gt;bol.com has plenty of databases supported by an army of skilled DBAs. During
+benchmarks, we collaborated with our PostgreSQL experts to continuosly tune
+the necessary knobs to get the best performance given our data size and access
+patterns. Hence, it wasn’t a tune once, run once operation, but rather a
+continuous effort to determine an optimal configuration.&lt;/p&gt;
+
+&lt;h2 id="how-do-you-calculate-searchrank"&gt;How do you calculate &lt;code&gt;search_rank&lt;/code&gt;?&lt;/h2&gt;
+
+&lt;p&gt;For the benchmark purposes, we employed a deprecated signal (that is,
+&lt;code&gt;search_rank&lt;/code&gt;) that we used to score the matched documents. In the new search
+gateway, that approach is replaced with a multitude of context-dependent
+signals combined at runtime. The answer to how does the computation of ranking
+signals work is out of the scope of this post. But in a nutshell, it is an
+in-house machine learning algorithm harvesting historical user interaction log.
+Handling of sudden or seasonal trends? That is a whole different game.&lt;/p&gt;
 </content>
   </entry>
   <entry>

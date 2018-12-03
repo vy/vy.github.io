@@ -111,6 +111,7 @@ idea.</p>
   </li>
   <li><a href="#conclusion">Conclusion</a></li>
   <li><a href="#acknowledgements">Acknowledgements</a></li>
+  <li><a href="#faq">F.A.Q</a></li>
 </ul>
 
 <p><a name="search"></a></p>
@@ -1402,6 +1403,31 @@ Lourens Heijs, <a href="https://twitter.com/wvl0">William Leese</a>, <a href="ht
 Tigelaar</a>, Leon Widdershoven, and <a href="https://twitter.com/maurice_zeijen">Maurice
 Zeijen</a> for their valuable feedback in
 bringing the post to its final form.</p>
+
+<p><a name="faq"></a></p>
+
+<h1 id="faq">F.A.Q.</h1>
+
+<p>Here I will try to answer certain questions I received via
+<a href="https://news.ycombinator.com/item?id=18568922">Hackernews</a> or e-mail.</p>
+
+<h2 id="did-you-try-tuning-the-postgresql-optimization-knobs">Did you try tuning the PostgreSQL optimization knobs?</h2>
+
+<p>bol.com has plenty of databases supported by an army of skilled DBAs. During
+benchmarks, we collaborated with our PostgreSQL experts to continuosly tune
+the necessary knobs to get the best performance given our data size and access
+patterns. Hence, it wasn’t a tune once, run once operation, but rather a
+continuous effort to determine an optimal configuration.</p>
+
+<h2 id="how-do-you-calculate-searchrank">How do you calculate <code>search_rank</code>?</h2>
+
+<p>For the benchmark purposes, we employed a deprecated signal (that is,
+<code>search_rank</code>) that we used to score the matched documents. In the new search
+gateway, that approach is replaced with a multitude of context-dependent
+signals combined at runtime. The answer to how does the computation of ranking
+signals work is out of the scope of this post. But in a nutshell, it is an
+in-house machine learning algorithm harvesting historical user interaction log.
+Handling of sudden or seasonal trends? That is a whole different game.</p>
 
 
         <div id="disqus_thread"></div>
