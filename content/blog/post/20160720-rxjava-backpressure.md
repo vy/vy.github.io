@@ -5,7 +5,7 @@ title: Callback Blocking for Back-Pressure in RxJava
 tags:
   - concurrency
   - java
-  - rx
+  - reactive
 ---
 
 In a reactive application, you don't necessarily have control over the
