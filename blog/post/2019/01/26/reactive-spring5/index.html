@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Notes on "Reactive Programming in Spring 5"</title>
+    <link rel="stylesheet" href="/css/common.css">
+    <meta name="generator" content="nanoc 3.8.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/post.css">
+    <script type="text/javascript">
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-40183531-1']);
+      _gaq.push(['_trackPageview']);
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="container">
+
+      <ul id="menu">
+        <li><a href="/">Home</a></li><li><a href="/blog/">Blog</a></li><li><a href="/code/">Code</a></li><li><a href="/blog/feed/">Feed</a></li>
+      </ul>
+
+    
+
+<div id="post">
+
+    <div class="head">
+        <div class="title">Notes on "Reactive Programming in Spring 5"</div>
+        <div class="subtitle">posted at
+            January 26, 2019
+            with tags <a href="/blog/tag/java">java</a>, <a href="/blog/tag/concurrency">concurrency</a>, <a href="/blog/tag/programming">programming</a>, <a href="/blog/tag/reactive">reactive</a>
+        </div>
+    </div>
+
+    <div class="body">
+
+        <script type="text/javascript">
+        var asyncLoadRequests = [];
+        </script>
+
+        
+<blockquote>
+  <p><strong>TL;DR</strong> – Already have your hands dirty with Spring? Wondering
+how reactive will play along with Spring and how they will shape
+each other? Read this book. You will get crushed under the load of
+information trying to get covered, but will have no regrets.</p>
+</blockquote>
+
+<p><img src="cover.jpg" alt="Reactive Programming in Spring 5"></p>
+
+<p>I tend to avoid reading books whose subject is about a certain library
+or tool, unless I think it will provide some insight into a certain
+domain in addition to the software’s internals. And as you may guess,
+many <a href="https://spring.io/">Spring</a>-related books do not pass this
+test. Though <a href="https://www.packtpub.com/application-development/hands-reactive-programming-spring-5">Reactive Programming in Spring
+5</a>
+was an exception due to following reasons:</p>
+
+<ul>
+  <li>
+    <p><a href="https://twitter.com/OlehDokuka">Oleh Dokuka</a>, one of the two
+authors of the book, is a contributor to many Spring projects, in
+particular to <a href="http://projectreactor.io/">Reactor</a>. He is further a
+pretty active figure in <a href="https://gitter.im/reactor/reactor">Reactor Gitter
+channel</a> where he is serving a
+fantastic public service. I personally am really interested in
+hearing anything he would say about <a href="http://www.reactive-streams.org/">Reactive
+Streams</a> in general.</p>
+  </li>
+  <li>
+    <p>Love it, hate it, but almost the entire Java train is fueled by
+Spring framework. In my day to day work, I am swamped into Spring
+too. If you would pay close attention, particularly after the recent
+<a href="https://springoneplatform.io/2018/sessions">SpringOne 2018</a>, Spring
+is full steam moving towards a reactive interface supported by all
+its whistles and bells – <a href="http://rsocket.io/">RSocket</a>,
+<a href="https://r2dbc.io/">R2DBC</a>, <a href="https://docs.spring.io/spring-framework/docs/5.0.0.BUILD-SNAPSHOT/spring-framework-reference/html/web-reactive.html">WebFlux and
+WebClient</a>,
+Reactor, etc. Though sometimes it is really difficult to see how the
+entire machine is progressing given the excessive amount of
+sub-projects. I expected the book to provide a 2,000 ft overview to
+the roadmap of this beast.</p>
+  </li>
+</ul>
+
+<h1 id="overview">Overview</h1>
+
+<p>If you are dealing with Spring while taking your daily dose of Java,
+<strong>read this book!</strong> The book manages to deliver an outstanding
+coverage of both reactive streams and its integration to almost all of
+the existing Spring components. In a nutshell, it lays out the
+following subjects in order:</p>
+
+<ul>
+  <li>fundamentals of reactive programming (observer pattern)</li>
+  <li>its historical development in the presence of RxJava, Reactive Streams, and Reactor</li>
+  <li>pull, push, and pull-push streaming</li>
+  <li>backpressure</li>
+  <li>theoratical foundations of reactive programming (Little’s and Amdahl’s laws)</li>
+  <li>WebFlux versus Web MVC</li>
+  <li>introduction to Reactor</li>
+  <li>reactive
+    <ul>
+      <li>Spring Data</li>
+      <li>Spring Cloud Stream</li>
+      <li>Spring Cloud Flow</li>
+      <li>Spring Boot</li>
+    </ul>
+  </li>
+  <li>RSocket</li>
+  <li>testing</li>
+  <li>deployment to cloud</li>
+</ul>
+
+<p>In conclusion, authors did a splendid job in compiling an exhaustive
+content covering almost every aspect of reactive programming in Spring
+5. They possess an in-depth understanding of the material they are
+talking about and present it in a digestable form to the user. While
+this thick compilation has the potential of crushing the reader, it is
+definitely a rewarding read.</p>
+
+<h2 id="pros">Pros</h2>
+
+<p>After finishing the book, a cover-to-cover marathon of 538 pages, I
+felt like I know everything there is to know about reactive
+programming in Spring.</p>
+
+<p><img src="i-know.jpg" alt="I know reactive Spring!"></p>
+
+<p>The extent of the covered content was astonishingly huge. I knew about
+RxJava, Reactive Streams, and Reactor individually, but not how they
+relate to each other. The presented historical perspective cleared out
+the missing pieces of the puzzle for me. I really enjoyed how the
+prose builds up by examining the problem, introducing the solution,
+laying out caveats of certain approaches, and drawing real-world
+comparisons. They repeated this pragmatic pattern for almost any
+project (Reactor, WebFlux, Spring Data, Spring Cloud Stream, etc.)
+they introduced.</p>
+
+<p>I was not expecting an in-depth Reactor content, though the authors
+delivered a perfect job here given the book’s main subject is not just
+Reactor.</p>
+
+<p>Investigation of pull, push, pull-push streaming, stress of
+backpressure, and reinforcement of the content with some theory
+(Little’s and Amdahl’s laws) was pretty enlightening to read. While
+many would consider these subjects boring, I found it pretty
+interesting and practical.</p>
+
+<h2 id="cons">Cons</h2>
+
+<p>The book is too long to a point of becoming exhausting. Many material
+(Vert.x, Ratpack integration, Reactive Streams TCK, transactions in
+distributed messaging systems, etc.) could have been left out and then
+the main juice would fit into ~300 pages. Even then, it is still
+long. I would have split the book into two: <em>Project Reactor in
+Action</em> and <em>Reactive Programming in Spring 5</em>. While reading, I also
+felt such a split as well.</p>
+
+<p>While 90% of the book is pretty objective, certain subjects were
+presented with bias. Particularly, RSocket-vs-gRPC comparison and
+using message brokers over system-to-system communication chapters
+were really opinionated. (I further explained this problem in my notes
+shared below.)</p>
+
+<p>The presented content is always excercised using Apache Kafka and
+MongoDB. I suppose this is due to the fact that these two are the only
+tools that have almost perfect reactive coverage by Spring family of
+projects.</p>
+
+<h1 id="notes">Notes</h1>
+
+<p>Below I share my notes ranging from a grammar mistake to a code typo,
+incorrect or ambiguous information to a thought provoking know-how,
+practical tip, etc. I further classify them in 4 groups:
+<span class="note-correction">corrections</span>,
+<span class="note-improvement">improvements</span>,
+<span class="note-question">questions</span>, and
+<span class="note-other">other</span>.</p>
+
+<ul>
+  <li>
+    <p><span class="note-correction">[p11]</span> Shared <code>processRequest()</code>
+method is missing a <code>return</code> statement.</p>
+  </li>
+  <li>
+    <p><span class="note-correction">[p12]</span> As a coroutine/fiber
+fanboy, I could not have passed through the following statement:</p>
+
+    <blockquote>
+      <p>In some languages, such as C#, Go, and Kotlin, the same code [a
+simple inter-microservice communication over HTTP] might be
+non-blocking when green threads are used. However, in pure Java,
+we do not have such features yet. Consequently, the actual thread
+will be blocked in such cases.</p>
+    </blockquote>
+
+    <p>I forgot how many times I needed to correct this false misbelief,
+but I will repeat it here one more time: For any language X
+compiling to JVM bytecode, if a Java standard library call is
+[thread] blocking, access to it in X is going to be blocking as
+well. Kotlin coroutines is no exception to this. Further every
+convenience X provides, say coroutines, except syntatic sugars, has
+already been at the exposure of Java via solid libraries like
+<a href="https://github.com/nqzero/kilim">Kilim</a> (since 2006) and
+<a href="https://github.com/puniverse/quasar">Quasar</a> (since 2013).</p>
+
+    <p>Additionally, the rules of the game will totally change in a couple
+of years after the release of <a href="http://openjdk.java.net/projects/loom/">Project
+Loom</a>.</p>
+  </li>
+  <li>
+    <p><span class="note-improvements">[p16]</span> In Diagram 1.4, what
+is the difference between solid and dashed lines? I am surprised to
+see that the image is advertising Apache Kafka while the rest of the
+components are free from such specification.</p>
+  </li>
+  <li>
+    <p><span class="note-improvements">[p18]</span> In Diagram 1.5, texts
+are not readable. (Unfortunately, many of the image texts are not
+readable in the hardcopy. I don’t know about the e-book though.)</p>
+  </li>
+  <li>
+    <p><span class="note-correction">[p28]</span> <em>all cross-service
+communication is non-blocking anymore.</em> → <em>… is not blocking
+anymore.</em></p>
+  </li>
+  <li>
+    <p><span class="note-correction">[p46]</span> <em>the actual request
+processing continues until <code>SseEnitter.complete()</code></em> →
+<em>… until <code>SseEmitter.complete()</code></em></p>
+  </li>
+  <li>
+    <p><span class="note-improvement">[p46]</span> Justification of why
+<code>@Async</code> is necessary here is missing.</p>
+  </li>
+  <li>
+    <p><span class="note-correction">[p59]</span> <em>The <code>count</code> operator is
+pretty descriptive, it emits the only value …</em> → <em>… emits
+only one value …</em></p>
+  </li>
+  <li>
+    <p><span class="note-question">[p62]</span> Chapter starts with</p>
+
+    <pre><code class="language-java"><span class="kd">public</span> <span class="kd">interface</span> <span class="nc">SearchEngine</span> <span class="o">{</span>
+    <span class="n">List</span><span class="o">&lt;</span><span class="n">URL</span><span class="o">&gt;</span> <span class="nf">search</span><span class="o">(</span><span class="n">String</span> <span class="n">query</span><span class="o">,</span> <span class="kt">int</span> <span class="n">limit</span><span class="o">);</span>
+<span class="o">}</span></code></pre>
+
+    <p>interface, improves it with</p>
+
+    <pre><code class="language-java"><span class="kd">public</span> <span class="kd">interface</span> <span class="nc">InterableSearchEngine</span> <span class="o">{</span>
+    <span class="n">Iterable</span><span class="o">&lt;</span><span class="n">URL</span><span class="o">&gt;</span> <span class="nf">search</span><span class="o">(</span><span class="n">String</span> <span class="n">query</span><span class="o">,</span> <span class="kt">int</span> <span class="n">limit</span><span class="o">);</span>
+<span class="o">}</span></code></pre>
+
+    <p>and</p>
+
+    <pre><code class="language-java"><span class="kd">public</span> <span class="kd">interface</span> <span class="nc">FutureSearchEngine</span> <span class="o">{</span>
+    <span class="n">CompletableFuture</span><span class="o">&lt;</span><span class="n">List</span><span class="o">&lt;</span><span class="n">URL</span><span class="o">&gt;&gt;</span> <span class="nf">search</span><span class="o">(</span><span class="n">String</span> <span class="n">query</span><span class="o">,</span> <span class="kt">int</span> <span class="n">limit</span><span class="o">);</span>
+<span class="o">}</span></code></pre>
+
+    <p>After piling up enough motivation, justifies the victory of
+<code>Observable</code>s:</p>
+
+    <pre><code class="language-java"><span class="kd">public</span> <span class="kd">interface</span> <span class="nc">RxSearchEngine</span> <span class="o">{</span>
+    <span class="n">Observable</span><span class="o">&lt;</span><span class="n">URL</span><span class="o">&gt;</span> <span class="nf">search</span><span class="o">(</span><span class="n">String</span> <span class="n">query</span><span class="o">,</span> <span class="kt">int</span> <span class="n">limit</span><span class="o">);</span>
+<span class="o">}</span></code></pre>
+
+    <p>As a reader, let me ask the obvious question: Why not using a
+<code>Stream&lt;URL&gt;</code> return type instead?</p>
+  </li>
+  <li>
+    <p><span class="note-question">[p103]</span> In the following
+explanation,</p>
+
+    <blockquote>
+      <p>Note that <code>ScheduledPublisher</code> is effectively an infinite stream
+and the completion of the merged <code>Publisher</code> is ignored.</p>
+    </blockquote>
+
+    <p>What does <em>merged <code>Publisher</code></em> refer to? <code>NewsPreparationOperator</code>?</p>
+  </li>
+  <li>
+    <p><span class="note-correction">[p106]</span> <em>Unfortunately, building a
+proper test suit</em> → <em>… test suite</em></p>
+  </li>
+  <li>
+    <p><span class="note-improvement">[p114]</span> Rather than focusing
+this much on the TCK, which is most of the time more relevant for
+library authors compared to users, I wish the authors would have had
+spared some pages on pitfalls and patterns of processors, which is
+bread and butter of reactive stream users and sadly skipped in the
+previous chapter.</p>
+  </li>
+  <li>
+    <p><span class="note-improvement">[p123-129]</span> I don’t think the
+readers really care about reactive streams adjustments for Vert.x,
+Ratpack or MongoDB reactive streams driver. I find these pages
+irrelevant and distracting.</p>
+  </li>
+  <li>
+    <p><span class="note-improvement">[p133]</span> It is page 133 and the
+reader is newly getting exposed to Project Reactor. Sort of too
+late, I think.</p>
+  </li>
+  <li>
+    <p><span class="note-improvement">[p133]</span> <em>Project Reactor, the
+most famous library in the reactive landscape, …</em> Really? Putting
+aside I favor Reactor over RxJava, the IT community that I know of
+does not give me such an impression to back this claim up.</p>
+  </li>
+  <li>
+    <p><span class="note-correction">[p141]</span> <em>investigating its reach
+API.</em> → <em>… its rich API</em></p>
+  </li>
+  <li>
+    <p><span class="note-improvement">[p149]</span> Speaking of <code>defer()</code>,
+it allows retries, which is, I think, of uttermost importance mostly
+overlooked by many and aligns better with reactive streams semantic
+compliance. Consider the following code:</p>
+
+    <pre><code class="language-java"><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">Mono</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="nf">f</span><span class="o">(</span><span class="n">Mono</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">mono</span><span class="o">)</span> <span class="o">{</span>
+    <span class="n">Stopwatch</span> <span class="n">stopwatch</span> <span class="o">=</span> <span class="n">Stopwatch</span><span class="o">.</span><span class="na">createUnstarted</span><span class="o">();</span>
+    <span class="k">return</span> <span class="n">mono</span>
+            <span class="o">.</span><span class="na">doOnSubscribe</span><span class="o">(</span><span class="n">ignored</span> <span class="o">-&gt;</span> <span class="n">stopwatch</span><span class="o">.</span><span class="na">start</span><span class="o">())</span>
+            <span class="o">.</span><span class="na">doOnTerminate</span><span class="o">(()</span> <span class="o">-&gt;</span> <span class="n">LOGGER</span><span class="o">.</span><span class="na">log</span><span class="o">(</span><span class="s">"{}"</span><span class="o">,</span> <span class="n">stopwatch</span><span class="o">));</span>
+<span class="o">}</span></code></pre>
+
+    <p>versus the alternative below</p>
+
+    <pre><code class="language-java"><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">Mono</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="nf">f</span><span class="o">(</span><span class="n">Mono</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">mono</span><span class="o">)</span> <span class="o">{</span>
+    <span class="k">return</span> <span class="n">Mono</span><span class="o">.</span><span class="na">defer</span><span class="o">(()</span> <span class="o">-&gt;</span> <span class="o">{</span>
+        <span class="n">Stopwatch</span> <span class="n">stopwatch</span> <span class="o">=</span> <span class="n">Stopwatch</span><span class="o">.</span><span class="na">createUnstarted</span><span class="o">();</span>
+        <span class="k">return</span> <span class="n">mono</span>
+                <span class="o">.</span><span class="na">doOnSubscribe</span><span class="o">(</span><span class="n">ignored</span> <span class="o">-&gt;</span> <span class="n">stopwatch</span><span class="o">.</span><span class="na">start</span><span class="o">())</span>
+                <span class="o">.</span><span class="na">doTerminate</span><span class="o">(()</span> <span class="o">-&gt;</span> <span class="n">LOGGER</span><span class="o">.</span><span class="na">log</span><span class="o">(</span><span class="s">"{}"</span><span class="o">,</span> <span class="n">stopwatch</span><span class="o">));</span>
+    <span class="o">});</span>
+<span class="o">}</span></code></pre>
+
+    <p>Also this is a good spot to talk about assembly-vs-runtime overhead
+of operator chaining.</p>
+  </li>
+  <li>
+    <p><span class="note-correction">[p149]</span> The word wrapping of
+paragraph starting with <em>Summing this up, Project reactor allows
+…</em> is broken.</p>
+  </li>
+  <li>
+    <p><span class="note-correction">[p150]</span> <em>…, we may still request
+<code>Long.MAX_VALUE).</code></em> → <em>request <code>Long.MAX_VALUE.</code></em></p>
+  </li>
+  <li>
+    <p><span class="note-improvement">[p154]</span> The first paragraph of
+the page (<em>However, the described approach for defining subscription
+…</em>) is an eye opener gem. Given many seasoned RS users fell into
+this trap at least once, a couple of paragraphs detailing these
+caveats would come really handy.</p>
+  </li>
+  <li>
+    <p><span class="note-improvement">[p169]</span> Speaking of
+<code>Flux#flatMap()</code> operator, <code>concurrency</code> parameter might have been
+slightly mentioned here.</p>
+  </li>
+  <li>
+    <p><span class="note-question">[p171]</span> Given we are executing
+<code>doOn...()</code> methods (<code>doOnNext()</code>, <code>doOnComplete()</code>,
+<code>doOnSubscribe()</code>, etc.) for their side effects, what does happen
+when they throw an exception?</p>
+  </li>
+  <li>
+    <p><span class="note-improvement">[p173]</span> Provide a couple of
+examples for <code>log()</code> operator, please! Many people, particularly
+coming from RxJava, do not know of its existence.</p>
+  </li>
+  <li>
+    <p><span class="note-correction">[p174]</span> <em>However, this allows
+forthe sending …</em> → <em>… allows for the sending …</em></p>
+  </li>
+  <li>
+    <p><span class="note-question">[p174]</span> In the <code>Flux.create()</code>
+example, I am puzzled about how does it handle the backpressure.</p>
+  </li>
+  <li>
+    <p><span class="note-improvement">[p183]</span> I think <em>exponential
+backoff</em> deserves an explanation here. What does it mean? Further, I
+would have used seconds rather than milliseconds in the example,
+since the latter does not expose the backoff periods clearly at
+first sight.</p>
+  </li>
+  <li>
+    <p><span class="note-correction">[p188]</span> <em><code>Flux&lt;Integer&gt;
+cachedSource = source.share();</code></em> Here and in the rest, all of the
+occurences of <code>cachedSource</code> should be replaced with <code>sharedSource</code>.</p>
+  </li>
+  <li>
+    <p><span class="note-improvement">[p191]</span> The used <em>assembly
+phase</em> term will be described in next chapters, hence using it here
+is sort of confusing. Further, the given explanation for
+<code>transform()</code> has still some room for improvement. Additionally, I
+would prefer to see a “when to use <code>compose()</code>, when to use
+<code>transform()</code>” guide.</p>
+  </li>
+  <li>
+    <p><span class="note-improvement">[p196-197]</span> There are 3 places
+where <em>assemble-time</em> is used, though it used to be referred as
+<em>assembly-time</em>”.</p>
+  </li>
+  <li>
+    <p><span class="note-correction">[p198]</span> <em>… passing
+<code>Subscription</code> through ever <code>Subscriber</code>s …</em> → <em>… passing
+<code>Subscription</code> through <code>Subscriber</code>s …</em></p>
+  </li>
+  <li>
+    <p><span class="note-other">[p200]</span> The last paragraph of p199
+goes as follows:</p>
+
+    <blockquote>
+      <p>THe importance of understanding this phase is that during runtime
+we may apply optimization that may reduce amount of signals
+exchange. [“the amount of signals exchanged”?] For example, as we
+are going to see in the next sections, we may reduce the number of
+<code>Subscription#request</code> calls and improve, therefore, performance
+of the stream.</p>
+    </blockquote>
+
+    <p>Then the following tip opens the p200:</p>
+
+    <blockquote>
+      <p>… the invocation of <code>Subscription#request</code> method causes a write
+to the <code>volatile</code> field that holds demand. Such a write is an
+expensive operation from computation perspective, so it is better
+to avoid it if possible.</p>
+    </blockquote>
+
+    <p>Hrm… I thought the main overhead of <code>Subscription#request</code> calls
+was unnecessary individual requests which could have been
+batched. Compared to this, write to a <code>volatile</code> does not really
+sound like an overhead.</p>
+  </li>
+  <li>
+    <p><span class="note-improvement">[p200]</span> Diagram 4.8 is missing
+some explanation.</p>
+  </li>
+  <li>
+    <p><span class="note-question">[p204]</span> In Diagram 4.11, how is
+backpressure preserved given there is an external buffer employed
+by <code>publishOn</code>. Who maintains this buffer? Is it the task queue of
+the <code>ScheduledExecutionService</code> used under the hood?</p>
+  </li>
+  <li>
+    <p><span class="note-question">[p206]</span> Totally lost with the
+following sentence: <em>Under the hood, <code>subscribeOn</code> executes the
+subscription to the parent <code>Publisher</code> into <code>Runnable</code>, which is the
+scheduler for a specified <code>Scheduler</code>.</em></p>
+  </li>
+  <li>
+    <p><span class="note-correction">[p207]</span> In the shared code
+snippet, <code>.map()</code> and <code>.filter()</code> are missing <code>...</code> as input
+arguments.</p>
+  </li>
+  <li>
+    <p><span class="note-question">[p208]</span> How does
+<code>SingleScheduler</code> handle blocking functions spoiling time-sensitive
+executions?</p>
+  </li>
+  <li>
+    <p><span class="note-improvement">[p209]</span> <em>… so the execution
+is attache to …</em> → <em>… so the execution is attached to …</em></p>
+  </li>
+  <li>
+    <p><span class="note-improvement">[p209]</span> In the next page, it
+has been admitted that the shared code snippet does not demonstrate
+a good usage of <code>ThreadLocal</code>s. So why not sharing a proper use of
+<code>ThreadLocal</code>s?</p>
+  </li>
+  <li>
+    <p><span class="note-correction">[p211]</span> I think <em>Such design
+decision … have its own <code>Context</code>.</em> part of the last paragraph
+needs a rewrite.</p>
+  </li>
+  <li>
+    <p><span class="note-correction">[p213]</span> <em>… bottom (with id
+initial) has empty Context at all.</em> → <em>… bottom (with id
+<code>initial</code>) has empty <code>Context</code> at all.</em></p>
+  </li>
+  <li>
+    <p><span class="note-correction">[p214]</span> <em>The preciding code show a
+…</em> → <em>The preciding code shows a …</em></p>
+  </li>
+  <li>
+    <p><span class="note-correction">[p215]</span> <em>… we mentioned another
+sample of such …</em> → <em>… we mentioned another example of such
+…</em></p>
+  </li>
+  <li>
+    <p><span class="note-correction">[p217]</span> In Diagram 4.15, the box
+at the bottom should be titled <code>subscribe()</code> instead of <code>flatMap()</code>.</p>
+  </li>
+  <li>
+    <p><span class="note-correction">[p225]</span> <em>Preview Online Code
+Files</em> at the bottom looks to be a typo.</p>
+  </li>
+  <li>
+    <p><span class="note-question">[p230]</span> <em>… the WebFlux module
+provides built-in backpressure support …</em> Cool! But how does it do
+that?</p>
+  </li>
+  <li>
+    <p><span class="note-correction">[p254]</span> <em>… using the
+<code>PasswordEncoder#matchs</code> …</em> → <em>… using the
+<code>PasswordEncoder#matches</code> …</em></p>
+  </li>
+  <li>
+    <p><span class="note-question">[p254]</span> In the shared snippet,
+which scheduler executes the <code>map(p -&gt;
+passwordEncoder.matches(...))</code> line? Netty I/O loop thread? If so
+(or some other scheduler of similar importance), is it wise perform
+<code>passwordEncoder#matches</code> here?</p>
+  </li>
+  <li>
+    <p><span class="note-correction">[p255]</span> In the shared code
+snippet, isn’t <code>flatMap(isMatched -&gt; ...)</code> should be replaced with
+<code>map(isMatched -&gt; ...)</code>?</p>
+  </li>
+  <li>
+    <p><span class="note-correction">[p278]</span> <em><code>else
+if(resposne.statusCode() == EXPECTATION_FAILD) {</code></em> → <em><code>else
+if(response.statusCode() == EXPECTATION_FAILED) {</code></em></p>
+  </li>
+  <li>
+    <p><span class="note-correction">[p267]</span> <em>… template has a
+placeholder, <code>dataSource</code>, …</em> → <em>… template has a
+placeholder, <code>playList</code>, …</em></p>
+  </li>
+  <li>
+    <p><span class="note-correction">[p273-274]</span> All apperances of
+<em>Albom</em> and <em>albom</em> should be replaced with <em>Album</em> and <em>album</em>,
+respectively.</p>
+  </li>
+  <li>
+    <p><span class="note-correction">[p278]</span> <em>As we can observe from
+the preciding diagram, with an increase in parallelization, the
+throughput of the system starts becoming slower and slower.</em>
+Hrm… Actually the throughput keeps on increasing, though the gain
+is slowing down. Does it mean <em>the increase in throughput</em>?</p>
+  </li>
+  <li>
+    <p><span class="note-improvement">[p281]</span> The definitions of
+contention and coherence are left pretty ambiguous. A couple of
+practical examples would come really handy.</p>
+  </li>
+  <li>
+    <p><span class="note-correction">[p292]</span> Diagram 6.16 misses the
+legend. The caption can be reworked to fix this as follows: <em>WebFlux
+(dash) versis WebMVC (plus) throughput…</em> This applies to the rest
+of diagrams with multiple lines in the following pages.</p>
+  </li>
+  <li>
+    <p><span class="note-improvement">[p301-303]</span> I would rather use
+a bar chart for performance figures rather than a table.</p>
+  </li>
+  <li>
+    <p><span class="note-improvement">[p308]</span> Diagram 6.25 looks
+like a <a href="https://en.wikipedia.org/wiki/Microsoft_Paint">mspaint.exe</a>
+101 assignment submission.</p>
+  </li>
+  <li>
+    <p><span class="note-correction">[p311]</span> <em>… the system has four
+central components …</em> → <em>… the system has three central
+components …</em></p>
+  </li>
+  <li>
+    <p><span class="note-correction">[p349]</span> <em>… EclipseLink, Spring
+Data JDBC, and Spring Data JDBC, …</em> → <em>… EclipseLink,
+Spring Data JDBC, and Spring JDBC, …</em></p>
+  </li>
+  <li>
+    <p><span class="note-correction">[p356-357]</span> All occurences of
+<code>updatedBook...</code> should be replaced with <code>updateBook...</code>.</p>
+  </li>
+  <li>
+    <p><span class="note-improvement">[p379]</span> What is the point of
+<em>Distributed transactions with the SAGA pattern</em> here?</p>
+  </li>
+  <li>
+    <p><span class="note-improvement">[p405]</span> In Diagram 8.1, there
+is plenty of space that could have been used and the texts are so
+small to the point of becoming unreadable.</p>
+  </li>
+  <li>
+    <p><span class="note-other">[p418]</span> This page concludes the
+<em>Scaling up with Cloud Streams</em> chapter by announcing its triumph
+over previously mentioned service-to-service architectures. I sadly
+find this conclusion pretty biased and far from reflecting the
+reality. There is no silver bullet for such problems and as has
+always been the case, <em>it depends</em>. Further, almost all of the
+listed so-called improvements to message broker-based solutions are
+either as is or with similar approaches applicable to
+service-to-service architectures as well. It is also surprising to
+see no mention of practical hurdles one need to overcome while
+scaling brokers too. You can easily Google and find dozens of Kafka
+horror stories. For a book that spent chapters on backpressure
+problems, the question of how is it affected by the delegation of
+the communication to a broker is totally ignored. Given how
+objective and well-equiped the authors were throughout the entire
+book, I am really amazed to see such a hype-oriented conclusion at
+the end of this chapter.</p>
+  </li>
+  <li>
+    <p><span class="note-improvement">[p425]</span> In the shared code
+snippet, used <code>messagesStream</code> and <code>statisticStream</code> are neither
+described, nor defined.</p>
+  </li>
+  <li>
+    <p><span class="note-improvement">[p430]</span> For a book published
+in October 2018, it is better to not limit the list of cloud
+providers offering serverless deployments with AWS Lambda. To the
+best of my knowledge, GCP, Azure, and many others provide similar
+functionalities.</p>
+  </li>
+  <li>
+    <p><span class="note-correction">[p435]</span> <em><code>ClassLoad</code></em> →
+<em><code>ClassLoader</code></em></p>
+  </li>
+  <li>
+    <p><span class="note-question">[p437]</span> It is noted that authors
+escaped <code>&lt;</code> and <code>&gt;</code> characters in the URL they pass to <code>curl</code> with
+<code>%3C</code> and <code>%3E</code>, respectively. Though, AFAIK, <code>curl</code> already does
+that if you pass the URL in quotes. Isn’t it?</p>
+  </li>
+  <li>
+    <p><span class="note-correction">[p440]</span> <em>… represent independent
+ClassLoaders.</em> → <em>… represent independent <code>ClassLoader</code>s.</em></p>
+  </li>
+  <li>
+    <p><span class="note-correction">[p441]</span> <em><code>implements
+Function&lt;Payment, Payment&gt;</code></em> → <em><code>implements Function&lt;Payment,
+PaymentValidation&gt;</code></em></p>
+  </li>
+  <li>
+    <p><span class="note-correction">[p441]</span> <em><code>public Payment
+apply(Payment payment) { ... }</code></em> → <em><code>public PaymentValidation
+apply(Payment payment) { ... }</code></em></p>
+  </li>
+  <li>
+    <p><span class="note-correction">[p448]</span> A dashed arrow is missing
+from Service B’s <code>request(1)</code> line to Service A’s <code>request(10)</code>
+line.</p>
+  </li>
+  <li>
+    <p><span class="note-improvement">[p449]</span> Page contains a pretty
+well wrapped comparison of Reactive Streams versus TCP for flow
+control. Given HTTP/3 is almost ready to be served and is employing
+UDP rather than TCP, a <em>Reactive Streams versus HTTP/3</em> comparison
+would be really thought-provoking.</p>
+  </li>
+  <li>
+    <p><span class="note-correction">[p450]</span> <code>request(3)</code> under Service
+A’s adapter is, I believe, mistakenly placed.</p>
+  </li>
+  <li>
+    <p><span class="note-other">[p454]</span> In the shared code snippet,
+isn’t <code>Flux.interval(Duration.ofMillis(100))</code> too harsh for service
+discovery?</p>
+  </li>
+  <li>
+    <p><span class="note-other">[p456]</span> I am aware of the fact that
+the design of gRPC incurs <a href="https://github.com/grpc/grpc-java/issues/1549">serious flow control
+problems</a>, though in
+a section where you compare contenders like RSocket and gRPC, there
+is no place for such a vague and ungrounded statement:</p>
+
+    <blockquote>
+      <p>Looking at the preciding code, we may get the feeling that gRPC,
+along with asynchronous message passing, gives backpressure
+control support as well. However, that part is a bit tricky.</p>
+    </blockquote>
+
+    <p>Is backpressure is not handled at all or what? One should not pass
+over such a claim by hand waving.</p>
+  </li>
+  <li>
+    <p><span class="note-correction">[p457]</span> <em><code>public static class
+TestApplication</code></em> → <em><code>public class TestApplication</code></em></p>
+  </li>
+  <li>
+    <p><span class="note-question">[p457]</span> The RSocket endpoint is
+annotated with <code>@RequestManyMapping(value = "/stream1", mimeType =
+"application/json")</code>. Given RSocket is a wire protocol, what is the
+purpose of the provided path and MIME type here?</p>
+  </li>
+  <li>
+    <p><span class="note-other">[p461]</span> The summary repeats the
+triumph of message brokers over service-to-service communication one
+more time. Again, this is a really subjective statement. There are
+many advantages and disadvantages to each approach. Announcing a
+winner is a pretty dangerous generalization.</p>
+  </li>
+  <li>
+    <p><span class="note-improvement">[p471]</span> Shared
+<code>StepVerifier.withVirtualTime()</code> trick only works unless you use a
+custom scheduler in <code>interval()</code> and <code>timeout()</code> calls.</p>
+  </li>
+  <li>
+    <p><span class="note-other">[p478]</span> Here authors share a hack to
+work around the problem of Spring Boot 2.0 <code>WebClient</code> not providing
+the mocking support for outgoing HTTP interactions. I would rather
+share this trick in a Stack Overflow post, because the readers of
+the book will take it for granted, and rather share the
+aforementioned WireMock approach.</p>
+  </li>
+  <li>
+    <p><span class="note-other">[p480]</span> <em>Testing
+WebSocket</em>… Again, this is a hack rather than a solution. I would
+not share it in the book.</p>
+  </li>
+  <li>
+    <p><span class="note-correction">[p491]</span> Diagram 10.1 is totally
+irrelevant to the content of the page.</p>
+  </li>
+  <li>
+    <p><span class="note-improvement">[p492]</span> Some texts in Diagram
+10.3 are not readable.</p>
+  </li>
+  <li>
+    <p><span class="note-correction">[p503]</span> <em>… memory usage by
+regions, GC pauses, treads count …</em> → <em>… memory usage by
+regions, GC pauses, thread counts …</em></p>
+  </li>
+  <li>
+    <p><span class="note-improvement">[p510]</span> It is wise to note
+that Spring Boot Admin is not an official Spring project.</p>
+  </li>
+  <li>
+    <p><span class="note-improvement">[p514-515]</span> No mention of
+either GCP or App Engine.</p>
+  </li>
+</ul>
+
+<style type="text/css">
+    span.note-correction {
+        color: red;
+    }
+    span.note-improvement {
+        color: orange;
+    }
+    span.note-question {
+        color: green;
+    }
+    span.note-other {
+        color: silver;
+    }
+</style>
+
+
+
+        <div id="disqus_thread"></div>
+        <script type="text/javascript">
+        var disqus_shortname = 'vyazici';
+        var disqus_identifier = '/blog/post/20190126-reactive-spring5/';
+        var disqus_title = 'Notes on "Reactive Programming in Spring 5"';
+        (function() {
+            var dsq = document.createElement('script');
+            dsq.type = 'text/javascript';
+            dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+        </script>
+
+        
+
+        
+
+    </div>
+  </body>
+</html>
+
+
+        <script type="text/javascript">
+        for (var i = 0; i < asyncLoadRequests.length; i++) {
+            asyncLoadRequest = asyncLoadRequests[i];
+            asyncLoadRequest();
+        }
+        </script>
+
+    </div>
+
+</div>

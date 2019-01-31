@@ -2,13 +2,734 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <id>https://vlkan.com//</id>
   <title>Volkan Yazıcı's Soap Co.</title>
-  <updated>2018-11-14T07:54:00Z</updated>
+  <updated>2019-01-26T20:25:00Z</updated>
   <link rel="alternate" href="https://vlkan.com//"/>
   <link rel="self" href="https://vlkan.com//blog/feed/"/>
   <author>
     <name>Volkan Yazıcı</name>
     <uri>https://vlkan.com/</uri>
   </author>
+  <entry>
+    <id>tag:vlkan.com,2019-01-26://blog/post/2019/01/26/reactive-spring5/</id>
+    <title type="html">Notes on "Reactive Programming in Spring 5"</title>
+    <published>2019-01-26T20:25:00Z</published>
+    <updated>2019-01-26T20:25:00Z</updated>
+    <link rel="alternate" href="https://vlkan.com//blog/post/2019/01/26/reactive-spring5/"/>
+    <content type="html">
+&lt;blockquote&gt;
+  &lt;p&gt;&lt;strong&gt;TL;DR&lt;/strong&gt; – Already have your hands dirty with Spring? Wondering
+how reactive will play along with Spring and how they will shape
+each other? Read this book. You will get crushed under the load of
+information trying to get covered, but will have no regrets.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;&lt;img src="cover.jpg" alt="Reactive Programming in Spring 5"&gt;&lt;/p&gt;
+
+&lt;p&gt;I tend to avoid reading books whose subject is about a certain library
+or tool, unless I think it will provide some insight into a certain
+domain in addition to the software’s internals. And as you may guess,
+many &lt;a href="https://spring.io/"&gt;Spring&lt;/a&gt;-related books do not pass this
+test. Though &lt;a href="https://www.packtpub.com/application-development/hands-reactive-programming-spring-5"&gt;Reactive Programming in Spring
+5&lt;/a&gt;
+was an exception due to following reasons:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;a href="https://twitter.com/OlehDokuka"&gt;Oleh Dokuka&lt;/a&gt;, one of the two
+authors of the book, is a contributor to many Spring projects, in
+particular to &lt;a href="http://projectreactor.io/"&gt;Reactor&lt;/a&gt;. He is further a
+pretty active figure in &lt;a href="https://gitter.im/reactor/reactor"&gt;Reactor Gitter
+channel&lt;/a&gt; where he is serving a
+fantastic public service. I personally am really interested in
+hearing anything he would say about &lt;a href="http://www.reactive-streams.org/"&gt;Reactive
+Streams&lt;/a&gt; in general.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Love it, hate it, but almost the entire Java train is fueled by
+Spring framework. In my day to day work, I am swamped into Spring
+too. If you would pay close attention, particularly after the recent
+&lt;a href="https://springoneplatform.io/2018/sessions"&gt;SpringOne 2018&lt;/a&gt;, Spring
+is full steam moving towards a reactive interface supported by all
+its whistles and bells – &lt;a href="http://rsocket.io/"&gt;RSocket&lt;/a&gt;,
+&lt;a href="https://r2dbc.io/"&gt;R2DBC&lt;/a&gt;, &lt;a href="https://docs.spring.io/spring-framework/docs/5.0.0.BUILD-SNAPSHOT/spring-framework-reference/html/web-reactive.html"&gt;WebFlux and
+WebClient&lt;/a&gt;,
+Reactor, etc. Though sometimes it is really difficult to see how the
+entire machine is progressing given the excessive amount of
+sub-projects. I expected the book to provide a 2,000 ft overview to
+the roadmap of this beast.&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h1 id="overview"&gt;Overview&lt;/h1&gt;
+
+&lt;p&gt;If you are dealing with Spring while taking your daily dose of Java,
+&lt;strong&gt;read this book!&lt;/strong&gt; The book manages to deliver an outstanding
+coverage of both reactive streams and its integration to almost all of
+the existing Spring components. In a nutshell, it lays out the
+following subjects in order:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;fundamentals of reactive programming (observer pattern)&lt;/li&gt;
+  &lt;li&gt;its historical development in the presence of RxJava, Reactive Streams, and Reactor&lt;/li&gt;
+  &lt;li&gt;pull, push, and pull-push streaming&lt;/li&gt;
+  &lt;li&gt;backpressure&lt;/li&gt;
+  &lt;li&gt;theoratical foundations of reactive programming (Little’s and Amdahl’s laws)&lt;/li&gt;
+  &lt;li&gt;WebFlux versus Web MVC&lt;/li&gt;
+  &lt;li&gt;introduction to Reactor&lt;/li&gt;
+  &lt;li&gt;reactive
+    &lt;ul&gt;
+      &lt;li&gt;Spring Data&lt;/li&gt;
+      &lt;li&gt;Spring Cloud Stream&lt;/li&gt;
+      &lt;li&gt;Spring Cloud Flow&lt;/li&gt;
+      &lt;li&gt;Spring Boot&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;RSocket&lt;/li&gt;
+  &lt;li&gt;testing&lt;/li&gt;
+  &lt;li&gt;deployment to cloud&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;In conclusion, authors did a splendid job in compiling an exhaustive
+content covering almost every aspect of reactive programming in Spring
+5. They possess an in-depth understanding of the material they are
+talking about and present it in a digestable form to the user. While
+this thick compilation has the potential of crushing the reader, it is
+definitely a rewarding read.&lt;/p&gt;
+
+&lt;h2 id="pros"&gt;Pros&lt;/h2&gt;
+
+&lt;p&gt;After finishing the book, a cover-to-cover marathon of 538 pages, I
+felt like I know everything there is to know about reactive
+programming in Spring.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src="i-know.jpg" alt="I know reactive Spring!"&gt;&lt;/p&gt;
+
+&lt;p&gt;The extent of the covered content was astonishingly huge. I knew about
+RxJava, Reactive Streams, and Reactor individually, but not how they
+relate to each other. The presented historical perspective cleared out
+the missing pieces of the puzzle for me. I really enjoyed how the
+prose builds up by examining the problem, introducing the solution,
+laying out caveats of certain approaches, and drawing real-world
+comparisons. They repeated this pragmatic pattern for almost any
+project (Reactor, WebFlux, Spring Data, Spring Cloud Stream, etc.)
+they introduced.&lt;/p&gt;
+
+&lt;p&gt;I was not expecting an in-depth Reactor content, though the authors
+delivered a perfect job here given the book’s main subject is not just
+Reactor.&lt;/p&gt;
+
+&lt;p&gt;Investigation of pull, push, pull-push streaming, stress of
+backpressure, and reinforcement of the content with some theory
+(Little’s and Amdahl’s laws) was pretty enlightening to read. While
+many would consider these subjects boring, I found it pretty
+interesting and practical.&lt;/p&gt;
+
+&lt;h2 id="cons"&gt;Cons&lt;/h2&gt;
+
+&lt;p&gt;The book is too long to a point of becoming exhausting. Many material
+(Vert.x, Ratpack integration, Reactive Streams TCK, transactions in
+distributed messaging systems, etc.) could have been left out and then
+the main juice would fit into ~300 pages. Even then, it is still
+long. I would have split the book into two: &lt;em&gt;Project Reactor in
+Action&lt;/em&gt; and &lt;em&gt;Reactive Programming in Spring 5&lt;/em&gt;. While reading, I also
+felt such a split as well.&lt;/p&gt;
+
+&lt;p&gt;While 90% of the book is pretty objective, certain subjects were
+presented with bias. Particularly, RSocket-vs-gRPC comparison and
+using message brokers over system-to-system communication chapters
+were really opinionated. (I further explained this problem in my notes
+shared below.)&lt;/p&gt;
+
+&lt;p&gt;The presented content is always excercised using Apache Kafka and
+MongoDB. I suppose this is due to the fact that these two are the only
+tools that have almost perfect reactive coverage by Spring family of
+projects.&lt;/p&gt;
+
+&lt;h1 id="notes"&gt;Notes&lt;/h1&gt;
+
+&lt;p&gt;Below I share my notes ranging from a grammar mistake to a code typo,
+incorrect or ambiguous information to a thought provoking know-how,
+practical tip, etc. I further classify them in 4 groups:
+&lt;span class="note-correction"&gt;corrections&lt;/span&gt;,
+&lt;span class="note-improvement"&gt;improvements&lt;/span&gt;,
+&lt;span class="note-question"&gt;questions&lt;/span&gt;, and
+&lt;span class="note-other"&gt;other&lt;/span&gt;.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;span class="note-correction"&gt;[p11]&lt;/span&gt; Shared &lt;code&gt;processRequest()&lt;/code&gt;
+method is missing a &lt;code&gt;return&lt;/code&gt; statement.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;span class="note-correction"&gt;[p12]&lt;/span&gt; As a coroutine/fiber
+fanboy, I could not have passed through the following statement:&lt;/p&gt;
+
+    &lt;blockquote&gt;
+      &lt;p&gt;In some languages, such as C#, Go, and Kotlin, the same code [a
+simple inter-microservice communication over HTTP] might be
+non-blocking when green threads are used. However, in pure Java,
+we do not have such features yet. Consequently, the actual thread
+will be blocked in such cases.&lt;/p&gt;
+    &lt;/blockquote&gt;
+
+    &lt;p&gt;I forgot how many times I needed to correct this false misbelief,
+but I will repeat it here one more time: For any language X
+compiling to JVM bytecode, if a Java standard library call is
+[thread] blocking, access to it in X is going to be blocking as
+well. Kotlin coroutines is no exception to this. Further every
+convenience X provides, say coroutines, except syntatic sugars, has
+already been at the exposure of Java via solid libraries like
+&lt;a href="https://github.com/nqzero/kilim"&gt;Kilim&lt;/a&gt; (since 2006) and
+&lt;a href="https://github.com/puniverse/quasar"&gt;Quasar&lt;/a&gt; (since 2013).&lt;/p&gt;
+
+    &lt;p&gt;Additionally, the rules of the game will totally change in a couple
+of years after the release of &lt;a href="http://openjdk.java.net/projects/loom/"&gt;Project
+Loom&lt;/a&gt;.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;span class="note-improvements"&gt;[p16]&lt;/span&gt; In Diagram 1.4, what
+is the difference between solid and dashed lines? I am surprised to
+see that the image is advertising Apache Kafka while the rest of the
+components are free from such specification.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;span class="note-improvements"&gt;[p18]&lt;/span&gt; In Diagram 1.5, texts
+are not readable. (Unfortunately, many of the image texts are not
+readable in the hardcopy. I don’t know about the e-book though.)&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;span class="note-correction"&gt;[p28]&lt;/span&gt; &lt;em&gt;all cross-service
+communication is non-blocking anymore.&lt;/em&gt; → &lt;em&gt;… is not blocking
+anymore.&lt;/em&gt;&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;span class="note-correction"&gt;[p46]&lt;/span&gt; &lt;em&gt;the actual request
+processing continues until &lt;code&gt;SseEnitter.complete()&lt;/code&gt;&lt;/em&gt; →
+&lt;em&gt;… until &lt;code&gt;SseEmitter.complete()&lt;/code&gt;&lt;/em&gt;&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;span class="note-improvement"&gt;[p46]&lt;/span&gt; Justification of why
+&lt;code&gt;@Async&lt;/code&gt; is necessary here is missing.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;span class="note-correction"&gt;[p59]&lt;/span&gt; &lt;em&gt;The &lt;code&gt;count&lt;/code&gt; operator is
+pretty descriptive, it emits the only value …&lt;/em&gt; → &lt;em&gt;… emits
+only one value …&lt;/em&gt;&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;span class="note-question"&gt;[p62]&lt;/span&gt; Chapter starts with&lt;/p&gt;
+
+    &lt;pre&gt;&lt;code class="language-java"&gt;&lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kd"&gt;interface&lt;/span&gt; &lt;span class="nc"&gt;SearchEngine&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+    &lt;span class="n"&gt;List&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;URL&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="nf"&gt;search&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;String&lt;/span&gt; &lt;span class="n"&gt;query&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="n"&gt;limit&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+&lt;span class="o"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+
+    &lt;p&gt;interface, improves it with&lt;/p&gt;
+
+    &lt;pre&gt;&lt;code class="language-java"&gt;&lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kd"&gt;interface&lt;/span&gt; &lt;span class="nc"&gt;InterableSearchEngine&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+    &lt;span class="n"&gt;Iterable&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;URL&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="nf"&gt;search&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;String&lt;/span&gt; &lt;span class="n"&gt;query&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="n"&gt;limit&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+&lt;span class="o"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+
+    &lt;p&gt;and&lt;/p&gt;
+
+    &lt;pre&gt;&lt;code class="language-java"&gt;&lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kd"&gt;interface&lt;/span&gt; &lt;span class="nc"&gt;FutureSearchEngine&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+    &lt;span class="n"&gt;CompletableFuture&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;List&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;URL&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="nf"&gt;search&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;String&lt;/span&gt; &lt;span class="n"&gt;query&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="n"&gt;limit&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+&lt;span class="o"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+
+    &lt;p&gt;After piling up enough motivation, justifies the victory of
+&lt;code&gt;Observable&lt;/code&gt;s:&lt;/p&gt;
+
+    &lt;pre&gt;&lt;code class="language-java"&gt;&lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kd"&gt;interface&lt;/span&gt; &lt;span class="nc"&gt;RxSearchEngine&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+    &lt;span class="n"&gt;Observable&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;URL&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="nf"&gt;search&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;String&lt;/span&gt; &lt;span class="n"&gt;query&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="n"&gt;limit&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+&lt;span class="o"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+
+    &lt;p&gt;As a reader, let me ask the obvious question: Why not using a
+&lt;code&gt;Stream&amp;lt;URL&amp;gt;&lt;/code&gt; return type instead?&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;span class="note-question"&gt;[p103]&lt;/span&gt; In the following
+explanation,&lt;/p&gt;
+
+    &lt;blockquote&gt;
+      &lt;p&gt;Note that &lt;code&gt;ScheduledPublisher&lt;/code&gt; is effectively an infinite stream
+and the completion of the merged &lt;code&gt;Publisher&lt;/code&gt; is ignored.&lt;/p&gt;
+    &lt;/blockquote&gt;
+
+    &lt;p&gt;What does &lt;em&gt;merged &lt;code&gt;Publisher&lt;/code&gt;&lt;/em&gt; refer to? &lt;code&gt;NewsPreparationOperator&lt;/code&gt;?&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;span class="note-correction"&gt;[p106]&lt;/span&gt; &lt;em&gt;Unfortunately, building a
+proper test suit&lt;/em&gt; → &lt;em&gt;… test suite&lt;/em&gt;&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;span class="note-improvement"&gt;[p114]&lt;/span&gt; Rather than focusing
+this much on the TCK, which is most of the time more relevant for
+library authors compared to users, I wish the authors would have had
+spared some pages on pitfalls and patterns of processors, which is
+bread and butter of reactive stream users and sadly skipped in the
+previous chapter.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;span class="note-improvement"&gt;[p123-129]&lt;/span&gt; I don’t think the
+readers really care about reactive streams adjustments for Vert.x,
+Ratpack or MongoDB reactive streams driver. I find these pages
+irrelevant and distracting.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;span class="note-improvement"&gt;[p133]&lt;/span&gt; It is page 133 and the
+reader is newly getting exposed to Project Reactor. Sort of too
+late, I think.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;span class="note-improvement"&gt;[p133]&lt;/span&gt; &lt;em&gt;Project Reactor, the
+most famous library in the reactive landscape, …&lt;/em&gt; Really? Putting
+aside I favor Reactor over RxJava, the IT community that I know of
+does not give me such an impression to back this claim up.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;span class="note-correction"&gt;[p141]&lt;/span&gt; &lt;em&gt;investigating its reach
+API.&lt;/em&gt; → &lt;em&gt;… its rich API&lt;/em&gt;&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;span class="note-improvement"&gt;[p149]&lt;/span&gt; Speaking of &lt;code&gt;defer()&lt;/code&gt;,
+it allows retries, which is, I think, of uttermost importance mostly
+overlooked by many and aligns better with reactive streams semantic
+compliance. Consider the following code:&lt;/p&gt;
+
+    &lt;pre&gt;&lt;code class="language-java"&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;T&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;Mono&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;T&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="nf"&gt;f&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;Mono&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;T&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;mono&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+    &lt;span class="n"&gt;Stopwatch&lt;/span&gt; &lt;span class="n"&gt;stopwatch&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;Stopwatch&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;createUnstarted&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
+    &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;mono&lt;/span&gt;
+            &lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;doOnSubscribe&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;ignored&lt;/span&gt; &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;stopwatch&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;start&lt;/span&gt;&lt;span class="o"&gt;())&lt;/span&gt;
+            &lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;doOnTerminate&lt;/span&gt;&lt;span class="o"&gt;(()&lt;/span&gt; &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;LOGGER&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;log&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="s"&gt;"{}"&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;stopwatch&lt;/span&gt;&lt;span class="o"&gt;));&lt;/span&gt;
+&lt;span class="o"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+
+    &lt;p&gt;versus the alternative below&lt;/p&gt;
+
+    &lt;pre&gt;&lt;code class="language-java"&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;T&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;Mono&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;T&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="nf"&gt;f&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;Mono&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;T&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;mono&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+    &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;Mono&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;defer&lt;/span&gt;&lt;span class="o"&gt;(()&lt;/span&gt; &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+        &lt;span class="n"&gt;Stopwatch&lt;/span&gt; &lt;span class="n"&gt;stopwatch&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;Stopwatch&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;createUnstarted&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
+        &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;mono&lt;/span&gt;
+                &lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;doOnSubscribe&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;ignored&lt;/span&gt; &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;stopwatch&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;start&lt;/span&gt;&lt;span class="o"&gt;())&lt;/span&gt;
+                &lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;doTerminate&lt;/span&gt;&lt;span class="o"&gt;(()&lt;/span&gt; &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;LOGGER&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;log&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="s"&gt;"{}"&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;stopwatch&lt;/span&gt;&lt;span class="o"&gt;));&lt;/span&gt;
+    &lt;span class="o"&gt;});&lt;/span&gt;
+&lt;span class="o"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+
+    &lt;p&gt;Also this is a good spot to talk about assembly-vs-runtime overhead
+of operator chaining.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;span class="note-correction"&gt;[p149]&lt;/span&gt; The word wrapping of
+paragraph starting with &lt;em&gt;Summing this up, Project reactor allows
+…&lt;/em&gt; is broken.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;span class="note-correction"&gt;[p150]&lt;/span&gt; &lt;em&gt;…, we may still request
+&lt;code&gt;Long.MAX_VALUE).&lt;/code&gt;&lt;/em&gt; → &lt;em&gt;request &lt;code&gt;Long.MAX_VALUE.&lt;/code&gt;&lt;/em&gt;&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;span class="note-improvement"&gt;[p154]&lt;/span&gt; The first paragraph of
+the page (&lt;em&gt;However, the described approach for defining subscription
+…&lt;/em&gt;) is an eye opener gem. Given many seasoned RS users fell into
+this trap at least once, a couple of paragraphs detailing these
+caveats would come really handy.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;span class="note-improvement"&gt;[p169]&lt;/span&gt; Speaking of
+&lt;code&gt;Flux#flatMap()&lt;/code&gt; operator, &lt;code&gt;concurrency&lt;/code&gt; parameter might have been
+slightly mentioned here.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;span class="note-question"&gt;[p171]&lt;/span&gt; Given we are executing
+&lt;code&gt;doOn...()&lt;/code&gt; methods (&lt;code&gt;doOnNext()&lt;/code&gt;, &lt;code&gt;doOnComplete()&lt;/code&gt;,
+&lt;code&gt;doOnSubscribe()&lt;/code&gt;, etc.) for their side effects, what does happen
+when they throw an exception?&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;span class="note-improvement"&gt;[p173]&lt;/span&gt; Provide a couple of
+examples for &lt;code&gt;log()&lt;/code&gt; operator, please! Many people, particularly
+coming from RxJava, do not know of its existence.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;span class="note-correction"&gt;[p174]&lt;/span&gt; &lt;em&gt;However, this allows
+forthe sending …&lt;/em&gt; → &lt;em&gt;… allows for the sending …&lt;/em&gt;&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;span class="note-question"&gt;[p174]&lt;/span&gt; In the &lt;code&gt;Flux.create()&lt;/code&gt;
+example, I am puzzled about how does it handle the backpressure.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;span class="note-improvement"&gt;[p183]&lt;/span&gt; I think &lt;em&gt;exponential
+backoff&lt;/em&gt; deserves an explanation here. What does it mean? Further, I
+would have used seconds rather than milliseconds in the example,
+since the latter does not expose the backoff periods clearly at
+first sight.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;span class="note-correction"&gt;[p188]&lt;/span&gt; &lt;em&gt;&lt;code&gt;Flux&amp;lt;Integer&amp;gt;
+cachedSource = source.share();&lt;/code&gt;&lt;/em&gt; Here and in the rest, all of the
+occurences of &lt;code&gt;cachedSource&lt;/code&gt; should be replaced with &lt;code&gt;sharedSource&lt;/code&gt;.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;span class="note-improvement"&gt;[p191]&lt;/span&gt; The used &lt;em&gt;assembly
+phase&lt;/em&gt; term will be described in next chapters, hence using it here
+is sort of confusing. Further, the given explanation for
+&lt;code&gt;transform()&lt;/code&gt; has still some room for improvement. Additionally, I
+would prefer to see a “when to use &lt;code&gt;compose()&lt;/code&gt;, when to use
+&lt;code&gt;transform()&lt;/code&gt;” guide.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;span class="note-improvement"&gt;[p196-197]&lt;/span&gt; There are 3 places
+where &lt;em&gt;assemble-time&lt;/em&gt; is used, though it used to be referred as
+&lt;em&gt;assembly-time&lt;/em&gt;”.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;span class="note-correction"&gt;[p198]&lt;/span&gt; &lt;em&gt;… passing
+&lt;code&gt;Subscription&lt;/code&gt; through ever &lt;code&gt;Subscriber&lt;/code&gt;s …&lt;/em&gt; → &lt;em&gt;… passing
+&lt;code&gt;Subscription&lt;/code&gt; through &lt;code&gt;Subscriber&lt;/code&gt;s …&lt;/em&gt;&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;span class="note-other"&gt;[p200]&lt;/span&gt; The last paragraph of p199
+goes as follows:&lt;/p&gt;
+
+    &lt;blockquote&gt;
+      &lt;p&gt;THe importance of understanding this phase is that during runtime
+we may apply optimization that may reduce amount of signals
+exchange. [“the amount of signals exchanged”?] For example, as we
+are going to see in the next sections, we may reduce the number of
+&lt;code&gt;Subscription#request&lt;/code&gt; calls and improve, therefore, performance
+of the stream.&lt;/p&gt;
+    &lt;/blockquote&gt;
+
+    &lt;p&gt;Then the following tip opens the p200:&lt;/p&gt;
+
+    &lt;blockquote&gt;
+      &lt;p&gt;… the invocation of &lt;code&gt;Subscription#request&lt;/code&gt; method causes a write
+to the &lt;code&gt;volatile&lt;/code&gt; field that holds demand. Such a write is an
+expensive operation from computation perspective, so it is better
+to avoid it if possible.&lt;/p&gt;
+    &lt;/blockquote&gt;
+
+    &lt;p&gt;Hrm… I thought the main overhead of &lt;code&gt;Subscription#request&lt;/code&gt; calls
+was unnecessary individual requests which could have been
+batched. Compared to this, write to a &lt;code&gt;volatile&lt;/code&gt; does not really
+sound like an overhead.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;span class="note-improvement"&gt;[p200]&lt;/span&gt; Diagram 4.8 is missing
+some explanation.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;span class="note-question"&gt;[p204]&lt;/span&gt; In Diagram 4.11, how is
+backpressure preserved given there is an external buffer employed
+by &lt;code&gt;publishOn&lt;/code&gt;. Who maintains this buffer? Is it the task queue of
+the &lt;code&gt;ScheduledExecutionService&lt;/code&gt; used under the hood?&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;span class="note-question"&gt;[p206]&lt;/span&gt; Totally lost with the
+following sentence: &lt;em&gt;Under the hood, &lt;code&gt;subscribeOn&lt;/code&gt; executes the
+subscription to the parent &lt;code&gt;Publisher&lt;/code&gt; into &lt;code&gt;Runnable&lt;/code&gt;, which is the
+scheduler for a specified &lt;code&gt;Scheduler&lt;/code&gt;.&lt;/em&gt;&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;span class="note-correction"&gt;[p207]&lt;/span&gt; In the shared code
+snippet, &lt;code&gt;.map()&lt;/code&gt; and &lt;code&gt;.filter()&lt;/code&gt; are missing &lt;code&gt;...&lt;/code&gt; as input
+arguments.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;span class="note-question"&gt;[p208]&lt;/span&gt; How does
+&lt;code&gt;SingleScheduler&lt;/code&gt; handle blocking functions spoiling time-sensitive
+executions?&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;span class="note-improvement"&gt;[p209]&lt;/span&gt; &lt;em&gt;… so the execution
+is attache to …&lt;/em&gt; → &lt;em&gt;… so the execution is attached to …&lt;/em&gt;&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;span class="note-improvement"&gt;[p209]&lt;/span&gt; In the next page, it
+has been admitted that the shared code snippet does not demonstrate
+a good usage of &lt;code&gt;ThreadLocal&lt;/code&gt;s. So why not sharing a proper use of
+&lt;code&gt;ThreadLocal&lt;/code&gt;s?&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;span class="note-correction"&gt;[p211]&lt;/span&gt; I think &lt;em&gt;Such design
+decision … have its own &lt;code&gt;Context&lt;/code&gt;.&lt;/em&gt; part of the last paragraph
+needs a rewrite.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;span class="note-correction"&gt;[p213]&lt;/span&gt; &lt;em&gt;… bottom (with id
+initial) has empty Context at all.&lt;/em&gt; → &lt;em&gt;… bottom (with id
+&lt;code&gt;initial&lt;/code&gt;) has empty &lt;code&gt;Context&lt;/code&gt; at all.&lt;/em&gt;&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;span class="note-correction"&gt;[p214]&lt;/span&gt; &lt;em&gt;The preciding code show a
+…&lt;/em&gt; → &lt;em&gt;The preciding code shows a …&lt;/em&gt;&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;span class="note-correction"&gt;[p215]&lt;/span&gt; &lt;em&gt;… we mentioned another
+sample of such …&lt;/em&gt; → &lt;em&gt;… we mentioned another example of such
+…&lt;/em&gt;&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;span class="note-correction"&gt;[p217]&lt;/span&gt; In Diagram 4.15, the box
+at the bottom should be titled &lt;code&gt;subscribe()&lt;/code&gt; instead of &lt;code&gt;flatMap()&lt;/code&gt;.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;span class="note-correction"&gt;[p225]&lt;/span&gt; &lt;em&gt;Preview Online Code
+Files&lt;/em&gt; at the bottom looks to be a typo.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;span class="note-question"&gt;[p230]&lt;/span&gt; &lt;em&gt;… the WebFlux module
+provides built-in backpressure support …&lt;/em&gt; Cool! But how does it do
+that?&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;span class="note-correction"&gt;[p254]&lt;/span&gt; &lt;em&gt;… using the
+&lt;code&gt;PasswordEncoder#matchs&lt;/code&gt; …&lt;/em&gt; → &lt;em&gt;… using the
+&lt;code&gt;PasswordEncoder#matches&lt;/code&gt; …&lt;/em&gt;&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;span class="note-question"&gt;[p254]&lt;/span&gt; In the shared snippet,
+which scheduler executes the &lt;code&gt;map(p -&amp;gt;
+passwordEncoder.matches(...))&lt;/code&gt; line? Netty I/O loop thread? If so
+(or some other scheduler of similar importance), is it wise perform
+&lt;code&gt;passwordEncoder#matches&lt;/code&gt; here?&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;span class="note-correction"&gt;[p255]&lt;/span&gt; In the shared code
+snippet, isn’t &lt;code&gt;flatMap(isMatched -&amp;gt; ...)&lt;/code&gt; should be replaced with
+&lt;code&gt;map(isMatched -&amp;gt; ...)&lt;/code&gt;?&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;span class="note-correction"&gt;[p278]&lt;/span&gt; &lt;em&gt;&lt;code&gt;else
+if(resposne.statusCode() == EXPECTATION_FAILD) {&lt;/code&gt;&lt;/em&gt; → &lt;em&gt;&lt;code&gt;else
+if(response.statusCode() == EXPECTATION_FAILED) {&lt;/code&gt;&lt;/em&gt;&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;span class="note-correction"&gt;[p267]&lt;/span&gt; &lt;em&gt;… template has a
+placeholder, &lt;code&gt;dataSource&lt;/code&gt;, …&lt;/em&gt; → &lt;em&gt;… template has a
+placeholder, &lt;code&gt;playList&lt;/code&gt;, …&lt;/em&gt;&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;span class="note-correction"&gt;[p273-274]&lt;/span&gt; All apperances of
+&lt;em&gt;Albom&lt;/em&gt; and &lt;em&gt;albom&lt;/em&gt; should be replaced with &lt;em&gt;Album&lt;/em&gt; and &lt;em&gt;album&lt;/em&gt;,
+respectively.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;span class="note-correction"&gt;[p278]&lt;/span&gt; &lt;em&gt;As we can observe from
+the preciding diagram, with an increase in parallelization, the
+throughput of the system starts becoming slower and slower.&lt;/em&gt;
+Hrm… Actually the throughput keeps on increasing, though the gain
+is slowing down. Does it mean &lt;em&gt;the increase in throughput&lt;/em&gt;?&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;span class="note-improvement"&gt;[p281]&lt;/span&gt; The definitions of
+contention and coherence are left pretty ambiguous. A couple of
+practical examples would come really handy.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;span class="note-correction"&gt;[p292]&lt;/span&gt; Diagram 6.16 misses the
+legend. The caption can be reworked to fix this as follows: &lt;em&gt;WebFlux
+(dash) versis WebMVC (plus) throughput…&lt;/em&gt; This applies to the rest
+of diagrams with multiple lines in the following pages.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;span class="note-improvement"&gt;[p301-303]&lt;/span&gt; I would rather use
+a bar chart for performance figures rather than a table.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;span class="note-improvement"&gt;[p308]&lt;/span&gt; Diagram 6.25 looks
+like a &lt;a href="https://en.wikipedia.org/wiki/Microsoft_Paint"&gt;mspaint.exe&lt;/a&gt;
+101 assignment submission.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;span class="note-correction"&gt;[p311]&lt;/span&gt; &lt;em&gt;… the system has four
+central components …&lt;/em&gt; → &lt;em&gt;… the system has three central
+components …&lt;/em&gt;&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;span class="note-correction"&gt;[p349]&lt;/span&gt; &lt;em&gt;… EclipseLink, Spring
+Data JDBC, and Spring Data JDBC, …&lt;/em&gt; → &lt;em&gt;… EclipseLink,
+Spring Data JDBC, and Spring JDBC, …&lt;/em&gt;&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;span class="note-correction"&gt;[p356-357]&lt;/span&gt; All occurences of
+&lt;code&gt;updatedBook...&lt;/code&gt; should be replaced with &lt;code&gt;updateBook...&lt;/code&gt;.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;span class="note-improvement"&gt;[p379]&lt;/span&gt; What is the point of
+&lt;em&gt;Distributed transactions with the SAGA pattern&lt;/em&gt; here?&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;span class="note-improvement"&gt;[p405]&lt;/span&gt; In Diagram 8.1, there
+is plenty of space that could have been used and the texts are so
+small to the point of becoming unreadable.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;span class="note-other"&gt;[p418]&lt;/span&gt; This page concludes the
+&lt;em&gt;Scaling up with Cloud Streams&lt;/em&gt; chapter by announcing its triumph
+over previously mentioned service-to-service architectures. I sadly
+find this conclusion pretty biased and far from reflecting the
+reality. There is no silver bullet for such problems and as has
+always been the case, &lt;em&gt;it depends&lt;/em&gt;. Further, almost all of the
+listed so-called improvements to message broker-based solutions are
+either as is or with similar approaches applicable to
+service-to-service architectures as well. It is also surprising to
+see no mention of practical hurdles one need to overcome while
+scaling brokers too. You can easily Google and find dozens of Kafka
+horror stories. For a book that spent chapters on backpressure
+problems, the question of how is it affected by the delegation of
+the communication to a broker is totally ignored. Given how
+objective and well-equiped the authors were throughout the entire
+book, I am really amazed to see such a hype-oriented conclusion at
+the end of this chapter.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;span class="note-improvement"&gt;[p425]&lt;/span&gt; In the shared code
+snippet, used &lt;code&gt;messagesStream&lt;/code&gt; and &lt;code&gt;statisticStream&lt;/code&gt; are neither
+described, nor defined.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;span class="note-improvement"&gt;[p430]&lt;/span&gt; For a book published
+in October 2018, it is better to not limit the list of cloud
+providers offering serverless deployments with AWS Lambda. To the
+best of my knowledge, GCP, Azure, and many others provide similar
+functionalities.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;span class="note-correction"&gt;[p435]&lt;/span&gt; &lt;em&gt;&lt;code&gt;ClassLoad&lt;/code&gt;&lt;/em&gt; →
+&lt;em&gt;&lt;code&gt;ClassLoader&lt;/code&gt;&lt;/em&gt;&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;span class="note-question"&gt;[p437]&lt;/span&gt; It is noted that authors
+escaped &lt;code&gt;&amp;lt;&lt;/code&gt; and &lt;code&gt;&amp;gt;&lt;/code&gt; characters in the URL they pass to &lt;code&gt;curl&lt;/code&gt; with
+&lt;code&gt;%3C&lt;/code&gt; and &lt;code&gt;%3E&lt;/code&gt;, respectively. Though, AFAIK, &lt;code&gt;curl&lt;/code&gt; already does
+that if you pass the URL in quotes. Isn’t it?&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;span class="note-correction"&gt;[p440]&lt;/span&gt; &lt;em&gt;… represent independent
+ClassLoaders.&lt;/em&gt; → &lt;em&gt;… represent independent &lt;code&gt;ClassLoader&lt;/code&gt;s.&lt;/em&gt;&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;span class="note-correction"&gt;[p441]&lt;/span&gt; &lt;em&gt;&lt;code&gt;implements
+Function&amp;lt;Payment, Payment&amp;gt;&lt;/code&gt;&lt;/em&gt; → &lt;em&gt;&lt;code&gt;implements Function&amp;lt;Payment,
+PaymentValidation&amp;gt;&lt;/code&gt;&lt;/em&gt;&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;span class="note-correction"&gt;[p441]&lt;/span&gt; &lt;em&gt;&lt;code&gt;public Payment
+apply(Payment payment) { ... }&lt;/code&gt;&lt;/em&gt; → &lt;em&gt;&lt;code&gt;public PaymentValidation
+apply(Payment payment) { ... }&lt;/code&gt;&lt;/em&gt;&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;span class="note-correction"&gt;[p448]&lt;/span&gt; A dashed arrow is missing
+from Service B’s &lt;code&gt;request(1)&lt;/code&gt; line to Service A’s &lt;code&gt;request(10)&lt;/code&gt;
+line.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;span class="note-improvement"&gt;[p449]&lt;/span&gt; Page contains a pretty
+well wrapped comparison of Reactive Streams versus TCP for flow
+control. Given HTTP/3 is almost ready to be served and is employing
+UDP rather than TCP, a &lt;em&gt;Reactive Streams versus HTTP/3&lt;/em&gt; comparison
+would be really thought-provoking.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;span class="note-correction"&gt;[p450]&lt;/span&gt; &lt;code&gt;request(3)&lt;/code&gt; under Service
+A’s adapter is, I believe, mistakenly placed.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;span class="note-other"&gt;[p454]&lt;/span&gt; In the shared code snippet,
+isn’t &lt;code&gt;Flux.interval(Duration.ofMillis(100))&lt;/code&gt; too harsh for service
+discovery?&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;span class="note-other"&gt;[p456]&lt;/span&gt; I am aware of the fact that
+the design of gRPC incurs &lt;a href="https://github.com/grpc/grpc-java/issues/1549"&gt;serious flow control
+problems&lt;/a&gt;, though in
+a section where you compare contenders like RSocket and gRPC, there
+is no place for such a vague and ungrounded statement:&lt;/p&gt;
+
+    &lt;blockquote&gt;
+      &lt;p&gt;Looking at the preciding code, we may get the feeling that gRPC,
+along with asynchronous message passing, gives backpressure
+control support as well. However, that part is a bit tricky.&lt;/p&gt;
+    &lt;/blockquote&gt;
+
+    &lt;p&gt;Is backpressure is not handled at all or what? One should not pass
+over such a claim by hand waving.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;span class="note-correction"&gt;[p457]&lt;/span&gt; &lt;em&gt;&lt;code&gt;public static class
+TestApplication&lt;/code&gt;&lt;/em&gt; → &lt;em&gt;&lt;code&gt;public class TestApplication&lt;/code&gt;&lt;/em&gt;&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;span class="note-question"&gt;[p457]&lt;/span&gt; The RSocket endpoint is
+annotated with &lt;code&gt;@RequestManyMapping(value = "/stream1", mimeType =
+"application/json")&lt;/code&gt;. Given RSocket is a wire protocol, what is the
+purpose of the provided path and MIME type here?&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;span class="note-other"&gt;[p461]&lt;/span&gt; The summary repeats the
+triumph of message brokers over service-to-service communication one
+more time. Again, this is a really subjective statement. There are
+many advantages and disadvantages to each approach. Announcing a
+winner is a pretty dangerous generalization.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;span class="note-improvement"&gt;[p471]&lt;/span&gt; Shared
+&lt;code&gt;StepVerifier.withVirtualTime()&lt;/code&gt; trick only works unless you use a
+custom scheduler in &lt;code&gt;interval()&lt;/code&gt; and &lt;code&gt;timeout()&lt;/code&gt; calls.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;span class="note-other"&gt;[p478]&lt;/span&gt; Here authors share a hack to
+work around the problem of Spring Boot 2.0 &lt;code&gt;WebClient&lt;/code&gt; not providing
+the mocking support for outgoing HTTP interactions. I would rather
+share this trick in a Stack Overflow post, because the readers of
+the book will take it for granted, and rather share the
+aforementioned WireMock approach.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;span class="note-other"&gt;[p480]&lt;/span&gt; &lt;em&gt;Testing
+WebSocket&lt;/em&gt;… Again, this is a hack rather than a solution. I would
+not share it in the book.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;span class="note-correction"&gt;[p491]&lt;/span&gt; Diagram 10.1 is totally
+irrelevant to the content of the page.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;span class="note-improvement"&gt;[p492]&lt;/span&gt; Some texts in Diagram
+10.3 are not readable.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;span class="note-correction"&gt;[p503]&lt;/span&gt; &lt;em&gt;… memory usage by
+regions, GC pauses, treads count …&lt;/em&gt; → &lt;em&gt;… memory usage by
+regions, GC pauses, thread counts …&lt;/em&gt;&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;span class="note-improvement"&gt;[p510]&lt;/span&gt; It is wise to note
+that Spring Boot Admin is not an official Spring project.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;span class="note-improvement"&gt;[p514-515]&lt;/span&gt; No mention of
+either GCP or App Engine.&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;style type="text/css"&gt;
+    span.note-correction {
+        color: red;
+    }
+    span.note-improvement {
+        color: orange;
+    }
+    span.note-question {
+        color: green;
+    }
+    span.note-other {
+        color: silver;
+    }
+&lt;/style&gt;
+
+</content>
+  </entry>
   <entry>
     <id>tag:vlkan.com,2018-11-14://blog/post/2018/11/14/elasticsearch-primary-data-store/</id>
     <title type="html">Using Elasticsearch as the Primary Data Store</title>
@@ -4048,259 +4769,6 @@ follows:&lt;/p&gt;
 file. The format of the problem and solution files are detailed in &lt;a href="https://hashcode.withgoogle.com/2015/tasks/hashcode2015_qualification_task.pdf"&gt;the
 official problem
 description&lt;/a&gt;.&lt;/p&gt;
-</content>
-  </entry>
-  <entry>
-    <id>tag:vlkan.com,2015-11-27://blog/post/2015/11/27/maven-protobuf/</id>
-    <title type="html">Compiling Protocol Buffers Sources in Maven</title>
-    <published>2015-11-27T08:49:00Z</published>
-    <updated>2015-11-27T08:49:00Z</updated>
-    <link rel="alternate" href="https://vlkan.com//blog/post/2015/11/27/maven-protobuf/"/>
-    <content type="html">
-&lt;blockquote&gt;
-  &lt;p&gt;&lt;strong&gt;TL;DR&lt;/strong&gt; – This post explains how to compile Protocol Buffers schemas into
-Java sources in Maven. Over the course of time, there appeared plugins like
-&lt;a href="https://github.com/os72/protoc-jar-maven-plugin"&gt;protoc-jar-maven-plugin&lt;/a&gt;.
-Nevertheless, the steps below still present a value to understand the
-necessary plumbing and some best practices (e.g., shading) that are not
-covered by the plugins.&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;p&gt;Java build systems have always been a second class citizen for &lt;a href="https://developers.google.com/protocol-buffers"&gt;Protocol
-Buffers&lt;/a&gt;. As is the case for
-many other Java serialization frameworks (e.g., &lt;a href="https://capnproto.org/"&gt;Cap’n
-Proto&lt;/a&gt;,
-&lt;a href="http://google.github.io/flatbuffers/"&gt;FlatBuffers&lt;/a&gt;), Protocol Buffers does
-not provide a native Java compiler which you can inject into Maven
-dependencies and invoke a plugin to compile &lt;code&gt;.proto&lt;/code&gt; files into &lt;code&gt;.java&lt;/code&gt;
-sources. Hence, programmers needed to have &lt;code&gt;protoc&lt;/code&gt; (Proto Buffers Compiler)
-binary on their development machine and call this platform-dependent binary
-during Maven build. This totally violates the environment independent build of
-a project. Fortunately, Google releases platform-specific &lt;code&gt;protoc&lt;/code&gt; binaries in
-the form of Maven artifacts.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src="protoc-artifacts.png" alt="Maven Artifacts for Proto Buffers Compiler Binary"&gt;&lt;/p&gt;
-
-&lt;p&gt;We can add these artifacts as a compile-time dependency to our Maven project
-and invoke the platform-dependent binary to compile &lt;code&gt;.proto&lt;/code&gt; sources.&lt;/p&gt;
-
-&lt;h1 id="preliminaries"&gt;Preliminaries&lt;/h1&gt;
-
-&lt;p&gt;Let’s start with defining certain properties for library versions and
-input/output directories for the Protocol Buffers compiler.&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="language-xml"&gt;&lt;span class="nt"&gt;&amp;lt;properties&amp;gt;&lt;/span&gt;
-
-    &lt;span class="c"&gt;&amp;lt;!-- protobuf paths --&amp;gt;&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;lt;protobuf.input.directory&amp;gt;&lt;/span&gt;${project.basedir}/src/main/proto&lt;span class="nt"&gt;&amp;lt;/protobuf.input.directory&amp;gt;&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;lt;protobuf.output.directory&amp;gt;&lt;/span&gt;${project.build.directory}/generated-sources&lt;span class="nt"&gt;&amp;lt;/protobuf.output.directory&amp;gt;&lt;/span&gt;
-
-    &lt;span class="c"&gt;&amp;lt;!-- library versions --&amp;gt;&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;lt;build-helper-maven-plugin.version&amp;gt;&lt;/span&gt;1.9.1&lt;span class="nt"&gt;&amp;lt;/build-helper-maven-plugin.version&amp;gt;&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;lt;maven-antrun-plugin.version&amp;gt;&lt;/span&gt;1.8&lt;span class="nt"&gt;&amp;lt;/maven-antrun-plugin.version&amp;gt;&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;lt;maven-dependency-plugin.version&amp;gt;&lt;/span&gt;2.10&lt;span class="nt"&gt;&amp;lt;/maven-dependency-plugin.version&amp;gt;&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;lt;maven-shade-plugin.version&amp;gt;&lt;/span&gt;2.4.2&lt;span class="nt"&gt;&amp;lt;/maven-shade-plugin.version&amp;gt;&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;lt;os-maven-plugin.version&amp;gt;&lt;/span&gt;1.4.1.Final&lt;span class="nt"&gt;&amp;lt;/os-maven-plugin.version&amp;gt;&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;lt;protobuf.version&amp;gt;&lt;/span&gt;3.0.0-beta-1&lt;span class="nt"&gt;&amp;lt;/protobuf.version&amp;gt;&lt;/span&gt;
-
-&lt;span class="nt"&gt;&amp;lt;/properties&amp;gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
-
-&lt;h1 id="protocol-buffers-java-api"&gt;Protocol Buffers Java API&lt;/h1&gt;
-
-&lt;p&gt;&lt;code&gt;protoc&lt;/code&gt; compiles &lt;code&gt;.proto&lt;/code&gt; files into &lt;code&gt;.java&lt;/code&gt; files such that the generated
-sources rely on certain common classes. These classes are provided by
-&lt;code&gt;protobuf-java&lt;/code&gt; artifact:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="language-xml"&gt;&lt;span class="nt"&gt;&amp;lt;dependency&amp;gt;&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;lt;groupId&amp;gt;&lt;/span&gt;com.google.protobuf&lt;span class="nt"&gt;&amp;lt;/groupId&amp;gt;&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;lt;artifactId&amp;gt;&lt;/span&gt;protobuf-java&lt;span class="nt"&gt;&amp;lt;/artifactId&amp;gt;&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;lt;version&amp;gt;&lt;/span&gt;${protobuf.version}&lt;span class="nt"&gt;&amp;lt;/version&amp;gt;&lt;/span&gt;
-&lt;span class="nt"&gt;&amp;lt;/dependency&amp;gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
-
-&lt;h1 id="detecting-operating-system"&gt;Detecting Operating System&lt;/h1&gt;
-
-&lt;p&gt;&lt;code&gt;protoc&lt;/code&gt; Maven artifact is provided in various platform-specific
-&lt;em&gt;classifications&lt;/em&gt;: &lt;code&gt;linux-x86_32&lt;/code&gt;, &lt;code&gt;linux-x86_64&lt;/code&gt;, &lt;code&gt;osx-x86_32&lt;/code&gt;, &lt;code&gt;osx-x86_64&lt;/code&gt;,
-&lt;code&gt;windows-x86_32&lt;/code&gt;, &lt;code&gt;windows-x86_64&lt;/code&gt;. In order to pick the right artifact, we
-will employ &lt;code&gt;os.detected.classifier&lt;/code&gt; property exposed by &lt;code&gt;os-maven-plugin&lt;/code&gt;:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="language-xml"&gt;&lt;span class="nt"&gt;&amp;lt;build&amp;gt;&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;lt;extensions&amp;gt;&lt;/span&gt;
-        &lt;span class="c"&gt;&amp;lt;!-- provides os.detected.classifier (i.e. linux-x86_64, osx-x86_64) property --&amp;gt;&lt;/span&gt;
-        &lt;span class="nt"&gt;&amp;lt;extension&amp;gt;&lt;/span&gt;
-            &lt;span class="nt"&gt;&amp;lt;groupId&amp;gt;&lt;/span&gt;kr.motd.maven&lt;span class="nt"&gt;&amp;lt;/groupId&amp;gt;&lt;/span&gt;
-            &lt;span class="nt"&gt;&amp;lt;artifactId&amp;gt;&lt;/span&gt;os-maven-plugin&lt;span class="nt"&gt;&amp;lt;/artifactId&amp;gt;&lt;/span&gt;
-            &lt;span class="nt"&gt;&amp;lt;version&amp;gt;&lt;/span&gt;${os-maven-plugin.version}&lt;span class="nt"&gt;&amp;lt;/version&amp;gt;&lt;/span&gt;
-        &lt;span class="nt"&gt;&amp;lt;/extension&amp;gt;&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;lt;/extensions&amp;gt;&lt;/span&gt;
-
-    &lt;span class="c"&gt;&amp;lt;!-- ... --&amp;gt;&lt;/span&gt;
-&lt;span class="nt"&gt;&amp;lt;/build&amp;gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
-
-&lt;h1 id="downloading-platform-specific-protocol-buffers-compiler"&gt;Downloading Platform-Specific Protocol Buffers Compiler&lt;/h1&gt;
-
-&lt;p&gt;We will use &lt;code&gt;maven-dependency-plugin&lt;/code&gt; to download the platform-specific
-&lt;code&gt;protoc&lt;/code&gt; binary suitable for the current build platform and copy it into
-&lt;code&gt;project.build.directory&lt;/code&gt;.&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="language-xml"&gt;&lt;span class="c"&gt;&amp;lt;!-- copy protoc binary into build directory --&amp;gt;&lt;/span&gt;
-&lt;span class="nt"&gt;&amp;lt;plugin&amp;gt;&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;lt;groupId&amp;gt;&lt;/span&gt;org.apache.maven.plugins&lt;span class="nt"&gt;&amp;lt;/groupId&amp;gt;&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;lt;artifactId&amp;gt;&lt;/span&gt;maven-dependency-plugin&lt;span class="nt"&gt;&amp;lt;/artifactId&amp;gt;&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;lt;version&amp;gt;&lt;/span&gt;${maven-dependency-plugin.version}&lt;span class="nt"&gt;&amp;lt;/version&amp;gt;&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;lt;executions&amp;gt;&lt;/span&gt;
-        &lt;span class="nt"&gt;&amp;lt;execution&amp;gt;&lt;/span&gt;
-            &lt;span class="nt"&gt;&amp;lt;id&amp;gt;&lt;/span&gt;copy-protoc&lt;span class="nt"&gt;&amp;lt;/id&amp;gt;&lt;/span&gt;
-            &lt;span class="nt"&gt;&amp;lt;phase&amp;gt;&lt;/span&gt;generate-sources&lt;span class="nt"&gt;&amp;lt;/phase&amp;gt;&lt;/span&gt;
-            &lt;span class="nt"&gt;&amp;lt;goals&amp;gt;&lt;/span&gt;
-                &lt;span class="nt"&gt;&amp;lt;goal&amp;gt;&lt;/span&gt;copy&lt;span class="nt"&gt;&amp;lt;/goal&amp;gt;&lt;/span&gt;
-            &lt;span class="nt"&gt;&amp;lt;/goals&amp;gt;&lt;/span&gt;
-            &lt;span class="nt"&gt;&amp;lt;configuration&amp;gt;&lt;/span&gt;
-                &lt;span class="nt"&gt;&amp;lt;artifactItems&amp;gt;&lt;/span&gt;
-                    &lt;span class="nt"&gt;&amp;lt;artifactItem&amp;gt;&lt;/span&gt;
-                        &lt;span class="nt"&gt;&amp;lt;groupId&amp;gt;&lt;/span&gt;com.google.protobuf&lt;span class="nt"&gt;&amp;lt;/groupId&amp;gt;&lt;/span&gt;
-                        &lt;span class="nt"&gt;&amp;lt;artifactId&amp;gt;&lt;/span&gt;protoc&lt;span class="nt"&gt;&amp;lt;/artifactId&amp;gt;&lt;/span&gt;
-                        &lt;span class="nt"&gt;&amp;lt;version&amp;gt;&lt;/span&gt;${protobuf.version}&lt;span class="nt"&gt;&amp;lt;/version&amp;gt;&lt;/span&gt;
-                        &lt;span class="nt"&gt;&amp;lt;classifier&amp;gt;&lt;/span&gt;${os.detected.classifier}&lt;span class="nt"&gt;&amp;lt;/classifier&amp;gt;&lt;/span&gt;
-                        &lt;span class="nt"&gt;&amp;lt;type&amp;gt;&lt;/span&gt;exe&lt;span class="nt"&gt;&amp;lt;/type&amp;gt;&lt;/span&gt;
-                        &lt;span class="nt"&gt;&amp;lt;overWrite&amp;gt;&lt;/span&gt;true&lt;span class="nt"&gt;&amp;lt;/overWrite&amp;gt;&lt;/span&gt;
-                        &lt;span class="nt"&gt;&amp;lt;outputDirectory&amp;gt;&lt;/span&gt;${project.build.directory}&lt;span class="nt"&gt;&amp;lt;/outputDirectory&amp;gt;&lt;/span&gt;
-                    &lt;span class="nt"&gt;&amp;lt;/artifactItem&amp;gt;&lt;/span&gt;
-                &lt;span class="nt"&gt;&amp;lt;/artifactItems&amp;gt;&lt;/span&gt;
-            &lt;span class="nt"&gt;&amp;lt;/configuration&amp;gt;&lt;/span&gt;
-        &lt;span class="nt"&gt;&amp;lt;/execution&amp;gt;&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;lt;/executions&amp;gt;&lt;/span&gt;
-&lt;span class="nt"&gt;&amp;lt;/plugin&amp;gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Note how we employed &lt;code&gt;os.detected.classifier&lt;/code&gt; variable provided by
-&lt;code&gt;os-maven-plugin&lt;/code&gt; to inject the platform-specific binary dependency.&lt;/p&gt;
-
-&lt;h1 id="generating-protocol-buffers-java-sources"&gt;Generating Protocol Buffers Java Sources&lt;/h1&gt;
-
-&lt;p&gt;Now we have our &lt;code&gt;protoc&lt;/code&gt; binary in &lt;code&gt;project.build.directory&lt;/code&gt;. We can use
-&lt;code&gt;maven-antrun-plugin&lt;/code&gt; plugin to execute &lt;code&gt;protoc&lt;/code&gt; for compiling &lt;code&gt;.proto&lt;/code&gt; files
-into &lt;code&gt;.java&lt;/code&gt; sources.&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="language-xml"&gt;&lt;span class="c"&gt;&amp;lt;!-- compile proto buffer files using copied protoc binary --&amp;gt;&lt;/span&gt;
-&lt;span class="nt"&gt;&amp;lt;plugin&amp;gt;&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;lt;groupId&amp;gt;&lt;/span&gt;org.apache.maven.plugins&lt;span class="nt"&gt;&amp;lt;/groupId&amp;gt;&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;lt;artifactId&amp;gt;&lt;/span&gt;maven-antrun-plugin&lt;span class="nt"&gt;&amp;lt;/artifactId&amp;gt;&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;lt;version&amp;gt;&lt;/span&gt;${maven-antrun-plugin.version}&lt;span class="nt"&gt;&amp;lt;/version&amp;gt;&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;lt;executions&amp;gt;&lt;/span&gt;
-        &lt;span class="nt"&gt;&amp;lt;execution&amp;gt;&lt;/span&gt;
-            &lt;span class="nt"&gt;&amp;lt;id&amp;gt;&lt;/span&gt;exec-protoc&lt;span class="nt"&gt;&amp;lt;/id&amp;gt;&lt;/span&gt;
-            &lt;span class="nt"&gt;&amp;lt;phase&amp;gt;&lt;/span&gt;generate-sources&lt;span class="nt"&gt;&amp;lt;/phase&amp;gt;&lt;/span&gt;
-            &lt;span class="nt"&gt;&amp;lt;configuration&amp;gt;&lt;/span&gt;
-                &lt;span class="nt"&gt;&amp;lt;target&amp;gt;&lt;/span&gt;
-                    &lt;span class="nt"&gt;&amp;lt;property&lt;/span&gt; &lt;span class="na"&gt;name=&lt;/span&gt;&lt;span class="s"&gt;"protoc.filename"&lt;/span&gt; &lt;span class="na"&gt;value=&lt;/span&gt;&lt;span class="s"&gt;"protoc-${protobuf.version}-${os.detected.classifier}.exe"&lt;/span&gt;&lt;span class="nt"&gt;/&amp;gt;&lt;/span&gt;
-                    &lt;span class="nt"&gt;&amp;lt;property&lt;/span&gt; &lt;span class="na"&gt;name=&lt;/span&gt;&lt;span class="s"&gt;"protoc.filepath"&lt;/span&gt; &lt;span class="na"&gt;value=&lt;/span&gt;&lt;span class="s"&gt;"${project.build.directory}/${protoc.filename}"&lt;/span&gt;&lt;span class="nt"&gt;/&amp;gt;&lt;/span&gt;
-                    &lt;span class="nt"&gt;&amp;lt;chmod&lt;/span&gt; &lt;span class="na"&gt;file=&lt;/span&gt;&lt;span class="s"&gt;"${protoc.filepath}"&lt;/span&gt; &lt;span class="na"&gt;perm=&lt;/span&gt;&lt;span class="s"&gt;"ugo+rx"&lt;/span&gt;&lt;span class="nt"&gt;/&amp;gt;&lt;/span&gt;
-                    &lt;span class="nt"&gt;&amp;lt;mkdir&lt;/span&gt; &lt;span class="na"&gt;dir=&lt;/span&gt;&lt;span class="s"&gt;"${protobuf.output.directory}"&lt;/span&gt; &lt;span class="nt"&gt;/&amp;gt;&lt;/span&gt;
-                    &lt;span class="nt"&gt;&amp;lt;path&lt;/span&gt; &lt;span class="na"&gt;id=&lt;/span&gt;&lt;span class="s"&gt;"protobuf.input.filepaths.path"&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;
-                        &lt;span class="nt"&gt;&amp;lt;fileset&lt;/span&gt; &lt;span class="na"&gt;dir=&lt;/span&gt;&lt;span class="s"&gt;"${protobuf.input.directory}"&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;
-                            &lt;span class="nt"&gt;&amp;lt;include&lt;/span&gt; &lt;span class="na"&gt;name=&lt;/span&gt;&lt;span class="s"&gt;"**/*.proto"&lt;/span&gt;&lt;span class="nt"&gt;/&amp;gt;&lt;/span&gt;
-                        &lt;span class="nt"&gt;&amp;lt;/fileset&amp;gt;&lt;/span&gt;
-                    &lt;span class="nt"&gt;&amp;lt;/path&amp;gt;&lt;/span&gt;
-                    &lt;span class="nt"&gt;&amp;lt;pathconvert&lt;/span&gt; &lt;span class="na"&gt;pathsep=&lt;/span&gt;&lt;span class="s"&gt;" "&lt;/span&gt; &lt;span class="na"&gt;property=&lt;/span&gt;&lt;span class="s"&gt;"protobuf.input.filepaths"&lt;/span&gt; &lt;span class="na"&gt;refid=&lt;/span&gt;&lt;span class="s"&gt;"protobuf.input.filepaths.path"&lt;/span&gt;&lt;span class="nt"&gt;/&amp;gt;&lt;/span&gt;
-                    &lt;span class="nt"&gt;&amp;lt;exec&lt;/span&gt; &lt;span class="na"&gt;executable=&lt;/span&gt;&lt;span class="s"&gt;"${protoc.filepath}"&lt;/span&gt; &lt;span class="na"&gt;failonerror=&lt;/span&gt;&lt;span class="s"&gt;"true"&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;
-                        &lt;span class="nt"&gt;&amp;lt;arg&lt;/span&gt; &lt;span class="na"&gt;value=&lt;/span&gt;&lt;span class="s"&gt;"-I"&lt;/span&gt;&lt;span class="nt"&gt;/&amp;gt;&lt;/span&gt;
-                        &lt;span class="nt"&gt;&amp;lt;arg&lt;/span&gt; &lt;span class="na"&gt;value=&lt;/span&gt;&lt;span class="s"&gt;"${protobuf.input.directory}"&lt;/span&gt;&lt;span class="nt"&gt;/&amp;gt;&lt;/span&gt;
-                        &lt;span class="nt"&gt;&amp;lt;arg&lt;/span&gt; &lt;span class="na"&gt;value=&lt;/span&gt;&lt;span class="s"&gt;"--java_out"&lt;/span&gt;&lt;span class="nt"&gt;/&amp;gt;&lt;/span&gt;
-                        &lt;span class="nt"&gt;&amp;lt;arg&lt;/span&gt; &lt;span class="na"&gt;value=&lt;/span&gt;&lt;span class="s"&gt;"${protobuf.output.directory}"&lt;/span&gt;&lt;span class="nt"&gt;/&amp;gt;&lt;/span&gt;
-                        &lt;span class="nt"&gt;&amp;lt;arg&lt;/span&gt; &lt;span class="na"&gt;line=&lt;/span&gt;&lt;span class="s"&gt;"${protobuf.input.filepaths}"&lt;/span&gt;&lt;span class="nt"&gt;/&amp;gt;&lt;/span&gt;
-                    &lt;span class="nt"&gt;&amp;lt;/exec&amp;gt;&lt;/span&gt;
-                &lt;span class="nt"&gt;&amp;lt;/target&amp;gt;&lt;/span&gt;
-            &lt;span class="nt"&gt;&amp;lt;/configuration&amp;gt;&lt;/span&gt;
-            &lt;span class="nt"&gt;&amp;lt;goals&amp;gt;&lt;/span&gt;
-                &lt;span class="nt"&gt;&amp;lt;goal&amp;gt;&lt;/span&gt;run&lt;span class="nt"&gt;&amp;lt;/goal&amp;gt;&lt;/span&gt;
-            &lt;span class="nt"&gt;&amp;lt;/goals&amp;gt;&lt;/span&gt;
-        &lt;span class="nt"&gt;&amp;lt;/execution&amp;gt;&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;lt;/executions&amp;gt;&lt;/span&gt;
-&lt;span class="nt"&gt;&amp;lt;/plugin&amp;gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
-
-&lt;h1 id="adding-generated-sources-into-the-package"&gt;Adding Generated Sources into the Package&lt;/h1&gt;
-
-&lt;p&gt;&lt;code&gt;protoc&lt;/code&gt; compiler placed the generated Java sources into
-&lt;code&gt;protobuf.output.directory&lt;/code&gt;. We need to add the sources in this directory to
-the package:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="language-xml"&gt;&lt;span class="c"&gt;&amp;lt;!-- add generated proto buffer classes into the package --&amp;gt;&lt;/span&gt;
-&lt;span class="nt"&gt;&amp;lt;plugin&amp;gt;&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;lt;groupId&amp;gt;&lt;/span&gt;org.codehaus.mojo&lt;span class="nt"&gt;&amp;lt;/groupId&amp;gt;&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;lt;artifactId&amp;gt;&lt;/span&gt;build-helper-maven-plugin&lt;span class="nt"&gt;&amp;lt;/artifactId&amp;gt;&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;lt;version&amp;gt;&lt;/span&gt;${build-helper-maven-plugin.version}&lt;span class="nt"&gt;&amp;lt;/version&amp;gt;&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;lt;executions&amp;gt;&lt;/span&gt;
-        &lt;span class="nt"&gt;&amp;lt;execution&amp;gt;&lt;/span&gt;
-            &lt;span class="nt"&gt;&amp;lt;id&amp;gt;&lt;/span&gt;add-classes&lt;span class="nt"&gt;&amp;lt;/id&amp;gt;&lt;/span&gt;
-            &lt;span class="nt"&gt;&amp;lt;phase&amp;gt;&lt;/span&gt;generate-sources&lt;span class="nt"&gt;&amp;lt;/phase&amp;gt;&lt;/span&gt;
-            &lt;span class="nt"&gt;&amp;lt;goals&amp;gt;&lt;/span&gt;
-                &lt;span class="nt"&gt;&amp;lt;goal&amp;gt;&lt;/span&gt;add-source&lt;span class="nt"&gt;&amp;lt;/goal&amp;gt;&lt;/span&gt;
-            &lt;span class="nt"&gt;&amp;lt;/goals&amp;gt;&lt;/span&gt;
-            &lt;span class="nt"&gt;&amp;lt;configuration&amp;gt;&lt;/span&gt;
-                &lt;span class="nt"&gt;&amp;lt;sources&amp;gt;&lt;/span&gt;
-                    &lt;span class="nt"&gt;&amp;lt;source&amp;gt;&lt;/span&gt;${protobuf.output.directory}&lt;span class="nt"&gt;&amp;lt;/source&amp;gt;&lt;/span&gt;
-                &lt;span class="nt"&gt;&amp;lt;/sources&amp;gt;&lt;/span&gt;
-            &lt;span class="nt"&gt;&amp;lt;/configuration&amp;gt;&lt;/span&gt;
-        &lt;span class="nt"&gt;&amp;lt;/execution&amp;gt;&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;lt;/executions&amp;gt;&lt;/span&gt;
-&lt;span class="nt"&gt;&amp;lt;/plugin&amp;gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
-
-&lt;h1 id="shading-protocol-buffers-package"&gt;Shading Protocol Buffers Package&lt;/h1&gt;
-
-&lt;p&gt;Say you are done with your project, which includes &lt;code&gt;protobuf-java&lt;/code&gt; version
-3.0.0-beta-1 as a dependency. What if there is another package that is
-included as a direct or transitive Maven dependency and injects
-&lt;code&gt;protobuf-java&lt;/code&gt; version 2.5.0? Then you are doomed; you will get a package
-version conflict. In order to avoid this problem, you can leverage
-&lt;code&gt;maven-shade-plugin&lt;/code&gt; to &lt;em&gt;relocate&lt;/em&gt; &lt;code&gt;com.google.protobuf&lt;/code&gt; package contents to a
-private package within your project:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="language-xml"&gt;&lt;span class="c"&gt;&amp;lt;!--  shade protobuf to avoid version conflicts --&amp;gt;&lt;/span&gt;
-&lt;span class="nt"&gt;&amp;lt;plugin&amp;gt;&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;lt;groupId&amp;gt;&lt;/span&gt;org.apache.maven.plugins&lt;span class="nt"&gt;&amp;lt;/groupId&amp;gt;&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;lt;artifactId&amp;gt;&lt;/span&gt;maven-shade-plugin&lt;span class="nt"&gt;&amp;lt;/artifactId&amp;gt;&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;lt;version&amp;gt;&lt;/span&gt;${maven-shade-plugin.version}&lt;span class="nt"&gt;&amp;lt;/version&amp;gt;&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;lt;executions&amp;gt;&lt;/span&gt;
-        &lt;span class="nt"&gt;&amp;lt;execution&amp;gt;&lt;/span&gt;
-            &lt;span class="nt"&gt;&amp;lt;phase&amp;gt;&lt;/span&gt;package&lt;span class="nt"&gt;&amp;lt;/phase&amp;gt;&lt;/span&gt;
-            &lt;span class="nt"&gt;&amp;lt;goals&amp;gt;&lt;/span&gt;
-                &lt;span class="nt"&gt;&amp;lt;goal&amp;gt;&lt;/span&gt;shade&lt;span class="nt"&gt;&amp;lt;/goal&amp;gt;&lt;/span&gt;
-            &lt;span class="nt"&gt;&amp;lt;/goals&amp;gt;&lt;/span&gt;
-            &lt;span class="nt"&gt;&amp;lt;configuration&amp;gt;&lt;/span&gt;
-                &lt;span class="nt"&gt;&amp;lt;relocations&amp;gt;&lt;/span&gt;
-                    &lt;span class="nt"&gt;&amp;lt;relocation&amp;gt;&lt;/span&gt;
-                        &lt;span class="nt"&gt;&amp;lt;pattern&amp;gt;&lt;/span&gt;com.google.protobuf&lt;span class="nt"&gt;&amp;lt;/pattern&amp;gt;&lt;/span&gt;
-                        &lt;span class="nt"&gt;&amp;lt;shadedPattern&amp;gt;&lt;/span&gt;${project.groupId}.${project.artifactId}.shaded.protobuf&lt;span class="nt"&gt;&amp;lt;/shadedPattern&amp;gt;&lt;/span&gt;
-                    &lt;span class="nt"&gt;&amp;lt;/relocation&amp;gt;&lt;/span&gt;
-                &lt;span class="nt"&gt;&amp;lt;/relocations&amp;gt;&lt;/span&gt;
-            &lt;span class="nt"&gt;&amp;lt;/configuration&amp;gt;&lt;/span&gt;
-        &lt;span class="nt"&gt;&amp;lt;/execution&amp;gt;&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;lt;/executions&amp;gt;&lt;/span&gt;
-&lt;span class="nt"&gt;&amp;lt;/plugin&amp;gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;This will relocate the contents of &lt;code&gt;com.google.protobuf&lt;/code&gt; package to
-&lt;code&gt;${project.groupId}.${project.artifactId}.shaded.protobuf&lt;/code&gt; and make the
-classes accessible under this namespace. That is, instead of using&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="language-java"&gt;&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;com.google.protobuf.*&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;in your project, you should use the new relocated package name:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="language-java"&gt;&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;groupId.artifactId.shaded.protobuf.*&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;(Note that you need to replace &lt;code&gt;groupId&lt;/code&gt; and &lt;code&gt;artifactId&lt;/code&gt; literals in the Java
-code.)&lt;/p&gt;
-
-&lt;h1 id="conclusion"&gt;Conclusion&lt;/h1&gt;
-
-&lt;p&gt;In this post, I tried to summarize the necessary set of steps to compile
-Protocol Buffers schema into Java classes using plain Maven magic. This is
-important to get a platform-independent build for a project.&lt;/p&gt;
-
-&lt;p&gt;The absence of a proper Maven plugin to handle all these steps for us causes
-quite a bit of &lt;code&gt;pom.xml&lt;/code&gt; pollution. Nevertheless, (de)serializers for the
-messaging medium are generally distributed in a separate artifact, hence this
-will probably end up being the entire content of your &lt;code&gt;pom.xml&lt;/code&gt;.&lt;/p&gt;
 </content>
   </entry>
 </feed>
