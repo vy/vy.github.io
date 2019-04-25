@@ -5,6 +5,7 @@ title: Using Elasticsearch as the Primary Data Store
 tags:
   - elasticsearch
   - java
+  - presentation
 ---
 
 The biggest e-commerce company in the Netherlands and Belgium,
@@ -1241,3 +1242,9 @@ signals combined at runtime. The answer to how does the computation of ranking
 signals work is out of the scope of this post. But in a nutshell, it is an
 in-house machine learning algorithm harvesting historical user interaction log.
 Handling of sudden or seasonal trends? That is a whole different game.
+
+## Have you ever presented this material in a conference setting?
+
+Yes, I managed to briefly cover the entire content into a 50 minutes long talk
+in [CNCML Vienna, 2019](https://cncv.io/). The slides are available in
+[PDF](cncml-vienna-2019.pdf) and [ODP](cncml-vienna-2019-org.odp) formats.
