@@ -54,6 +54,10 @@ the Elasticsearch documentation. The listed principles are all derived from my
 personal point of view, I strived to share only the ones that I can justify with
 either facts or experience.</p>
 
+<p>Before proceeding further, I would like to thank <a href="https://discuss.elastic.co/t/review-request-for-elasticsearch-survival-guide-for-developers-blog-post/183411/2">David
+Turner</a>
+for his valuable feedback.</p>
+
 <h1 id="table-of-contents">Table of Contents</h1>
 
 <ul>
@@ -258,10 +262,7 @@ PostgreSQL, etc.</p>
   <li>
     <p>Find the sweet spot for the
 <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/index-modules-translog.html">translog</a>
-flushes. Start first by setting <code>index.translog.durability</code> to <code>async</code>. This
-suggestion assumes that you are smart enough to either not use Elasticsearch
-as your primary data storage or have necessary recovery measures in place.
-Next relax <code>index.translog.sync_interval</code> and
+flushes. Try relaxing <code>index.translog.sync_interval</code> and
 <code>index.translog.flush_threshold_size</code> settings until you don’t get any
 benefits for your usage pattern.</p>
   </li>
@@ -270,6 +271,17 @@ benefits for your usage pattern.</p>
 index and later on occasionally perform small updates on it. In such a case,
 start with a loose (even disabled!) <code>refresh_interval</code> and make it tighter
 after bootstrap.</p>
+
+    <p>Note that in recent versions, if you are indexing but not searching then
+there will be no refreshes taking place at all. Quoting from <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/index-modules.html#dynamic-index-settings">Dynamic Index
+Settings</a>:</p>
+
+    <blockquote>
+      <p>If this [<code>index.refresh_interval</code>] setting is not explicitly set, shards
+that haven’t seen search traffic for at least <code>index.search.idle.after</code>
+seconds will not receive background refreshes until they receive a search
+request.</p>
+    </blockquote>
   </li>
 </ol>
 
@@ -317,6 +329,14 @@ trick can be summarized as follows:</p>
 
 <p>Clearly this trick doesn’t stretch to multiple indices or <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/parent-join.html">parent/child
 relations</a>.</p>
+
+<p><strong>Warning:</strong> Usage of <code>_version</code> within CAS-loops are deprecated due to <a href="https://github.com/elastic/elasticsearch/issues/19269">known
+issues</a>. In Elasticsearch
+version 6.6 and onwards, one should rather use <code>_seq_no</code> and <code>_primary_term</code>
+fields instead. Though the gist of this practice is still the same. See
+<a href="https://www.elastic.co/guide/en/elasticsearch/reference/6.6/optimistic-concurrency-control.html">Optimistic Concurrency
+Control</a>
+for details.</p>
 
 <p><a name="splitting-queries"></a></p>
 
