@@ -44,6 +44,7 @@ for his valuable feedback.&lt;/p&gt;
   &lt;li&gt;
 &lt;a href="#setting"&gt;Setting&lt;/a&gt;
     &lt;ul&gt;
+      &lt;li&gt;&lt;a href="#oversharding"&gt;Avoid oversharding&lt;/a&gt;&lt;/li&gt;
       &lt;li&gt;&lt;a href="#tuning-merges"&gt;Unlearn every hack for tuning merges&lt;/a&gt;&lt;/li&gt;
       &lt;li&gt;&lt;a href="#memory"&gt;Pay attention to JVM memory settings&lt;/a&gt;&lt;/li&gt;
     &lt;/ul&gt;
@@ -174,6 +175,18 @@ mapping&lt;/a&gt; bullet.&lt;/p&gt;
 &lt;p&gt;Here I share Elasticsearch cluster
 &lt;a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/cluster-update-settings.html"&gt;settings&lt;/a&gt;
 related tips.&lt;/p&gt;
+
+&lt;p&gt;&lt;a name="oversharding"&gt;&lt;/a&gt;&lt;/p&gt;
+
+&lt;h2 id="avoid-oversharding"&gt;Avoid oversharding&lt;/h2&gt;
+
+&lt;p&gt;One of the greatest strenghts of Elasticsearch is sharding, that is, splitting
+the data into multiple nodes to exploit parallellization. There are many myths
+surrounding this subject. Recall that sharding of an index cannot be changed
+once it is set. This makes oversharding a pretty common pitfall for newcomers.
+Make sure you have done your homework right (that is, RTFM, such as &lt;a href="https://www.elastic.co/blog/how-many-shards-should-i-have-in-my-elasticsearch-cluster"&gt;this
+one&lt;/a&gt;)
+before taking any decisions.&lt;/p&gt;
 
 &lt;p&gt;&lt;a name="tuning-merges"&gt;&lt;/a&gt;&lt;/p&gt;
 
