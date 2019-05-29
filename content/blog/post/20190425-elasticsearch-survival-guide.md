@@ -17,6 +17,10 @@ the Elasticsearch documentation. The listed principles are all derived from my
 personal point of view, I strived to share only the ones that I can justify with
 either facts or experience.
 
+Before proceeding further, I would like to thank [David
+Turner](https://discuss.elastic.co/t/review-request-for-elasticsearch-survival-guide-for-developers-blog-post/183411/2)
+for his valuable feedback.
+
 # Table of Contents
 
 - [Mapping](#mapping)
@@ -188,10 +192,7 @@ tuning merges start as follows:
 
 2. Find the sweet spot for the
    [translog](https://www.elastic.co/guide/en/elasticsearch/reference/current/index-modules-translog.html)
-   flushes. Start first by setting `index.translog.durability` to `async`. This
-   suggestion assumes that you are smart enough to either not use Elasticsearch
-   as your primary data storage or have necessary recovery measures in place.
-   Next relax `index.translog.sync_interval` and
+   flushes. Try relaxing `index.translog.sync_interval` and
    `index.translog.flush_threshold_size` settings until you don't get any
    benefits for your usage pattern.
 
@@ -199,6 +200,16 @@ tuning merges start as follows:
    index and later on occasionally perform small updates on it. In such a case,
    start with a loose (even disabled!) `refresh_interval` and make it tighter
    after bootstrap.
+
+   Note that in recent versions, if you are indexing but not searching then
+   there will be no refreshes taking place at all. Quoting from [Dynamic Index
+   Settings](https://www.elastic.co/guide/en/elasticsearch/reference/current/index-modules.html#dynamic-index-settings):
+
+   > If this \[`index.refresh_interval`] setting is not explicitly set, shards
+   > that haven’t seen search traffic for at least `index.search.idle.after`
+   > seconds will not receive background refreshes until they receive a search
+   > request.
+
 
 <a name="memory"/>
 
@@ -245,6 +256,14 @@ trick can be summarized as follows:
 
 Clearly this trick doesn't stretch to multiple indices or [parent/child
 relations](https://www.elastic.co/guide/en/elasticsearch/reference/current/parent-join.html).
+
+**Warning:** Usage of `_version` within CAS-loops are deprecated due to [known
+issues](https://github.com/elastic/elasticsearch/issues/19269). In Elasticsearch
+version 6.6 and onwards, one should rather use `_seq_no` and `_primary_term`
+fields instead. Though the gist of this practice is still the same. See
+[Optimistic Concurrency
+Control](https://www.elastic.co/guide/en/elasticsearch/reference/6.6/optimistic-concurrency-control.html)
+for details.
 
 <a name="splitting-queries"/>
 
