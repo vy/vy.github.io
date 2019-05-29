@@ -2,13 +2,960 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <id>https://vlkan.com//</id>
   <title>Volkan Yazıcı's Soap Co.</title>
-  <updated>2019-01-26T20:25:00Z</updated>
+  <updated>2019-04-25T11:44:00Z</updated>
   <link rel="alternate" href="https://vlkan.com//"/>
   <link rel="self" href="https://vlkan.com//blog/feed/"/>
   <author>
     <name>Volkan Yazıcı</name>
     <uri>https://vlkan.com/</uri>
   </author>
+  <entry>
+    <id>tag:vlkan.com,2019-04-25://blog/post/2019/04/25/elasticsearch-survival-guide/</id>
+    <title type="html">Elasticsearch Survival Guide for Developers</title>
+    <published>2019-04-25T11:44:00Z</published>
+    <updated>2019-04-25T11:44:00Z</updated>
+    <link rel="alternate" href="https://vlkan.com//blog/post/2019/04/25/elasticsearch-survival-guide/"/>
+    <content type="html">
+&lt;p&gt;For some months, I have been writing down to my notebook Elasticsearch best
+practices that I wish I would have known when I first started developing
+applications running against Elasticsearch. Even though the following collection
+tries to communicate certain ideas in Java, I believe almost each of such cases
+apply to every other programming language with almost no or minor changes. I
+tried to avoid repeating content that has already been covered in tutorials and
+the Elasticsearch documentation. The listed principles are all derived from my
+personal point of view, I strived to share only the ones that I can justify with
+either facts or experience.&lt;/p&gt;
+
+&lt;h1 id="table-of-contents"&gt;Table of Contents&lt;/h1&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+&lt;a href="#mapping"&gt;Mapping&lt;/a&gt;
+    &lt;ul&gt;
+      &lt;li&gt;&lt;a href="#nested-fields"&gt;Avoid &lt;code&gt;nested&lt;/code&gt; fields&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;a href="#strict-mapping"&gt;Have a strict mapping&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;a href="#analyze"&gt;Don’t analyze fields of type &lt;code&gt;string&lt;/code&gt; unless necessary&lt;/a&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+&lt;a href="#setting"&gt;Setting&lt;/a&gt;
+    &lt;ul&gt;
+      &lt;li&gt;&lt;a href="#tuning-merges"&gt;Unlearn every hack for tuning merges&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;a href="#memory"&gt;Pay attention to JVM memory settings&lt;/a&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+&lt;a href="#querying"&gt;Querying&lt;/a&gt;
+    &lt;ul&gt;
+      &lt;li&gt;&lt;a href="#cas"&gt;Compare-and-swap over &lt;code&gt;_version&lt;/code&gt; field is poor man’s transactions&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;a href="#splitting-queries"&gt;Try splitting complex queries&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;a href="#numeric-types"&gt;Know your numeric types&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;a href="#transport-client"&gt;Don’t use Elasticsearch Transport/Node client in your Java application (and always use JSON over HTTP)&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;a href="#rest-client"&gt;Use the official Elasticsearch REST client in your Java application&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;a href="#cache-keys"&gt;Don’t use Elasticsearch query models to generate cache keys&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;a href="#http-caching"&gt;Don’t use HTTP caching for caching Elasticsearch responses&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;a href="#sliced-scrolls"&gt;Use sliced scrolls sorted on &lt;code&gt;_doc&lt;/code&gt;&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;a href="#get-by-id"&gt;Prefer &lt;code&gt;GET /index/type/{id}&lt;/code&gt; over &lt;code&gt;POST /index/_search&lt;/code&gt; for single document retrieval&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;a href="#size0-includes-excludes"&gt;Use &lt;code&gt;size: 0&lt;/code&gt; and &lt;code&gt;includes&lt;/code&gt;/&lt;code&gt;excludes&lt;/code&gt; wisely&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;a href="#backpressure"&gt;Implement proper backpressure while querying&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;a href="#explicit-timeouts"&gt;Provide explicit timeouts in queries&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;a href="#blocking-io-threads"&gt;Don’t block the Elasticsearch client I/O threads (and know your threads)&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;a href="#json-templates"&gt;Don’t write Elasticsearch queries with JSON templates injecting variables&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;a href="#json-serializer"&gt;Prefer your own JSON serializer over the one provided by Elasticsearch clients&lt;/a&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+&lt;a href="#strategy"&gt;Strategy&lt;/a&gt;
+    &lt;ul&gt;
+      &lt;li&gt;&lt;a href="#latest-version"&gt;Always (try to) stick to the latest JVM and Elasticsearch versions&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;a href="#snapshots"&gt;Use Elasticsearch complete and partial snapshots for backups&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;a href="#performance-test-bed"&gt;Have a continuous performance test bed&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;a href="#aliases"&gt;Use aliases&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;a href="#synonyms"&gt;Avoid having big synonym collections&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;a href="#force-merge"&gt;Force merge and increase operation bandwidth before enabling replicas&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;a href="#metrics"&gt;Record application-level metrics&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;a href="#cpu"&gt;Invest in CPU!&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;a href="#plugins"&gt;Avoid writing custom Elasticsearch plugins&lt;/a&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;a name="mapping"&gt;&lt;/a&gt;&lt;/p&gt;
+
+&lt;h1 id="mapping"&gt;Mapping&lt;/h1&gt;
+
+&lt;p&gt;Here I share Elasticsearch
+&lt;a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping.html"&gt;mapping&lt;/a&gt;
+related tips.&lt;/p&gt;
+
+&lt;p&gt;&lt;a name="nested-fields"&gt;&lt;/a&gt;&lt;/p&gt;
+
+&lt;h2 id="avoid-nested-fields"&gt;Avoid &lt;code&gt;nested&lt;/code&gt; fields&lt;/h2&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;Under the hood, each Elasticsearch document corresponds to a Lucene document,
+almost. Though this promise is broken for fields of type
+&lt;a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/nested.html"&gt;&lt;code&gt;nested&lt;/code&gt;&lt;/a&gt;.
+There each field is stored as a separate document next to the parent Lucene
+one. This has a couple of particular impacts:&lt;/p&gt;
+
+    &lt;ul&gt;
+      &lt;li&gt;Querying on &lt;code&gt;nested&lt;/code&gt; fields is slower compared to fields in parent document&lt;/li&gt;
+      &lt;li&gt;Retrieval of matching &lt;code&gt;nested&lt;/code&gt; fields adds an extra slowdown&lt;/li&gt;
+      &lt;li&gt;Once you update any field of a document containing &lt;code&gt;nested&lt;/code&gt; fields,
+independent of whether you updated a nested field or not, all the underlying
+Lucene documents (parent and all its &lt;code&gt;nested&lt;/code&gt; children) need to be marked as
+deleted and rewritten. In addition to slowing down your updates, such an
+operation also creates garbage to be cleaned up by segment merging later on.&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;In certain ocassions, you can flatten &lt;code&gt;nested&lt;/code&gt; fields. For instance, given the
+following document:&lt;/p&gt;
+
+    &lt;pre&gt;&lt;code class="language-json"&gt;&lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="nt"&gt;"attributes"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;
+        &lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="nt"&gt;"key"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s2"&gt;"color"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nt"&gt;"val"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s2"&gt;"green"&lt;/span&gt;&lt;span class="p"&gt;},&lt;/span&gt;
+        &lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="nt"&gt;"key"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s2"&gt;"color"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nt"&gt;"val"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s2"&gt;"blue"&lt;/span&gt;&lt;span class="p"&gt;},&lt;/span&gt;
+        &lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="nt"&gt;"key"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s2"&gt;"size"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nt"&gt;"val"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s2"&gt;"medium"&lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;
+    &lt;span class="p"&gt;]&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+
+    &lt;p&gt;You can flatten it as follows:&lt;/p&gt;
+
+    &lt;pre&gt;&lt;code class="language-json"&gt;&lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="nt"&gt;"attributes"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+        &lt;span class="nt"&gt;"color"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;"green"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s2"&gt;"blue"&lt;/span&gt;&lt;span class="p"&gt;],&lt;/span&gt;
+        &lt;span class="nt"&gt;"size"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s2"&gt;"medium"&lt;/span&gt;
+    &lt;span class="p"&gt;}&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;a name="strict-mapping"&gt;&lt;/a&gt;&lt;/p&gt;
+
+&lt;h2 id="have-a-strict-mapping"&gt;Have a strict mapping&lt;/h2&gt;
+
+&lt;p&gt;Do you know how many times I witnessed a production failure due to a new field
+first receiving a &lt;code&gt;long&lt;/code&gt; value where the rest of the values are of type
+&lt;code&gt;double&lt;/code&gt;? After the first received &lt;code&gt;long&lt;/code&gt;, Elasticsearch creates the field, sets
+its type to &lt;code&gt;long&lt;/code&gt;, and shares this mapping change with the rest of the nodes in
+the cluster. Then the rest of the &lt;code&gt;double&lt;/code&gt; values are simply rejected due to
+type mismatch.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Have a strict mapping to avoid surprises.&lt;/li&gt;
+  &lt;li&gt;Don’t blacklist, just whitelist.&lt;/li&gt;
+  &lt;li&gt;Avoid using &lt;a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/dynamic-templates.html"&gt;dynamic templates&lt;/a&gt;
+– they are just gateway drugs.&lt;/li&gt;
+  &lt;li&gt;Disable &lt;a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/dynamic-field-mapping.html#date-detection"&gt;date detection&lt;/a&gt;,
+which is on by default.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;a name="analyze"&gt;&lt;/a&gt;&lt;/p&gt;
+
+&lt;h2 id="dont-analyze-fields-of-type-string-unless-necessary"&gt;Don’t analyze fields of type &lt;code&gt;string&lt;/code&gt; unless necessary&lt;/h2&gt;
+
+&lt;p&gt;By default, a freshly inserted string field is assigned of type
+&lt;a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/text.html"&gt;&lt;code&gt;text&lt;/code&gt;&lt;/a&gt;,
+which incurs an analysis cost. Unless you need fuzzy matching but just
+filtering, use type &lt;code&gt;keyword&lt;/code&gt; instead. This is slightly an extension of &lt;a href="#strict-mapping"&gt;strict
+mapping&lt;/a&gt; bullet.&lt;/p&gt;
+
+&lt;p&gt;&lt;a name="setting"&gt;&lt;/a&gt;&lt;/p&gt;
+
+&lt;h1 id="setting"&gt;Setting&lt;/h1&gt;
+
+&lt;p&gt;Here I share Elasticsearch cluster
+&lt;a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/cluster-update-settings.html"&gt;settings&lt;/a&gt;
+related tips.&lt;/p&gt;
+
+&lt;p&gt;&lt;a name="tuning-merges"&gt;&lt;/a&gt;&lt;/p&gt;
+
+&lt;h2 id="unlearn-every-hack-for-tuning-merges"&gt;Unlearn every hack for tuning merges&lt;/h2&gt;
+
+&lt;p&gt;Elasticsearch is in essence yet another distributed
+&lt;a href="http://lucene.apache.org/"&gt;Lucene&lt;/a&gt; offering, just like
+&lt;a href="http://lucene.apache.org/solr/"&gt;Solr&lt;/a&gt;. Under the hood, every Elasticsearch
+document corresponds to a Lucene document, almost. (There are certain exceptions
+to this rule like &lt;code&gt;nested&lt;/code&gt; fields, though this generalization is pretty
+accurate.) In Lucene, documents are stored in
+&lt;a href="https://lucene.apache.org/core/3_0_3/fileformats.html"&gt;segments&lt;/a&gt;. Elasticsearch
+in the background continuously maintains these Lucene segments by means of the
+following two patterns:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;In Lucene, when you delete and/or update a document, the old one gets marked
+as removed and a new one gets created. Elasticsearch keeps track of these dead
+documents and compacts such segments that are highly polluted by rebuilding
+them.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Newly added documents might yield to segments of imbalanced sizes.
+Elasticsearch might decide to merge these into bigger ones for optimization
+purposes.&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;This aforementioned compaction is referred as &lt;a href="https://www.elastic.co/guide/en/elasticsearch/guide/current/merge-process.html"&gt;segment
+merges&lt;/a&gt;
+in Elasticsearch terminology. As you can guess, merges are highly disk I/O- and
+CPU-bound operations. As a user, you would not want to have them ruining your
+Elasticsearch query performance. As a matter of fact, you can achieve this in
+certain circumstances: Build the index once and don’t change it anymore. Though
+this condition might be difficult to meet in many application scenarios. Once
+you start to insert new documents or update existing ones, segment merges become
+an inevitable part of your life.&lt;/p&gt;
+
+&lt;p&gt;An on-going segment merge can significantly damage the overal query performance
+of the cluster. Give it a search in the internet, you will find many people
+looking for help to work around these and many others sharing certain tunings
+that worked for them. Over the last years, there were two particular patterns I
+observed in the shared tuning tips: they exist from the incarnation of this
+operation (so everybody agrees that it used to hurt and is still hurting) and
+the majority of the mentioned settings become deprecated (or even worse, become
+unavailable) with the next Elasticsearch release. So my rules of thumb for
+tuning merges start as follows:&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;
+    &lt;p&gt;Unlearn every hack you heard about tuning merges. It is an operation pretty
+coupled with the internals of Elasticsearch and subject to change without
+providing a backward compatibility fallback. There is no secret knob to make
+it run faster; it is like the garbage collector in JVM, &lt;code&gt;VACUUM&lt;/code&gt; in
+PostgreSQL, etc.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Find the sweet spot for the
+&lt;a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/index-modules-translog.html"&gt;translog&lt;/a&gt;
+flushes. Start first by setting &lt;code&gt;index.translog.durability&lt;/code&gt; to &lt;code&gt;async&lt;/code&gt;. This
+suggestion assumes that you are smart enough to either not use Elasticsearch
+as your primary data storage or have necessary recovery measures in place.
+Next relax &lt;code&gt;index.translog.sync_interval&lt;/code&gt; and
+&lt;code&gt;index.translog.flush_threshold_size&lt;/code&gt; settings until you don’t get any
+benefits for your usage pattern.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Adapt &lt;code&gt;index.refresh_interval&lt;/code&gt; to your needs. Imagine you first bootstrap an
+index and later on occasionally perform small updates on it. In such a case,
+start with a loose (even disabled!) &lt;code&gt;refresh_interval&lt;/code&gt; and make it tighter
+after bootstrap.&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;&lt;a name="memory"&gt;&lt;/a&gt;&lt;/p&gt;
+
+&lt;h2 id="pay-attention-to-jvm-memory-settings"&gt;Pay attention to JVM memory settings&lt;/h2&gt;
+
+&lt;p&gt;Elasticsearch can yield dramatic performance characteristics dependending on two
+primary memory settings: JVM heap space and the amount of memory left to the
+kernel page cache. I am not going to dive into these details here, because they
+are pretty well
+&lt;a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/heap-size.html"&gt;documented&lt;/a&gt;.
+This is your reminder to not blindly set the Elasticsearch JVM heap size judging
+from your past non-Elasticsearch JVM application experiences.&lt;/p&gt;
+
+&lt;p&gt;&lt;a name="querying"&gt;&lt;/a&gt;&lt;/p&gt;
+
+&lt;h1 id="querying"&gt;Querying&lt;/h1&gt;
+
+&lt;p&gt;Below I collected tips that you can take advantage of (or better stick to) while
+querying Elasticsearch.&lt;/p&gt;
+
+&lt;p&gt;&lt;a name="cas"&gt;&lt;/a&gt;&lt;/p&gt;
+
+&lt;h2 id="compare-and-swap-over-version-field-is-poor-mans-transactions"&gt;Compare-and-swap over &lt;code&gt;_version&lt;/code&gt; field is poor man’s transactions&lt;/h2&gt;
+
+&lt;p&gt;I believe you had already figured that Elasticsearch doesn’t support
+transactions. Though you can leverage the
+&lt;a href="https://www.elastic.co/guide/en/elasticsearch/reference/7.0/docs-get.html#get-versioning"&gt;&lt;code&gt;_version&lt;/code&gt;&lt;/a&gt;
+field in a &lt;a href="https://en.wikipedia.org/wiki/Compare-and-swap"&gt;CAS&lt;/a&gt;-loop to provide
+integrity at least on a single document basis. An example demonstration of this
+trick can be summarized as follows:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-java"&gt;&lt;span class="n"&gt;String&lt;/span&gt; &lt;span class="n"&gt;id&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s"&gt;"123"&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+&lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="o"&gt;(;;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+    &lt;span class="n"&gt;EsDocument&lt;/span&gt; &lt;span class="n"&gt;prevDoc&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;store&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;findById&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;id&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+    &lt;span class="kt"&gt;long&lt;/span&gt; &lt;span class="n"&gt;prevVersion&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;prevDoc&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;getVersion&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
+    &lt;span class="n"&gt;Object&lt;/span&gt; &lt;span class="n"&gt;prevSource&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;prevDoc&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;getSource&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
+    &lt;span class="n"&gt;Object&lt;/span&gt; &lt;span class="n"&gt;nextSource&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;update&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;prevSource&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+    &lt;span class="kt"&gt;boolean&lt;/span&gt; &lt;span class="n"&gt;updated&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;store&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;updateByIdAndVersion&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;id&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;prevVersion&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;nextSource&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+    &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;updated&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+        &lt;span class="k"&gt;break&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+    &lt;span class="o"&gt;}&lt;/span&gt;
+&lt;span class="o"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Clearly this trick doesn’t stretch to multiple indices or &lt;a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/parent-join.html"&gt;parent/child
+relations&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;a name="splitting-queries"&gt;&lt;/a&gt;&lt;/p&gt;
+
+&lt;h2 id="try-splitting-complex-queries"&gt;Try splitting complex queries&lt;/h2&gt;
+
+&lt;p&gt;If you have complex queries with both, say, filter and aggregation components,
+splitting these into mutliple queries and executing them in parallel in most
+cases speed up the querying performance. That is, in the first query just get
+the hits using the filter, and in the second query, just get the aggregations
+without retrieving hits, that is, &lt;code&gt;size: 0&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;a name="numeric-types"&gt;&lt;/a&gt;&lt;/p&gt;
+
+&lt;h2 id="know-your-numeric-types"&gt;Know your numeric types&lt;/h2&gt;
+
+&lt;p&gt;Many JSON parsers reach for various optimizations to provide efficient
+read/write performance. For instance,
+&lt;a href="https://github.com/FasterXML/jackson"&gt;Jackson&lt;/a&gt;, the de facto JSON parser in the
+Java world, picks the primitive with the smallest memory footprint that can
+store the number passed by JSON. Hence after reading a field value via Jackson,
+you might end up getting an &lt;code&gt;int&lt;/code&gt;, &lt;code&gt;long&lt;/code&gt;, &lt;code&gt;double&lt;/code&gt;, etc. Once you get a, say,
+&lt;code&gt;double&lt;/code&gt;, it is highly likely that you had already lost precision and/or will be
+losing precision while serializing it back to JSON again. To avoid such
+surprises, prefer &lt;code&gt;BigDecimal&lt;/code&gt; over &lt;code&gt;float&lt;/code&gt; or &lt;code&gt;double&lt;/code&gt;. Using &lt;code&gt;BigInteger&lt;/code&gt; for
+integral numbers is a safe bet too. (See
+&lt;a href="https://fasterxml.github.io/jackson-databind/javadoc/2.0.0/com/fasterxml/jackson/databind/DeserializationFeature.html#USE_BIG_DECIMAL_FOR_FLOATS"&gt;USE_BIG_DECIMAL_FOR_FLOATS&lt;/a&gt;
+and
+&lt;a href="https://fasterxml.github.io/jackson-databind/javadoc/2.0.0/com/fasterxml/jackson/databind/DeserializationFeature.html#USE_BIG_INTEGER_FOR_INTS"&gt;USE_BIG_INTEGER_FOR_INTS&lt;/a&gt;
+Jackson configurations for details.)&lt;/p&gt;
+
+&lt;p&gt;&lt;a name="transport-client"&gt;&lt;/a&gt;&lt;/p&gt;
+
+&lt;h2 id="dont-use-elasticsearch-transportnode-client-in-your-java-application-and-always-use-json-over-http"&gt;Don’t use Elasticsearch Transport/Node client in your Java application (and always use JSON over HTTP)&lt;/h2&gt;
+
+&lt;p&gt;Elasticsearch is written in Java and its query model classes implement custom
+(de)serialization methods using Jackson’s &lt;code&gt;JsonGenerator&lt;/code&gt; and &lt;code&gt;JsonParser&lt;/code&gt;. This
+way, thanks to Jackson, a model instance can be (de)serialized to both JSON
+(text) and &lt;a href="https://en.wikipedia.org/wiki/Smile_%28data_interchange_format%29"&gt;SMILE&lt;/a&gt;
+(binary) formats without breaking a sweat. Logically, Elasticsearch uses the
+binary format for communication within the cluster due to performance reasons.
+Using &lt;code&gt;JsonParser&lt;/code&gt; for parsing SMILE has a slight caveat: A schema cannot always
+be evolved in such a way that the backwards compatibility is kept. Indeed this
+is not a problem for an Elasticsearch cluster, all the nodes hopefully run the
+same version. Though using SMILE in your application means that you might need
+to shutdown your application, upgrade it to a newer version which is using the
+models of the new Elasticsearch you are about to deploy in parallel.&lt;/p&gt;
+
+&lt;p&gt;What about performance between JSON and SMILE? Even Elastic’s own data intensive
+products such as Logstash and Kibana have replaced SMILE with JSON. It is highly
+unlikely that your bottleneck while querying Elasticsearch would be
+serialization. Further &lt;a href="https://github.com/fabienrenaud/java-json-benchmark"&gt;Jackson is an excelling library in JSON serialization
+efficiency&lt;/a&gt;. Hence, to be
+on the safe side, just stick to JSON over HTTP.&lt;/p&gt;
+
+&lt;p&gt;&lt;a name="rest-client"&gt;&lt;/a&gt;&lt;/p&gt;
+
+&lt;h2 id="use-the-official-elasticsearch-rest-client-in-your-java-application"&gt;Use the official Elasticsearch REST client in your Java application&lt;/h2&gt;
+
+&lt;p&gt;&lt;a href="https://www.elastic.co/guide/en/elasticsearch/client/java-rest/current/index.html"&gt;The official
+driver&lt;/a&gt;
+will be maintained through the lifetime of the project. It will implement
+community approved features from its competitors. Unless something awkwardly
+goes wrong, the official one will just either leave no room of additional value
+to its competitors or they will just get rusted and disappear. That being said,
+the official REST client is a piece of crap for two main reasons:&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;It has a leaky abstraction over &lt;a href="http://hc.apache.org/httpcomponents-client-ga/"&gt;Apache HTTP
+Client&lt;/a&gt; whose configurations
+you need to deal with while tuning the client.&lt;/li&gt;
+  &lt;li&gt;Do you recall &lt;a href="#transport-client"&gt;the query model classes I mentioned above&lt;/a&gt;?
+I have some bad news for you: Model classes are entangled with the server
+code and the REST client uses those classes. So what does this mean for you?
+Well… Adding the REST client in your dependencies will drag the entire
+Elasticsearch milkyway into your JAR Hell.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;&lt;a href="https://github.com/reactiverse/elasticsearch-client"&gt;Eclipse Vert.x works around this
+entanglement&lt;/a&gt; in a yet
+another entangled way. Though I doubt if it will have a long lifetime given the
+reasons I listed above.&lt;/p&gt;
+
+&lt;p&gt;In summary, the official REST client (unfortunately) is still your best bet.&lt;/p&gt;
+
+&lt;p&gt;&lt;a name="cache-keys"&gt;&lt;/a&gt;&lt;/p&gt;
+
+&lt;h2 id="dont-use-elasticsearch-query-models-to-generate-cache-keys"&gt;Don’t use Elasticsearch query models to generate cache keys&lt;/h2&gt;
+
+&lt;p&gt;Or more specifically,&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;[If you want your hash keys to be consistent between different JVM processes,
+JVM upgrades, and JVM restarts,] don’t use &lt;code&gt;Object#hashCode()&lt;/code&gt;.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;The JSON generated by Elasticsearch query models for semantically identical
+queries are not necessarily identical. It took more than a year to figure this
+out ourselves. Hence, don’t take the query model generated JSON as your source
+of hash. (My guess is that somewhere in the &lt;code&gt;JsonGenerator&lt;/code&gt;-based serializers,
+they are probably iterating over a &lt;code&gt;java.util.Map&lt;/code&gt; or &lt;code&gt;java.util.Set&lt;/code&gt; whose
+order for identical content varies under different conditions.)&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Ok. So what else is left? How one should do it?&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;
+    &lt;p&gt;You query Elasticsearch due to a request you have just received, right? Does
+that request has its own application level model? Good. There you go. Use
+that one as a hash source.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Your application level request model is too complex to generate a proper hash
+key? Doh! Ok. Don’t tell anyone that I told you this: Parse Elasticsearch
+generated JSON using Jackson and let Jackson serialize it one more time back
+to JSON, but this time &lt;a href="https://fasterxml.github.io/jackson-databind/javadoc/2.0.0/com/fasterxml/jackson/databind/SerializationFeature.html#ORDER_MAP_ENTRIES_BY_KEYS"&gt;instruct Jackson to sort the
+keys&lt;/a&gt;.&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;&lt;a name="http-caching"&gt;&lt;/a&gt;&lt;/p&gt;
+
+&lt;h2 id="dont-use-http-caching-for-caching-elasticsearch-responses"&gt;Don’t use HTTP caching for caching Elasticsearch responses&lt;/h2&gt;
+
+&lt;p&gt;Many people fall in the trap of fronting their Elasticsearch cluster with an
+HTTP cache such as &lt;a href="http://varnish-cache.org/"&gt;Varnish&lt;/a&gt; due to its convenience
+and low entry barrier. Though this appealing approach has certain shortcomings:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;When using Elasticsearch in production, it is highly likely you will end up
+having multiple clusters due to various reasons: resiliency, experimentation
+room, zero downtime upgrades, etc. Then,&lt;/p&gt;
+
+    &lt;ul&gt;
+      &lt;li&gt;
+        &lt;p&gt;once you front each cluster with a dedicated HTTP cache, 99% of the cache
+content will just be duplicated.&lt;/p&gt;
+      &lt;/li&gt;
+      &lt;li&gt;
+        &lt;p&gt;if you decide to use a single HTTP cache for all clusters, it is really
+difficult to programmatically configure an HTTP cache to adopt the needs of
+the ever changing cluster states. How will you communicate the load to let
+the cache balance the traffic. How will you configure scheduled or manual
+downtimes? How will you let the cache gradually migrate the traffic from one
+to another during maintanence windows?&lt;/p&gt;
+      &lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;As mentioned above, HTTP caches are difficult to command programmatically.
+When you need to manually evict one or more entries, it is not always as easy
+as a &lt;code&gt;DELETE FROM cache WHERE keys IN (...)&lt;/code&gt; query. And let me warn you, you
+are gonna need that manual eviction.&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;a name="sliced-scrolls"&gt;&lt;/a&gt;&lt;/p&gt;
+
+&lt;h2 id="use-sliced-scrolls-sorted-on-doc"&gt;Use sliced scrolls sorted on &lt;code&gt;_doc&lt;/code&gt;
+&lt;/h2&gt;
+
+&lt;p&gt;&lt;a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/search-request-scroll.html"&gt;Scrolls&lt;/a&gt;
+are the vehicle that Elasticsearch lets you scan its entire dataset for large
+reads. They are functionally (and surprisingly, internally too) pretty much
+similar to &lt;a href="https://en.wikipedia.org/wiki/Cursor_(databases)"&gt;RDBMS cursors&lt;/a&gt;.
+Though most people don’t get them right in their first attempt. Here are some
+basics:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;If you reach for scrolls, you are probably reading quite some data. It is
+highly likely &lt;a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/search-request-scroll.html#sliced-scroll"&gt;slicing&lt;/a&gt; will help you improve the read performance
+significantly.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;The order doesn’t matter in your reads? This is your lucky day then! Just sort
+on &lt;code&gt;_doc&lt;/code&gt; field and there goes your +20% read speed up without any charges.
+(&lt;code&gt;_doc&lt;/code&gt; is a pseudo field to let Elasticsearch use the order documents are
+laid out on the disk.)&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;The &lt;code&gt;scrollId&lt;/code&gt; might (and does!) change between calls. Hence make sure you are
+always scrolling using the most recently retrieved &lt;code&gt;scrollId&lt;/code&gt;.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Reaching for &lt;code&gt;REINDEX&lt;/code&gt;? Did you enable slicing there too? Good.&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;a name="get-by-id"&gt;&lt;/a&gt;&lt;/p&gt;
+
+&lt;h2 id="prefer-get-indextypeid-over-post-indexsearch-for-single-document-retrieval"&gt;Prefer &lt;code&gt;GET /index/type/{id}&lt;/code&gt; over &lt;code&gt;POST /index/_search&lt;/code&gt; for single document retrieval&lt;/h2&gt;
+
+&lt;p&gt;Elasticsearch uses different thread pools to handle &lt;code&gt;GET /index/type/{id}&lt;/code&gt; and
+&lt;code&gt;POST /index/_search&lt;/code&gt; queries. Using &lt;code&gt;POST /index/_search&lt;/code&gt; with payload &lt;code&gt;{query:
+{"match": {"_id": "123"}}}&lt;/code&gt; (or something similar) occupies your
+search-dedicated thread pool. Under heavy load, this will worsen your both
+search and single document fetch performance. Simply just stick to &lt;code&gt;GET
+/index/type/{id}&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;a name="size0-includes-excludes"&gt;&lt;/a&gt;&lt;/p&gt;
+
+&lt;h2 id="use-size-0-and-includesexcludes-wisely"&gt;Use &lt;code&gt;size: 0&lt;/code&gt; and &lt;code&gt;includes&lt;/code&gt;/&lt;code&gt;excludes&lt;/code&gt; wisely&lt;/h2&gt;
+
+&lt;p&gt;This tip I guess applies to any storage engine of your preference: Avoid
+retrieving (or even storing!) content unless necessary. I have witnessed
+Elasticsearch showing dramatic performance differences before and after adding a
+&lt;code&gt;size: 0&lt;/code&gt; clause.&lt;/p&gt;
+
+&lt;p&gt;&lt;a name="backpressure"&gt;&lt;/a&gt;&lt;/p&gt;
+
+&lt;h2 id="implement-proper-backpressure-while-querying"&gt;Implement proper backpressure while querying&lt;/h2&gt;
+
+&lt;p&gt;Yet another database-independent tip: There is no point in hammering your
+database to the point of making it choke. Consider the following Java snippet
+employing an imaginary database client:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-java"&gt;&lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;findUserById&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;String&lt;/span&gt; &lt;span class="n"&gt;id&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;Callable&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;User&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;callback&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+    &lt;span class="n"&gt;dbClient&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;find&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="s"&gt;"user"&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
+            &lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;filter&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="s"&gt;"id"&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;id&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
+            &lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;first&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="nl"&gt;callback:&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt;&lt;span class="n"&gt;apply&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+&lt;span class="o"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Assuming &lt;code&gt;dbClient&lt;/code&gt; is implemented in a non-blocking and asynchronous fashion –
+that is, each request is enqueued to be delivered and each response handler is
+enqueued to react on incoming payloads – what would happen if your database can
+handle at most 1 req/sec while your application perfectly receives, handles, and
+passes forward 10 req/sec? Let me draw you a shallow probability tree depicting
+consequences of such an incident.&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;Your database gets loaded more than it can take. If your database has proper
+backpressure mechanics, which most don’t possess, including Elasticsearch,&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;Then it will start choking and eventually throw up. This will get reflected
+as query errors on the application side. If your application is equipped
+with backpressure mechanics as well, it can kindly reflect this back to the
+caller.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Otherwise,&lt;/p&gt;
+
+    &lt;ol&gt;
+      &lt;li&gt;
+        &lt;p&gt;even the simplest database queries will start suffering due to heavy load.&lt;/p&gt;
+      &lt;/li&gt;
+      &lt;li&gt;
+        &lt;p&gt;the database process queue will overgrow.&lt;/p&gt;
+
+        &lt;ol&gt;
+          &lt;li&gt;
+            &lt;p&gt;Excessive growth of the queue (that is, no backpressure mechanics in
+place) will start stressing the process memory.&lt;/p&gt;
+          &lt;/li&gt;
+          &lt;li&gt;
+            &lt;p&gt;The requests succeed in making from the queue to an executor thread
+will highly likely already become deprecated. That is, database will
+be doing job that is of use to nobody.&lt;/p&gt;
+          &lt;/li&gt;
+        &lt;/ol&gt;
+      &lt;/li&gt;
+      &lt;li&gt;
+        &lt;p&gt;above two points drawn from the process queue overgrow of the database,
+apply as is to the application too.&lt;/p&gt;
+      &lt;/li&gt;
+    &lt;/ol&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Unfortunately there is no silver bullet or a step-by-step guide of implementing
+backpressure for a particular application. This in a way makes sense, each has
+its own domain-specific requirements. That being said, I can share my personal
+best practices:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;Use performance benchmarks of your application (You have performance
+benchmarks, right?) to estimate an upper bound on the load that your
+application delivers an acceptable performance. Enforce this limit in your
+application via a rate limiter. Please, please, please don’t block the carrier
+thread using the rate limiter! Rather just communicate the backpressure to
+your client, for instance, by means of an &lt;a href="https://en.wikipedia.org/wiki/List_of_HTTP_status_codes#5xx_Server_errors"&gt;HTTP 503 (SERVICE UNAVAILABLE)
+status code&lt;/a&gt;.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Avoid using thread pools with an unbounded task queue. Java programmers, all
+your RxJava/Reactor schedulers are by default backed by a
+&lt;code&gt;ScheduledThreadPoolExecutor&lt;/code&gt; (the one and only &lt;code&gt;ScheduledExecutorService&lt;/code&gt;
+implementation in the Java standard library) and that internally uses an
+unbounded task queue, unfortunately. See &lt;a href="https://stackoverflow.com/q/7403764/1278899"&gt;this Stack Overflow
+post&lt;/a&gt; and &lt;a href="http://cs.oswego.edu/pipermail/concurrency-interest/2019-April/016860.html"&gt;that
+concurrency-interest
+discussion&lt;/a&gt;
+on how to work around that.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;If your application is a pipe between two resources (e.g., from a Pubsub queue
+to an Elasticsearch cluster) make sure your producers react to consumers’
+backpressure. That is, if the consumer latency starts increasing, you better
+start slowing down the producer.&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;a name="explicit-timeouts"&gt;&lt;/a&gt;&lt;/p&gt;
+
+&lt;h2 id="provide-explicit-timeouts-in-queries"&gt;Provide explicit timeouts in queries&lt;/h2&gt;
+
+&lt;p&gt;Almost all Elasticsearch API endpoints allow the user to specify a timeout, use
+that. This will help both your application and your Elasticsearch cluster: Spot
+and shrug off unpexected long running operations and save associated resources,
+establish a stable SLA with no surprises, etc.&lt;/p&gt;
+
+&lt;p&gt;&lt;a name="blocking-io-threads"&gt;&lt;/a&gt;&lt;/p&gt;
+
+&lt;h2 id="dont-block-the-elasticsearch-client-io-threads-and-know-your-threads"&gt;Don’t block the Elasticsearch client I/O threads (and know your threads)&lt;/h2&gt;
+
+&lt;p&gt;This tip is also database independent: Don’t block I/O threads of an external
+resource for another external resource. Let me demonstrate this pitfall with a
+snippet:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-java"&gt;&lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;enrichUserById&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;String&lt;/span&gt; &lt;span class="n"&gt;id&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;Function&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;EsDocument&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;EsDocument&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;enricher&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;Runnable&lt;/span&gt; &lt;span class="n"&gt;callback&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+    &lt;span class="n"&gt;esClient&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;findUserById&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;id&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;user&lt;/span&gt; &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+        &lt;span class="n"&gt;EsDocument&lt;/span&gt; &lt;span class="n"&gt;enrichedUser&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;enricher&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;apply&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;user&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+        &lt;span class="n"&gt;esClient&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;saveUserById&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;id&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;enrichedUser&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;callback&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+    &lt;span class="o"&gt;});&lt;/span&gt;
+&lt;span class="o"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;What is mostly unintentional here is that: Both &lt;code&gt;enricher.apply(user)&lt;/code&gt; and
+&lt;code&gt;callback.run()&lt;/code&gt; will get executed in the Elasticsearch client I/O thread. Here
+I see two common cases:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;If both functions don’t incur any other I/O calls (except the ones that are
+again reaching for Elasticsearch) and this is the only place in the entire
+application where you access to Elasticsearch, then this is a good practice.
+You repurpose Elasticsearch client I/O thread for a CPU-intensive
+post-processing. Almost no thread context-switch costs. On a 4 core machine,
+with 4 threads dedicated to Elasticsearch client I/O, you will get an almost
+optimal performance given your usage pattern.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;If both or any of the functions internally perform other I/O calls and/or
+there are multiple places in the application where Elasticsearch client is
+used for different purposes, then you are occupying the Elasticsearch client
+I/O threads for something unrelated whereas these threads could have just been
+serving yet another Elasticsearch request. In such cases, it is better to
+employ task-specific thread pools and avoid exhausting Elasticsearch client
+I/O loop unnecessarily:&lt;/p&gt;
+
+    &lt;pre&gt;&lt;code class="language-java"&gt;&lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;enrichUserById&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;String&lt;/span&gt; &lt;span class="n"&gt;id&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;Function&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;EsDocument&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;EsDocument&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;enricher&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;Runnable&lt;/span&gt; &lt;span class="n"&gt;callback&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+    &lt;span class="n"&gt;esClient&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;findUserById&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;id&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;user&lt;/span&gt; &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+        &lt;span class="n"&gt;computationExecutor&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;submit&lt;/span&gt;&lt;span class="o"&gt;(()&lt;/span&gt; &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+          &lt;span class="n"&gt;EsDocument&lt;/span&gt; &lt;span class="n"&gt;enrichedUser&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;enricher&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;apply&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;user&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+          &lt;span class="n"&gt;esClient&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;saveUserById&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;id&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;enrichedUser&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+              &lt;span class="n"&gt;computationExecutor&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;submit&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;callback&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+          &lt;span class="o"&gt;});&lt;/span&gt;
+        &lt;span class="o"&gt;});&lt;/span&gt;
+    &lt;span class="o"&gt;});&lt;/span&gt;
+&lt;span class="o"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;a name="json-templates"&gt;&lt;/a&gt;&lt;/p&gt;
+
+&lt;h2 id="dont-write-elasticsearch-queries-with-json-templates-injecting-variables"&gt;Don’t write Elasticsearch queries with JSON templates injecting variables&lt;/h2&gt;
+
+&lt;p&gt;Don’t ever do this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="language-json"&gt;&lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="nt"&gt;"query"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+        &lt;span class="nt"&gt;"bool"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+            &lt;span class="nt"&gt;"filter"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;
+                &lt;span class="p"&gt;{&lt;/span&gt;
+                    &lt;span class="nt"&gt;"term"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+                        &lt;span class="nt"&gt;"username"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+                            &lt;span class="nt"&gt;"value"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="err"&gt;{username&lt;/span&gt;&lt;span class="p"&gt;}}&lt;/span&gt;
+                        &lt;span class="p"&gt;}&lt;/span&gt;
+                    &lt;span class="p"&gt;}&lt;/span&gt;
+                &lt;span class="err"&gt;}&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+                &lt;span class="p"&gt;{&lt;/span&gt;
+                    &lt;span class="nt"&gt;"term"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+                        &lt;span class="nt"&gt;"password"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+                            &lt;span class="nt"&gt;"password"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="err"&gt;{password&lt;/span&gt;&lt;span class="p"&gt;}}&lt;/span&gt;
+                        &lt;span class="p"&gt;}&lt;/span&gt;
+                    &lt;span class="p"&gt;}&lt;/span&gt;
+                &lt;span class="err"&gt;}&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+            &lt;span class="p"&gt;]&lt;/span&gt;
+        &lt;span class="p"&gt;}&lt;/span&gt;
+    &lt;span class="p"&gt;}&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;You are just falling into a half-century old trap: &lt;a href="https://en.wikipedia.org/wiki/SQL_injection"&gt;SQL
+injection&lt;/a&gt;, adopted for
+Elasticsearch. No matter how smart your character whitelisting, escaping
+routines are, it is just a matter of time someone passes a malicious &lt;code&gt;username&lt;/code&gt;
+and/or &lt;code&gt;password&lt;/code&gt; input that would expose your entire dataset. I also personally
+find it a pretty bad practice to render a curly brace (&lt;code&gt;{&lt;/code&gt;, &lt;code&gt;}&lt;/code&gt;) rich structured
+text via a templating language (e.g., Moustache, Handlebars) which uses the very
+same curly braces for its own directives.&lt;/p&gt;
+
+&lt;p&gt;There are two safe approaches that I can recommend to generate dynamic queries:&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;Use the query models provided by the Elasticsearch (official) client. (This
+works for Java pretty well.)&lt;/li&gt;
+  &lt;li&gt;Use a JSON library (e.g., &lt;a href="https://github.com/FasterXML/jackson"&gt;Jackson&lt;/a&gt;) to
+build the JSON tree and serialize it to JSON.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;&lt;a name="json-serializer"&gt;&lt;/a&gt;&lt;/p&gt;
+
+&lt;h2 id="prefer-your-own-json-serializer-over-the-one-provided-by-elasticsearch-clients"&gt;Prefer your own JSON serializer over the one provided by Elasticsearch clients&lt;/h2&gt;
+
+&lt;p&gt;Many Elasticsearch clients allow you to pass a generic JSON object and serialize
+it to JSON before passing it over the wire. For instance, the official
+Elasticsearch REST client for Java allows &lt;code&gt;java.util.Map&amp;lt;String, Object&amp;gt;&lt;/code&gt;
+instances as source. Then it uses its own JSON serializer to translate these
+models into JSON. While this works fine for vanilla Java, which is most of the
+time sufficient to get the message across in tutorials, most real world
+applications have more complex class structures that necessitate custom
+serialization. For instance, speaking of Java client, how does it serialize
+Guava models? What about the new date and time classes introduced in Java 8?
+What will happen to all your &lt;code&gt;@JsonProperty&lt;/code&gt;-, &lt;code&gt;@JsonSerializes&lt;/code&gt;-, etc.
+annotated classes? Hence it is always a better practice to employ your own
+serialization and pass a &lt;code&gt;byte[]&lt;/code&gt; as source to the client. That will save you
+from surprises.&lt;/p&gt;
+
+&lt;p&gt;&lt;a name="strategy"&gt;&lt;/a&gt;&lt;/p&gt;
+
+&lt;h1 id="strategy"&gt;Strategy&lt;/h1&gt;
+
+&lt;p&gt;In this last section I collected convenient &lt;em&gt;strategic&lt;/em&gt; (whatever that means)
+practices which address concerns not covered above.&lt;/p&gt;
+
+&lt;p&gt;&lt;a name="latest-version"&gt;&lt;/a&gt;&lt;/p&gt;
+
+&lt;h2 id="always-try-to-stick-to-the-latest-jvm-and-elasticsearch-versions"&gt;Always (try to) stick to the latest JVM and Elasticsearch versions&lt;/h2&gt;
+
+&lt;p&gt;Elasticsearch is a Java application. (Surprise, surprise!) Like every other Java
+application it has its hot paths and garbage collection dues. Almost every new
+JVM release will bring you extra optimizations that you can take advantage of
+without breaking a sweat. Note that due to the low-level performance hacks
+exploited in Lucene, which is internally used by Elasticsearch, Lucene is sort
+of fragile to JVM upgrades, particularly involving garbage collector changes.
+Fortunately, Elasticsearch has an official page listing supported &lt;a href="https://www.elastic.co/support/matrix#matrix_jvm"&gt;JVM
+releases&lt;/a&gt; and &lt;a href="https://www.elastic.co/guide/en/elasticsearch/guide/current/_don_8217_t_touch_these_settings.html"&gt;garbage
+collectors&lt;/a&gt;.
+Always check these pages out before attempting any JVM upgrades.&lt;/p&gt;
+
+&lt;p&gt;Elasticsearch upgrades are also a source of free performance gains. I have never
+experienced a regression after Elasticsearch upgrades. That said, your milage
+may vary and this is why you should have proper integration tests in place.&lt;/p&gt;
+
+&lt;p&gt;&lt;a name="snapshots"&gt;&lt;/a&gt;&lt;/p&gt;
+
+&lt;h2 id="use-elasticsearch-complete-and-partial-snapshots-for-backups"&gt;Use Elasticsearch complete and partial snapshots for backups&lt;/h2&gt;
+
+&lt;p&gt;Elasticsearch lets you easily take
+&lt;a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/modules-snapshots.html"&gt;snapshots&lt;/a&gt;
+of an index either completely or partially against an existing snapshot.
+Depending on your update patterns and index size, find the best combination for
+your use case. That is, for instance, 1 complete snapshot at 00:00 and 3 partial
+snapshots at 06:00, 12:00, and 18:00. It is also known to be a good practice to
+have them stored at &lt;a href="https://aws.amazon.com/s3/"&gt;AWS S3&lt;/a&gt; or &lt;a href="https://cloud.google.com/storage/"&gt;GCP
+Storage&lt;/a&gt;. There exists
+&lt;a href="https://www.elastic.co/guide/en/elasticsearch/plugins/master/repository.html"&gt;plugins&lt;/a&gt;
+to facilitate these scenarios.&lt;/p&gt;
+
+&lt;p&gt;As in every backup solution, make sure you can restore them and practice this a
+couple of times. In case of a post-failure restoration, you might need to
+engineer your own replay mechanisms to reach the last stable state just before
+the crash. Leveraging queues supporting custom retention periods (e.g., keep all
+the messages received in the last 2 days) for this purpose is a practice
+employed a lot.&lt;/p&gt;
+
+&lt;p&gt;&lt;a name="performance-test-bed"&gt;&lt;/a&gt;&lt;/p&gt;
+
+&lt;h2 id="have-a-continuous-performance-test-bed"&gt;Have a continuous performance test bed&lt;/h2&gt;
+
+&lt;p&gt;Like any other database, Elasticsearch shows varying performance under different
+conditions: index, document sizes; update, query patterns; index, cluster
+settings; hardware, OS, JVM versions; etc. It is difficult to keep track of each
+knob to observe its impact on the overall performance. Make sure you have
+(at least) daily performance tests to help you narrow down a recently introduced
+change damaging the performance.&lt;/p&gt;
+
+&lt;p&gt;This utopic test bed is easier said than done. You will need to make sure that
+the test environment has representative data of production, (preferably)
+identical configuration to production, complete coverage of use cases, and
+provides a clean slate (including the OS cache!) for each test to avoid
+retaining the effects of a previous run. I know, quite a list. But it pays off.&lt;/p&gt;
+
+&lt;p&gt;&lt;a name="aliases"&gt;&lt;/a&gt;&lt;/p&gt;
+
+&lt;h2 id="use-aliases"&gt;Use aliases&lt;/h2&gt;
+
+&lt;p&gt;Now I am gonna tell you something quite opinionated, though backed by
+experience: Never query against indices, but
+&lt;a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-aliases.html"&gt;alias&lt;/a&gt;es.
+Aliases are pointers to actual indices. You can group one or more indices under
+a single alias. Many Elasticsearch indices have an internal context attached to
+the index name, such as, &lt;code&gt;events-20190515&lt;/code&gt;. Now you have two choices in the
+application code while querying against &lt;code&gt;events-*&lt;/code&gt; indices:&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;
+    &lt;p&gt;Determine the index name on the fly via a certain date pattern:
+&lt;code&gt;events-YYYYMMDD&lt;/code&gt;. This approach has two major drawbacks:&lt;/p&gt;
+
+    &lt;ul&gt;
+      &lt;li&gt;
+        &lt;p&gt;The need to fallback to an index of a particular date necessitates the
+entire code base to be engineered accordingly to support such an operation.&lt;/p&gt;
+      &lt;/li&gt;
+      &lt;li&gt;
+        &lt;p&gt;Putting all clock synchronization issues aside, at midnight, you need to
+make sure that the next index is there.&lt;/p&gt;
+      &lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Create an &lt;code&gt;events&lt;/code&gt; alias pointing to the &lt;code&gt;events-*&lt;/code&gt; index you want the
+application to use. The component responsible for the creation of the new
+indices can atomically switch the alias to the new index. This approach will
+bring two notable benefits:&lt;/p&gt;
+
+    &lt;ul&gt;
+      &lt;li&gt;
+        &lt;p&gt;It doesn’t suffer from the drawbacks of the previous approach.&lt;/p&gt;
+      &lt;/li&gt;
+      &lt;li&gt;
+        &lt;p&gt;The application code is way more simpler by just pointing to the &lt;code&gt;events&lt;/code&gt;
+index everywhere.&lt;/p&gt;
+      &lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;&lt;a name="synonyms"&gt;&lt;/a&gt;&lt;/p&gt;
+
+&lt;h2 id="avoid-having-big-synonym-collections"&gt;Avoid having big synonym collections&lt;/h2&gt;
+
+&lt;p&gt;Elasticsearch supports both index- and query-time
+&lt;a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/analysis-synonym-tokenfilter.html"&gt;synonyms&lt;/a&gt;.
+These are powerful shotguns with a good track record of shooting its holder in
+the foot. No search engine is complete without synonyms, hence they have pretty
+valid use cases. Though the following implications need to be kept in mind while
+employing them:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;Index-time synonyms increase the index size and creates an extra runtime
+overhead.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Query-time synonyms doesn’t add up to the index size, but as their name
+implies, creates an extra runtime overhead.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Using synonyms, it is pretty easy to unintentionally break something while
+trying to fix some other thing.&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Continuosly monitor the impact of synonyms on the performance and try to write
+tests for each synonym added.&lt;/p&gt;
+
+&lt;p&gt;&lt;a name="force-merge"&gt;&lt;/a&gt;&lt;/p&gt;
+
+&lt;h2 id="force-merge-and-increase-operation-bandwidth-before-enabling-replicas"&gt;Force merge and increase operation bandwidth before enabling replicas&lt;/h2&gt;
+
+&lt;p&gt;A really common Elasticsearch use case is to periodically (once every couple of
+hours) create an index. There is a really good
+&lt;a href="https://developers.soundcloud.com/blog/how-to-reindex-1-billion-documents-in-1-hour-at-soundcloud"&gt;SoundCloud&lt;/a&gt;
+article on how to achieve the optimal performance. Quoting from that
+compilation, there are the following items that I particularly find a “must”.&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;Always enable replicas after completing the indexing.&lt;/li&gt;
+  &lt;li&gt;Before enabling replicas, make sure you
+    &lt;ul&gt;
+      &lt;li&gt;shrinked the index size by &lt;a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-forcemerge.html"&gt;forcing a
+merge&lt;/a&gt;
+and&lt;/li&gt;
+      &lt;li&gt;increased the replica transmission bandwidth, that is,
+&lt;a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/recovery.html"&gt;&lt;code&gt;indices.recovery.max_bytes_per_sec&lt;/code&gt;&lt;/a&gt;.&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;&lt;a name="metrics"&gt;&lt;/a&gt;&lt;/p&gt;
+
+&lt;h2 id="record-application-level-metrics"&gt;Record application-level metrics&lt;/h2&gt;
+
+&lt;p&gt;Kibana provides quite solid insights into the Elasticsearch performance:
+indexing, search latency and throughput; flush, merge operations; etc. Once you
+enhance this view with extra JVM (GC pauses, heap size, etc.) and OS (CPU usage,
+disk I/O, kernel caches, etc.) metrics, you will get a rock solid monitoring
+dashboard. That said, this is not enough. It is used by a single application or
+more, Elasticsearch will get hit by various access patterns. Imagine a part of
+your software trying to shovel off 10 million documents of not-so-important user
+activity, while another component is trying to update user account details. If
+you would look at your shiny Elasticsearch metrics, everything will look fine
+since 10 million document updates will make the statistical effect of user
+account updates disappear. On the other hand, your users might not be that much
+happy with the latency they observe while they are trying to update their
+accounts. Hence always expose extra application-level metrics for your
+Elasticsearch queries. While Elasticsearch metrics provide sufficient indicators
+for the overall cluster performance, they lack the domain-specific context.&lt;/p&gt;
+
+&lt;p&gt;&lt;a name="cpu"&gt;&lt;/a&gt;&lt;/p&gt;
+
+&lt;h2 id="invest-in-cpu"&gt;Invest in CPU!&lt;/h2&gt;
+
+&lt;p&gt;I cannot emphasise this enough: &lt;strong&gt;invest in CPU!&lt;/strong&gt; Now open your dashboards,
+look at the metrics of your most recent Elasticsearch hammering session in
+production, and tell me whether you are disk I/O, memory, or CPU bound? I am not
+telling you to use a 32-core machine with an inferior SATA disk drive and 8 GB
+of memory. Rather what I am talking about is this: get a decent machine with
+sufficient memory and SSD (you might want to checkout NVMe cards too depending
+on your disk I/O), after that invest in CPU. Judging from my past experiences,
+whether it is a write- or read-heavy load, CPU has always been our bottleneck.&lt;/p&gt;
+
+&lt;p&gt;&lt;a name="plugins"&gt;&lt;/a&gt;&lt;/p&gt;
+
+&lt;h2 id="avoid-writing-custom-elasticsearch-plugins"&gt;Avoid writing custom Elasticsearch plugins&lt;/h2&gt;
+
+&lt;p&gt;Once I had the opportunity to have the joy of pairing with a colleague to write
+an Elasticsearch plugin that exposes synonyms over a REST endpoint. That allowed
+us to query synonyms uploaded to an Elasticsearch cluster at runtime and
+manipulate it on-the-fly. After having 20 releases where we were convinced that
+there are no more concurrency bugs (actually, we had been pretty convinced in
+the previous 19 releases too), it worked like a charm. Though the real suffering
+started when we tried to upgrade the Elasticsearch supported by the plugin. In a
+nutshell, avoid writing custom Elasticsearch plugins, because…&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;Many Elasticsearch releases contain significant internal changes. It is highly
+likely the public APIs you erect your plugin on will get backward incompatible
+changes.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Getting concurrency right in an environment where you are not much accustomed
+to can be daunting.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;You need to tailor your deployment procedure to ship the plugin everytime and
+everywhere it is needed. You cannot just use the vanilla Elasticsearch
+artifacts as is anymore.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Since your application depends on the specific functionality provided by the
+plugin, the Elasticsearch instances you run during integration tests also need
+to incorporate the plugin as well. Hence you cannot use vanilla, say, Docker
+images out of the box anymore.&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+</content>
+  </entry>
   <entry>
     <id>tag:vlkan.com,2019-01-26://blog/post/2019/01/26/reactive-spring5/</id>
     <title type="html">Notes on "Reactive Programming in Spring 5"</title>
@@ -4534,247 +5481,6 @@ on the speed mismatch of the involved actors. In this post, I examined the
 problem in a sample RxJava application and provided a solution leveraging
 &lt;em&gt;callback blocking&lt;/em&gt; approach that can be employed in almost any domain where
 the back-pressure needs to communicated. I hope you find it useful as well.&lt;/p&gt;
-</content>
-  </entry>
-  <entry>
-    <id>tag:vlkan.com,2016-03-02://blog/post/2016/03/02/optimize-dc/</id>
-    <title type="html">Optimizing a Data Center Using Integer Programming</title>
-    <published>2016-03-02T19:32:00Z</published>
-    <updated>2016-03-02T19:32:00Z</updated>
-    <link rel="alternate" href="https://vlkan.com//blog/post/2016/03/02/optimize-dc/"/>
-    <content type="html">
-&lt;p&gt;&lt;a href="https://hashcode.withgoogle.com/2015/tasks/hashcode2015_qualification_task.pdf"&gt;Optimize a Data
-Center&lt;/a&gt;
-is a &lt;strong&gt;challenging&lt;/strong&gt; programming problem presented in the Qualification Round
-of the &lt;a href="https://hashcode.withgoogle.com/past_editions.html"&gt;Hash Code 2015&lt;/a&gt;.
-Among 230 teams, &lt;em&gt;What’s in a name?&lt;/em&gt; from &lt;a href="http://www.ens.fr/"&gt;École normale
-supérieure&lt;/a&gt; ranked first in the qualification, but third
-in the final round. By challenging, I mean it is not possible to come up with
-a deterministic polynomial-time optimal answer. I am not in a position to
-either provide a rigorous proof of its complexity or its reduction to a known
-NP-hard problem. But in this blog post I will investigate the following
-question: Can we provide an optimal solution using &lt;a href="https://en.wikipedia.org/wiki/Integer_programming"&gt;integer
-programming&lt;/a&gt;? In practice,
-that would allow us to come up with an optimal solution to small-sized
-problems. Without further ado, let’s start with the problem definition.&lt;/p&gt;
-
-&lt;h1 id="the-problem"&gt;The Problem&lt;/h1&gt;
-
-&lt;p&gt;Here, I will present a brief summary of &lt;a href="https://hashcode.withgoogle.com/2015/tasks/hashcode2015_qualification_task.pdf"&gt;the actual
-problem&lt;/a&gt;.
-A data center is modeled as &lt;strong&gt;rows​&lt;/strong&gt; of &lt;strong&gt;slots&lt;/strong&gt; ​in which servers can be
-placed. And some of the slots are known to be &lt;strong&gt;unavailable&lt;/strong&gt;.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src="rows.jpg" alt="Data center rows"&gt;&lt;/p&gt;
-
-&lt;p&gt;Each &lt;strong&gt;server&lt;/strong&gt; is characterized by its &lt;strong&gt;size&lt;/strong&gt; and &lt;strong&gt;capacity​&lt;/strong&gt;. Size is
-the number of consecutive slots occupied by the machine. Capacity is the total
-amount of CPU resources of the machine (an integer value).&lt;/p&gt;
-
-&lt;p&gt;&lt;img src="servers.jpg" alt="Data center servers"&gt;&lt;/p&gt;
-
-&lt;p&gt;Servers in a data center are also logically divided into &lt;strong&gt;pools&lt;/strong&gt;. ​Each
-server belongs to exactly one pool. The capacity of a pool is the sum of the
-capacities of the available ​servers in that pool.&lt;/p&gt;
-
-&lt;p&gt;The &lt;strong&gt;guaranteed capacity&lt;/strong&gt; ​of a pool is the minimum capacity it will have
-when at most one data center row goes down. Given a schema of a data center
-and a list of available servers, the goal is to assign servers to slots within
-the rows​ and to logical pools ​so that the lowest guaranteed capacity​ of all
-pools is maximized.&lt;/p&gt;
-
-&lt;p&gt;Consider the following data center schema and a list of available servers. For
-simplicity, it is assumed that server capacities are equal to server sizes.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src="example-prob.jpg" alt="Example problem"&gt;&lt;/p&gt;
-
-&lt;p&gt;Following layout is a solution to the above given problem. Here different
-pools are denoted in distinct colors.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src="example-soln.jpg" alt="Example solution"&gt;&lt;/p&gt;
-
-&lt;h1 id="preliminaries"&gt;Preliminaries&lt;/h1&gt;
-
-&lt;p&gt;Before modeling the IP (Integer Program), I will start with stating the
-problem input.&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;
-&lt;script type="math/tex"&gt;R&lt;/script&gt; ​denotes the number of rows in the data center&lt;/li&gt;
-  &lt;li&gt;
-&lt;script type="math/tex"&gt;S&lt;/script&gt; denotes the number of slots in each row of the data center&lt;/li&gt;
-  &lt;li&gt;
-&lt;script type="math/tex"&gt;U \leq RS&lt;/script&gt; denotes the number of unavailable slots&lt;/li&gt;
-  &lt;li&gt;
-&lt;script type="math/tex"&gt;P&lt;/script&gt; denotes the number of pools to be created&lt;/li&gt;
-  &lt;li&gt;
-&lt;script type="math/tex"&gt;M \leq RS&lt;/script&gt; denotes the number of servers to be allocated&lt;/li&gt;
-  &lt;li&gt;
-&lt;script type="math/tex"&gt;z_k&lt;/script&gt; and &lt;script type="math/tex"&gt;c_k&lt;/script&gt; denote &lt;script type="math/tex"&gt;k&lt;/script&gt;th server’s respectively size and capacity&lt;/li&gt;
-  &lt;li&gt;
-&lt;script type="math/tex"&gt;r_i&lt;/script&gt; and &lt;script type="math/tex"&gt;s_i&lt;/script&gt; denote &lt;script type="math/tex"&gt;i&lt;/script&gt;th unavailable slot’s respectively row and
-slot indices&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;While modeling the formulation, I will need to provide constraints to avoid
-placing servers to unavailable slots. Rather than doing that, &lt;a href="http://kaygun.tumblr.com/"&gt;Atabey
-Kaygun&lt;/a&gt; hinted me to represent the data in
-&lt;strong&gt;blocks&lt;/strong&gt;. That is, instead of &lt;script type="math/tex"&gt;U&lt;/script&gt;, &lt;script type="math/tex"&gt;r_i&lt;/script&gt;, and &lt;script type="math/tex"&gt;s_i&lt;/script&gt;, I will transform
-this data into a single lookup table called &lt;script type="math/tex"&gt;z(i, j)&lt;/script&gt; that denotes the size
-of the available slots at &lt;script type="math/tex"&gt;i&lt;/script&gt;th row and &lt;script type="math/tex"&gt;j&lt;/script&gt;th block. For instance,
-consider the following layout:&lt;/p&gt;
-
-&lt;p&gt;&lt;img src="blocks.jpg" alt="Example blocks"&gt;&lt;/p&gt;
-
-&lt;p&gt;Here blocks will look as follows:&lt;/p&gt;
-
-&lt;script type="math/tex; mode=display"&gt;% &lt;![CDATA[
-\begin{align}
-[z(0, 0)] &amp;= [10] \\
-[z(1, 0), z(1, 1)] &amp;= [5,3] \\
-[z(2, 0), z(2, 1), z(2, 2)] &amp;= [3, 4, 1] \\
-[z(3, 0)] &amp;= [6]
-\end{align} %]]&gt;&lt;/script&gt;
-
-&lt;h1 id="the-integer-programming-model"&gt;The Integer Programming Model&lt;/h1&gt;
-
-&lt;p&gt;For simplicity, I will adopt the following index notation:&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;
-&lt;script type="math/tex"&gt;i&lt;/script&gt; denotes row indices (&lt;script type="math/tex"&gt;0 \leq i \leq R&lt;/script&gt;)&lt;/li&gt;
-  &lt;li&gt;
-&lt;script type="math/tex"&gt;j&lt;/script&gt; denotes block (not slot!) indices (varies per row)&lt;/li&gt;
-  &lt;li&gt;
-&lt;script type="math/tex"&gt;k&lt;/script&gt; denotes server indices (&lt;script type="math/tex"&gt;0 \leq k \leq M&lt;/script&gt;)&lt;/li&gt;
-  &lt;li&gt;
-&lt;script type="math/tex"&gt;\ell&lt;/script&gt; denotes pool indices (&lt;script type="math/tex"&gt;0 \leq \ell \leq P&lt;/script&gt;)&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;Given that &lt;script type="math/tex"&gt;z(i, j)&lt;/script&gt; denotes the available blocks, the IP model can be
-defined as follows:&lt;/p&gt;
-
-&lt;script type="math/tex; mode=display"&gt;% &lt;![CDATA[
-\begin{align}
-
-\text{maximize}
-&amp; \quad
-\min_\ell g(\ell)
-\quad \text{(minimum of pool guaranteed capacities)} \\
-
-\text{subject to}
-
-&amp; \quad
-\sum_\ell a(i, j, k, \ell) \leq 1, \, \forall k
-\quad \text{(a server can be assigned to at most 1 pool and block)} \\
-
-&amp; \quad
-\sum_{k,\ell} z_k \, a(i, j, k, \ell) \leq z(i, j), \, \forall i, j
-\quad \text{(total size of servers within a block cannot exceed block's size)} \\
-
-\text{where}
-&amp; \quad
-a(i, j, k, \ell) =
-\begin{cases}
-    1       &amp; \quad \text{if } k \text{th server is assigned to } (i, j) \text{th block and } \ell \text{th pool} \\
-    0  &amp; \quad \text{otherwise} \\
-  \end{cases} \\
-
-&amp; \quad
-g(\ell) = \min_i g(\ell, i)
-\quad \text{(guaranteed capacity of } \ell \text{th pool)} \\
-
-&amp; \quad
-g(\ell, i) = \sum_{i', j, k} c_k \, a(i', j, k, \ell) - \sum_{j, k} c_k \, a(i, j, k, \ell)
-\quad \text{(guaranteed capacity of } \ell \text{th pool for } i \text{th row)} \\
-
-\end{align} %]]&gt;&lt;/script&gt;
-
-&lt;h1 id="avoiding-minimax-constraint"&gt;Avoiding Minimax Constraint&lt;/h1&gt;
-
-&lt;p&gt;The presented IP model contains a minimax objective, which to the best of my
-knowledge is not tractable by popular linear programming optimizers, such as
-&lt;a href="http://www-01.ibm.com/software/commerce/optimization/cplex-optimizer/"&gt;CPLEX&lt;/a&gt;
-or &lt;a href="http://lpsolve.sourceforge.net/"&gt;lpsolve&lt;/a&gt;. But I have a trick in my pocket
-to tackle that. Let’s assume that we know the optimal objective, say &lt;script type="math/tex"&gt;g^*&lt;/script&gt;.
-Then we can model the entire IP as follows:&lt;/p&gt;
-
-&lt;script type="math/tex; mode=display"&gt;% &lt;![CDATA[
-\begin{align}
-
-\text{maximize}
-&amp; \quad
-1
-\quad \text{(a dummy objective)} \\
-
-&amp; \quad
-\sum_\ell a(i, j, k, \ell) \leq 1, \, \forall k \\
-
-&amp; \quad
-\sum_{k,\ell} z_k \, a(i, j, k, \ell) \leq z(i, j), \, \forall i, j \\
-
-&amp; \quad
-g(\ell, i) \geq g^*, \, \forall \ell, i
-\quad \text{(guaranteed capacity must be greater than or equal to } g^* \text{)} \\
-
-\end{align} %]]&gt;&lt;/script&gt;
-
-&lt;p&gt;What this model states is this: I am not interested in the optimization
-objective, return me the first found feasible solution. That is, the optimizer
-will return us the first &lt;script type="math/tex"&gt;a(i, j, k, \ell)&lt;/script&gt; variable set the moment it finds
-a feasible solution satisfying &lt;script type="math/tex"&gt;g(\ell, i) \geq g^*, \, \forall \ell, i&lt;/script&gt;
-constraints.&lt;/p&gt;
-
-&lt;p&gt;Now things are getting interesting. If we can find bounds to &lt;script type="math/tex"&gt;g^*&lt;/script&gt;, than we
-can use these bounds to bisect the optimal &lt;script type="math/tex"&gt;g^*&lt;/script&gt;! For the lower bound, we
-know that &lt;script type="math/tex"&gt;g_i = 0 \leq g^*&lt;/script&gt;. The upper bound is a little bit tricky, but we
-can come up with a quite loose bound: &lt;script type="math/tex"&gt;g_f = \frac{1}{P} \sum_k c_k \gg
-g^*&lt;/script&gt;. (I will not go into details of how to come up with a stricter upper
-bound.) So by picking &lt;script type="math/tex"&gt;g^* \in (g_i, g_f)&lt;/script&gt; we can bisect &lt;strong&gt;the optimal
-guaranteed capacity&lt;/strong&gt;.&lt;/p&gt;
-
-&lt;h1 id="the-solver"&gt;The Solver&lt;/h1&gt;
-
-&lt;p&gt;For testing purposes, I wrote a simple &lt;a href="https://gist.github.com/vy/9689cb122a84be22d454"&gt;Python
-script&lt;/a&gt; that reads an input
-problem file and calls CPLEX iteratively. A sample output of the script is as
-follows:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;$ ./dc.py ./cplex.sh prob/dc-min.in soln/dc-min 0
-2016-03-03 08:35:25 DEBUG    reading setup: prob/dc-min.in
-2016-03-03 08:35:25 DEBUG    R=2, S=5, U=1, P=2, M=5
-2016-03-03 08:35:25 INFO     solving for 0 &amp;lt;= g=8 &amp;lt; 16
-2016-03-03 08:35:25 DEBUG    writing problem: soln/dc-min-8.lp
-2016-03-03 08:35:25 DEBUG    running solver
-2016-03-03 08:35:25 DEBUG    writing cplex output: soln/dc-min-8.out
-2016-03-03 08:35:25 DEBUG    no solution
-2016-03-03 08:35:25 DEBUG    stepping back
-2016-03-03 08:35:25 INFO     solving for 0 &amp;lt;= g=4 &amp;lt; 8
-2016-03-03 08:35:25 DEBUG    writing problem: soln/dc-min-4.lp
-2016-03-03 08:35:25 DEBUG    running solver
-2016-03-03 08:35:25 DEBUG    writing cplex output: soln/dc-min-4.out
-2016-03-03 08:35:25 DEBUG    solution score: 5
-2016-03-03 08:35:25 DEBUG    writing solution: soln/dc-min-4.soln
-2016-03-03 08:35:25 DEBUG    stepping forward
-2016-03-03 08:35:25 INFO     solving for 5 &amp;lt;= g=6 &amp;lt; 8
-2016-03-03 08:35:25 DEBUG    writing problem: soln/dc-min-6.lp
-2016-03-03 08:35:25 DEBUG    running solver
-2016-03-03 08:35:25 DEBUG    writing cplex output: soln/dc-min-6.out
-2016-03-03 08:35:25 DEBUG    no solution
-2016-03-03 08:35:25 DEBUG    stepping back
-2016-03-03 08:35:25 INFO     solving for 5 &amp;lt;= g=5 &amp;lt; 6
-2016-03-03 08:35:25 DEBUG    writing problem: soln/dc-min-5.lp
-2016-03-03 08:35:25 DEBUG    running solver
-2016-03-03 08:35:25 DEBUG    writing cplex output: soln/dc-min-5.out
-2016-03-03 08:35:25 DEBUG    solution score: 5
-2016-03-03 08:35:25 DEBUG    writing solution: soln/dc-min-5.soln
-2016-03-03 08:35:25 DEBUG    stepping forward
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;It also outputs intermediate IP formulation files, CPLEX output, and solution
-file. The format of the problem and solution files are detailed in &lt;a href="https://hashcode.withgoogle.com/2015/tasks/hashcode2015_qualification_task.pdf"&gt;the
-official problem
-description&lt;/a&gt;.&lt;/p&gt;
 </content>
   </entry>
 </feed>

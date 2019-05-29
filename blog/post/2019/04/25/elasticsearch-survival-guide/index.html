@@ -1,0 +1,1019 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Elasticsearch Survival Guide for Developers</title>
+    <link rel="stylesheet" href="/css/common.css">
+    <meta name="generator" content="nanoc 3.8.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/post.css">
+    <script type="text/javascript">
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-40183531-1']);
+      _gaq.push(['_trackPageview']);
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="container">
+
+      <ul id="menu">
+        <li><a href="/">Home</a></li><li><a href="/blog/">Blog</a></li><li><a href="/code/">Code</a></li><li><a href="/blog/feed/">Feed</a></li>
+      </ul>
+
+    
+
+<div id="post">
+
+    <div class="head">
+        <div class="title">Elasticsearch Survival Guide for Developers</div>
+        <div class="subtitle">posted at
+            April 25, 2019
+            with tags <a href="/blog/tag/elasticsearch">elasticsearch</a>, <a href="/blog/tag/java">java</a>
+        </div>
+    </div>
+
+    <div class="body">
+
+        <script type="text/javascript">
+        var asyncLoadRequests = [];
+        </script>
+
+        
+<p>For some months, I have been writing down to my notebook Elasticsearch best
+practices that I wish I would have known when I first started developing
+applications running against Elasticsearch. Even though the following collection
+tries to communicate certain ideas in Java, I believe almost each of such cases
+apply to every other programming language with almost no or minor changes. I
+tried to avoid repeating content that has already been covered in tutorials and
+the Elasticsearch documentation. The listed principles are all derived from my
+personal point of view, I strived to share only the ones that I can justify with
+either facts or experience.</p>
+
+<h1 id="table-of-contents">Table of Contents</h1>
+
+<ul>
+  <li>
+<a href="#mapping">Mapping</a>
+    <ul>
+      <li><a href="#nested-fields">Avoid <code>nested</code> fields</a></li>
+      <li><a href="#strict-mapping">Have a strict mapping</a></li>
+      <li><a href="#analyze">Don’t analyze fields of type <code>string</code> unless necessary</a></li>
+    </ul>
+  </li>
+  <li>
+<a href="#setting">Setting</a>
+    <ul>
+      <li><a href="#tuning-merges">Unlearn every hack for tuning merges</a></li>
+      <li><a href="#memory">Pay attention to JVM memory settings</a></li>
+    </ul>
+  </li>
+  <li>
+<a href="#querying">Querying</a>
+    <ul>
+      <li><a href="#cas">Compare-and-swap over <code>_version</code> field is poor man’s transactions</a></li>
+      <li><a href="#splitting-queries">Try splitting complex queries</a></li>
+      <li><a href="#numeric-types">Know your numeric types</a></li>
+      <li><a href="#transport-client">Don’t use Elasticsearch Transport/Node client in your Java application (and always use JSON over HTTP)</a></li>
+      <li><a href="#rest-client">Use the official Elasticsearch REST client in your Java application</a></li>
+      <li><a href="#cache-keys">Don’t use Elasticsearch query models to generate cache keys</a></li>
+      <li><a href="#http-caching">Don’t use HTTP caching for caching Elasticsearch responses</a></li>
+      <li><a href="#sliced-scrolls">Use sliced scrolls sorted on <code>_doc</code></a></li>
+      <li><a href="#get-by-id">Prefer <code>GET /index/type/{id}</code> over <code>POST /index/_search</code> for single document retrieval</a></li>
+      <li><a href="#size0-includes-excludes">Use <code>size: 0</code> and <code>includes</code>/<code>excludes</code> wisely</a></li>
+      <li><a href="#backpressure">Implement proper backpressure while querying</a></li>
+      <li><a href="#explicit-timeouts">Provide explicit timeouts in queries</a></li>
+      <li><a href="#blocking-io-threads">Don’t block the Elasticsearch client I/O threads (and know your threads)</a></li>
+      <li><a href="#json-templates">Don’t write Elasticsearch queries with JSON templates injecting variables</a></li>
+      <li><a href="#json-serializer">Prefer your own JSON serializer over the one provided by Elasticsearch clients</a></li>
+    </ul>
+  </li>
+  <li>
+<a href="#strategy">Strategy</a>
+    <ul>
+      <li><a href="#latest-version">Always (try to) stick to the latest JVM and Elasticsearch versions</a></li>
+      <li><a href="#snapshots">Use Elasticsearch complete and partial snapshots for backups</a></li>
+      <li><a href="#performance-test-bed">Have a continuous performance test bed</a></li>
+      <li><a href="#aliases">Use aliases</a></li>
+      <li><a href="#synonyms">Avoid having big synonym collections</a></li>
+      <li><a href="#force-merge">Force merge and increase operation bandwidth before enabling replicas</a></li>
+      <li><a href="#metrics">Record application-level metrics</a></li>
+      <li><a href="#cpu">Invest in CPU!</a></li>
+      <li><a href="#plugins">Avoid writing custom Elasticsearch plugins</a></li>
+    </ul>
+  </li>
+</ul>
+
+<p><a name="mapping"></a></p>
+
+<h1 id="mapping">Mapping</h1>
+
+<p>Here I share Elasticsearch
+<a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping.html">mapping</a>
+related tips.</p>
+
+<p><a name="nested-fields"></a></p>
+
+<h2 id="avoid-nested-fields">Avoid <code>nested</code> fields</h2>
+
+<ul>
+  <li>
+    <p>Under the hood, each Elasticsearch document corresponds to a Lucene document,
+almost. Though this promise is broken for fields of type
+<a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/nested.html"><code>nested</code></a>.
+There each field is stored as a separate document next to the parent Lucene
+one. This has a couple of particular impacts:</p>
+
+    <ul>
+      <li>Querying on <code>nested</code> fields is slower compared to fields in parent document</li>
+      <li>Retrieval of matching <code>nested</code> fields adds an extra slowdown</li>
+      <li>Once you update any field of a document containing <code>nested</code> fields,
+independent of whether you updated a nested field or not, all the underlying
+Lucene documents (parent and all its <code>nested</code> children) need to be marked as
+deleted and rewritten. In addition to slowing down your updates, such an
+operation also creates garbage to be cleaned up by segment merging later on.</li>
+    </ul>
+  </li>
+  <li>
+    <p>In certain ocassions, you can flatten <code>nested</code> fields. For instance, given the
+following document:</p>
+
+    <pre><code class="language-json"><span class="p">{</span>
+    <span class="nt">"attributes"</span><span class="p">:</span> <span class="p">[</span>
+        <span class="p">{</span><span class="nt">"key"</span><span class="p">:</span> <span class="s2">"color"</span><span class="p">,</span> <span class="nt">"val"</span><span class="p">:</span> <span class="s2">"green"</span><span class="p">},</span>
+        <span class="p">{</span><span class="nt">"key"</span><span class="p">:</span> <span class="s2">"color"</span><span class="p">,</span> <span class="nt">"val"</span><span class="p">:</span> <span class="s2">"blue"</span><span class="p">},</span>
+        <span class="p">{</span><span class="nt">"key"</span><span class="p">:</span> <span class="s2">"size"</span><span class="p">,</span> <span class="nt">"val"</span><span class="p">:</span> <span class="s2">"medium"</span><span class="p">}</span>
+    <span class="p">]</span>
+<span class="p">}</span></code></pre>
+
+    <p>You can flatten it as follows:</p>
+
+    <pre><code class="language-json"><span class="p">{</span>
+    <span class="nt">"attributes"</span><span class="p">:</span> <span class="p">{</span>
+        <span class="nt">"color"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"green"</span><span class="p">,</span> <span class="s2">"blue"</span><span class="p">],</span>
+        <span class="nt">"size"</span><span class="p">:</span> <span class="s2">"medium"</span>
+    <span class="p">}</span>
+<span class="p">}</span></code></pre>
+  </li>
+</ul>
+
+<p><a name="strict-mapping"></a></p>
+
+<h2 id="have-a-strict-mapping">Have a strict mapping</h2>
+
+<p>Do you know how many times I witnessed a production failure due to a new field
+first receiving a <code>long</code> value where the rest of the values are of type
+<code>double</code>? After the first received <code>long</code>, Elasticsearch creates the field, sets
+its type to <code>long</code>, and shares this mapping change with the rest of the nodes in
+the cluster. Then the rest of the <code>double</code> values are simply rejected due to
+type mismatch.</p>
+
+<ul>
+  <li>Have a strict mapping to avoid surprises.</li>
+  <li>Don’t blacklist, just whitelist.</li>
+  <li>Avoid using <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/dynamic-templates.html">dynamic templates</a>
+– they are just gateway drugs.</li>
+  <li>Disable <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/dynamic-field-mapping.html#date-detection">date detection</a>,
+which is on by default.</li>
+</ul>
+
+<p><a name="analyze"></a></p>
+
+<h2 id="dont-analyze-fields-of-type-string-unless-necessary">Don’t analyze fields of type <code>string</code> unless necessary</h2>
+
+<p>By default, a freshly inserted string field is assigned of type
+<a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/text.html"><code>text</code></a>,
+which incurs an analysis cost. Unless you need fuzzy matching but just
+filtering, use type <code>keyword</code> instead. This is slightly an extension of <a href="#strict-mapping">strict
+mapping</a> bullet.</p>
+
+<p><a name="setting"></a></p>
+
+<h1 id="setting">Setting</h1>
+
+<p>Here I share Elasticsearch cluster
+<a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/cluster-update-settings.html">settings</a>
+related tips.</p>
+
+<p><a name="tuning-merges"></a></p>
+
+<h2 id="unlearn-every-hack-for-tuning-merges">Unlearn every hack for tuning merges</h2>
+
+<p>Elasticsearch is in essence yet another distributed
+<a href="http://lucene.apache.org/">Lucene</a> offering, just like
+<a href="http://lucene.apache.org/solr/">Solr</a>. Under the hood, every Elasticsearch
+document corresponds to a Lucene document, almost. (There are certain exceptions
+to this rule like <code>nested</code> fields, though this generalization is pretty
+accurate.) In Lucene, documents are stored in
+<a href="https://lucene.apache.org/core/3_0_3/fileformats.html">segments</a>. Elasticsearch
+in the background continuously maintains these Lucene segments by means of the
+following two patterns:</p>
+
+<ul>
+  <li>
+    <p>In Lucene, when you delete and/or update a document, the old one gets marked
+as removed and a new one gets created. Elasticsearch keeps track of these dead
+documents and compacts such segments that are highly polluted by rebuilding
+them.</p>
+  </li>
+  <li>
+    <p>Newly added documents might yield to segments of imbalanced sizes.
+Elasticsearch might decide to merge these into bigger ones for optimization
+purposes.</p>
+  </li>
+</ul>
+
+<p>This aforementioned compaction is referred as <a href="https://www.elastic.co/guide/en/elasticsearch/guide/current/merge-process.html">segment
+merges</a>
+in Elasticsearch terminology. As you can guess, merges are highly disk I/O- and
+CPU-bound operations. As a user, you would not want to have them ruining your
+Elasticsearch query performance. As a matter of fact, you can achieve this in
+certain circumstances: Build the index once and don’t change it anymore. Though
+this condition might be difficult to meet in many application scenarios. Once
+you start to insert new documents or update existing ones, segment merges become
+an inevitable part of your life.</p>
+
+<p>An on-going segment merge can significantly damage the overal query performance
+of the cluster. Give it a search in the internet, you will find many people
+looking for help to work around these and many others sharing certain tunings
+that worked for them. Over the last years, there were two particular patterns I
+observed in the shared tuning tips: they exist from the incarnation of this
+operation (so everybody agrees that it used to hurt and is still hurting) and
+the majority of the mentioned settings become deprecated (or even worse, become
+unavailable) with the next Elasticsearch release. So my rules of thumb for
+tuning merges start as follows:</p>
+
+<ol>
+  <li>
+    <p>Unlearn every hack you heard about tuning merges. It is an operation pretty
+coupled with the internals of Elasticsearch and subject to change without
+providing a backward compatibility fallback. There is no secret knob to make
+it run faster; it is like the garbage collector in JVM, <code>VACUUM</code> in
+PostgreSQL, etc.</p>
+  </li>
+  <li>
+    <p>Find the sweet spot for the
+<a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/index-modules-translog.html">translog</a>
+flushes. Start first by setting <code>index.translog.durability</code> to <code>async</code>. This
+suggestion assumes that you are smart enough to either not use Elasticsearch
+as your primary data storage or have necessary recovery measures in place.
+Next relax <code>index.translog.sync_interval</code> and
+<code>index.translog.flush_threshold_size</code> settings until you don’t get any
+benefits for your usage pattern.</p>
+  </li>
+  <li>
+    <p>Adapt <code>index.refresh_interval</code> to your needs. Imagine you first bootstrap an
+index and later on occasionally perform small updates on it. In such a case,
+start with a loose (even disabled!) <code>refresh_interval</code> and make it tighter
+after bootstrap.</p>
+  </li>
+</ol>
+
+<p><a name="memory"></a></p>
+
+<h2 id="pay-attention-to-jvm-memory-settings">Pay attention to JVM memory settings</h2>
+
+<p>Elasticsearch can yield dramatic performance characteristics dependending on two
+primary memory settings: JVM heap space and the amount of memory left to the
+kernel page cache. I am not going to dive into these details here, because they
+are pretty well
+<a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/heap-size.html">documented</a>.
+This is your reminder to not blindly set the Elasticsearch JVM heap size judging
+from your past non-Elasticsearch JVM application experiences.</p>
+
+<p><a name="querying"></a></p>
+
+<h1 id="querying">Querying</h1>
+
+<p>Below I collected tips that you can take advantage of (or better stick to) while
+querying Elasticsearch.</p>
+
+<p><a name="cas"></a></p>
+
+<h2 id="compare-and-swap-over-version-field-is-poor-mans-transactions">Compare-and-swap over <code>_version</code> field is poor man’s transactions</h2>
+
+<p>I believe you had already figured that Elasticsearch doesn’t support
+transactions. Though you can leverage the
+<a href="https://www.elastic.co/guide/en/elasticsearch/reference/7.0/docs-get.html#get-versioning"><code>_version</code></a>
+field in a <a href="https://en.wikipedia.org/wiki/Compare-and-swap">CAS</a>-loop to provide
+integrity at least on a single document basis. An example demonstration of this
+trick can be summarized as follows:</p>
+
+<pre><code class="language-java"><span class="n">String</span> <span class="n">id</span> <span class="o">=</span> <span class="s">"123"</span><span class="o">;</span>
+<span class="k">for</span> <span class="o">(;;)</span> <span class="o">{</span>
+    <span class="n">EsDocument</span> <span class="n">prevDoc</span> <span class="o">=</span> <span class="n">store</span><span class="o">.</span><span class="na">findById</span><span class="o">(</span><span class="n">id</span><span class="o">);</span>
+    <span class="kt">long</span> <span class="n">prevVersion</span> <span class="o">=</span> <span class="n">prevDoc</span><span class="o">.</span><span class="na">getVersion</span><span class="o">();</span>
+    <span class="n">Object</span> <span class="n">prevSource</span> <span class="o">=</span> <span class="n">prevDoc</span><span class="o">.</span><span class="na">getSource</span><span class="o">();</span>
+    <span class="n">Object</span> <span class="n">nextSource</span> <span class="o">=</span> <span class="n">update</span><span class="o">(</span><span class="n">prevSource</span><span class="o">);</span>
+    <span class="kt">boolean</span> <span class="n">updated</span> <span class="o">=</span> <span class="n">store</span><span class="o">.</span><span class="na">updateByIdAndVersion</span><span class="o">(</span><span class="n">id</span><span class="o">,</span> <span class="n">prevVersion</span><span class="o">,</span> <span class="n">nextSource</span><span class="o">);</span>
+    <span class="k">if</span> <span class="o">(</span><span class="n">updated</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">break</span><span class="o">;</span>
+    <span class="o">}</span>
+<span class="o">}</span></code></pre>
+
+<p>Clearly this trick doesn’t stretch to multiple indices or <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/parent-join.html">parent/child
+relations</a>.</p>
+
+<p><a name="splitting-queries"></a></p>
+
+<h2 id="try-splitting-complex-queries">Try splitting complex queries</h2>
+
+<p>If you have complex queries with both, say, filter and aggregation components,
+splitting these into mutliple queries and executing them in parallel in most
+cases speed up the querying performance. That is, in the first query just get
+the hits using the filter, and in the second query, just get the aggregations
+without retrieving hits, that is, <code>size: 0</code>.</p>
+
+<p><a name="numeric-types"></a></p>
+
+<h2 id="know-your-numeric-types">Know your numeric types</h2>
+
+<p>Many JSON parsers reach for various optimizations to provide efficient
+read/write performance. For instance,
+<a href="https://github.com/FasterXML/jackson">Jackson</a>, the de facto JSON parser in the
+Java world, picks the primitive with the smallest memory footprint that can
+store the number passed by JSON. Hence after reading a field value via Jackson,
+you might end up getting an <code>int</code>, <code>long</code>, <code>double</code>, etc. Once you get a, say,
+<code>double</code>, it is highly likely that you had already lost precision and/or will be
+losing precision while serializing it back to JSON again. To avoid such
+surprises, prefer <code>BigDecimal</code> over <code>float</code> or <code>double</code>. Using <code>BigInteger</code> for
+integral numbers is a safe bet too. (See
+<a href="https://fasterxml.github.io/jackson-databind/javadoc/2.0.0/com/fasterxml/jackson/databind/DeserializationFeature.html#USE_BIG_DECIMAL_FOR_FLOATS">USE_BIG_DECIMAL_FOR_FLOATS</a>
+and
+<a href="https://fasterxml.github.io/jackson-databind/javadoc/2.0.0/com/fasterxml/jackson/databind/DeserializationFeature.html#USE_BIG_INTEGER_FOR_INTS">USE_BIG_INTEGER_FOR_INTS</a>
+Jackson configurations for details.)</p>
+
+<p><a name="transport-client"></a></p>
+
+<h2 id="dont-use-elasticsearch-transportnode-client-in-your-java-application-and-always-use-json-over-http">Don’t use Elasticsearch Transport/Node client in your Java application (and always use JSON over HTTP)</h2>
+
+<p>Elasticsearch is written in Java and its query model classes implement custom
+(de)serialization methods using Jackson’s <code>JsonGenerator</code> and <code>JsonParser</code>. This
+way, thanks to Jackson, a model instance can be (de)serialized to both JSON
+(text) and <a href="https://en.wikipedia.org/wiki/Smile_%28data_interchange_format%29">SMILE</a>
+(binary) formats without breaking a sweat. Logically, Elasticsearch uses the
+binary format for communication within the cluster due to performance reasons.
+Using <code>JsonParser</code> for parsing SMILE has a slight caveat: A schema cannot always
+be evolved in such a way that the backwards compatibility is kept. Indeed this
+is not a problem for an Elasticsearch cluster, all the nodes hopefully run the
+same version. Though using SMILE in your application means that you might need
+to shutdown your application, upgrade it to a newer version which is using the
+models of the new Elasticsearch you are about to deploy in parallel.</p>
+
+<p>What about performance between JSON and SMILE? Even Elastic’s own data intensive
+products such as Logstash and Kibana have replaced SMILE with JSON. It is highly
+unlikely that your bottleneck while querying Elasticsearch would be
+serialization. Further <a href="https://github.com/fabienrenaud/java-json-benchmark">Jackson is an excelling library in JSON serialization
+efficiency</a>. Hence, to be
+on the safe side, just stick to JSON over HTTP.</p>
+
+<p><a name="rest-client"></a></p>
+
+<h2 id="use-the-official-elasticsearch-rest-client-in-your-java-application">Use the official Elasticsearch REST client in your Java application</h2>
+
+<p><a href="https://www.elastic.co/guide/en/elasticsearch/client/java-rest/current/index.html">The official
+driver</a>
+will be maintained through the lifetime of the project. It will implement
+community approved features from its competitors. Unless something awkwardly
+goes wrong, the official one will just either leave no room of additional value
+to its competitors or they will just get rusted and disappear. That being said,
+the official REST client is a piece of crap for two main reasons:</p>
+
+<ol>
+  <li>It has a leaky abstraction over <a href="http://hc.apache.org/httpcomponents-client-ga/">Apache HTTP
+Client</a> whose configurations
+you need to deal with while tuning the client.</li>
+  <li>Do you recall <a href="#transport-client">the query model classes I mentioned above</a>?
+I have some bad news for you: Model classes are entangled with the server
+code and the REST client uses those classes. So what does this mean for you?
+Well… Adding the REST client in your dependencies will drag the entire
+Elasticsearch milkyway into your JAR Hell.</li>
+</ol>
+
+<p><a href="https://github.com/reactiverse/elasticsearch-client">Eclipse Vert.x works around this
+entanglement</a> in a yet
+another entangled way. Though I doubt if it will have a long lifetime given the
+reasons I listed above.</p>
+
+<p>In summary, the official REST client (unfortunately) is still your best bet.</p>
+
+<p><a name="cache-keys"></a></p>
+
+<h2 id="dont-use-elasticsearch-query-models-to-generate-cache-keys">Don’t use Elasticsearch query models to generate cache keys</h2>
+
+<p>Or more specifically,</p>
+
+<ul>
+  <li>
+    <p>[If you want your hash keys to be consistent between different JVM processes,
+JVM upgrades, and JVM restarts,] don’t use <code>Object#hashCode()</code>.</p>
+  </li>
+  <li>
+    <p>The JSON generated by Elasticsearch query models for semantically identical
+queries are not necessarily identical. It took more than a year to figure this
+out ourselves. Hence, don’t take the query model generated JSON as your source
+of hash. (My guess is that somewhere in the <code>JsonGenerator</code>-based serializers,
+they are probably iterating over a <code>java.util.Map</code> or <code>java.util.Set</code> whose
+order for identical content varies under different conditions.)</p>
+  </li>
+</ul>
+
+<p>Ok. So what else is left? How one should do it?</p>
+
+<ol>
+  <li>
+    <p>You query Elasticsearch due to a request you have just received, right? Does
+that request has its own application level model? Good. There you go. Use
+that one as a hash source.</p>
+  </li>
+  <li>
+    <p>Your application level request model is too complex to generate a proper hash
+key? Doh! Ok. Don’t tell anyone that I told you this: Parse Elasticsearch
+generated JSON using Jackson and let Jackson serialize it one more time back
+to JSON, but this time <a href="https://fasterxml.github.io/jackson-databind/javadoc/2.0.0/com/fasterxml/jackson/databind/SerializationFeature.html#ORDER_MAP_ENTRIES_BY_KEYS">instruct Jackson to sort the
+keys</a>.</p>
+  </li>
+</ol>
+
+<p><a name="http-caching"></a></p>
+
+<h2 id="dont-use-http-caching-for-caching-elasticsearch-responses">Don’t use HTTP caching for caching Elasticsearch responses</h2>
+
+<p>Many people fall in the trap of fronting their Elasticsearch cluster with an
+HTTP cache such as <a href="http://varnish-cache.org/">Varnish</a> due to its convenience
+and low entry barrier. Though this appealing approach has certain shortcomings:</p>
+
+<ul>
+  <li>
+    <p>When using Elasticsearch in production, it is highly likely you will end up
+having multiple clusters due to various reasons: resiliency, experimentation
+room, zero downtime upgrades, etc. Then,</p>
+
+    <ul>
+      <li>
+        <p>once you front each cluster with a dedicated HTTP cache, 99% of the cache
+content will just be duplicated.</p>
+      </li>
+      <li>
+        <p>if you decide to use a single HTTP cache for all clusters, it is really
+difficult to programmatically configure an HTTP cache to adopt the needs of
+the ever changing cluster states. How will you communicate the load to let
+the cache balance the traffic. How will you configure scheduled or manual
+downtimes? How will you let the cache gradually migrate the traffic from one
+to another during maintanence windows?</p>
+      </li>
+    </ul>
+  </li>
+  <li>
+    <p>As mentioned above, HTTP caches are difficult to command programmatically.
+When you need to manually evict one or more entries, it is not always as easy
+as a <code>DELETE FROM cache WHERE keys IN (...)</code> query. And let me warn you, you
+are gonna need that manual eviction.</p>
+  </li>
+</ul>
+
+<p><a name="sliced-scrolls"></a></p>
+
+<h2 id="use-sliced-scrolls-sorted-on-doc">Use sliced scrolls sorted on <code>_doc</code>
+</h2>
+
+<p><a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/search-request-scroll.html">Scrolls</a>
+are the vehicle that Elasticsearch lets you scan its entire dataset for large
+reads. They are functionally (and surprisingly, internally too) pretty much
+similar to <a href="https://en.wikipedia.org/wiki/Cursor_(databases)">RDBMS cursors</a>.
+Though most people don’t get them right in their first attempt. Here are some
+basics:</p>
+
+<ul>
+  <li>
+    <p>If you reach for scrolls, you are probably reading quite some data. It is
+highly likely <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/search-request-scroll.html#sliced-scroll">slicing</a> will help you improve the read performance
+significantly.</p>
+  </li>
+  <li>
+    <p>The order doesn’t matter in your reads? This is your lucky day then! Just sort
+on <code>_doc</code> field and there goes your +20% read speed up without any charges.
+(<code>_doc</code> is a pseudo field to let Elasticsearch use the order documents are
+laid out on the disk.)</p>
+  </li>
+  <li>
+    <p>The <code>scrollId</code> might (and does!) change between calls. Hence make sure you are
+always scrolling using the most recently retrieved <code>scrollId</code>.</p>
+  </li>
+  <li>
+    <p>Reaching for <code>REINDEX</code>? Did you enable slicing there too? Good.</p>
+  </li>
+</ul>
+
+<p><a name="get-by-id"></a></p>
+
+<h2 id="prefer-get-indextypeid-over-post-indexsearch-for-single-document-retrieval">Prefer <code>GET /index/type/{id}</code> over <code>POST /index/_search</code> for single document retrieval</h2>
+
+<p>Elasticsearch uses different thread pools to handle <code>GET /index/type/{id}</code> and
+<code>POST /index/_search</code> queries. Using <code>POST /index/_search</code> with payload <code>{query:
+{"match": {"_id": "123"}}}</code> (or something similar) occupies your
+search-dedicated thread pool. Under heavy load, this will worsen your both
+search and single document fetch performance. Simply just stick to <code>GET
+/index/type/{id}</code>.</p>
+
+<p><a name="size0-includes-excludes"></a></p>
+
+<h2 id="use-size-0-and-includesexcludes-wisely">Use <code>size: 0</code> and <code>includes</code>/<code>excludes</code> wisely</h2>
+
+<p>This tip I guess applies to any storage engine of your preference: Avoid
+retrieving (or even storing!) content unless necessary. I have witnessed
+Elasticsearch showing dramatic performance differences before and after adding a
+<code>size: 0</code> clause.</p>
+
+<p><a name="backpressure"></a></p>
+
+<h2 id="implement-proper-backpressure-while-querying">Implement proper backpressure while querying</h2>
+
+<p>Yet another database-independent tip: There is no point in hammering your
+database to the point of making it choke. Consider the following Java snippet
+employing an imaginary database client:</p>
+
+<pre><code class="language-java"><span class="kt">void</span> <span class="nf">findUserById</span><span class="o">(</span><span class="n">String</span> <span class="n">id</span><span class="o">,</span> <span class="n">Callable</span><span class="o">&lt;</span><span class="n">User</span><span class="o">&gt;</span> <span class="n">callback</span><span class="o">)</span> <span class="o">{</span>
+    <span class="n">dbClient</span><span class="o">.</span><span class="na">find</span><span class="o">(</span><span class="s">"user"</span><span class="o">)</span>
+            <span class="o">.</span><span class="na">filter</span><span class="o">(</span><span class="s">"id"</span><span class="o">,</span> <span class="n">id</span><span class="o">)</span>
+            <span class="o">.</span><span class="na">first</span><span class="o">(</span><span class="nl">callback:</span><span class="o">:</span><span class="n">apply</span><span class="o">);</span>
+<span class="o">}</span></code></pre>
+
+<p>Assuming <code>dbClient</code> is implemented in a non-blocking and asynchronous fashion –
+that is, each request is enqueued to be delivered and each response handler is
+enqueued to react on incoming payloads – what would happen if your database can
+handle at most 1 req/sec while your application perfectly receives, handles, and
+passes forward 10 req/sec? Let me draw you a shallow probability tree depicting
+consequences of such an incident.</p>
+
+<ol>
+  <li>Your database gets loaded more than it can take. If your database has proper
+backpressure mechanics, which most don’t possess, including Elasticsearch,</li>
+</ol>
+
+<ul>
+  <li>
+    <p>Then it will start choking and eventually throw up. This will get reflected
+as query errors on the application side. If your application is equipped
+with backpressure mechanics as well, it can kindly reflect this back to the
+caller.</p>
+  </li>
+  <li>
+    <p>Otherwise,</p>
+
+    <ol>
+      <li>
+        <p>even the simplest database queries will start suffering due to heavy load.</p>
+      </li>
+      <li>
+        <p>the database process queue will overgrow.</p>
+
+        <ol>
+          <li>
+            <p>Excessive growth of the queue (that is, no backpressure mechanics in
+place) will start stressing the process memory.</p>
+          </li>
+          <li>
+            <p>The requests succeed in making from the queue to an executor thread
+will highly likely already become deprecated. That is, database will
+be doing job that is of use to nobody.</p>
+          </li>
+        </ol>
+      </li>
+      <li>
+        <p>above two points drawn from the process queue overgrow of the database,
+apply as is to the application too.</p>
+      </li>
+    </ol>
+  </li>
+</ul>
+
+<p>Unfortunately there is no silver bullet or a step-by-step guide of implementing
+backpressure for a particular application. This in a way makes sense, each has
+its own domain-specific requirements. That being said, I can share my personal
+best practices:</p>
+
+<ul>
+  <li>
+    <p>Use performance benchmarks of your application (You have performance
+benchmarks, right?) to estimate an upper bound on the load that your
+application delivers an acceptable performance. Enforce this limit in your
+application via a rate limiter. Please, please, please don’t block the carrier
+thread using the rate limiter! Rather just communicate the backpressure to
+your client, for instance, by means of an <a href="https://en.wikipedia.org/wiki/List_of_HTTP_status_codes#5xx_Server_errors">HTTP 503 (SERVICE UNAVAILABLE)
+status code</a>.</p>
+  </li>
+  <li>
+    <p>Avoid using thread pools with an unbounded task queue. Java programmers, all
+your RxJava/Reactor schedulers are by default backed by a
+<code>ScheduledThreadPoolExecutor</code> (the one and only <code>ScheduledExecutorService</code>
+implementation in the Java standard library) and that internally uses an
+unbounded task queue, unfortunately. See <a href="https://stackoverflow.com/q/7403764/1278899">this Stack Overflow
+post</a> and <a href="http://cs.oswego.edu/pipermail/concurrency-interest/2019-April/016860.html">that
+concurrency-interest
+discussion</a>
+on how to work around that.</p>
+  </li>
+  <li>
+    <p>If your application is a pipe between two resources (e.g., from a Pubsub queue
+to an Elasticsearch cluster) make sure your producers react to consumers’
+backpressure. That is, if the consumer latency starts increasing, you better
+start slowing down the producer.</p>
+  </li>
+</ul>
+
+<p><a name="explicit-timeouts"></a></p>
+
+<h2 id="provide-explicit-timeouts-in-queries">Provide explicit timeouts in queries</h2>
+
+<p>Almost all Elasticsearch API endpoints allow the user to specify a timeout, use
+that. This will help both your application and your Elasticsearch cluster: Spot
+and shrug off unpexected long running operations and save associated resources,
+establish a stable SLA with no surprises, etc.</p>
+
+<p><a name="blocking-io-threads"></a></p>
+
+<h2 id="dont-block-the-elasticsearch-client-io-threads-and-know-your-threads">Don’t block the Elasticsearch client I/O threads (and know your threads)</h2>
+
+<p>This tip is also database independent: Don’t block I/O threads of an external
+resource for another external resource. Let me demonstrate this pitfall with a
+snippet:</p>
+
+<pre><code class="language-java"><span class="kd">public</span> <span class="kt">void</span> <span class="nf">enrichUserById</span><span class="o">(</span><span class="n">String</span> <span class="n">id</span><span class="o">,</span> <span class="n">Function</span><span class="o">&lt;</span><span class="n">EsDocument</span><span class="o">,</span> <span class="n">EsDocument</span><span class="o">&gt;</span> <span class="n">enricher</span><span class="o">,</span> <span class="n">Runnable</span> <span class="n">callback</span><span class="o">)</span> <span class="o">{</span>
+    <span class="n">esClient</span><span class="o">.</span><span class="na">findUserById</span><span class="o">(</span><span class="n">id</span><span class="o">,</span> <span class="n">user</span> <span class="o">-&gt;</span> <span class="o">{</span>
+        <span class="n">EsDocument</span> <span class="n">enrichedUser</span> <span class="o">=</span> <span class="n">enricher</span><span class="o">.</span><span class="na">apply</span><span class="o">(</span><span class="n">user</span><span class="o">);</span>
+        <span class="n">esClient</span><span class="o">.</span><span class="na">saveUserById</span><span class="o">(</span><span class="n">id</span><span class="o">,</span> <span class="n">enrichedUser</span><span class="o">,</span> <span class="n">callback</span><span class="o">);</span>
+    <span class="o">});</span>
+<span class="o">}</span></code></pre>
+
+<p>What is mostly unintentional here is that: Both <code>enricher.apply(user)</code> and
+<code>callback.run()</code> will get executed in the Elasticsearch client I/O thread. Here
+I see two common cases:</p>
+
+<ul>
+  <li>
+    <p>If both functions don’t incur any other I/O calls (except the ones that are
+again reaching for Elasticsearch) and this is the only place in the entire
+application where you access to Elasticsearch, then this is a good practice.
+You repurpose Elasticsearch client I/O thread for a CPU-intensive
+post-processing. Almost no thread context-switch costs. On a 4 core machine,
+with 4 threads dedicated to Elasticsearch client I/O, you will get an almost
+optimal performance given your usage pattern.</p>
+  </li>
+  <li>
+    <p>If both or any of the functions internally perform other I/O calls and/or
+there are multiple places in the application where Elasticsearch client is
+used for different purposes, then you are occupying the Elasticsearch client
+I/O threads for something unrelated whereas these threads could have just been
+serving yet another Elasticsearch request. In such cases, it is better to
+employ task-specific thread pools and avoid exhausting Elasticsearch client
+I/O loop unnecessarily:</p>
+
+    <pre><code class="language-java"><span class="kd">public</span> <span class="kt">void</span> <span class="nf">enrichUserById</span><span class="o">(</span><span class="n">String</span> <span class="n">id</span><span class="o">,</span> <span class="n">Function</span><span class="o">&lt;</span><span class="n">EsDocument</span><span class="o">,</span> <span class="n">EsDocument</span><span class="o">&gt;</span> <span class="n">enricher</span><span class="o">,</span> <span class="n">Runnable</span> <span class="n">callback</span><span class="o">)</span> <span class="o">{</span>
+    <span class="n">esClient</span><span class="o">.</span><span class="na">findUserById</span><span class="o">(</span><span class="n">id</span><span class="o">,</span> <span class="n">user</span> <span class="o">-&gt;</span> <span class="o">{</span>
+        <span class="n">computationExecutor</span><span class="o">.</span><span class="na">submit</span><span class="o">(()</span> <span class="o">-&gt;</span> <span class="o">{</span>
+          <span class="n">EsDocument</span> <span class="n">enrichedUser</span> <span class="o">=</span> <span class="n">enricher</span><span class="o">.</span><span class="na">apply</span><span class="o">(</span><span class="n">user</span><span class="o">);</span>
+          <span class="n">esClient</span><span class="o">.</span><span class="na">saveUserById</span><span class="o">(</span><span class="n">id</span><span class="o">,</span> <span class="n">enrichedUser</span><span class="o">,</span> <span class="o">()</span> <span class="o">-&gt;</span> <span class="o">{</span>
+              <span class="n">computationExecutor</span><span class="o">.</span><span class="na">submit</span><span class="o">(</span><span class="n">callback</span><span class="o">);</span>
+          <span class="o">});</span>
+        <span class="o">});</span>
+    <span class="o">});</span>
+<span class="o">}</span></code></pre>
+  </li>
+</ul>
+
+<p><a name="json-templates"></a></p>
+
+<h2 id="dont-write-elasticsearch-queries-with-json-templates-injecting-variables">Don’t write Elasticsearch queries with JSON templates injecting variables</h2>
+
+<p>Don’t ever do this:</p>
+
+<pre><code class="language-json"><span class="p">{</span>
+    <span class="nt">"query"</span><span class="p">:</span> <span class="p">{</span>
+        <span class="nt">"bool"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="nt">"filter"</span><span class="p">:</span> <span class="p">[</span>
+                <span class="p">{</span>
+                    <span class="nt">"term"</span><span class="p">:</span> <span class="p">{</span>
+                        <span class="nt">"username"</span><span class="p">:</span> <span class="p">{</span>
+                            <span class="nt">"value"</span><span class="p">:</span> <span class="p">{</span><span class="err">{username</span><span class="p">}}</span>
+                        <span class="p">}</span>
+                    <span class="p">}</span>
+                <span class="err">}</span><span class="p">,</span>
+                <span class="p">{</span>
+                    <span class="nt">"term"</span><span class="p">:</span> <span class="p">{</span>
+                        <span class="nt">"password"</span><span class="p">:</span> <span class="p">{</span>
+                            <span class="nt">"password"</span><span class="p">:</span> <span class="p">{</span><span class="err">{password</span><span class="p">}}</span>
+                        <span class="p">}</span>
+                    <span class="p">}</span>
+                <span class="err">}</span><span class="p">,</span>
+            <span class="p">]</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span></code></pre>
+
+<p>You are just falling into a half-century old trap: <a href="https://en.wikipedia.org/wiki/SQL_injection">SQL
+injection</a>, adopted for
+Elasticsearch. No matter how smart your character whitelisting, escaping
+routines are, it is just a matter of time someone passes a malicious <code>username</code>
+and/or <code>password</code> input that would expose your entire dataset. I also personally
+find it a pretty bad practice to render a curly brace (<code>{</code>, <code>}</code>) rich structured
+text via a templating language (e.g., Moustache, Handlebars) which uses the very
+same curly braces for its own directives.</p>
+
+<p>There are two safe approaches that I can recommend to generate dynamic queries:</p>
+
+<ol>
+  <li>Use the query models provided by the Elasticsearch (official) client. (This
+works for Java pretty well.)</li>
+  <li>Use a JSON library (e.g., <a href="https://github.com/FasterXML/jackson">Jackson</a>) to
+build the JSON tree and serialize it to JSON.</li>
+</ol>
+
+<p><a name="json-serializer"></a></p>
+
+<h2 id="prefer-your-own-json-serializer-over-the-one-provided-by-elasticsearch-clients">Prefer your own JSON serializer over the one provided by Elasticsearch clients</h2>
+
+<p>Many Elasticsearch clients allow you to pass a generic JSON object and serialize
+it to JSON before passing it over the wire. For instance, the official
+Elasticsearch REST client for Java allows <code>java.util.Map&lt;String, Object&gt;</code>
+instances as source. Then it uses its own JSON serializer to translate these
+models into JSON. While this works fine for vanilla Java, which is most of the
+time sufficient to get the message across in tutorials, most real world
+applications have more complex class structures that necessitate custom
+serialization. For instance, speaking of Java client, how does it serialize
+Guava models? What about the new date and time classes introduced in Java 8?
+What will happen to all your <code>@JsonProperty</code>-, <code>@JsonSerializes</code>-, etc.
+annotated classes? Hence it is always a better practice to employ your own
+serialization and pass a <code>byte[]</code> as source to the client. That will save you
+from surprises.</p>
+
+<p><a name="strategy"></a></p>
+
+<h1 id="strategy">Strategy</h1>
+
+<p>In this last section I collected convenient <em>strategic</em> (whatever that means)
+practices which address concerns not covered above.</p>
+
+<p><a name="latest-version"></a></p>
+
+<h2 id="always-try-to-stick-to-the-latest-jvm-and-elasticsearch-versions">Always (try to) stick to the latest JVM and Elasticsearch versions</h2>
+
+<p>Elasticsearch is a Java application. (Surprise, surprise!) Like every other Java
+application it has its hot paths and garbage collection dues. Almost every new
+JVM release will bring you extra optimizations that you can take advantage of
+without breaking a sweat. Note that due to the low-level performance hacks
+exploited in Lucene, which is internally used by Elasticsearch, Lucene is sort
+of fragile to JVM upgrades, particularly involving garbage collector changes.
+Fortunately, Elasticsearch has an official page listing supported <a href="https://www.elastic.co/support/matrix#matrix_jvm">JVM
+releases</a> and <a href="https://www.elastic.co/guide/en/elasticsearch/guide/current/_don_8217_t_touch_these_settings.html">garbage
+collectors</a>.
+Always check these pages out before attempting any JVM upgrades.</p>
+
+<p>Elasticsearch upgrades are also a source of free performance gains. I have never
+experienced a regression after Elasticsearch upgrades. That said, your milage
+may vary and this is why you should have proper integration tests in place.</p>
+
+<p><a name="snapshots"></a></p>
+
+<h2 id="use-elasticsearch-complete-and-partial-snapshots-for-backups">Use Elasticsearch complete and partial snapshots for backups</h2>
+
+<p>Elasticsearch lets you easily take
+<a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/modules-snapshots.html">snapshots</a>
+of an index either completely or partially against an existing snapshot.
+Depending on your update patterns and index size, find the best combination for
+your use case. That is, for instance, 1 complete snapshot at 00:00 and 3 partial
+snapshots at 06:00, 12:00, and 18:00. It is also known to be a good practice to
+have them stored at <a href="https://aws.amazon.com/s3/">AWS S3</a> or <a href="https://cloud.google.com/storage/">GCP
+Storage</a>. There exists
+<a href="https://www.elastic.co/guide/en/elasticsearch/plugins/master/repository.html">plugins</a>
+to facilitate these scenarios.</p>
+
+<p>As in every backup solution, make sure you can restore them and practice this a
+couple of times. In case of a post-failure restoration, you might need to
+engineer your own replay mechanisms to reach the last stable state just before
+the crash. Leveraging queues supporting custom retention periods (e.g., keep all
+the messages received in the last 2 days) for this purpose is a practice
+employed a lot.</p>
+
+<p><a name="performance-test-bed"></a></p>
+
+<h2 id="have-a-continuous-performance-test-bed">Have a continuous performance test bed</h2>
+
+<p>Like any other database, Elasticsearch shows varying performance under different
+conditions: index, document sizes; update, query patterns; index, cluster
+settings; hardware, OS, JVM versions; etc. It is difficult to keep track of each
+knob to observe its impact on the overall performance. Make sure you have
+(at least) daily performance tests to help you narrow down a recently introduced
+change damaging the performance.</p>
+
+<p>This utopic test bed is easier said than done. You will need to make sure that
+the test environment has representative data of production, (preferably)
+identical configuration to production, complete coverage of use cases, and
+provides a clean slate (including the OS cache!) for each test to avoid
+retaining the effects of a previous run. I know, quite a list. But it pays off.</p>
+
+<p><a name="aliases"></a></p>
+
+<h2 id="use-aliases">Use aliases</h2>
+
+<p>Now I am gonna tell you something quite opinionated, though backed by
+experience: Never query against indices, but
+<a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-aliases.html">alias</a>es.
+Aliases are pointers to actual indices. You can group one or more indices under
+a single alias. Many Elasticsearch indices have an internal context attached to
+the index name, such as, <code>events-20190515</code>. Now you have two choices in the
+application code while querying against <code>events-*</code> indices:</p>
+
+<ol>
+  <li>
+    <p>Determine the index name on the fly via a certain date pattern:
+<code>events-YYYYMMDD</code>. This approach has two major drawbacks:</p>
+
+    <ul>
+      <li>
+        <p>The need to fallback to an index of a particular date necessitates the
+entire code base to be engineered accordingly to support such an operation.</p>
+      </li>
+      <li>
+        <p>Putting all clock synchronization issues aside, at midnight, you need to
+make sure that the next index is there.</p>
+      </li>
+    </ul>
+  </li>
+  <li>
+    <p>Create an <code>events</code> alias pointing to the <code>events-*</code> index you want the
+application to use. The component responsible for the creation of the new
+indices can atomically switch the alias to the new index. This approach will
+bring two notable benefits:</p>
+
+    <ul>
+      <li>
+        <p>It doesn’t suffer from the drawbacks of the previous approach.</p>
+      </li>
+      <li>
+        <p>The application code is way more simpler by just pointing to the <code>events</code>
+index everywhere.</p>
+      </li>
+    </ul>
+  </li>
+</ol>
+
+<p><a name="synonyms"></a></p>
+
+<h2 id="avoid-having-big-synonym-collections">Avoid having big synonym collections</h2>
+
+<p>Elasticsearch supports both index- and query-time
+<a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/analysis-synonym-tokenfilter.html">synonyms</a>.
+These are powerful shotguns with a good track record of shooting its holder in
+the foot. No search engine is complete without synonyms, hence they have pretty
+valid use cases. Though the following implications need to be kept in mind while
+employing them:</p>
+
+<ul>
+  <li>
+    <p>Index-time synonyms increase the index size and creates an extra runtime
+overhead.</p>
+  </li>
+  <li>
+    <p>Query-time synonyms doesn’t add up to the index size, but as their name
+implies, creates an extra runtime overhead.</p>
+  </li>
+  <li>
+    <p>Using synonyms, it is pretty easy to unintentionally break something while
+trying to fix some other thing.</p>
+  </li>
+</ul>
+
+<p>Continuosly monitor the impact of synonyms on the performance and try to write
+tests for each synonym added.</p>
+
+<p><a name="force-merge"></a></p>
+
+<h2 id="force-merge-and-increase-operation-bandwidth-before-enabling-replicas">Force merge and increase operation bandwidth before enabling replicas</h2>
+
+<p>A really common Elasticsearch use case is to periodically (once every couple of
+hours) create an index. There is a really good
+<a href="https://developers.soundcloud.com/blog/how-to-reindex-1-billion-documents-in-1-hour-at-soundcloud">SoundCloud</a>
+article on how to achieve the optimal performance. Quoting from that
+compilation, there are the following items that I particularly find a “must”.</p>
+
+<ol>
+  <li>Always enable replicas after completing the indexing.</li>
+  <li>Before enabling replicas, make sure you
+    <ul>
+      <li>shrinked the index size by <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-forcemerge.html">forcing a
+merge</a>
+and</li>
+      <li>increased the replica transmission bandwidth, that is,
+<a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/recovery.html"><code>indices.recovery.max_bytes_per_sec</code></a>.</li>
+    </ul>
+  </li>
+</ol>
+
+<p><a name="metrics"></a></p>
+
+<h2 id="record-application-level-metrics">Record application-level metrics</h2>
+
+<p>Kibana provides quite solid insights into the Elasticsearch performance:
+indexing, search latency and throughput; flush, merge operations; etc. Once you
+enhance this view with extra JVM (GC pauses, heap size, etc.) and OS (CPU usage,
+disk I/O, kernel caches, etc.) metrics, you will get a rock solid monitoring
+dashboard. That said, this is not enough. It is used by a single application or
+more, Elasticsearch will get hit by various access patterns. Imagine a part of
+your software trying to shovel off 10 million documents of not-so-important user
+activity, while another component is trying to update user account details. If
+you would look at your shiny Elasticsearch metrics, everything will look fine
+since 10 million document updates will make the statistical effect of user
+account updates disappear. On the other hand, your users might not be that much
+happy with the latency they observe while they are trying to update their
+accounts. Hence always expose extra application-level metrics for your
+Elasticsearch queries. While Elasticsearch metrics provide sufficient indicators
+for the overall cluster performance, they lack the domain-specific context.</p>
+
+<p><a name="cpu"></a></p>
+
+<h2 id="invest-in-cpu">Invest in CPU!</h2>
+
+<p>I cannot emphasise this enough: <strong>invest in CPU!</strong> Now open your dashboards,
+look at the metrics of your most recent Elasticsearch hammering session in
+production, and tell me whether you are disk I/O, memory, or CPU bound? I am not
+telling you to use a 32-core machine with an inferior SATA disk drive and 8 GB
+of memory. Rather what I am talking about is this: get a decent machine with
+sufficient memory and SSD (you might want to checkout NVMe cards too depending
+on your disk I/O), after that invest in CPU. Judging from my past experiences,
+whether it is a write- or read-heavy load, CPU has always been our bottleneck.</p>
+
+<p><a name="plugins"></a></p>
+
+<h2 id="avoid-writing-custom-elasticsearch-plugins">Avoid writing custom Elasticsearch plugins</h2>
+
+<p>Once I had the opportunity to have the joy of pairing with a colleague to write
+an Elasticsearch plugin that exposes synonyms over a REST endpoint. That allowed
+us to query synonyms uploaded to an Elasticsearch cluster at runtime and
+manipulate it on-the-fly. After having 20 releases where we were convinced that
+there are no more concurrency bugs (actually, we had been pretty convinced in
+the previous 19 releases too), it worked like a charm. Though the real suffering
+started when we tried to upgrade the Elasticsearch supported by the plugin. In a
+nutshell, avoid writing custom Elasticsearch plugins, because…</p>
+
+<ul>
+  <li>
+    <p>Many Elasticsearch releases contain significant internal changes. It is highly
+likely the public APIs you erect your plugin on will get backward incompatible
+changes.</p>
+  </li>
+  <li>
+    <p>Getting concurrency right in an environment where you are not much accustomed
+to can be daunting.</p>
+  </li>
+  <li>
+    <p>You need to tailor your deployment procedure to ship the plugin everytime and
+everywhere it is needed. You cannot just use the vanilla Elasticsearch
+artifacts as is anymore.</p>
+  </li>
+  <li>
+    <p>Since your application depends on the specific functionality provided by the
+plugin, the Elasticsearch instances you run during integration tests also need
+to incorporate the plugin as well. Hence you cannot use vanilla, say, Docker
+images out of the box anymore.</p>
+  </li>
+</ul>
+
+
+        <div id="disqus_thread"></div>
+        <script type="text/javascript">
+        var disqus_shortname = 'vyazici';
+        var disqus_identifier = '/blog/post/20190425-elasticsearch-survival-guide/';
+        var disqus_title = 'Elasticsearch Survival Guide for Developers';
+        (function() {
+            var dsq = document.createElement('script');
+            dsq.type = 'text/javascript';
+            dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+        </script>
+
+        
+
+        
+
+    </div>
+  </body>
+</html>
+
+
+        <script type="text/javascript">
+        for (var i = 0; i < asyncLoadRequests.length; i++) {
+            asyncLoadRequest = asyncLoadRequests[i];
+            asyncLoadRequest();
+        }
+        </script>
+
+    </div>
+
+</div>
