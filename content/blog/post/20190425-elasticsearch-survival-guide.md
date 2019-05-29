@@ -28,6 +28,7 @@ for his valuable feedback.
   - [Have a strict mapping](#strict-mapping)
   - [Don't analyze fields of type `string` unless necessary](#analyze)
 - [Setting](#setting)
+  - [Avoid oversharding](#oversharding)
   - [Unlearn every hack for tuning merges](#tuning-merges)
   - [Pay attention to JVM memory settings](#memory)
 - [Querying](#querying)
@@ -140,6 +141,18 @@ mapping](#strict-mapping) bullet.
 Here I share Elasticsearch cluster
 [settings](https://www.elastic.co/guide/en/elasticsearch/reference/current/cluster-update-settings.html)
 related tips.
+
+<a name="oversharding"/>
+
+## Avoid oversharding
+
+One of the greatest strenghts of Elasticsearch is sharding, that is, splitting
+the data into multiple nodes to exploit parallellization. There are many myths
+surrounding this subject. Recall that sharding of an index cannot be changed
+once it is set. This makes oversharding a pretty common pitfall for newcomers.
+Make sure you have done your homework right (that is, RTFM, such as [this
+one](https://www.elastic.co/blog/how-many-shards-should-i-have-in-my-elasticsearch-cluster))
+before taking any decisions.
 
 <a name="tuning-merges"/>
 
