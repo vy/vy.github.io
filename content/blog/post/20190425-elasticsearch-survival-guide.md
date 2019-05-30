@@ -7,15 +7,14 @@ tags:
   - java
 ---
 
-For some months, I have been writing down to my notebook Elasticsearch best
-practices that I wish I would have known when I first started developing
-applications running against Elasticsearch. Even though the following collection
-tries to communicate certain ideas in Java, I believe almost each of such cases
-apply to every other programming language with almost no or minor changes. I
-tried to avoid repeating content that has already been covered in tutorials and
-the Elasticsearch documentation. The listed principles are all derived from my
-personal point of view, I strived to share only the ones that I can justify with
-either facts or experience.
+For some months, I have been jotting down notes best practices that I wish I would 
+have known when I first started developing applications running against Elasticsearch.
+Even though the following collection tries to communicate certain ideas in Java,
+I believe almost each of such cases apply to every other programming language with
+almost no or minor changes. I tried to avoid repeating content that has already been
+covered in tutorials and the Elasticsearch documentation. The listed principles are
+all derived from my personal point of view, I strived to share only the ones that I
+can justify with either facts or experience.
 
 Before proceeding further, I would like to thank [David
 Turner](https://discuss.elastic.co/t/review-request-for-elasticsearch-survival-guide-for-developers-blog-post/183411/2)
@@ -27,7 +26,7 @@ for his valuable feedback.
   - [Avoid `nested` fields](#nested-fields) 
   - [Have a strict mapping](#strict-mapping)
   - [Don't analyze fields of type `string` unless necessary](#analyze)
-- [Setting](#setting)
+- [Setting](#settings)
   - [Avoid oversharding](#oversharding)
   - [Unlearn every hack for tuning merges](#tuning-merges)
   - [Pay attention to JVM memory settings](#memory)
@@ -71,13 +70,13 @@ related tips.
 ## Avoid `nested` fields
 
 - Under the hood, each Elasticsearch document corresponds to a Lucene document,
-  almost. Though this promise is broken for fields of type
+  most of the time. This promise is broken for fields of type
   [`nested`](https://www.elastic.co/guide/en/elasticsearch/reference/current/nested.html).
   There each field is stored as a separate document next to the parent Lucene
-  one. This has a couple of particular impacts:
+  one. The impact of this being:
 
   - Querying on `nested` fields is slower compared to fields in parent document
-  - Retrieval of matching `nested` fields adds an extra slowdown
+  - Retrieval of matching `nested` fields adds an additional slowdown
   - Once you update any field of a document containing `nested` fields,
     independent of whether you updated a nested field or not, all the underlying
     Lucene documents (parent and all its `nested` children) need to be marked as
@@ -130,13 +129,13 @@ type mismatch.
 
 By default, a freshly inserted string field is assigned of type
 [`text`](https://www.elastic.co/guide/en/elasticsearch/reference/current/text.html),
-which incurs an analysis cost. Unless you need fuzzy matching but just
-filtering, use type `keyword` instead. This is slightly an extension of [strict
-mapping](#strict-mapping) bullet.
+which incurs an analysis cost. Unless you need fuzzy matching, and just want
+filtering, use type `keyword` instead. This is small amendment of the [strict
+mapping](#strict-mapping) bullet point.
 
 <a name="setting"/>
 
-# Setting
+# Settings
 
 Here I share Elasticsearch cluster
 [settings](https://www.elastic.co/guide/en/elasticsearch/reference/current/cluster-update-settings.html)
@@ -146,11 +145,11 @@ related tips.
 
 ## Avoid oversharding
 
-One of the greatest strenghts of Elasticsearch is sharding, that is, splitting
-the data into multiple nodes to exploit parallellization. There are many myths
+One of the greatest strengths of Elasticsearch is sharding, that is, splitting
+the data into multiple nodes to exploit parallelization. There are many myths
 surrounding this subject. Recall that sharding of an index cannot be changed
-once it is set. This makes oversharding a pretty common pitfall for newcomers.
-Make sure you have done your homework right (that is, RTFM, such as [this
+once it is set. This makes oversharding a very common pitfall for newcomers.
+Make sure you have done your homework (that is, RTFM, such as [this
 one](https://www.elastic.co/blog/how-many-shards-should-i-have-in-my-elasticsearch-cluster))
 before taking any decisions.
 
@@ -161,7 +160,7 @@ before taking any decisions.
 Elasticsearch is in essence yet another distributed
 [Lucene](http://lucene.apache.org/) offering, just like
 [Solr](http://lucene.apache.org/solr/). Under the hood, every Elasticsearch
-document corresponds to a Lucene document, almost. (There are certain exceptions
+document corresponds to a Lucene document, most of the time. (There are certain exceptions
 to this rule like `nested` fields, though this generalization is pretty
 accurate.) In Lucene, documents are stored in
 [segments](https://lucene.apache.org/core/3_0_3/fileformats.html). Elasticsearch
@@ -177,36 +176,35 @@ following two patterns:
   Elasticsearch might decide to merge these into bigger ones for optimization
   purposes.
 
-This aforementioned compaction is referred as [segment
+This aforementioned compaction is referred to as [segment
 merges](https://www.elastic.co/guide/en/elasticsearch/guide/current/merge-process.html)
 in Elasticsearch terminology. As you can guess, merges are highly disk I/O- and
 CPU-bound operations. As a user, you would not want to have them ruining your
-Elasticsearch query performance. As a matter of fact, you can achieve this in
+Elasticsearch query performance. As a matter of fact, you can avoid them completely in
 certain circumstances: Build the index once and don't change it anymore. Though
 this condition might be difficult to meet in many application scenarios. Once
 you start to insert new documents or update existing ones, segment merges become
 an inevitable part of your life.
 
 An on-going segment merge can significantly damage the overal query performance
-of the cluster. Give it a search in the internet, you will find many people
-looking for help to work around these and many others sharing certain tunings
+of the cluster. Do a random search on google and you will find many people
+looking for help to reduce the performance impact and many others sharing certain settings
 that worked for them. Over the last years, there were two particular patterns I
-observed in the shared tuning tips: they exist from the incarnation of this
-operation (so everybody agrees that it used to hurt and is still hurting) and
-the majority of the mentioned settings become deprecated (or even worse, become
-unavailable) with the next Elasticsearch release. So my rules of thumb for
-tuning merges start as follows:
+observed in these cries for help: they existed since the earliest of Elasticsearch
+versions (so everybody agrees that it used to hurt and is still hurting) and
+the majority of the mentioned settings have become deprecated over time (or even worse,
+removed completely). So my rules of thumb for tuning merges is as follows:
 
-1. Unlearn every hack you heard about tuning merges. It is an operation pretty
+1. Unlearn every hack you heard about tuning merges. It is an operation tightly
    coupled with the internals of Elasticsearch and subject to change without
-   providing a backward compatibility fallback. There is no secret knob to make
+   providing a backward compatibility. There is no secret knob to make
    it run faster; it is like the garbage collector in JVM, `VACUUM` in
    PostgreSQL, etc.
 
 2. Find the sweet spot for the
    [translog](https://www.elastic.co/guide/en/elasticsearch/reference/current/index-modules-translog.html)
    flushes. Try relaxing `index.translog.sync_interval` and
-   `index.translog.flush_threshold_size` settings until you don't get any
+   `index.translog.flush_threshold_size` settings until you stop seeing
    benefits for your usage pattern.
 
 3. Adapt `index.refresh_interval` to your needs. Imagine you first bootstrap an
@@ -215,7 +213,7 @@ tuning merges start as follows:
    after bootstrap.
 
    Note that in recent versions, if you are indexing but not searching then
-   there will be no refreshes taking place at all. Quoting from [Dynamic Index
+   no refreshes will take place at all. Quoting from [Dynamic Index
    Settings](https://www.elastic.co/guide/en/elasticsearch/reference/current/index-modules.html#dynamic-index-settings):
 
    > If this \[`index.refresh_interval`] setting is not explicitly set, shards
@@ -228,7 +226,7 @@ tuning merges start as follows:
 
 ## Pay attention to JVM memory settings
 
-Elasticsearch can yield dramatic performance characteristics dependending on two
+Elasticsearch can yield dramatic performance characteristics depending on two
 primary memory settings: JVM heap space and the amount of memory left to the
 kernel page cache. I am not going to dive into these details here, because they
 are pretty well
@@ -247,7 +245,7 @@ querying Elasticsearch.
 
 ## Compare-and-swap over `_version` field is poor man's transactions
 
-I believe you had already figured that Elasticsearch doesn't support
+I believe you have already figured out that Elasticsearch doesn't support
 transactions. Though you can leverage the
 [`_version`](https://www.elastic.co/guide/en/elasticsearch/reference/7.0/docs-get.html#get-versioning)
 field in a [CAS](https://en.wikipedia.org/wiki/Compare-and-swap)-loop to provide
@@ -283,9 +281,9 @@ for details.
 ## Try splitting complex queries
 
 If you have complex queries with both, say, filter and aggregation components,
-splitting these into mutliple queries and executing them in parallel in most
-cases speed up the querying performance. That is, in the first query just get
-the hits using the filter, and in the second query, just get the aggregations
+splitting these into multiple queries and executing them in parallel speeds up
+the querying performance in most cases. That is, in the first query just get
+the hits using the filter then in the second query, just get the aggregations
 without retrieving hits, that is, `size: 0`.
 
 <a name="numeric-types"/>
@@ -318,8 +316,8 @@ way, thanks to Jackson, a model instance can be (de)serialized to both JSON
 (binary) formats without breaking a sweat. Logically, Elasticsearch uses the
 binary format for communication within the cluster due to performance reasons.
 Using `JsonParser` for parsing SMILE has a slight caveat: A schema cannot always
-be evolved in such a way that the backwards compatibility is kept. Indeed this
-is not a problem for an Elasticsearch cluster, all the nodes hopefully run the
+be evolved in such a way that backwards compatibility is guaranteed. Indeed this
+is not a problem for an Elasticsearch cluster; all the nodes (hopefully!) run the
 same version. Though using SMILE in your application means that you might need
 to shutdown your application, upgrade it to a newer version which is using the
 models of the new Elasticsearch you are about to deploy in parallel.
@@ -338,10 +336,10 @@ on the safe side, just stick to JSON over HTTP.
 [The official
 driver](https://www.elastic.co/guide/en/elasticsearch/client/java-rest/current/index.html)
 will be maintained through the lifetime of the project. It will implement
-community approved features from its competitors. Unless something awkwardly
-goes wrong, the official one will just either leave no room of additional value
-to its competitors or they will just get rusted and disappear. That being said,
-the official REST client is a piece of crap for two main reasons:
+community approved features from its competitors. Unless something terrible
+goes wrong, ///the official one will just either leave no room of additional value
+to its competitors or they will just get rusted and disappear./// <--(needs rephrasing. Meaning unclean)
+That being said, the official REST client is a piece of crap for two main reasons:
 
 1. It has a leaky abstraction over [Apache HTTP
    Client](http://hc.apache.org/httpcomponents-client-ga/) whose configurations
@@ -354,7 +352,7 @@ the official REST client is a piece of crap for two main reasons:
 
 [Eclipse Vert.x works around this
 entanglement](https://github.com/reactiverse/elasticsearch-client) in a yet
-another entangled way. Though I doubt if it will have a long lifetime given the
+another entangled way. Though I doubt if it will be granted a long life given the
 reasons I listed above.
 
 In summary, the official REST client (unfortunately) is still your best bet.
@@ -363,7 +361,7 @@ In summary, the official REST client (unfortunately) is still your best bet.
 
 ## Don't use Elasticsearch query models to generate cache keys
 
-Or more specifically,
+Or more specifically:
 
 - \[If you want your hash keys to be consistent between different JVM processes,
   JVM upgrades, and JVM restarts,] don't use `Object#hashCode()`.
@@ -375,7 +373,7 @@ Or more specifically,
   they are probably iterating over a `java.util.Map` or `java.util.Set` whose
   order for identical content varies under different conditions.)
 
-Ok. So what else is left? How one should do it?
+Ok. So what else is left? How should we do it?
 
 1. You query Elasticsearch due to a request you have just received, right? Does
    that request has its own application level model? Good. There you go. Use
@@ -393,7 +391,7 @@ Ok. So what else is left? How one should do it?
 
 Many people fall in the trap of fronting their Elasticsearch cluster with an
 HTTP cache such as [Varnish](http://varnish-cache.org/) due to its convenience
-and low entry barrier. Though this appealing approach has certain shortcomings:
+and low barrier of entry. This seductive approach has certain shortcomings:
 
 - When using Elasticsearch in production, it is highly likely you will end up
   having multiple clusters due to various reasons: resiliency, experimentation
@@ -404,15 +402,15 @@ and low entry barrier. Though this appealing approach has certain shortcomings:
 
   - if you decide to use a single HTTP cache for all clusters, it is really
     difficult to programmatically configure an HTTP cache to adopt the needs of
-    the ever changing cluster states. How will you communicate the load to let
+    the ever changing cluster states. How will you communicate the cluster load to let
     the cache balance the traffic. How will you configure scheduled or manual
-    downtimes? How will you let the cache gradually migrate the traffic from one
+    downtimes? How will you make the cache gradually migrate the traffic from one
     to another during maintanence windows?
 
 - As mentioned above, HTTP caches are difficult to command programmatically.
   When you need to manually evict one or more entries, it is not always as easy
   as a `DELETE FROM cache WHERE keys IN (...)` query. And let me warn you, you
-  are gonna need that manual eviction.
+  are gonna need that manual eviction sooner or later.
 
 <a name="sliced-scrolls"/>
 
