@@ -417,7 +417,7 @@ and low barrier of entry. This seductive approach has certain shortcomings:
 ## Use sliced scrolls sorted on `_doc`
 
 [Scrolls](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-request-scroll.html)
-are the vehicle that Elasticsearch lets you scan its entire dataset for large
+are the vehicle that Elasticsearch provides allowing you to scan its entire dataset for large
 reads. They are functionally (and surprisingly, internally too) pretty much
 similar to [RDBMS cursors](https://en.wikipedia.org/wiki/Cursor_(databases)).
 Though most people don't get them right in their first attempt. Here are some
@@ -427,10 +427,10 @@ basics:
   highly likely [slicing](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-request-scroll.html#sliced-scroll) will help you improve the read performance
   significantly.
 
-- The order doesn't matter in your reads? This is your lucky day then! Just sort
-  on `_doc` field and there goes your +20% read speed up without any charges.
+- The order doesn't matter in your reads? This is your lucky day! Just sort
+  on `_doc` field and there's a +20% read speed up without any other changes.
   (`_doc` is a pseudo field to let Elasticsearch use the order documents are
-  laid out on the disk.)
+  in on disk.)
 
 - The `scrollId` might (and does!) change between calls. Hence make sure you are
   always scrolling using the most recently retrieved `scrollId`.
@@ -476,10 +476,10 @@ Assuming `dbClient` is implemented in a non-blocking and asynchronous fashion --
 that is, each request is enqueued to be delivered and each response handler is
 enqueued to react on incoming payloads -- what would happen if your database can
 handle at most 1 req/sec while your application perfectly receives, handles, and
-passes forward 10 req/sec? Let me draw you a shallow probability tree depicting
+passes on 10 req/sec? Let me draw you a shallow probability tree depicting
 consequences of such an incident.
 
-1. Your database gets loaded more than it can take. If your database has proper
+1. Your database gets more load than it can take. If your database has proper
    backpressure mechanics, which most don't possess, including Elasticsearch,
 
   - Then it will start choking and eventually throw up. This will get reflected
@@ -496,21 +496,21 @@ consequences of such an incident.
        1. Excessive growth of the queue (that is, no backpressure mechanics in
           place) will start stressing the process memory.
 
-       2. The requests succeed in making from the queue to an executor thread
-          will highly likely already become deprecated. That is, database will
-          be doing job that is of use to nobody.
+       2. The requests that succeed in making from the queue to an executor thread
+          will highly likely already become deprecated. That is, the database will
+          be doing work that is of no use to anybody.
 
     3. above two points drawn from the process queue overgrow of the database,
-       apply as is to the application too.
+       also apply to the application.
 
-Unfortunately there is no silver bullet or a step-by-step guide of implementing
+Unfortunately there is no silver bullet or a step-by-step guide to implementing
 backpressure for a particular application. This in a way makes sense, each has
 its own domain-specific requirements. That being said, I can share my personal
 best practices:
 
 - Use performance benchmarks of your application (You have performance
   benchmarks, right?) to estimate an upper bound on the load that your
-  application delivers an acceptable performance. Enforce this limit in your
+  application still delivers acceptable performance. Enforce this limit in your
   application via a rate limiter. Please, please, please don't block the carrier
   thread using the rate limiter! Rather just communicate the backpressure to
   your client, for instance, by means of an [HTTP 503 (SERVICE UNAVAILABLE)
@@ -521,7 +521,7 @@ best practices:
   `ScheduledThreadPoolExecutor` (the one and only `ScheduledExecutorService`
   implementation in the Java standard library) and that internally uses an
   unbounded task queue, unfortunately. See [this Stack Overflow
-  post](https://stackoverflow.com/q/7403764/1278899) and [that
+  post](https://stackoverflow.com/q/7403764/1278899) and [this
   concurrency-interest
   discussion](http://cs.oswego.edu/pipermail/concurrency-interest/2019-April/016860.html)
   on how to work around that.
@@ -535,9 +535,9 @@ best practices:
 
 ## Provide explicit timeouts in queries
 
-Almost all Elasticsearch API endpoints allow the user to specify a timeout, use
-that. This will help both your application and your Elasticsearch cluster: Spot
-and shrug off unpexected long running operations and save associated resources,
+Almost all Elasticsearch API endpoints allow the user to specify a timeout - use
+it. This will help both your application and your Elasticsearch cluster: Spot
+and shrug off unexpected long running operations, save associated resources,
 establish a stable SLA with no surprises, etc.
 
 <a name="blocking-io-threads"/>
@@ -618,10 +618,10 @@ Don't ever do this:
         }
     }
 
-You are just falling into a half-century old trap: [SQL
+You just fell into a half-century old trap: [SQL
 injection](https://en.wikipedia.org/wiki/SQL_injection), adopted for
 Elasticsearch. No matter how smart your character whitelisting, escaping
-routines are, it is just a matter of time someone passes a malicious `username`
+routines are, it is just a matter of time until someone passes a malicious `username`
 and/or `password` input that would expose your entire dataset. I also personally
 find it a pretty bad practice to render a curly brace (`{`, `}`) rich structured
 text via a templating language (e.g., Moustache, Handlebars) which uses the very
@@ -642,15 +642,15 @@ Many Elasticsearch clients allow you to pass a generic JSON object and serialize
 it to JSON before passing it over the wire. For instance, the official
 Elasticsearch REST client for Java allows `java.util.Map<String, Object>`
 instances as source. Then it uses its own JSON serializer to translate these
-models into JSON. While this works fine for vanilla Java, which is most of the
-time sufficient to get the message across in tutorials, most real world
+models into JSON. While this works fine for vanilla Java, which most of the
+time is sufficient to get the message across in tutorials, most real world
 applications have more complex class structures that necessitate custom
 serialization. For instance, speaking of Java client, how does it serialize
 Guava models? What about the new date and time classes introduced in Java 8?
 What will happen to all your `@JsonProperty`-, `@JsonSerializes`-, etc.
 annotated classes? Hence it is always a better practice to employ your own
 serialization and pass a `byte[]` as source to the client. That will save you
-from surprises.
+from any nasty surprises.
 
 <a name="strategy"/>
 
@@ -664,10 +664,10 @@ practices which address concerns not covered above.
 ## Always (try to) stick to the latest JVM and Elasticsearch versions
 
 Elasticsearch is a Java application. (Surprise, surprise!) Like every other Java
-application it has its hot paths and garbage collection dues. Almost every new
-JVM release will bring you extra optimizations that you can take advantage of
+application it has its hot paths and garbage collection woes. Almost every new
+JVM release will bring you more optimizations that you can take advantage of
 without breaking a sweat. Note that due to the low-level performance hacks
-exploited in Lucene, which is internally used by Elasticsearch, Lucene is sort
+exploited in Lucene, which is used internally by Elasticsearch, Lucene is sort
 of fragile to JVM upgrades, particularly involving garbage collector changes.
 Fortunately, Elasticsearch has an official page listing supported [JVM
 releases](https://www.elastic.co/support/matrix#matrix_jvm) and [garbage
@@ -689,7 +689,7 @@ Depending on your update patterns and index size, find the best combination for
 your use case. That is, for instance, 1 complete snapshot at 00:00 and 3 partial
 snapshots at 06:00, 12:00, and 18:00. It is also known to be a good practice to
 have them stored at [AWS S3](https://aws.amazon.com/s3/) or [GCP
-Storage](https://cloud.google.com/storage/). There exists
+Storage](https://cloud.google.com/storage/). There are
 [plugins](https://www.elastic.co/guide/en/elasticsearch/plugins/master/repository.html)
 to facilitate these scenarios.
 
@@ -706,10 +706,10 @@ employed a lot.
 
 Like any other database, Elasticsearch shows varying performance under different
 conditions: index, document sizes; update, query patterns; index, cluster
-settings; hardware, OS, JVM versions; etc. It is difficult to keep track of each
-knob to observe its impact on the overall performance. Make sure you have
+settings; hardware, OS, JVM versions, etc. It is difficult to keep track of each
+knob to observe its impact on overall performance. Make sure you have
 (at least) daily performance tests to help you narrow down a recently introduced
-change damaging the performance.
+change contributing to lower performance.
 
 This utopic test bed is easier said than done. You will need to make sure that
 the test environment has representative data of production, (preferably)
@@ -722,7 +722,7 @@ retaining the effects of a previous run. I know, quite a list. But it pays off.
 ## Use aliases
 
 Now I am gonna tell you something quite opinionated, though backed by
-experience: Never query against indices, but
+experience: Never query against indices, but rather against
 [alias](https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-aliases.html)es.
 Aliases are pointers to actual indices. You can group one or more indices under
 a single alias. Many Elasticsearch indices have an internal context attached to
@@ -754,16 +754,16 @@ application code while querying against `events-*` indices:
 
 Elasticsearch supports both index- and query-time
 [synonyms](https://www.elastic.co/guide/en/elasticsearch/reference/current/analysis-synonym-tokenfilter.html).
-These are powerful shotguns with a good track record of shooting its holder in
+These are powerful shotguns with a good track record of shooting its wielder in
 the foot. No search engine is complete without synonyms, hence they have pretty
-valid use cases. Though the following implications need to be kept in mind while
+valid use cases. That said, the following implications need to be kept in mind while
 employing them:
 
-- Index-time synonyms increase the index size and creates an extra runtime
+- Index-time synonyms increase the index size and create extra runtime
   overhead.
 
-- Query-time synonyms doesn't add up to the index size, but as their name
-  implies, creates an extra runtime overhead.
+- Query-time synonyms doesn't add to the index size, but as their name
+  implies, creates extra runtime overhead.
 
 - Using synonyms, it is pretty easy to unintentionally break something while
   trying to fix some other thing.
@@ -786,24 +786,25 @@ compilation, there are the following items that I particularly find a "must".
    - shrinked the index size by [forcing a
      merge](https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-forcemerge.html)
      and
-   - increased the replica transmission bandwidth, that is,
+   - temporarily increased the replica transmission bandwidth until allocation
+     has finished, that is,
      [`indices.recovery.max_bytes_per_sec`](https://www.elastic.co/guide/en/elasticsearch/reference/current/recovery.html).
 
 <a name="metrics"/>
 
 ## Record application-level metrics
 
-Kibana provides quite solid insights into the Elasticsearch performance:
-indexing, search latency and throughput; flush, merge operations; etc. Once you
+Kibana provides quite solid insights into Elasticsearch performance:
+indexing, search latency and throughput, flush, merge operations, etc. Once you
 enhance this view with extra JVM (GC pauses, heap size, etc.) and OS (CPU usage,
 disk I/O, kernel caches, etc.) metrics, you will get a rock solid monitoring
-dashboard. That said, this is not enough. It is used by a single application or
+dashboard. That said, this is not enough. If used by a single application or
 more, Elasticsearch will get hit by various access patterns. Imagine a part of
 your software trying to shovel off 10 million documents of not-so-important user
 activity, while another component is trying to update user account details. If
 you would look at your shiny Elasticsearch metrics, everything will look fine
 since 10 million document updates will make the statistical effect of user
-account updates disappear. On the other hand, your users might not be that much
+account updates disappear. On the other hand, your users might not be that
 happy with the latency they observe while they are trying to update their
 accounts. Hence always expose extra application-level metrics for your
 Elasticsearch queries. While Elasticsearch metrics provide sufficient indicators
@@ -813,7 +814,7 @@ for the overall cluster performance, they lack the domain-specific context.
 
 ## Invest in CPU!
 
-I cannot emphasise this enough: **invest in CPU!** Now open your dashboards,
+I cannot emphasize this enough: **invest in CPU!**. Now open your dashboards,
 look at the metrics of your most recent Elasticsearch hammering session in
 production, and tell me whether you are disk I/O, memory, or CPU bound? I am not
 telling you to use a 32-core machine with an inferior SATA disk drive and 8 GB
@@ -830,19 +831,19 @@ Once I had the opportunity to have the joy of pairing with a colleague to write
 an Elasticsearch plugin that exposes synonyms over a REST endpoint. That allowed
 us to query synonyms uploaded to an Elasticsearch cluster at runtime and
 manipulate it on-the-fly. After having 20 releases where we were convinced that
-there are no more concurrency bugs (actually, we had been pretty convinced in
+there are no more concurrency bugs (actually, we were pretty convinced with
 the previous 19 releases too), it worked like a charm. Though the real suffering
-started when we tried to upgrade the Elasticsearch supported by the plugin. In a
-nutshell, avoid writing custom Elasticsearch plugins, because...
+started when we tried to upgrade the Elasticsearch version supported by the plugin.
+In a nutshell, avoid writing custom Elasticsearch plugins, because...
 
 - Many Elasticsearch releases contain significant internal changes. It is highly
-  likely the public APIs you erect your plugin on will get backward incompatible
+  likely the public APIs you base your plugin on will be hit by backward incompatible
   changes.
 
-- Getting concurrency right in an environment where you are not much accustomed
-  to can be daunting.
+- Getting concurrency right in an environment that you are not accustomed to can
+  be daunting.
 
-- You need to tailor your deployment procedure to ship the plugin everytime and
+- You need to tailor your deployment procedure to ship the plugin every time and
   everywhere it is needed. You cannot just use the vanilla Elasticsearch
   artifacts as is anymore.
 
