@@ -18,7 +18,7 @@ can justify with either facts or experience.
 
 Before proceeding further, I would like to thank [David
 Turner](https://discuss.elastic.co/t/review-request-for-elasticsearch-survival-guide-for-developers-blog-post/183411/2)
-for his valuable feedback.
+and [William Leese](https://twitter.com/wvl0) for their valuable feedback.
 
 # Table of Contents
 
