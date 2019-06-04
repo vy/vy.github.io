@@ -16,19 +16,18 @@
     <updated>2019-04-25T11:44:00Z</updated>
     <link rel="alternate" href="https://vlkan.com//blog/post/2019/04/25/elasticsearch-survival-guide/"/>
     <content type="html">
-&lt;p&gt;For some months, I have been writing down to my notebook Elasticsearch best
-practices that I wish I would have known when I first started developing
-applications running against Elasticsearch. Even though the following collection
-tries to communicate certain ideas in Java, I believe almost each of such cases
-apply to every other programming language with almost no or minor changes. I
-tried to avoid repeating content that has already been covered in tutorials and
-the Elasticsearch documentation. The listed principles are all derived from my
-personal point of view, I strived to share only the ones that I can justify with
-either facts or experience.&lt;/p&gt;
+&lt;p&gt;For some months, I have been jotting down notes best practices that I wish I would 
+have known when I first started developing applications running against Elasticsearch.
+Even though the following collection tries to communicate certain ideas in Java,
+I believe almost each of such cases apply to every other programming language with
+almost no or minor changes. I tried to avoid repeating content that has already been
+covered in tutorials and the Elasticsearch documentation. The listed principles are
+all derived from my personal point of view, I strived to share only the ones that I
+can justify with either facts or experience.&lt;/p&gt;
 
 &lt;p&gt;Before proceeding further, I would like to thank &lt;a href="https://discuss.elastic.co/t/review-request-for-elasticsearch-survival-guide-for-developers-blog-post/183411/2"&gt;David
 Turner&lt;/a&gt;
-for his valuable feedback.&lt;/p&gt;
+and &lt;a href="https://twitter.com/wvl0"&gt;William Leese&lt;/a&gt; for their valuable feedback.&lt;/p&gt;
 
 &lt;h1 id="table-of-contents"&gt;Table of Contents&lt;/h1&gt;
 
@@ -42,7 +41,7 @@ for his valuable feedback.&lt;/p&gt;
     &lt;/ul&gt;
   &lt;/li&gt;
   &lt;li&gt;
-&lt;a href="#setting"&gt;Setting&lt;/a&gt;
+&lt;a href="#settings"&gt;Setting&lt;/a&gt;
     &lt;ul&gt;
       &lt;li&gt;&lt;a href="#oversharding"&gt;Avoid oversharding&lt;/a&gt;&lt;/li&gt;
       &lt;li&gt;&lt;a href="#tuning-merges"&gt;Unlearn every hack for tuning merges&lt;/a&gt;&lt;/li&gt;
@@ -100,14 +99,14 @@ related tips.&lt;/p&gt;
 &lt;ul&gt;
   &lt;li&gt;
     &lt;p&gt;Under the hood, each Elasticsearch document corresponds to a Lucene document,
-almost. Though this promise is broken for fields of type
+most of the time. This promise is broken for fields of type
 &lt;a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/nested.html"&gt;&lt;code&gt;nested&lt;/code&gt;&lt;/a&gt;.
 There each field is stored as a separate document next to the parent Lucene
-one. This has a couple of particular impacts:&lt;/p&gt;
+one. The impact of this being:&lt;/p&gt;
 
     &lt;ul&gt;
       &lt;li&gt;Querying on &lt;code&gt;nested&lt;/code&gt; fields is slower compared to fields in parent document&lt;/li&gt;
-      &lt;li&gt;Retrieval of matching &lt;code&gt;nested&lt;/code&gt; fields adds an extra slowdown&lt;/li&gt;
+      &lt;li&gt;Retrieval of matching &lt;code&gt;nested&lt;/code&gt; fields adds an additional slowdown&lt;/li&gt;
       &lt;li&gt;Once you update any field of a document containing &lt;code&gt;nested&lt;/code&gt; fields,
 independent of whether you updated a nested field or not, all the underlying
 Lucene documents (parent and all its &lt;code&gt;nested&lt;/code&gt; children) need to be marked as
@@ -164,13 +163,13 @@ which is on by default.&lt;/li&gt;
 
 &lt;p&gt;By default, a freshly inserted string field is assigned of type
 &lt;a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/text.html"&gt;&lt;code&gt;text&lt;/code&gt;&lt;/a&gt;,
-which incurs an analysis cost. Unless you need fuzzy matching but just
-filtering, use type &lt;code&gt;keyword&lt;/code&gt; instead. This is slightly an extension of &lt;a href="#strict-mapping"&gt;strict
-mapping&lt;/a&gt; bullet.&lt;/p&gt;
+which incurs an analysis cost. Unless you need fuzzy matching, and just want
+filtering, use type &lt;code&gt;keyword&lt;/code&gt; instead. This is small amendment of the &lt;a href="#strict-mapping"&gt;strict
+mapping&lt;/a&gt; bullet point.&lt;/p&gt;
 
 &lt;p&gt;&lt;a name="setting"&gt;&lt;/a&gt;&lt;/p&gt;
 
-&lt;h1 id="setting"&gt;Setting&lt;/h1&gt;
+&lt;h1 id="settings"&gt;Settings&lt;/h1&gt;
 
 &lt;p&gt;Here I share Elasticsearch cluster
 &lt;a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/cluster-update-settings.html"&gt;settings&lt;/a&gt;
@@ -180,11 +179,11 @@ related tips.&lt;/p&gt;
 
 &lt;h2 id="avoid-oversharding"&gt;Avoid oversharding&lt;/h2&gt;
 
-&lt;p&gt;One of the greatest strenghts of Elasticsearch is sharding, that is, splitting
-the data into multiple nodes to exploit parallellization. There are many myths
+&lt;p&gt;One of the greatest strengths of Elasticsearch is sharding, that is, splitting
+the data into multiple nodes to exploit parallelization. There are many myths
 surrounding this subject. Recall that sharding of an index cannot be changed
-once it is set. This makes oversharding a pretty common pitfall for newcomers.
-Make sure you have done your homework right (that is, RTFM, such as &lt;a href="https://www.elastic.co/blog/how-many-shards-should-i-have-in-my-elasticsearch-cluster"&gt;this
+once it is set. This makes oversharding a very common pitfall for newcomers.
+Make sure you have done your homework (that is, RTFM, such as &lt;a href="https://www.elastic.co/blog/how-many-shards-should-i-have-in-my-elasticsearch-cluster"&gt;this
 one&lt;/a&gt;)
 before taking any decisions.&lt;/p&gt;
 
@@ -195,7 +194,7 @@ before taking any decisions.&lt;/p&gt;
 &lt;p&gt;Elasticsearch is in essence yet another distributed
 &lt;a href="http://lucene.apache.org/"&gt;Lucene&lt;/a&gt; offering, just like
 &lt;a href="http://lucene.apache.org/solr/"&gt;Solr&lt;/a&gt;. Under the hood, every Elasticsearch
-document corresponds to a Lucene document, almost. (There are certain exceptions
+document corresponds to a Lucene document, most of the time. (There are certain exceptions
 to this rule like &lt;code&gt;nested&lt;/code&gt; fields, though this generalization is pretty
 accurate.) In Lucene, documents are stored in
 &lt;a href="https://lucene.apache.org/core/3_0_3/fileformats.html"&gt;segments&lt;/a&gt;. Elasticsearch
@@ -216,31 +215,30 @@ purposes.&lt;/p&gt;
   &lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;p&gt;This aforementioned compaction is referred as &lt;a href="https://www.elastic.co/guide/en/elasticsearch/guide/current/merge-process.html"&gt;segment
+&lt;p&gt;This aforementioned compaction is referred to as &lt;a href="https://www.elastic.co/guide/en/elasticsearch/guide/current/merge-process.html"&gt;segment
 merges&lt;/a&gt;
 in Elasticsearch terminology. As you can guess, merges are highly disk I/O- and
 CPU-bound operations. As a user, you would not want to have them ruining your
-Elasticsearch query performance. As a matter of fact, you can achieve this in
+Elasticsearch query performance. As a matter of fact, you can avoid them completely in
 certain circumstances: Build the index once and don’t change it anymore. Though
 this condition might be difficult to meet in many application scenarios. Once
 you start to insert new documents or update existing ones, segment merges become
 an inevitable part of your life.&lt;/p&gt;
 
 &lt;p&gt;An on-going segment merge can significantly damage the overal query performance
-of the cluster. Give it a search in the internet, you will find many people
-looking for help to work around these and many others sharing certain tunings
+of the cluster. Do a random search on google and you will find many people
+looking for help to reduce the performance impact and many others sharing certain settings
 that worked for them. Over the last years, there were two particular patterns I
-observed in the shared tuning tips: they exist from the incarnation of this
-operation (so everybody agrees that it used to hurt and is still hurting) and
-the majority of the mentioned settings become deprecated (or even worse, become
-unavailable) with the next Elasticsearch release. So my rules of thumb for
-tuning merges start as follows:&lt;/p&gt;
+observed in these cries for help: they existed since the earliest of Elasticsearch
+versions (so everybody agrees that it used to hurt and is still hurting) and
+the majority of the mentioned settings have become deprecated over time (or even worse,
+removed completely). So my rules of thumb for tuning merges is as follows:&lt;/p&gt;
 
 &lt;ol&gt;
   &lt;li&gt;
-    &lt;p&gt;Unlearn every hack you heard about tuning merges. It is an operation pretty
+    &lt;p&gt;Unlearn every hack you heard about tuning merges. It is an operation tightly
 coupled with the internals of Elasticsearch and subject to change without
-providing a backward compatibility fallback. There is no secret knob to make
+providing a backward compatibility. There is no secret knob to make
 it run faster; it is like the garbage collector in JVM, &lt;code&gt;VACUUM&lt;/code&gt; in
 PostgreSQL, etc.&lt;/p&gt;
   &lt;/li&gt;
@@ -248,7 +246,7 @@ PostgreSQL, etc.&lt;/p&gt;
     &lt;p&gt;Find the sweet spot for the
 &lt;a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/index-modules-translog.html"&gt;translog&lt;/a&gt;
 flushes. Try relaxing &lt;code&gt;index.translog.sync_interval&lt;/code&gt; and
-&lt;code&gt;index.translog.flush_threshold_size&lt;/code&gt; settings until you don’t get any
+&lt;code&gt;index.translog.flush_threshold_size&lt;/code&gt; settings until you stop seeing
 benefits for your usage pattern.&lt;/p&gt;
   &lt;/li&gt;
   &lt;li&gt;
@@ -258,7 +256,7 @@ start with a loose (even disabled!) &lt;code&gt;refresh_interval&lt;/code&gt; an
 after bootstrap.&lt;/p&gt;
 
     &lt;p&gt;Note that in recent versions, if you are indexing but not searching then
-there will be no refreshes taking place at all. Quoting from &lt;a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/index-modules.html#dynamic-index-settings"&gt;Dynamic Index
+no refreshes will take place at all. Quoting from &lt;a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/index-modules.html#dynamic-index-settings"&gt;Dynamic Index
 Settings&lt;/a&gt;:&lt;/p&gt;
 
     &lt;blockquote&gt;
@@ -274,7 +272,7 @@ request.&lt;/p&gt;
 
 &lt;h2 id="pay-attention-to-jvm-memory-settings"&gt;Pay attention to JVM memory settings&lt;/h2&gt;
 
-&lt;p&gt;Elasticsearch can yield dramatic performance characteristics dependending on two
+&lt;p&gt;Elasticsearch can yield dramatic performance characteristics depending on two
 primary memory settings: JVM heap space and the amount of memory left to the
 kernel page cache. I am not going to dive into these details here, because they
 are pretty well
@@ -293,7 +291,7 @@ querying Elasticsearch.&lt;/p&gt;
 
 &lt;h2 id="compare-and-swap-over-version-field-is-poor-mans-transactions"&gt;Compare-and-swap over &lt;code&gt;_version&lt;/code&gt; field is poor man’s transactions&lt;/h2&gt;
 
-&lt;p&gt;I believe you had already figured that Elasticsearch doesn’t support
+&lt;p&gt;I believe you have already figured out that Elasticsearch doesn’t support
 transactions. Though you can leverage the
 &lt;a href="https://www.elastic.co/guide/en/elasticsearch/reference/7.0/docs-get.html#get-versioning"&gt;&lt;code&gt;_version&lt;/code&gt;&lt;/a&gt;
 field in a &lt;a href="https://en.wikipedia.org/wiki/Compare-and-swap"&gt;CAS&lt;/a&gt;-loop to provide
@@ -328,9 +326,9 @@ for details.&lt;/p&gt;
 &lt;h2 id="try-splitting-complex-queries"&gt;Try splitting complex queries&lt;/h2&gt;
 
 &lt;p&gt;If you have complex queries with both, say, filter and aggregation components,
-splitting these into mutliple queries and executing them in parallel in most
-cases speed up the querying performance. That is, in the first query just get
-the hits using the filter, and in the second query, just get the aggregations
+splitting these into multiple queries and executing them in parallel speeds up
+the querying performance in most cases. That is, in the first query just get
+the hits using the filter then in the second query, just get the aggregations
 without retrieving hits, that is, &lt;code&gt;size: 0&lt;/code&gt;.&lt;/p&gt;
 
 &lt;p&gt;&lt;a name="numeric-types"&gt;&lt;/a&gt;&lt;/p&gt;
@@ -363,8 +361,8 @@ way, thanks to Jackson, a model instance can be (de)serialized to both JSON
 (binary) formats without breaking a sweat. Logically, Elasticsearch uses the
 binary format for communication within the cluster due to performance reasons.
 Using &lt;code&gt;JsonParser&lt;/code&gt; for parsing SMILE has a slight caveat: A schema cannot always
-be evolved in such a way that the backwards compatibility is kept. Indeed this
-is not a problem for an Elasticsearch cluster, all the nodes hopefully run the
+be evolved in such a way that backwards compatibility is guaranteed. Indeed this
+is not a problem for an Elasticsearch cluster; all the nodes (hopefully!) run the
 same version. Though using SMILE in your application means that you might need
 to shutdown your application, upgrade it to a newer version which is using the
 models of the new Elasticsearch you are about to deploy in parallel.&lt;/p&gt;
@@ -383,10 +381,12 @@ on the safe side, just stick to JSON over HTTP.&lt;/p&gt;
 &lt;p&gt;&lt;a href="https://www.elastic.co/guide/en/elasticsearch/client/java-rest/current/index.html"&gt;The official
 driver&lt;/a&gt;
 will be maintained through the lifetime of the project. It will implement
-community approved features from its competitors. Unless something awkwardly
-goes wrong, the official one will just either leave no room of additional value
-to its competitors or they will just get rusted and disappear. That being said,
-the official REST client is a piece of crap for two main reasons:&lt;/p&gt;
+community approved features from its competitors. Unless something goes terribly
+wrong, the official client will either assimilate the others by simply including
+their features or the unofficial clients will just rust away due to not being
+able to keep up with the rate of new features being introduced in Elasticsearch
+and finally disappear. That being said, the official REST client is a piece of
+crap for two main reasons:&lt;/p&gt;
 
 &lt;ol&gt;
   &lt;li&gt;It has a leaky abstraction over &lt;a href="http://hc.apache.org/httpcomponents-client-ga/"&gt;Apache HTTP
@@ -401,7 +401,7 @@ Elasticsearch milkyway into your JAR Hell.&lt;/li&gt;
 
 &lt;p&gt;&lt;a href="https://github.com/reactiverse/elasticsearch-client"&gt;Eclipse Vert.x works around this
 entanglement&lt;/a&gt; in a yet
-another entangled way. Though I doubt if it will have a long lifetime given the
+another entangled way. Though I doubt if it will be granted a long life given the
 reasons I listed above.&lt;/p&gt;
 
 &lt;p&gt;In summary, the official REST client (unfortunately) is still your best bet.&lt;/p&gt;
@@ -410,7 +410,7 @@ reasons I listed above.&lt;/p&gt;
 
 &lt;h2 id="dont-use-elasticsearch-query-models-to-generate-cache-keys"&gt;Don’t use Elasticsearch query models to generate cache keys&lt;/h2&gt;
 
-&lt;p&gt;Or more specifically,&lt;/p&gt;
+&lt;p&gt;Or more specifically:&lt;/p&gt;
 
 &lt;ul&gt;
   &lt;li&gt;
@@ -427,7 +427,7 @@ order for identical content varies under different conditions.)&lt;/p&gt;
   &lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;p&gt;Ok. So what else is left? How one should do it?&lt;/p&gt;
+&lt;p&gt;Ok. So what else is left? How should we do it?&lt;/p&gt;
 
 &lt;ol&gt;
   &lt;li&gt;
@@ -450,7 +450,7 @@ keys&lt;/a&gt;.&lt;/p&gt;
 
 &lt;p&gt;Many people fall in the trap of fronting their Elasticsearch cluster with an
 HTTP cache such as &lt;a href="http://varnish-cache.org/"&gt;Varnish&lt;/a&gt; due to its convenience
-and low entry barrier. Though this appealing approach has certain shortcomings:&lt;/p&gt;
+and low barrier of entry. This seductive approach has certain shortcomings:&lt;/p&gt;
 
 &lt;ul&gt;
   &lt;li&gt;
@@ -466,9 +466,9 @@ content will just be duplicated.&lt;/p&gt;
       &lt;li&gt;
         &lt;p&gt;if you decide to use a single HTTP cache for all clusters, it is really
 difficult to programmatically configure an HTTP cache to adopt the needs of
-the ever changing cluster states. How will you communicate the load to let
+the ever changing cluster states. How will you communicate the cluster load to let
 the cache balance the traffic. How will you configure scheduled or manual
-downtimes? How will you let the cache gradually migrate the traffic from one
+downtimes? How will you make the cache gradually migrate the traffic from one
 to another during maintanence windows?&lt;/p&gt;
       &lt;/li&gt;
     &lt;/ul&gt;
@@ -477,7 +477,7 @@ to another during maintanence windows?&lt;/p&gt;
     &lt;p&gt;As mentioned above, HTTP caches are difficult to command programmatically.
 When you need to manually evict one or more entries, it is not always as easy
 as a &lt;code&gt;DELETE FROM cache WHERE keys IN (...)&lt;/code&gt; query. And let me warn you, you
-are gonna need that manual eviction.&lt;/p&gt;
+are gonna need that manual eviction sooner or later.&lt;/p&gt;
   &lt;/li&gt;
 &lt;/ul&gt;
 
@@ -487,7 +487,7 @@ are gonna need that manual eviction.&lt;/p&gt;
 &lt;/h2&gt;
 
 &lt;p&gt;&lt;a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/search-request-scroll.html"&gt;Scrolls&lt;/a&gt;
-are the vehicle that Elasticsearch lets you scan its entire dataset for large
+are the vehicle that Elasticsearch provides allowing you to scan its entire dataset for large
 reads. They are functionally (and surprisingly, internally too) pretty much
 similar to &lt;a href="https://en.wikipedia.org/wiki/Cursor_(databases)"&gt;RDBMS cursors&lt;/a&gt;.
 Though most people don’t get them right in their first attempt. Here are some
@@ -500,10 +500,10 @@ highly likely &lt;a href="https://www.elastic.co/guide/en/elasticsearch/referenc
 significantly.&lt;/p&gt;
   &lt;/li&gt;
   &lt;li&gt;
-    &lt;p&gt;The order doesn’t matter in your reads? This is your lucky day then! Just sort
-on &lt;code&gt;_doc&lt;/code&gt; field and there goes your +20% read speed up without any charges.
+    &lt;p&gt;The order doesn’t matter in your reads? This is your lucky day! Just sort
+on &lt;code&gt;_doc&lt;/code&gt; field and there’s a +20% read speed up without any other changes.
 (&lt;code&gt;_doc&lt;/code&gt; is a pseudo field to let Elasticsearch use the order documents are
-laid out on the disk.)&lt;/p&gt;
+in on disk.)&lt;/p&gt;
   &lt;/li&gt;
   &lt;li&gt;
     &lt;p&gt;The &lt;code&gt;scrollId&lt;/code&gt; might (and does!) change between calls. Hence make sure you are
@@ -552,11 +552,11 @@ employing an imaginary database client:&lt;/p&gt;
 that is, each request is enqueued to be delivered and each response handler is
 enqueued to react on incoming payloads – what would happen if your database can
 handle at most 1 req/sec while your application perfectly receives, handles, and
-passes forward 10 req/sec? Let me draw you a shallow probability tree depicting
+passes on 10 req/sec? Let me draw you a shallow probability tree depicting
 consequences of such an incident.&lt;/p&gt;
 
 &lt;ol&gt;
-  &lt;li&gt;Your database gets loaded more than it can take. If your database has proper
+  &lt;li&gt;Your database gets more load than it can take. If your database has proper
 backpressure mechanics, which most don’t possess, including Elasticsearch,&lt;/li&gt;
 &lt;/ol&gt;
 
@@ -583,21 +583,21 @@ caller.&lt;/p&gt;
 place) will start stressing the process memory.&lt;/p&gt;
           &lt;/li&gt;
           &lt;li&gt;
-            &lt;p&gt;The requests succeed in making from the queue to an executor thread
-will highly likely already become deprecated. That is, database will
-be doing job that is of use to nobody.&lt;/p&gt;
+            &lt;p&gt;The requests that succeed in making from the queue to an executor thread
+will highly likely already become deprecated. That is, the database will
+be doing work that is of no use to anybody.&lt;/p&gt;
           &lt;/li&gt;
         &lt;/ol&gt;
       &lt;/li&gt;
       &lt;li&gt;
         &lt;p&gt;above two points drawn from the process queue overgrow of the database,
-apply as is to the application too.&lt;/p&gt;
+also apply to the application.&lt;/p&gt;
       &lt;/li&gt;
     &lt;/ol&gt;
   &lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;p&gt;Unfortunately there is no silver bullet or a step-by-step guide of implementing
+&lt;p&gt;Unfortunately there is no silver bullet or a step-by-step guide to implementing
 backpressure for a particular application. This in a way makes sense, each has
 its own domain-specific requirements. That being said, I can share my personal
 best practices:&lt;/p&gt;
@@ -606,7 +606,7 @@ best practices:&lt;/p&gt;
   &lt;li&gt;
     &lt;p&gt;Use performance benchmarks of your application (You have performance
 benchmarks, right?) to estimate an upper bound on the load that your
-application delivers an acceptable performance. Enforce this limit in your
+application still delivers acceptable performance. Enforce this limit in your
 application via a rate limiter. Please, please, please don’t block the carrier
 thread using the rate limiter! Rather just communicate the backpressure to
 your client, for instance, by means of an &lt;a href="https://en.wikipedia.org/wiki/List_of_HTTP_status_codes#5xx_Server_errors"&gt;HTTP 503 (SERVICE UNAVAILABLE)
@@ -618,7 +618,7 @@ your RxJava/Reactor schedulers are by default backed by a
 &lt;code&gt;ScheduledThreadPoolExecutor&lt;/code&gt; (the one and only &lt;code&gt;ScheduledExecutorService&lt;/code&gt;
 implementation in the Java standard library) and that internally uses an
 unbounded task queue, unfortunately. See &lt;a href="https://stackoverflow.com/q/7403764/1278899"&gt;this Stack Overflow
-post&lt;/a&gt; and &lt;a href="http://cs.oswego.edu/pipermail/concurrency-interest/2019-April/016860.html"&gt;that
+post&lt;/a&gt; and &lt;a href="http://cs.oswego.edu/pipermail/concurrency-interest/2019-April/016860.html"&gt;this
 concurrency-interest
 discussion&lt;/a&gt;
 on how to work around that.&lt;/p&gt;
@@ -635,9 +635,9 @@ start slowing down the producer.&lt;/p&gt;
 
 &lt;h2 id="provide-explicit-timeouts-in-queries"&gt;Provide explicit timeouts in queries&lt;/h2&gt;
 
-&lt;p&gt;Almost all Elasticsearch API endpoints allow the user to specify a timeout, use
-that. This will help both your application and your Elasticsearch cluster: Spot
-and shrug off unpexected long running operations and save associated resources,
+&lt;p&gt;Almost all Elasticsearch API endpoints allow the user to specify a timeout - use
+it. This will help both your application and your Elasticsearch cluster: Spot
+and shrug off unexpected long running operations, save associated resources,
 establish a stable SLA with no surprises, etc.&lt;/p&gt;
 
 &lt;p&gt;&lt;a name="blocking-io-threads"&gt;&lt;/a&gt;&lt;/p&gt;
@@ -720,10 +720,10 @@ I/O loop unnecessarily:&lt;/p&gt;
     &lt;span class="p"&gt;}&lt;/span&gt;
 &lt;span class="p"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
 
-&lt;p&gt;You are just falling into a half-century old trap: &lt;a href="https://en.wikipedia.org/wiki/SQL_injection"&gt;SQL
+&lt;p&gt;You just fell into a half-century old trap: &lt;a href="https://en.wikipedia.org/wiki/SQL_injection"&gt;SQL
 injection&lt;/a&gt;, adopted for
 Elasticsearch. No matter how smart your character whitelisting, escaping
-routines are, it is just a matter of time someone passes a malicious &lt;code&gt;username&lt;/code&gt;
+routines are, it is just a matter of time until someone passes a malicious &lt;code&gt;username&lt;/code&gt;
 and/or &lt;code&gt;password&lt;/code&gt; input that would expose your entire dataset. I also personally
 find it a pretty bad practice to render a curly brace (&lt;code&gt;{&lt;/code&gt;, &lt;code&gt;}&lt;/code&gt;) rich structured
 text via a templating language (e.g., Moustache, Handlebars) which uses the very
@@ -746,15 +746,15 @@ build the JSON tree and serialize it to JSON.&lt;/li&gt;
 it to JSON before passing it over the wire. For instance, the official
 Elasticsearch REST client for Java allows &lt;code&gt;java.util.Map&amp;lt;String, Object&amp;gt;&lt;/code&gt;
 instances as source. Then it uses its own JSON serializer to translate these
-models into JSON. While this works fine for vanilla Java, which is most of the
-time sufficient to get the message across in tutorials, most real world
+models into JSON. While this works fine for vanilla Java, which most of the
+time is sufficient to get the message across in tutorials, most real world
 applications have more complex class structures that necessitate custom
 serialization. For instance, speaking of Java client, how does it serialize
 Guava models? What about the new date and time classes introduced in Java 8?
 What will happen to all your &lt;code&gt;@JsonProperty&lt;/code&gt;-, &lt;code&gt;@JsonSerializes&lt;/code&gt;-, etc.
 annotated classes? Hence it is always a better practice to employ your own
 serialization and pass a &lt;code&gt;byte[]&lt;/code&gt; as source to the client. That will save you
-from surprises.&lt;/p&gt;
+from any nasty surprises.&lt;/p&gt;
 
 &lt;p&gt;&lt;a name="strategy"&gt;&lt;/a&gt;&lt;/p&gt;
 
@@ -768,10 +768,10 @@ practices which address concerns not covered above.&lt;/p&gt;
 &lt;h2 id="always-try-to-stick-to-the-latest-jvm-and-elasticsearch-versions"&gt;Always (try to) stick to the latest JVM and Elasticsearch versions&lt;/h2&gt;
 
 &lt;p&gt;Elasticsearch is a Java application. (Surprise, surprise!) Like every other Java
-application it has its hot paths and garbage collection dues. Almost every new
-JVM release will bring you extra optimizations that you can take advantage of
+application it has its hot paths and garbage collection woes. Almost every new
+JVM release will bring you more optimizations that you can take advantage of
 without breaking a sweat. Note that due to the low-level performance hacks
-exploited in Lucene, which is internally used by Elasticsearch, Lucene is sort
+exploited in Lucene, which is used internally by Elasticsearch, Lucene is sort
 of fragile to JVM upgrades, particularly involving garbage collector changes.
 Fortunately, Elasticsearch has an official page listing supported &lt;a href="https://www.elastic.co/support/matrix#matrix_jvm"&gt;JVM
 releases&lt;/a&gt; and &lt;a href="https://www.elastic.co/guide/en/elasticsearch/guide/current/_don_8217_t_touch_these_settings.html"&gt;garbage
@@ -793,7 +793,7 @@ Depending on your update patterns and index size, find the best combination for
 your use case. That is, for instance, 1 complete snapshot at 00:00 and 3 partial
 snapshots at 06:00, 12:00, and 18:00. It is also known to be a good practice to
 have them stored at &lt;a href="https://aws.amazon.com/s3/"&gt;AWS S3&lt;/a&gt; or &lt;a href="https://cloud.google.com/storage/"&gt;GCP
-Storage&lt;/a&gt;. There exists
+Storage&lt;/a&gt;. There are
 &lt;a href="https://www.elastic.co/guide/en/elasticsearch/plugins/master/repository.html"&gt;plugins&lt;/a&gt;
 to facilitate these scenarios.&lt;/p&gt;
 
@@ -810,10 +810,10 @@ employed a lot.&lt;/p&gt;
 
 &lt;p&gt;Like any other database, Elasticsearch shows varying performance under different
 conditions: index, document sizes; update, query patterns; index, cluster
-settings; hardware, OS, JVM versions; etc. It is difficult to keep track of each
-knob to observe its impact on the overall performance. Make sure you have
+settings; hardware, OS, JVM versions, etc. It is difficult to keep track of each
+knob to observe its impact on overall performance. Make sure you have
 (at least) daily performance tests to help you narrow down a recently introduced
-change damaging the performance.&lt;/p&gt;
+change contributing to lower performance.&lt;/p&gt;
 
 &lt;p&gt;This utopic test bed is easier said than done. You will need to make sure that
 the test environment has representative data of production, (preferably)
@@ -826,7 +826,7 @@ retaining the effects of a previous run. I know, quite a list. But it pays off.&
 &lt;h2 id="use-aliases"&gt;Use aliases&lt;/h2&gt;
 
 &lt;p&gt;Now I am gonna tell you something quite opinionated, though backed by
-experience: Never query against indices, but
+experience: Never query against indices, but rather against
 &lt;a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-aliases.html"&gt;alias&lt;/a&gt;es.
 Aliases are pointers to actual indices. You can group one or more indices under
 a single alias. Many Elasticsearch indices have an internal context attached to
@@ -873,19 +873,19 @@ index everywhere.&lt;/p&gt;
 
 &lt;p&gt;Elasticsearch supports both index- and query-time
 &lt;a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/analysis-synonym-tokenfilter.html"&gt;synonyms&lt;/a&gt;.
-These are powerful shotguns with a good track record of shooting its holder in
+These are powerful shotguns with a good track record of shooting its wielder in
 the foot. No search engine is complete without synonyms, hence they have pretty
-valid use cases. Though the following implications need to be kept in mind while
+valid use cases. That said, the following implications need to be kept in mind while
 employing them:&lt;/p&gt;
 
 &lt;ul&gt;
   &lt;li&gt;
-    &lt;p&gt;Index-time synonyms increase the index size and creates an extra runtime
+    &lt;p&gt;Index-time synonyms increase the index size and create extra runtime
 overhead.&lt;/p&gt;
   &lt;/li&gt;
   &lt;li&gt;
-    &lt;p&gt;Query-time synonyms doesn’t add up to the index size, but as their name
-implies, creates an extra runtime overhead.&lt;/p&gt;
+    &lt;p&gt;Query-time synonyms doesn’t add to the index size, but as their name
+implies, creates extra runtime overhead.&lt;/p&gt;
   &lt;/li&gt;
   &lt;li&gt;
     &lt;p&gt;Using synonyms, it is pretty easy to unintentionally break something while
@@ -913,7 +913,8 @@ compilation, there are the following items that I particularly find a “must”
       &lt;li&gt;shrinked the index size by &lt;a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-forcemerge.html"&gt;forcing a
 merge&lt;/a&gt;
 and&lt;/li&gt;
-      &lt;li&gt;increased the replica transmission bandwidth, that is,
+      &lt;li&gt;temporarily increased the replica transmission bandwidth until allocation
+has finished, that is,
 &lt;a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/recovery.html"&gt;&lt;code&gt;indices.recovery.max_bytes_per_sec&lt;/code&gt;&lt;/a&gt;.&lt;/li&gt;
     &lt;/ul&gt;
   &lt;/li&gt;
@@ -923,17 +924,17 @@ and&lt;/li&gt;
 
 &lt;h2 id="record-application-level-metrics"&gt;Record application-level metrics&lt;/h2&gt;
 
-&lt;p&gt;Kibana provides quite solid insights into the Elasticsearch performance:
-indexing, search latency and throughput; flush, merge operations; etc. Once you
+&lt;p&gt;Kibana provides quite solid insights into Elasticsearch performance:
+indexing, search latency and throughput, flush, merge operations, etc. Once you
 enhance this view with extra JVM (GC pauses, heap size, etc.) and OS (CPU usage,
 disk I/O, kernel caches, etc.) metrics, you will get a rock solid monitoring
-dashboard. That said, this is not enough. It is used by a single application or
+dashboard. That said, this is not enough. If used by a single application or
 more, Elasticsearch will get hit by various access patterns. Imagine a part of
 your software trying to shovel off 10 million documents of not-so-important user
 activity, while another component is trying to update user account details. If
 you would look at your shiny Elasticsearch metrics, everything will look fine
 since 10 million document updates will make the statistical effect of user
-account updates disappear. On the other hand, your users might not be that much
+account updates disappear. On the other hand, your users might not be that
 happy with the latency they observe while they are trying to update their
 accounts. Hence always expose extra application-level metrics for your
 Elasticsearch queries. While Elasticsearch metrics provide sufficient indicators
@@ -943,7 +944,7 @@ for the overall cluster performance, they lack the domain-specific context.&lt;/
 
 &lt;h2 id="invest-in-cpu"&gt;Invest in CPU!&lt;/h2&gt;
 
-&lt;p&gt;I cannot emphasise this enough: &lt;strong&gt;invest in CPU!&lt;/strong&gt; Now open your dashboards,
+&lt;p&gt;I cannot emphasize this enough: &lt;strong&gt;invest in CPU!&lt;/strong&gt;. Now open your dashboards,
 look at the metrics of your most recent Elasticsearch hammering session in
 production, and tell me whether you are disk I/O, memory, or CPU bound? I am not
 telling you to use a 32-core machine with an inferior SATA disk drive and 8 GB
@@ -960,23 +961,23 @@ whether it is a write- or read-heavy load, CPU has always been our bottleneck.&l
 an Elasticsearch plugin that exposes synonyms over a REST endpoint. That allowed
 us to query synonyms uploaded to an Elasticsearch cluster at runtime and
 manipulate it on-the-fly. After having 20 releases where we were convinced that
-there are no more concurrency bugs (actually, we had been pretty convinced in
+there are no more concurrency bugs (actually, we were pretty convinced with
 the previous 19 releases too), it worked like a charm. Though the real suffering
-started when we tried to upgrade the Elasticsearch supported by the plugin. In a
-nutshell, avoid writing custom Elasticsearch plugins, because…&lt;/p&gt;
+started when we tried to upgrade the Elasticsearch version supported by the plugin.
+In a nutshell, avoid writing custom Elasticsearch plugins, because…&lt;/p&gt;
 
 &lt;ul&gt;
   &lt;li&gt;
     &lt;p&gt;Many Elasticsearch releases contain significant internal changes. It is highly
-likely the public APIs you erect your plugin on will get backward incompatible
+likely the public APIs you base your plugin on will be hit by backward incompatible
 changes.&lt;/p&gt;
   &lt;/li&gt;
   &lt;li&gt;
-    &lt;p&gt;Getting concurrency right in an environment where you are not much accustomed
-to can be daunting.&lt;/p&gt;
+    &lt;p&gt;Getting concurrency right in an environment that you are not accustomed to can
+be daunting.&lt;/p&gt;
   &lt;/li&gt;
   &lt;li&gt;
-    &lt;p&gt;You need to tailor your deployment procedure to ship the plugin everytime and
+    &lt;p&gt;You need to tailor your deployment procedure to ship the plugin every time and
 everywhere it is needed. You cannot just use the vanilla Elasticsearch
 artifacts as is anymore.&lt;/p&gt;
   &lt;/li&gt;
