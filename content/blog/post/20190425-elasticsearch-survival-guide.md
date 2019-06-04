@@ -7,7 +7,7 @@ tags:
   - java
 ---
 
-For some months, I have been jotting down notes best practices that I wish I would 
+For some months, I have been jotting down notes on best practices that I wish I would 
 have known when I first started developing applications running against Elasticsearch.
 Even though the following collection tries to communicate certain ideas in Java,
 I believe almost each of such cases apply to every other programming language with
