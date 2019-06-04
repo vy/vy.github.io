@@ -336,10 +336,12 @@ on the safe side, just stick to JSON over HTTP.
 [The official
 driver](https://www.elastic.co/guide/en/elasticsearch/client/java-rest/current/index.html)
 will be maintained through the lifetime of the project. It will implement
-community approved features from its competitors. Unless something terrible
-goes wrong, the official one will just either leave no room of additional value
-to its competitors or they will just get rusted and disappear.
-That being said, the official REST client is a piece of crap for two main reasons:
+community approved features from its competitors. Unless something goes terribly
+wrong, the official client will either assimilate the others by simply including
+their features or the unofficial clients will just rust away due to not being
+able to keep up with the rate of new features being introduced in Elasticsearch
+and finally disappear. That being said, the official REST client is a piece of
+crap for two main reasons:
 
 1. It has a leaky abstraction over [Apache HTTP
    Client](http://hc.apache.org/httpcomponents-client-ga/) whose configurations
