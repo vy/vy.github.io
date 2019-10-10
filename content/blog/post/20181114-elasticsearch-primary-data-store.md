@@ -1245,6 +1245,10 @@ Handling of sudden or seasonal trends? That is a whole different game.
 
 ## Have you ever presented this material in a conference setting?
 
-Yes, I managed to briefly cover the entire content into a 50 minutes long talk
-in [CNCML Vienna, 2019](https://cncv.io/). The slides are available in
-[PDF](cncml-vienna-2019.pdf) and [ODP](cncml-vienna-2019-org.odp) formats.
+Yes. I managed to squeeze the entire content into a 50 minutes long talk and
+had to opportunity to share it with people in
+
+- [CNCML Vienna, 2019](https://cncv.io/) ([PDF](cncml-vienna-2019.pdf),
+  [ODP](cncml-vienna-2019-org.odp))
+- [ElasticNL](https://www.meetup.com/Elastic-NL/events/265086114/)
+  ([PDF](elasticnl-20191008.pdf), [ODP](elasticnl-20191008-org.odp))
