@@ -1252,3 +1252,9 @@ had to opportunity to share it with people in
   [ODP](cncml-vienna-2019-org.odp))
 - [ElasticNL](https://www.meetup.com/Elastic-NL/events/265086114/)
   ([PDF](elasticnl-20191008.pdf), [ODP](elasticnl-20191008-org.odp))
+
+<iframe
+	src="//www.slideshare.net/slideshow/embed_code/key/rWY6gjv31CPFz3"
+	width="476" height="400" frameborder="0" marginwidth="0" marginheight="0"
+	scrolling="no">
+</iframe>
