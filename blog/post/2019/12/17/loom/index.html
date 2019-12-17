@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>The State of Lightweight Threads for the JVM</title>
+    <link rel="stylesheet" href="/css/common.css">
+    <meta name="generator" content="nanoc 3.8.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/post.css">
+    <script type="text/javascript">
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-40183531-1']);
+      _gaq.push(['_trackPageview']);
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="container">
+
+      <ul id="menu">
+        <li><a href="/">Home</a></li><li><a href="/blog/">Blog</a></li><li><a href="/code/">Code</a></li><li><a href="/blog/feed/">Feed</a></li>
+      </ul>
+
+    
+
+<div id="post">
+
+    <div class="head">
+        <div class="title">The State of Lightweight Threads for the JVM</div>
+        <div class="subtitle">posted at
+            December 17, 2019
+            with tags <a href="/blog/tag/concurrency">concurrency</a>, <a href="/blog/tag/java">java</a>, <a href="/blog/tag/presentation">presentation</a>, <a href="/blog/tag/reactive">reactive</a>
+        </div>
+    </div>
+
+    <div class="body">
+
+        <script type="text/javascript">
+        var asyncLoadRequests = [];
+        </script>
+
+        
+<p>This week I took the stage at <a href="//bol.com">bol.com</a> with a presentation titled
+<em>The State of Lightweight Threads for the JVM</em>. The abstract of the presentation
+was as follows:</p>
+
+<blockquote>
+  <p>Thanks to your constantly crashing desktop apps, you know about processes.
+Microservice flavored web development taught us about threads too. Then came
+callbacks, shortening lifetime of millions of developers. Do you recall the day
+you shed tears when Java shipped a Future that you can complete? I know you
+haven’t forgotten how Reactive Streams occupied our agendas with RxJava,Reactor,
+and infinite stack traces. Now newspapers are yelling about coroutines, fibers,
+lightweight threads! We poor souls… In this presentation, I aimto give a
+2,000ft overview of where do we come from, where are we heading to, and what
+does all this mean for the Java Virtual Machine, aka, JVM. Are you a Java
+developer? Thread circus owner? Reactive ninja? Kotlin fan? COBOL enthusiast?
+Algol pensioner? There is something I willtell you. (Spoiler: I will as well
+talk about Project Loom, structured concurrency, and scoped variables.)</p>
+</blockquote>
+
+<p>The slides are available in <a href="loom-bol.pdf">PDF</a> and
+<a href="loom-bol-org.odp">ODP</a> formats.</p>
+
+<iframe src="//www.slideshare.net/slideshow/embed_code/key/vJM88UwcN6ypDn" width="476" height="400" frameborder="0" marginwidth="0" marginheight="0" scrolling="no">
+</iframe>
+
+
+        <div id="disqus_thread"></div>
+        <script type="text/javascript">
+        var disqus_shortname = 'vyazici';
+        var disqus_identifier = '/blog/post/20191217-loom/';
+        var disqus_title = 'The State of Lightweight Threads for the JVM';
+        (function() {
+            var dsq = document.createElement('script');
+            dsq.type = 'text/javascript';
+            dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+        </script>
+
+        
+
+        
+
+    </div>
+  </body>
+</html>
+
+
+        <script type="text/javascript">
+        for (var i = 0; i < asyncLoadRequests.length; i++) {
+            asyncLoadRequest = asyncLoadRequests[i];
+            asyncLoadRequest();
+        }
+        </script>
+
+    </div>
+
+</div>
