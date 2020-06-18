@@ -262,7 +262,7 @@ appender.console.json.eventTemplateUri = classpath:LogstashJsonEventLayoutV1.jso
                 <p class="tableblock"><code>eventTemplateAdditionalFields</code></p>
               </td>
               <td class="tableblock halign-left valign-top">
-                <p class="tableblock"><code>KeyValuePair[]</code></p>
+                <p class="tableblock"><code>EventTemplateAdditionalField[]</code></p>
               </td>
               <td class="tableblock halign-left valign-top">
                 <p class="tableblock">additional key-value pairs appended to the root of the event template</p>
@@ -351,15 +351,17 @@ appender.console.json.eventTemplateUri = classpath:LogstashJsonEventLayoutV1.jso
         <div class="sect2">
           <h3 id="additional-event-template-fields">Additonal event template fields</h3>
           <div class="paragraph">
-            <p>One can configure additional event template fields via
-              <code>eventTemplateAdditionalFields</code> as follows:</p>
+            <p>Additional event template field is a convenient short-cut to add custom
+              fields to a template or override the fields of a template. Following
+              configuration overrides the <code>host</code> field of the <code>GelfLayout.json</code>              template and adds two new custom fields:</p>
           </div>
           <div class="listingblock">
             <div class="content">
-              <pre class="highlight"><code class="language-xml" data-lang="xml">&lt;JsonTemplateLayout ...&gt;
+              <pre class="highlight"><code class="language-xml" data-lang="xml">&lt;JsonTemplateLayout eventTemplateUri="classpath:GelfLayout.json"&gt;
     &lt;EventTemplateAdditionalFields&gt;
-        &lt;EventTemplateAdditionalField key="serviceName" value="auth-service"/&gt;
-        &lt;EventTemplateAdditionalField key="containerId" value="6ede3f0ca7d9"/&gt;
+        &lt;EventTemplateAdditionalField key="host" value="www.apache.org"/&gt;
+        &lt;EventTemplateAdditionalField key="_serviceName" value="auth-service"/&gt;
+        &lt;EventTemplateAdditionalField key="_containerId" value="6ede3f0ca7d9"/&gt;
     &lt;/EventTemplateAdditionalFields&gt;
 &lt;/JsonTemplateLayout&gt;</code></pre>
             </div>
@@ -401,9 +403,10 @@ appender.console.json.eventTemplateUri = classpath:LogstashJsonEventLayoutV1.jso
               </li>
               <li>
                 <p><code>threadLocal</code> performs the best, since every instance
-                  is stored in TLAB and accessed without any synchronization cost.
-                  Though this might not be a desirable option for applications running
-                  with hundreds of threads or more, e.g., a web servlet.</p>
+                  is stored in
+                  <code>ThreadLocal</code>s and accessed without any synchronization
+                  cost. Though this might not be a desirable option for applications
+                  running with hundreds of threads or more, e.g., a web servlet.</p>
               </li>
               <li>
                 <p><code>queue</code> is the best of both worlds. It allows recycling
@@ -497,9 +500,7 @@ queue:supplier=java.util.concurrent.ArrayBlockingQueue.new,capacity=50</code></p
   },
   "labels": {
     "$resolver": "mdc",
-    "flatten": {
-      "prefix": "labels."
-    },
+    "flatten": true,
     "stringified": true
   },
   "tags": {
@@ -989,7 +990,7 @@ flattenPrefix = "prefix" -&gt; string</code></pre>
                         to be turned on to iterate the map without allocations.</p>
                     </div>
                     <div class="paragraph">
-                      <p><code>stringify</code> allocates a new <code>String</code>                        for values that are not of type <code>String</code>.</p>
+                      <p><code>stringified</code> allocates a new <code>String</code>                        for values that are not of type <code>String</code>.</p>
                     </div>
                     <div class="paragraph">
                       <p>Writing certain non-primitive values (e.g., <code>BigDecimal</code>,
