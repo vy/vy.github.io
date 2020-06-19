@@ -1087,8 +1087,9 @@ flattenPrefix = "prefix" -&gt; string</code></pre>
                   <div>
                     <div class="listingblock">
                       <div class="content">
-                        <pre class="highlight"><code>config      = [ stringified ]
-stringified = "stringified" -&gt; boolean</code></pre>
+                        <pre class="highlight"><code>config      = [ stringified ] , [ fallbackKey ]
+stringified = "stringified" -&gt; boolean
+fallbackKey = "fallbackKey" -&gt; string</code></pre>
                       </div>
                     </div>
                   </div>
@@ -1129,6 +1130,32 @@ stringified = "stringified" -&gt; boolean</code></pre>
   "$resolver": "message"
 }</code></pre>
                       </div>
+                    </div>
+                    <div class="paragraph">
+                      <p>Given the above configuration, a <code>SimpleMessage</code>                        will generate a <code>"sample log
+message"</code>, whereas a <code>MapMessage</code> will generate a <code>{"action": "login",
+"sessionId": "87asd97a"}</code>. Certain indexed log storage systems (e.g.,
+                        <a href="https://www.elastic.co/elasticsearch/">Elasticsearch</a>)
+                        will not allow both values to coexist due to type mismatch:
+                        one is a <code>string</code> while the other is an <code>object</code>.
+                        Here one can use a <code>fallbackKey</code> to work around
+                        the problem:</p>
+                    </div>
+                    <div class="listingblock">
+                      <div class="content">
+                        <pre class="highlight"><code class="language-json" data-lang="json">{
+  "$resolver": "message",
+  "fallbackKey": "formattedMessage"
+}</code></pre>
+                      </div>
+                    </div>
+                    <div class="paragraph">
+                      <p>Using this configuration, a <code>SimpleMessage</code> will
+                        generate a
+                        <code>{"formattedMessage": "sample log message"}</code> and
+                        a <code>MapMessage</code> will generate a
+                        <code>{"action": "login", "sessionId": "87asd97a"}</code>.
+                        Note that both emitted JSONs are of type <code>object</code>                        and have no type-conflicting fields.</p>
                     </div>
                   </div>
                 </td>
