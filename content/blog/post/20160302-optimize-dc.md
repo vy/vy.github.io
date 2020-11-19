@@ -193,10 +193,9 @@ guaranteed capacity**.
 The Solver
 ==========
 
-For testing purposes, I wrote a simple [Python
-script](https://gist.github.com/vy/9689cb122a84be22d454) that reads an input
-problem file and calls CPLEX iteratively. A sample output of the script is as
-follows:
+For testing purposes, I wrote a simple [Python script](dc.py) that reads [an
+input problem file](dc-min.in) and calls CPLEX iteratively. A sample output of
+the script is as follows:
 
 	$ ./dc.py ./cplex.sh prob/dc-min.in soln/dc-min 0
 	2016-03-03 08:35:25 DEBUG    reading setup: prob/dc-min.in
