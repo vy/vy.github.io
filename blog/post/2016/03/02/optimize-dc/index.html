@@ -236,10 +236,9 @@ guaranteed capacity</strong>.</p>
 
 <h1 id="the-solver">The Solver</h1>
 
-<p>For testing purposes, I wrote a simple <a href="https://gist.github.com/vy/9689cb122a84be22d454">Python
-script</a> that reads an input
-problem file and calls CPLEX iteratively. A sample output of the script is as
-follows:</p>
+<p>For testing purposes, I wrote a simple <a href="cplex-solver.py">Python script</a> that
+reads <a href="dc-min.in">an input problem file</a> and calls CPLEX iteratively. A sample
+output of the script is as follows:</p>
 
 <pre><code>$ ./dc.py ./cplex.sh prob/dc-min.in soln/dc-min 0
 2016-03-03 08:35:25 DEBUG    reading setup: prob/dc-min.in
