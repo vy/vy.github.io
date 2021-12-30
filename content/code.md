@@ -40,24 +40,9 @@ css: code
   NodeJS. It is used to stress test software-defined networks built using
   [mininet](http://www.mininet.org/).
 
-* [BTCTurkTracker](https://github.com/vy/BTCTurkTracker) is a Scala
-  application that periodically collects data from
-  [BTCTurk](https://btcturk.com/)
-  [API](https://btcturk.com/yardim/api-home-page).
-
-* [lubang-menggali](https://github.com/vy/lubang-menggali) is a real-time
-  multi-player Mancala game written using Play Framework and WebSockets in
-  Java.
-
 * [quasar-maven-plugin](https://github.com/vy/quasar-maven-plugin) is a Maven
   plugin for ahead-of-time [Quasar](http://docs.paralleluniverse.co/quasar/)
   instrumentation.
-
-2013
-----
-
-* [vy.github.io](https://github.com/vy/vy.github.io) is a static blog
-  generated using [nanoc](http://nanoc.ws/).
 
 2010
 ----
