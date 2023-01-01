@@ -1,7 +1,7 @@
 # About
 
 This branch contains the sources for generating my personal web site. You can
-either [view it online](https://vlkan.com/) or
+either [view it online](https://volkan.yazi.ci/) or
 [browse the generated content](https://github.com/vy/vy.github.io/tree/master/).
 
 # Installation

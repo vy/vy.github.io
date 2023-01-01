@@ -77,4 +77,4 @@ watcher:
   notify_on_compilation_success: true
   notify_on_compilation_failure: true
 
-base_url: 'https://vlkan.com/'
+base_url: 'https://volkan.yazi.ci/'
