@@ -207,20 +207,6 @@
 <p>The truth is, it took my almost four hours to find and squash the bug. <code>serverSocket.shutdownOutput()</code> was a low hanging one, it solved the problem of web server waiting to start sending data. But take a closer look at the <code>readHeaders()</code> method. You see the mess? Particularly, the ones with stream arithmetic using <code>mark()</code>, <code>reset()</code> and <code>skip()</code> calls. The problem was, in order to make <code>readLine()</code> requests on an <code>InputStream</code>, you first need to wrap it with a <code>BufferedReader</code>. But once you wrap it up and make a call to <code>readLine()</code>, <code>BufferedReader</code> buffers the input stream to a position that is much more advanced than you generally expect it to be. Hence, after you finish reading headers and continue with reading the response data in bytes, <code>read()</code> tells you that there is nothing left to read. To avoid such nasty bugs, after reading from an <code>InputStream</code> using some sort of buffered reader, do not forget to reset the stream to a position where you expect it to be.</p>
 
 
-        <div id="disqus_thread"></div>
-        <script type="text/javascript">
-        var disqus_shortname = 'vyazici';
-        var disqus_identifier = '/blog/post/20120325-cleaning-up-the-bufferedreader-mess/';
-        var disqus_title = 'Cleaning up the BufferedReader Mess in a Proxy Server';
-        (function() {
-            var dsq = document.createElement('script');
-            dsq.type = 'text/javascript';
-            dsq.async = true;
-            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
-            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-        })();
-        </script>
-
         
 
         

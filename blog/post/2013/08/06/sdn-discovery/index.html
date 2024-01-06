@@ -71,20 +71,6 @@
 <p>Hosts <code>h1</code>, <code>h2</code> and <code>h3</code> all have a single attachment point from the point of view of the controller. Say this time <code>h1</code> pings <code>h4</code>. Since the controller does not know the attachment point of <code>h4</code>, it will repeatedly flood the request until it makes its way to <code>s4</code> and then <code>h4</code>. <code>h4</code>s reply might reach to the controller network either from <code>p1</code> of <code>s2</code> or <code>p2</code> of <code>s3</code>. Further, each packet originating from <code>h4</code> can be routed across different paths by <code>s4</code> too. To handle such cases, controllers generally assign multiple attachment points for <code>h4</code>.</p>
 
 
-        <div id="disqus_thread"></div>
-        <script type="text/javascript">
-        var disqus_shortname = 'vyazici';
-        var disqus_identifier = '/blog/post/20130806-sdn-discovery/';
-        var disqus_title = 'Discovery in Software-Defined Networks';
-        (function() {
-            var dsq = document.createElement('script');
-            dsq.type = 'text/javascript';
-            dsq.async = true;
-            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
-            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-        })();
-        </script>
-
         
 
         

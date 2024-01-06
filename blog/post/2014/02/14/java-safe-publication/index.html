@@ -146,20 +146,6 @@
 <p>Here the JVM defers initializing the <code>ResourceHolder</code> class until it is actually used [JLS 12.4.1], and because the <code>Resource</code> is initialized with a static initializer, no additional synchronization is needed. The first call to <code>getResource</code> by any thread causes <code>ResourceHolder</code> to be loaded and initialized, at which time the initialization of the <code>Resource</code> happens through the static initializer.</p>
 
 
-        <div id="disqus_thread"></div>
-        <script type="text/javascript">
-        var disqus_shortname = 'vyazici';
-        var disqus_identifier = '/blog/post/20140214-java-safe-publication/';
-        var disqus_title = 'Safe Object Publication in Java';
-        (function() {
-            var dsq = document.createElement('script');
-            dsq.type = 'text/javascript';
-            dsq.async = true;
-            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
-            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-        })();
-        </script>
-
         
 
         
