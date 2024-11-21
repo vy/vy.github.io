@@ -3848,6 +3848,131 @@ experience and presentations to the book, I will definitely buy the
 </content>
   </entry>
   <entry>
+    <id>tag:volkan.yazi.ci,2017-04-18://blog/post/2017/04/18/inter-service-comm/</id>
+    <title type="html">Inter-Microservice Communication Fatigue</title>
+    <published>2017-04-18T17:22:00Z</published>
+    <updated>2017-04-18T17:22:00Z</updated>
+    <link rel="alternate" href="https://volkan.yazi.ci//blog/post/2017/04/18/inter-service-comm/"/>
+    <content type="html">
+&lt;p&gt;Let me get this straight: &lt;strong&gt;Every single line of code that needs to
+communicate with a remote microservice is the most bizarre, annoying, sad, and
+hopeless experience in my daily coding routine.&lt;/strong&gt; And the worst is: Most of
+the time its &lt;em&gt;my client&lt;/em&gt; code communicating with &lt;em&gt;my services&lt;/em&gt;, so there is no
+one else to blame that would sooth my anger. But I did not end up here out of
+blue.&lt;/p&gt;
+
+&lt;p&gt;In my freshman years, I was given the responsibility of further development of
+a microservice, where both the server and its driver (API models, HTTP client,
+etc.) were written in Scala. Because Scala was still a cool buzzword back then
+and the team wanted to experiment with it. (No, this won’t be a Scala FUD
+post.) It was using an in-house built HTTP client, which is more or less yet
+another buggy wrapper over an ancient version of &lt;a href="https://github.com/ning/async-http-client"&gt;Ning
+async-http-client&lt;/a&gt;. I implemented a
+(yes, another!) thin wrapper over it to expose the HTTP response models as
+&lt;code&gt;scala.concurrent.Future&lt;/code&gt;s, so we can compose them via Scala’s
+for-comprehensions. (It did not take long for me to figure out that exposing
+the API in Scala was one of the worst possible design decisions one could have
+made in an ecosystem dominated by Java consumers.)&lt;/p&gt;
+
+&lt;p&gt;Later on as a team we adopted another critical microservice comprising a giant
+Java client with Spring fizz and buzz, caching, Guava immutables all under the
+hood with insanely strict &lt;code&gt;checkNotNull&lt;/code&gt;/&lt;code&gt;checkArgument&lt;/code&gt;-powered model
+validation, etc. This comet created its own fan clubs. There are two types of
+people in the company who are consuming this service:&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;
+    &lt;p&gt;ones that bite the bullet and use the gigantic driver we
+provide (say hello to a truck load of artifacts in your
+not-sufficiently-sucking dependency hell) or&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;ones that prefer to implement his/her own HTTP driver hosting an empire of
+bugs by manually building/parsing query request/response models formatted
+in JSON/XML/Protobuf.&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;Later on I said enough is enough! Let’s stick to a standard: JEE HTTP client,
+that is, Jersey JAX-RS Client with Jackson cream on it. I still needed to
+create all the API models and verify them myself every time. It was bearable
+to some extent. But here comes the perfect storm: JAX-RS Client 2.0 (which
+supports proper HTTP connection pooling with sanely configurable
+socket+connection timeout support, which weren’t sanely available in 1.x)
+requires &lt;code&gt;javax.ws.rs-api&lt;/code&gt; 2.x, which is binary incompatible with 1.x, which
+is used by 80% of microservices in the ecosystem. So in practice no other
+microservice will be able to use my driver without the developer losing half
+of his/her hairs.&lt;/p&gt;
+
+&lt;p&gt;Later on I kept repeating “enough is enough”! Let’s use &lt;a href="https://github.com/AsyncHttpClient/async-http-client"&gt;Google’s
+async-http-client&lt;/a&gt;. It
+is pluggable all around the place: the HTTP connector (Apache HC, etc.),
+marshaller (Jackson, Gson, etc.). The project is more or less undocumented.
+But thanks to an army of Android users, there is plenty of blog posts and
+source code to discover your own personal bugs, so you can keep on blog
+posting about it. Anyway… It worked. I still need to motivate myself to dive
+into the source code to comprehend how it works under the hood, but it worked.&lt;/p&gt;
+
+&lt;p&gt;Today… When I need to talk to one of these services I need to pick a lousy,
+juice, smelly sh*t of my preference:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;Inject the entire Scala milky way into your 1-file Java microservice, which
+could have been delivered as a 5MB fat-JAR before Scala space-warping it
+into 50MB. And don’t forget to pat your IDE in the back every time it needs
+to auto-complete a Scala class. Oh, by the way, have you ever tried
+accessing a &lt;code&gt;scala.Option&lt;/code&gt; from Java? Boy! It is fun! I hope your service
+consumers think likewise.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Let the giant Java driver bring all its feature-rich functionality together
+with its cousins, its nephews, its uncle, its grandma, its grandpa, its
+friends from the school, its ex, and of course with spring-core. All you
+wanted is to make a &lt;code&gt;GET&lt;/code&gt; to &lt;code&gt;/v1/user/&amp;lt;id&amp;gt;&lt;/code&gt;, but now you have the entire
+Pivotal art gallery decorating your &lt;code&gt;mvn dependency:tree&lt;/code&gt; output on the
+wall.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;You can of course purpose maven-shade-plugin to shade and relocate the
+entire &lt;code&gt;javax.ws.rs-api&lt;/code&gt;, Jersey dependencies, together with the entire
+universe. I know you can do that.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Browse to Google’s &lt;code&gt;async-http-client&lt;/code&gt; webpage and try to find the page that
+explains how to make a simple fscking &lt;code&gt;GET&lt;/code&gt; request.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Embrace the old Ning client wrapper, welcome bugs (the first time I needed
+to use it I found out that &lt;code&gt;setHeaders()&lt;/code&gt; wasn’t working as expected), stick
+to JAX-RS 1.x and an ancient Netty version, which causes a JAR Hell with any
+recent library, e.g., Elasticsearch. (Please refer back to
+maven-shade-plugin item.)&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;I can hear you shouting about compile-time generated HTTP clients based on
+Swagger or WADL specs. But weren’t we just cursing WSDL and trying to run away
+from it? &lt;a href="square.github.io/retrofit/"&gt;Retrofit&lt;/a&gt;?
+&lt;a href="https://twitter.github.io/finagle/"&gt;Finagle&lt;/a&gt;? &lt;a href="http://www.grpc.io/"&gt;gRPC&lt;/a&gt;? I
+bet it is a matter of time until you end up needing to consume two clients
+which have transitive dependencies to two binary incompatible versions of
+Retrofit/Finagle/gRPC. You can blame the Java class loader mechanism. But that
+doesn’t make the problem fade away. Oh! I was just about to forget! Wait until
+I migrate to &lt;code&gt;rx.Completable&lt;/code&gt; from &lt;code&gt;rx.Single&amp;lt;Void&amp;gt;&lt;/code&gt;, which I migrated from
+&lt;code&gt;rx.Observable&amp;lt;Void&amp;gt;&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;I am exhausted and demotiviated to write yet another single line of code that
+needs to communicate with a remote microservice and which could have been a
+simple fucking RPC. I don’t have a solution for the mud ball in my hands. Even
+if I do have, I am not sure whether it will survive a couple of years or not.
+But in the back of my head, I keep on cursing the Java Platform SE guys: How
+difficult could it be to come up with a proper pluggable HTTP client? Compared
+to &lt;code&gt;NPE&lt;/code&gt;, Java’s HTTP client is not &lt;em&gt;the&lt;/em&gt; billion dollar mistake, but a really
+close one.&lt;/p&gt;
+</content>
+  </entry>
+  <entry>
     <id>tag:volkan.yazi.ci,2017-04-18://blog/post/2017/10/20/hazelcast-guice/</id>
     <title type="html">Guice Integration in Hazelcast</title>
     <published>2017-04-18T17:22:00Z</published>
@@ -4051,131 +4176,6 @@ injection into the Hazelcast class instantiation process.&lt;/p&gt;
 dependency injection framework that provides an equivalent to
 &lt;code&gt;Injector#injectMembers()&lt;/code&gt; of Guice. Needless to say, but Spring folks are
 already covered by &lt;code&gt;SpringManagedContext&lt;/code&gt; shipped with Hazelcast.&lt;/p&gt;
-</content>
-  </entry>
-  <entry>
-    <id>tag:volkan.yazi.ci,2017-04-18://blog/post/2017/04/18/inter-service-comm/</id>
-    <title type="html">Inter-Microservice Communication Fatigue</title>
-    <published>2017-04-18T17:22:00Z</published>
-    <updated>2017-04-18T17:22:00Z</updated>
-    <link rel="alternate" href="https://volkan.yazi.ci//blog/post/2017/04/18/inter-service-comm/"/>
-    <content type="html">
-&lt;p&gt;Let me get this straight: &lt;strong&gt;Every single line of code that needs to
-communicate with a remote microservice is the most bizarre, annoying, sad, and
-hopeless experience in my daily coding routine.&lt;/strong&gt; And the worst is: Most of
-the time its &lt;em&gt;my client&lt;/em&gt; code communicating with &lt;em&gt;my services&lt;/em&gt;, so there is no
-one else to blame that would sooth my anger. But I did not end up here out of
-blue.&lt;/p&gt;
-
-&lt;p&gt;In my freshman years, I was given the responsibility of further development of
-a microservice, where both the server and its driver (API models, HTTP client,
-etc.) were written in Scala. Because Scala was still a cool buzzword back then
-and the team wanted to experiment with it. (No, this won’t be a Scala FUD
-post.) It was using an in-house built HTTP client, which is more or less yet
-another buggy wrapper over an ancient version of &lt;a href="https://github.com/ning/async-http-client"&gt;Ning
-async-http-client&lt;/a&gt;. I implemented a
-(yes, another!) thin wrapper over it to expose the HTTP response models as
-&lt;code&gt;scala.concurrent.Future&lt;/code&gt;s, so we can compose them via Scala’s
-for-comprehensions. (It did not take long for me to figure out that exposing
-the API in Scala was one of the worst possible design decisions one could have
-made in an ecosystem dominated by Java consumers.)&lt;/p&gt;
-
-&lt;p&gt;Later on as a team we adopted another critical microservice comprising a giant
-Java client with Spring fizz and buzz, caching, Guava immutables all under the
-hood with insanely strict &lt;code&gt;checkNotNull&lt;/code&gt;/&lt;code&gt;checkArgument&lt;/code&gt;-powered model
-validation, etc. This comet created its own fan clubs. There are two types of
-people in the company who are consuming this service:&lt;/p&gt;
-
-&lt;ol&gt;
-  &lt;li&gt;
-    &lt;p&gt;ones that bite the bullet and use the gigantic driver we
-provide (say hello to a truck load of artifacts in your
-not-sufficiently-sucking dependency hell) or&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;ones that prefer to implement his/her own HTTP driver hosting an empire of
-bugs by manually building/parsing query request/response models formatted
-in JSON/XML/Protobuf.&lt;/p&gt;
-  &lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;p&gt;Later on I said enough is enough! Let’s stick to a standard: JEE HTTP client,
-that is, Jersey JAX-RS Client with Jackson cream on it. I still needed to
-create all the API models and verify them myself every time. It was bearable
-to some extent. But here comes the perfect storm: JAX-RS Client 2.0 (which
-supports proper HTTP connection pooling with sanely configurable
-socket+connection timeout support, which weren’t sanely available in 1.x)
-requires &lt;code&gt;javax.ws.rs-api&lt;/code&gt; 2.x, which is binary incompatible with 1.x, which
-is used by 80% of microservices in the ecosystem. So in practice no other
-microservice will be able to use my driver without the developer losing half
-of his/her hairs.&lt;/p&gt;
-
-&lt;p&gt;Later on I kept repeating “enough is enough”! Let’s use &lt;a href="https://github.com/AsyncHttpClient/async-http-client"&gt;Google’s
-async-http-client&lt;/a&gt;. It
-is pluggable all around the place: the HTTP connector (Apache HC, etc.),
-marshaller (Jackson, Gson, etc.). The project is more or less undocumented.
-But thanks to an army of Android users, there is plenty of blog posts and
-source code to discover your own personal bugs, so you can keep on blog
-posting about it. Anyway… It worked. I still need to motivate myself to dive
-into the source code to comprehend how it works under the hood, but it worked.&lt;/p&gt;
-
-&lt;p&gt;Today… When I need to talk to one of these services I need to pick a lousy,
-juice, smelly sh*t of my preference:&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;
-    &lt;p&gt;Inject the entire Scala milky way into your 1-file Java microservice, which
-could have been delivered as a 5MB fat-JAR before Scala space-warping it
-into 50MB. And don’t forget to pat your IDE in the back every time it needs
-to auto-complete a Scala class. Oh, by the way, have you ever tried
-accessing a &lt;code&gt;scala.Option&lt;/code&gt; from Java? Boy! It is fun! I hope your service
-consumers think likewise.&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;Let the giant Java driver bring all its feature-rich functionality together
-with its cousins, its nephews, its uncle, its grandma, its grandpa, its
-friends from the school, its ex, and of course with spring-core. All you
-wanted is to make a &lt;code&gt;GET&lt;/code&gt; to &lt;code&gt;/v1/user/&amp;lt;id&amp;gt;&lt;/code&gt;, but now you have the entire
-Pivotal art gallery decorating your &lt;code&gt;mvn dependency:tree&lt;/code&gt; output on the
-wall.&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;You can of course purpose maven-shade-plugin to shade and relocate the
-entire &lt;code&gt;javax.ws.rs-api&lt;/code&gt;, Jersey dependencies, together with the entire
-universe. I know you can do that.&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;Browse to Google’s &lt;code&gt;async-http-client&lt;/code&gt; webpage and try to find the page that
-explains how to make a simple fscking &lt;code&gt;GET&lt;/code&gt; request.&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;Embrace the old Ning client wrapper, welcome bugs (the first time I needed
-to use it I found out that &lt;code&gt;setHeaders()&lt;/code&gt; wasn’t working as expected), stick
-to JAX-RS 1.x and an ancient Netty version, which causes a JAR Hell with any
-recent library, e.g., Elasticsearch. (Please refer back to
-maven-shade-plugin item.)&lt;/p&gt;
-  &lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;I can hear you shouting about compile-time generated HTTP clients based on
-Swagger or WADL specs. But weren’t we just cursing WSDL and trying to run away
-from it? &lt;a href="square.github.io/retrofit/"&gt;Retrofit&lt;/a&gt;?
-&lt;a href="https://twitter.github.io/finagle/"&gt;Finagle&lt;/a&gt;? &lt;a href="http://www.grpc.io/"&gt;gRPC&lt;/a&gt;? I
-bet it is a matter of time until you end up needing to consume two clients
-which have transitive dependencies to two binary incompatible versions of
-Retrofit/Finagle/gRPC. You can blame the Java class loader mechanism. But that
-doesn’t make the problem fade away. Oh! I was just about to forget! Wait until
-I migrate to &lt;code&gt;rx.Completable&lt;/code&gt; from &lt;code&gt;rx.Single&amp;lt;Void&amp;gt;&lt;/code&gt;, which I migrated from
-&lt;code&gt;rx.Observable&amp;lt;Void&amp;gt;&lt;/code&gt;.&lt;/p&gt;
-
-&lt;p&gt;I am exhausted and demotiviated to write yet another single line of code that
-needs to communicate with a remote microservice and which could have been a
-simple fucking RPC. I don’t have a solution for the mud ball in my hands. Even
-if I do have, I am not sure whether it will survive a couple of years or not.
-But in the back of my head, I keep on cursing the Java Platform SE guys: How
-difficult could it be to come up with a proper pluggable HTTP client? Compared
-to &lt;code&gt;NPE&lt;/code&gt;, Java’s HTTP client is not &lt;em&gt;the&lt;/em&gt; billion dollar mistake, but a really
-close one.&lt;/p&gt;
 </content>
   </entry>
   <entry>
