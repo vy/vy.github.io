@@ -8,7 +8,7 @@ dockerImageTag="latest"
 case $1 in
 
 	build)
-		docker build -t $dockerImageName:$dockerImageTag  .
+		docker build --network host -t $dockerImageName:$dockerImageTag  .
 		;;
 
 	run)
