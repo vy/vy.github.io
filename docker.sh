@@ -14,7 +14,7 @@ case $1 in
 	run)
 		docker run \
 			-i -t \
-			-p 3000:3000 \
+			--network host \
 			-v $(pwd):/app \
 			$dockerImageName:$dockerImageTag \
 			/bin/bash
