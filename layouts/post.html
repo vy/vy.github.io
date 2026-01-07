@@ -4,11 +4,11 @@
 
     <div class="head">
         <div class="title"><%= @item[:title] %></div>
-        <div class="subtitle">posted at
+        <div class="subtitle">posted on
             <%=
                 require 'time'
                 tm = Time.parse(@item[:created_at])
-                tm.strftime('%B %-d, %Y')
+                tm.strftime('%Y-%m-%d')
             %>
             <%=
                 unless @item[:tags].nil?

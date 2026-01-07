@@ -38,8 +38,8 @@
         <%= link_to(article[:title], article.path) %>
       </span><br/>
       <span class="info">
-        posted at
-        <%= Time.parse(article[:created_at]).strftime("%m/%d") %>
+        posted on
+        <%= Time.parse(article[:created_at]).strftime("%Y-%m-%d") %>
         <%=
           if article[:tags]
             "with tags " + \
